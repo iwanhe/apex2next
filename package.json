@@ -11,7 +11,7 @@
     "typecheck": "pnpm -r --if-present typecheck",
     "lint": "pnpm -r --if-present lint",
     "test": "pnpm -r --if-present test",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --check package.json tsconfig.base.json pnpm-workspace.yaml",
     "format": "prettier --write ."
   },
   "devDependencies": {
