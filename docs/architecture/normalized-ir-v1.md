@@ -1,0 +1,243 @@
+# Normalized Application IR v1 — Detailed Technical Design
+
+- **Status:** Proposed implementation contract
+- **IR version:** 1.0.0
+- **Schema dialect:** JSON Schema Draft 2020-12
+- **Scope:** Static metadata normalization for Oracle APEX SQL Export and APEXLang
+- **Safety:** Parsing and normalization never execute SQL, PL/SQL, JavaScript, or deployment instructions.
+
+## 1. Goals and non-goals
+
+### Goals
+1. Define one source-independent application model consumed by analysis and conversion stages.
+2. Preserve source identity, locations, raw expressions, unknown object types, and unknown properties.
+3. Represent structural relationships separately from semantic references and dependencies.
+4. Resolve references only when a unique, context-valid target exists.
+5. Make snapshots deterministic, immutable after publication, and traceable to source artifacts.
+6. Provide diagnostics with stable machine-readable codes.
+
+### Non-goals for v1
+- Complete Oracle APEX or APEXLang grammar coverage.
+- Executing or evaluating source expressions.
+- Claiming behavioral or semantic parity.
+- Resolving arbitrary dynamic SQL, runtime-generated identifiers, plugin behavior, or every implicit APEX reference.
+- Defining target Next.js/NestJS/PostgreSQL code-generation contracts.
+
+## 2. Architectural boundaries
+
+`source parser -> source adapter -> normalized IR -> validators/resolver -> validated IR -> conversion engine`
+
+- **Parser:** recognizes syntax and source constructs; emits parser-native inventory.
+- **Adapter:** maps parser-native records into canonical IR types and retains source-specific fields.
+- **IR schema:** authoritative cross-language contract.
+- **Resolver:** processes typed references against a snapshot-scoped object index.
+- **Diagnostics:** reports uncertainty and invalidity without silently dropping source content.
+- **Generator:** consumes validated IR and must not depend on parser-specific structures.
+
+Python parsers and TypeScript platform services MUST validate against the same JSON Schema. Generated language types may be derived from the schema; handwritten duplicate contracts are prohibited.
+
+## 3. Top-level document
+
+Required top-level members:
+- `irVersion`: semantic version of the IR contract.
+- `application`: application identity and source metadata.
+- `objects`: canonical object inventory.
+- `relationships`: structural relationships.
+- `references`: explicit or lexical references and their resolution outcomes.
+- `dependencies`: typed dependency edges.
+- `diagnostics`: parse, normalization, validation, and resolution diagnostics.
+- `metadata`: source artifact hashes and producer information.
+
+Unknown top-level extension data must be preserved under `extensions`; implementations must not silently discard unrecognized fields during read/modify/write operations.
+
+## 4. Canonical object taxonomy
+
+Initial canonical types:
+- APPLICATION
+- PAGE
+- REGION
+- ITEM
+- BUTTON
+- BRANCH
+- VALIDATION
+- PROCESS
+- DYNAMIC_ACTION
+- DYNAMIC_ACTION_ACTION
+- LIST
+- LIST_ITEM
+- BREADCRUMB
+- LOV
+- AUTHENTICATION
+- AUTHORIZATION
+- THEME
+- PLUGIN
+- COLUMN
+- DISPLAY_COLUMN
+- COMPONENT_ENTRY
+- PAGE_GROUP
+- STATIC_FILE
+- BUILD_OPTION
+- COMPONENT_SETTING
+- SUPPORTING_OBJECT
+- SAVED_REPORT
+- REPORT_SORT
+- PARAMETER
+- CHART_SERIES
+- CHART_AXIS
+- UNKNOWN
+
+The canonical `type` is stable across source formats. `sourceType` preserves the original declaration/API category. Unmapped types use `UNKNOWN` and retain the original value in `sourceType` and `extensions`.
+
+## 5. Identity, fingerprint, and locator
+
+These concepts MUST remain separate:
+
+| Field | Meaning | Stability |
+|---|---|---|
+| `id` | Canonical object identity within the platform | Stable across content-only edits where source-native identity is stable |
+| `fingerprint` | Hash of canonicalized object content | Changes when relevant content changes |
+| `sourceLocator` | File/API call/source position | May change when files are reorganized |
+
+Identity strategy, in order:
+1. A source-native immutable identifier, when its stability and scope are known.
+2. A deterministic canonical identity composed from application scope, canonical type, and source-native key.
+3. A deterministic fallback from normalized source path and declaration identity.
+4. A provisional identity with an explicit low-confidence diagnostic when the source does not provide enough information.
+
+Do not use content hash as the primary identity. Do not resolve name-only collisions globally. Identity collision must produce a diagnostic, not an arbitrary winner.
+
+For cross-snapshot comparison, implementations must retain the source-native key and identity strategy used. UUID database primary keys may wrap canonical identities, but must not replace the deterministic identity contract.
+
+## 6. Properties and expression preservation
+
+Properties are represented as named records with:
+- `valueType`
+- `value` when safely decoded
+- `rawExpression` when the source is an unevaluated expression
+- `sourceLocator`
+- optional `extensions`
+
+Supported value types: STRING, NUMBER, BOOLEAN, NULL, ARRAY, OBJECT, SQL_EXPRESSION, PL_SQL_EXPRESSION, JAVASCRIPT_EXPRESSION, UNKNOWN.
+
+A parser may decode only unambiguous scalar literals. Expressions remain raw source text and MUST NOT be evaluated. Unknown properties and unknown nested blocks must be preserved in a lossless raw representation or source-artifact reference.
+
+## 7. Provenance
+
+Every object must have provenance identifying:
+- source format (APEXLANG or APEX_SQL_EXPORT);
+- relative source file/artifact identifier;
+- line and column when available;
+- end line/column when available;
+- source artifact SHA-256;
+- object fingerprint;
+- source-native identifier/API routine when available.
+
+Property-level provenance should be recorded when the parser can provide it. Missing coordinates are represented as null/omitted with a diagnostic; they must not be fabricated.
+
+Large raw source text should remain in a source artifact store. IR stores the artifact hash and locator rather than duplicating entire files.
+
+## 8. Relationships, references, and dependencies
+
+These are separate concepts:
+
+- **Relationship:** structural containment or ordering, e.g. application contains page, page contains region.
+- **Reference:** a source expression/identifier that appears to point to another object, e.g. an item references an LOV.
+- **Dependency:** an edge used for analysis or conversion ordering, derived from an explicit relationship/reference or a separately labeled inference.
+
+Every edge includes a type, source object, target object if resolved, origin, and provenance. Inferred dependencies must be marked `INFERRED`; they must never be represented as explicit source facts.
+
+### Reference statuses
+- PENDING
+- RESOLVED
+- DANGLING
+- AMBIGUOUS
+- UNSUPPORTED
+- INVALID
+
+Reference resolution algorithm:
+1. Collect reference candidates from parser output without interpreting arbitrary expression semantics.
+2. Normalize only syntax-specific wrappers that are documented by the source adapter.
+3. Determine reference context and expected target type.
+4. Search source-native IDs in the correct application/scope.
+5. Search canonical IDs and documented scoped aliases.
+6. Evaluate candidate count: zero = DANGLING; one valid candidate = RESOLVED; multiple = AMBIGUOUS.
+7. Persist the resolution outcome and diagnostic.
+8. Create dependency edges only for resolved references.
+
+Name-only matching is permitted only when the reference type and scope make the candidate set unambiguous. Resolver must never guess.
+
+## 9. Diagnostics and conversion classification
+
+Diagnostic fields:
+- stable `code`;
+- `severity` (INFO, WARNING, ERROR);
+- `category`;
+- human-readable `message`;
+- affected object/reference ID;
+- source locator;
+- structured `details`;
+- optional remediation `suggestion`.
+
+Initial diagnostic catalogue:
+- IR001 invalid IR structure (ERROR)
+- IR002 unknown object type preserved (WARNING)
+- IR003 unknown property preserved (WARNING)
+- IR004 identity collision (ERROR)
+- SRC001 incomplete source provenance (WARNING)
+- SRC002 runtime version not established (INFO)
+- REF001 dangling reference (ERROR)
+- REF002 ambiguous reference (ERROR)
+- REF003 unsupported reference syntax (WARNING)
+- DEP001 circular dependency (WARNING by default; severity depends on dependency class)
+- DEP002 invalid relationship endpoint (ERROR)
+
+Conversion statuses remain: AUTO, AUTO_TEST, REVIEW, BLOCKED, ERROR. AUTO_TEST is allowed only after the relevant generated artifact tests have actually passed. IR validity alone does not imply conversion readiness or semantic parity.
+
+## 10. Snapshot and determinism rules
+
+- A published IR snapshot is immutable.
+- Re-ingestion creates a new snapshot with source artifact hashes and adapter/schema versions.
+- The same source bytes, adapter version, and schema version must produce semantically identical canonical IR, excluding explicitly volatile generation metadata.
+- Object ordering, property ordering, and diagnostics ordering must be deterministic.
+- Snapshot comparison uses identity for object matching and fingerprint for content change detection.
+- Failed parsing may produce a diagnostic-bearing partial snapshot, but it must not be labeled complete.
+
+## 11. Internal persistence guidance
+
+Recommended relational storage:
+- `ir_snapshots`: application, IR version, source hashes, adapter version, lifecycle state.
+- `ir_objects`: snapshot, canonical identity, type, source type, fingerprint, provenance.
+- `ir_properties`: object, property name, typed JSONB value, raw expression, provenance.
+- `ir_relationships`: source/target object and relationship type.
+- `ir_references`: source object, reference type/value, target, resolution status.
+- `ir_dependencies`: source/target object, dependency type, origin/confidence.
+- `ir_diagnostics`: snapshot/object/reference, code, severity, details.
+
+Use relational columns for frequently queried identifiers/statuses and JSONB for heterogeneous property payloads. Enforce snapshot-scoped foreign keys and uniqueness constraints. Do not make a single opaque JSONB document the only persistence model.
+
+## 12. Security and safety
+
+- Never execute source SQL, PL/SQL, JavaScript, shell commands, or deployment metadata during extraction/normalization.
+- Treat source files and metadata as untrusted input.
+- Apply file size, nesting-depth, declaration-count, and processing-time limits.
+- Reject path traversal and do not follow symlinks outside the selected source root.
+- Avoid logging secrets or complete source expressions by default.
+- Keep raw artifacts access-controlled and redact credentials/endpoints in diagnostic output where applicable.
+
+## 13. Acceptance criteria
+
+1. Both source adapters produce schema-valid IR documents.
+2. Same logical object maps to a stable identity across content-only edits where source-native identity remains stable.
+3. Fingerprint changes when canonicalized object content changes.
+4. Unknown object types/properties and raw expressions survive normalization.
+5. Provenance is retained or a diagnostic explains why it is unavailable.
+6. Resolver returns RESOLVED only for one scope-valid candidate.
+7. Missing and multiple candidates produce DANGLING and AMBIGUOUS respectively.
+8. Structural relationships, explicit references, and inferred dependencies remain distinguishable.
+9. Snapshot output is deterministic for fixed inputs and tool versions.
+10. Parsing/normalization does not execute source code.
+11. Invalid input returns actionable diagnostics and never a false success status.
+
+## 14. Implementation sequence
+
+See [Normalized IR v1 Development Backlog](../development/normalized-ir-v1-backlog.md). Implement the schema and contract tests first, then identity/provenance, adapters, resolver, and diagnostics. Keep each work package independently reviewable.
