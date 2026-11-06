@@ -47,6 +47,13 @@ class ExportCall:
 
 
 def _skip_quoted(text: str, index: int) -> int:
+    # Oracle alternative quoting: q'[text]', q'{text}', q'(text)', q'<text>'.
+    if index > 0 and text[index - 1] in "qQ" and index + 1 < len(text):
+        opener = text[index + 1]
+        closer = {"[": "]", "{": "}", "(": ")", "<": ">"}.get(opener, opener)
+        end = text.find(closer + "'", index + 2)
+        return len(text) if end < 0 else end + 2
+
     quote = text[index]
     cursor = index + 1
     while cursor < len(text):
