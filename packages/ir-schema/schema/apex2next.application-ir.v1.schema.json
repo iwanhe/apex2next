@@ -1,0 +1,566 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://apex2next.dev/schemas/application-ir/v1.json",
+  "title": "APEX2NEXT Normalized Application IR v1",
+  "description": "Source-independent structural representation of an Oracle APEX application. Source expressions are data and must never be executed by validators.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "irVersion",
+    "application",
+    "objects",
+    "relationships",
+    "references",
+    "dependencies",
+    "diagnostics",
+    "metadata"
+  ],
+  "properties": {
+    "irVersion": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "application": {
+      "$ref": "#/$defs/application"
+    },
+    "objects": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/object"
+      }
+    },
+    "relationships": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/edge"
+      }
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/reference"
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/dependency"
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/diagnostic"
+      }
+    },
+    "metadata": {
+      "$ref": "#/$defs/metadata"
+    },
+    "extensions": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "locator": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "file": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "line": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "column": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "endLine": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "endColumn": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "artifactHash": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sourceNativeId": {
+          "type": [
+            "string",
+            "number",
+            "null"
+          ]
+        },
+        "apiRoutine": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "application": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "id",
+        "sourceFormat"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sourceFormat": {
+          "enum": [
+            "APEXLANG",
+            "APEX_SQL_EXPORT",
+            "UNKNOWN"
+          ]
+        },
+        "sourceVersion": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "metadataVersion": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "runtimeVersion": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "property": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "valueType"
+      ],
+      "properties": {
+        "valueType": {
+          "enum": [
+            "STRING",
+            "NUMBER",
+            "BOOLEAN",
+            "NULL",
+            "ARRAY",
+            "OBJECT",
+            "SQL_EXPRESSION",
+            "PL_SQL_EXPRESSION",
+            "JAVASCRIPT_EXPRESSION",
+            "UNKNOWN"
+          ]
+        },
+        "value": {},
+        "rawExpression": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sourceLocator": {
+          "$ref": "#/$defs/locator"
+        },
+        "preserved": {
+          "type": "boolean"
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "object": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "id",
+        "type",
+        "sourceType",
+        "properties",
+        "source"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "enum": [
+            "APPLICATION",
+            "PAGE",
+            "REGION",
+            "ITEM",
+            "BUTTON",
+            "BRANCH",
+            "VALIDATION",
+            "PROCESS",
+            "DYNAMIC_ACTION",
+            "DYNAMIC_ACTION_ACTION",
+            "LIST",
+            "LIST_ITEM",
+            "BREADCRUMB",
+            "LOV",
+            "AUTHENTICATION",
+            "AUTHORIZATION",
+            "THEME",
+            "PLUGIN",
+            "COLUMN",
+            "DISPLAY_COLUMN",
+            "COMPONENT_ENTRY",
+            "PAGE_GROUP",
+            "STATIC_FILE",
+            "BUILD_OPTION",
+            "COMPONENT_SETTING",
+            "SUPPORTING_OBJECT",
+            "SAVED_REPORT",
+            "REPORT_SORT",
+            "PARAMETER",
+            "CHART_SERIES",
+            "CHART_AXIS",
+            "UNKNOWN"
+          ]
+        },
+        "sourceType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "parentId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "properties": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/property"
+          }
+        },
+        "source": {
+          "$ref": "#/$defs/locator"
+        },
+        "fingerprint": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "parse": {
+              "enum": [
+                "SUCCESS",
+                "PARTIAL",
+                "FAILED"
+              ]
+            },
+            "resolve": {
+              "enum": [
+                "PENDING",
+                "SUCCESS",
+                "PARTIAL",
+                "FAILED"
+              ]
+            },
+            "conversion": {
+              "enum": [
+                "PENDING",
+                "AUTO",
+                "AUTO_TEST",
+                "REVIEW",
+                "BLOCKED",
+                "ERROR"
+              ]
+            }
+          }
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "id",
+        "sourceObjectId",
+        "relationshipType"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "sourceObjectId": {
+          "type": "string"
+        },
+        "targetObjectId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "relationshipType": {
+          "type": "string"
+        },
+        "sourceLocator": {
+          "$ref": "#/$defs/locator"
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "reference": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "id",
+        "sourceObjectId",
+        "referenceType",
+        "referenceValue",
+        "resolutionStatus"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "sourceObjectId": {
+          "type": "string"
+        },
+        "referenceType": {
+          "type": "string"
+        },
+        "referenceValue": {
+          "type": "string"
+        },
+        "targetObjectId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "resolutionStatus": {
+          "enum": [
+            "PENDING",
+            "RESOLVED",
+            "DANGLING",
+            "AMBIGUOUS",
+            "UNSUPPORTED",
+            "INVALID"
+          ]
+        },
+        "scope": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sourceLocator": {
+          "$ref": "#/$defs/locator"
+        },
+        "candidateObjectIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "dependency": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "id",
+        "sourceObjectId",
+        "dependencyType",
+        "origin"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "sourceObjectId": {
+          "type": "string"
+        },
+        "targetObjectId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dependencyType": {
+          "type": "string"
+        },
+        "origin": {
+          "enum": [
+            "EXPLICIT",
+            "STRUCTURAL",
+            "INFERRED"
+          ]
+        },
+        "ruleId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "confidence": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "sourceLocator": {
+          "$ref": "#/$defs/locator"
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "code",
+        "severity",
+        "category",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "INFO",
+            "WARNING",
+            "ERROR"
+          ]
+        },
+        "category": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "objectId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "referenceId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sourceLocator": {
+          "$ref": "#/$defs/locator"
+        },
+        "details": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "suggestion": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "sourceHash",
+        "adapterVersion"
+      ],
+      "properties": {
+        "sourceHash": {
+          "type": "string"
+        },
+        "generatedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "adapterVersion": {
+          "type": "string"
+        },
+        "schemaDialect": {
+          "type": "string"
+        },
+        "sourceArtifactHashes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
