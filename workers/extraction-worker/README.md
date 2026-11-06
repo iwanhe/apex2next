@@ -33,3 +33,17 @@ The parser reports the .apex/apexlang.json mmdVersion value as apexlang_mmd_vers
 - Nested property blocks, complex values, SQL/PLSQL semantics, plug-in behavior, and dynamic references are not fully modeled.
 - @references are collected lexically; target resolution and dangling-reference validation are not implemented.
 - A successful parse does not prove semantic parity or conversion readiness. Unsupported behavior must remain visible for review.
+
+## 3. Normalized IR schema validation (initial slice)
+
+The shared JSON Schema contract is maintained at `packages/ir-schema/schema/apex2next.application-ir.v1.schema.json` (JSON Schema Draft 2020-12, IR version 1.0.0). Python callers can use:
+
+```python
+from apex2next_extractor.ir_schema import validate_ir_document
+
+diagnostics = validate_ir_document(ir_document)
+if diagnostics:
+    raise ValueError(diagnostics)
+```
+
+The validator checks structure only. A schema-valid document is not evidence of complete extraction, reference resolution, conversion readiness, or semantic parity. Unknown source properties and expressions should remain represented in the IR.
