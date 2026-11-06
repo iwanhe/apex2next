@@ -46,3 +46,7 @@ Synthetic fixtures cover:
 ## Important boundary
 
 These components are not yet full APEX application extractors or Oracle schema analyzers. They establish the first static parsing/inventory slice; live Oracle dictionary extraction, complete metadata modeling, dependency resolution, and completeness certification remain future work.
+
+## Normalized IR v1 direction
+
+The source adapters are being extended toward a common source-independent contract. See [Normalized Application IR v1 — Detailed Technical Design](normalized-ir-v1.md) and the [implementation backlog](../development/normalized-ir-v1-backlog.md). The JSON Schema contract is located at `packages/ir-schema/schema/apex2next.application-ir.v1.schema.json`. The schema and design are an initial contract baseline; adapter implementation, cross-language validation, and resolver behavior remain pending backlog work.
