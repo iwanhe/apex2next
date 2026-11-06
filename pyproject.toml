@@ -3,7 +3,7 @@ name = "apex2next-workers"
 version = "0.1.0"
 description = "Parsing, analysis, conversion, and validation workers for APEX2NEXT"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = ["jsonschema>=4.23,<5"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.3", "ruff>=0.8", "mypy>=1.13"]
