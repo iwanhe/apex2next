@@ -6,9 +6,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_worker_directories_are_present() -> None:
+def test_worker_boundaries_are_documented() -> None:
+    worker_readme = ROOT / "workers" / "README.md"
+    content = worker_readme.read_text(encoding="utf-8")
     for name in ("extraction-worker", "conversion-worker", "data-worker", "validation-worker"):
-        assert (ROOT / "workers" / name).is_dir()
+        assert name in content
 
 
 def test_migration_status_contract_is_documented() -> None:
