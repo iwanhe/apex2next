@@ -17,8 +17,8 @@ DECLARATION_TYPES = {
     "componentsetting": "COMPONENT_SETTING", "supportingobjects": "SUPPORTING_OBJECTS",
 }
 DECLARATION_RE = re.compile(
-    r"^(?P<indent>[ \\t]*)(?P<kind>[A-Za-z][A-Za-z0-9_-]*)"
-    r"(?:[ \\t]+(?P<name>[A-Za-z0-9_.-]+))?[ \\t]*\\(", re.MULTILINE
+    r"^(?P<indent>[ \t]*)(?P<kind>[A-Za-z][A-Za-z0-9_-]*)"
+    r"(?:[ \t]+(?P<name>[A-Za-z0-9_.-]+))?[ \t]*\(", re.MULTILINE
 )
 REFERENCE_RE = re.compile(r"(?<![A-Za-z0-9_])@(?P<ref>[A-Za-z0-9_./-]+)")
 
@@ -35,7 +35,7 @@ def _matching_close(source: str, opening: int) -> int | None:
             i += 1
             continue
         if source.startswith("//", i) or source.startswith("--", i):
-            end = source.find("\\n", i + 2)
+            end = source.find("\n", i + 2)
             i = len(source) if end < 0 else end + 1
             continue
         if source.startswith("/*", i):
@@ -45,7 +45,7 @@ def _matching_close(source: str, opening: int) -> int | None:
             i = end + 2
             continue
         ch = source[i]
-        if ch in "'\\\"":
+        if ch in "'\"":
             quote = ch
         elif ch == "(":
             depth += 1
@@ -62,7 +62,7 @@ def _mask_non_code(source: str) -> str:
     chars, i = list(source), 0
     while i < len(source):
         if source.startswith("//", i) or source.startswith("--", i):
-            end = source.find("\\n", i + 2)
+            end = source.find("\n", i + 2)
             end = len(source) if end < 0 else end
             for pos in range(i, end):
                 chars[pos] = " "
@@ -72,11 +72,11 @@ def _mask_non_code(source: str) -> str:
             end = source.find("*/", i + 2)
             end = len(source) if end < 0 else end + 2
             for pos in range(i, end):
-                if chars[pos] != "\\n":
+                if chars[pos] != "\n":
                     chars[pos] = " "
             i = end
             continue
-        if source[i] in "'\\\"":
+        if source[i] in "'\"":
             quote, start = source[i], i
             i += 1
             while i < len(source):
@@ -88,7 +88,7 @@ def _mask_non_code(source: str) -> str:
                     break
                 i += 1
             for pos in range(start, i):
-                if chars[pos] != "\\n":
+                if chars[pos] != "\n":
                     chars[pos] = " "
             continue
         i += 1
@@ -99,12 +99,12 @@ def _direct_properties(body: str) -> dict[str, Any]:
     result: dict[str, Any] = {}
     depth_paren = depth_brace = depth_bracket = 0
     quote, line_start = None, 0
-    for i, ch in enumerate(body + "\\n"):
+    for i, ch in enumerate(body + "\n"):
         if quote:
-            if ch == quote and (i == 0 or body[i - 1] != "\\\\"):
+            if ch == quote and (i == 0 or body[i - 1] != "\\"):
                 quote = None
             continue
-        if ch in "'\\\"":
+        if ch in "'\"":
             quote = ch
             continue
         if ch == "(":
@@ -119,17 +119,17 @@ def _direct_properties(body: str) -> dict[str, Any]:
             depth_bracket += 1
         elif ch == "]":
             depth_bracket -= 1
-        elif ch == "\\n":
+        elif ch == "\n":
             if depth_paren == depth_brace == depth_bracket == 0:
                 line = body[line_start:i].strip()
-                match = re.match(r"([A-Za-z][A-Za-z0-9_]*)\\s*:\\s*(.*?)\\s*$", line)
+                match = re.match(r"([A-Za-z][A-Za-z0-9_]*)\s*:\s*(.*?)\s*$", line)
                 if match:
                     key, raw = match.groups()
                     if raw.startswith("'") and raw.endswith("'") and len(raw) >= 2:
                         value: Any = raw[1:-1].replace("''", "'")
                     elif raw.lower() in {"true", "false"}:
                         value = raw.lower() == "true"
-                    elif re.fullmatch(r"-?\\d+", raw):
+                    elif re.fullmatch(r"-?\d+", raw):
                         value = int(raw)
                     else:
                         value = raw
@@ -148,7 +148,7 @@ def parse_apexlang_text(source: str, file_path: str = "") -> dict[str, Any]:
             continue
         opening = source.find("(", match.start(), match.end())
         closing = _matching_close(source, opening)
-        line = source.count("\\n", 0, match.start()) + 1
+        line = source.count("\n", 0, match.start()) + 1
         if closing is None:
             diagnostics.append({"code":"APEXLANG001","severity":"ERROR","file":file_path,
                                 "line":line,"message":f"Unterminated declaration: {kind}"})
