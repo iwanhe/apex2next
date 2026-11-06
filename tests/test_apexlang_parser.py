@@ -42,5 +42,5 @@ def test_ignores_references_inside_comments_and_string_literals() -> None:
 
 
 def test_reports_unterminated_declaration() -> None:
-    result = parse_apexlang_text("page 10 (\\n name: Home\\n", "broken.apx")
+    result = parse_apexlang_text("page 10 (\n name: Home\n", "broken.apx")
     assert result["diagnostics"][0]["code"] == "APEXLANG001"
