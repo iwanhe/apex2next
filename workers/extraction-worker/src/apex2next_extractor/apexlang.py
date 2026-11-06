@@ -91,12 +91,18 @@ def _direct_properties(body: str) -> dict[str, Any]:
     paren = brace = bracket = 0
     line_start = 0
     for i, ch in enumerate(masked + "\n"):
-        if ch == "(":\n            paren += 1
-        elif ch == ")":\n            paren -= 1
-        elif ch == "{":\n            brace += 1
-        elif ch == "}":\n            brace -= 1
-        elif ch == "[":\n            bracket += 1
-        elif ch == "]":\n            bracket -= 1
+        if ch == "(":
+            paren += 1
+        elif ch == ")":
+            paren -= 1
+        elif ch == "{":
+            brace += 1
+        elif ch == "}":
+            brace -= 1
+        elif ch == "[":
+            bracket += 1
+        elif ch == "]":
+            bracket -= 1
         elif ch == "\n":
             if paren == brace == bracket == 0:
                 raw_line = body[line_start:i].strip()
