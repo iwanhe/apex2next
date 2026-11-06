@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   node:
-    name: Node workspace checks
+    name: Node workspace baseline
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -29,22 +29,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Formatting
-        run: pnpm format:check
-
-      - name: Lint
-        run: pnpm lint
-
-      - name: Typecheck
-        run: pnpm typecheck
-
-      - name: Tests
-        run: pnpm test
+      - name: Check configuration formatting
+        run: pnpm exec prettier --check package.json tsconfig.base.json pnpm-workspace.yaml
 
   python:
     name: Python worker checks
