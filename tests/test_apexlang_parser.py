@@ -41,6 +41,21 @@ def test_ignores_references_inside_comments_and_string_literals() -> None:
     assert result["references"] == ["requester"]
 
 
+def test_ignores_declaration_like_text_inside_fenced_sql() -> None:
+    source = """page 10 (
+    source {
+        sqlQuery:
+            ~~~sql
+            select 'page 99 (' as text from dual
+            ~~~
+    }
+)
+"""
+    result = parse_apexlang_text(source)
+    assert [item["object_type"] for item in result["declarations"]] == ["PAGE"]
+    assert result["diagnostics"] == []
+
+
 def test_reports_unterminated_declaration() -> None:
     result = parse_apexlang_text("page 10 (\n name: Home\n", "broken.apx")
     assert result["diagnostics"][0]["code"] == "APEXLANG001"
