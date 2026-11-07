@@ -175,3 +175,22 @@ The milestone establishes a normalized structural model and deterministic refere
 - [ ] Compare AST property output with existing inventory adapter property records.
 
 **Done when:** supported scalar/object/array values are represented as typed AST nodes with source spans, unknown expressions remain lossless, duplicate keys are diagnosed, and regression fixtures pass. This initial slice is not full APEXLang syntax coverage.
+
+
+### WP PARSER-03 — Parser hardening and grammar integration
+
+- [x] Parse recursive nested OBJECT and ARRAY values, including arrays of objects and nested arrays.
+- [x] Support inline object/array forms within the supported key/value syntax subset.
+- [x] Preserve non-literal and multiline expression source without evaluation.
+- [x] Preserve duplicate properties and report AST102 at every parsed object scope.
+- [x] Emit deterministic diagnostics for malformed containers and unsupported object members.
+- [x] Add source-character, token-count, delimiter-depth, and recursive-property-depth limits.
+- [x] Add malformed-input regression corpus and nested-value/source-span tests.
+- [x] Validate the maintained ANTLR grammar by generating a Python parser with pinned ANTLR 4.13.2 in CI.
+- [x] Keep the Python parser dependency-free and explicitly separate from ANTLR code generation/runtime.
+- [ ] Add property-based fuzzing with Hypothesis or an equivalent dependency once the parser API stabilizes.
+- [ ] Validate behavior against a sanitized representative real APEXLang project corpus.
+- [ ] Establish parser-vs-inventory parity before making the AST authoritative for the Normalized IR adapter.
+- [ ] Expand deterministic recovery for malformed nested declarations and delimiter mismatch reporting.
+
+**Done for this incremental WP3 slice when:** recursive values, conservative expression preservation, bounded input, regression tests, and grammar-generation validation are in place. This is not production certification or complete APEXLang syntax support. Corpus-based accuracy and adapter parity remain explicit gates.
