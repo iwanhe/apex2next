@@ -6,7 +6,7 @@ WP9 qualifies the complete WP1–WP8 pipeline against one representative, saniti
 
 ## WP9.1 candidate intake
 
-The 2026-11-07 static intake report is [WP9.1 — Candidate Pilot Intake: Demo Permintaan Barang](wp9.1-pilot-intake-f170134.md). It records the two uploaded archive hashes, app ID 170134, export release metadata 26.2.1, page and component inventory, cross-format discrepancy (page 00302 is missing from the APEXLang archive), parser coverage gaps, database/PLSQL dependency candidates and the current fail-closed gate assessment.
+The 2026-11-07 static intake report is [WP9.1 — Candidate Pilot Intake: Demo Permintaan Barang](wp9.1-pilot-intake-f170134.md). It records the uploaded archive hashes, app ID 170134, export release metadata 26.2.1, page/component inventory, cross-format discrepancy (page 00302 is missing from the APEXLang archive), parser coverage gaps, database/PLSQL dependencies and the current fail-closed gate assessment. A separate user-supplied generated `install.sql` has since been inspected: it contains 9 tables, 10 views, 4 package specifications and bodies, 5 triggers, indexes, constraints and demo/config DML. This advances schema/PLSQL source intake but does not replace Oracle dictionary reconciliation or data/runtime evidence.
 
 The inspection was read-only. No archive source was executed and no database connection was made. The archives were not committed to Git. The report's basic source scan is not a sanitization attestation.
 
@@ -78,7 +78,7 @@ Exit codes: 0 QUALIFIED, 1 BLOCKED, 3 CONDITIONAL, 4 INCOMPLETE, 2 invalid input
 
 ## Current blockers
 
-Formal sanitization attestation and source scope; confirmed actual runtime/snapshot; matching Oracle dictionary/DDL/PLSQL/data evidence; archive-aware extraction and parser coverage; disposable PostgreSQL target and target build; approved critical journeys and role matrix; witnessed rehearsal/restore/rollback/performance; formal owner approvals.
+Formal sanitization attestation and source scope; confirmed actual runtime/snapshot; Oracle dictionary reconciliation and any missing object/grant evidence; archive-aware extraction and parser coverage; review of dynamic SQL and trigger/package semantics; consistent data evidence; disposable PostgreSQL target and target build; approved critical journeys and role matrix; witnessed rehearsal/restore/rollback/performance; formal owner approvals.
 
 ## Safety
 

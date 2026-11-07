@@ -86,7 +86,8 @@ WP8 is phased and remains in progress. See the phase plan in ../migration/wp8-fu
 - [x] Compare cross-format page inventories and identify the missing APEXLang page 00302.
 - [ ] Obtain formal sanitization attestation and confirm source instance runtime/snapshot.
 - [ ] Implement archive-aware intake and expand SQL-export parser coverage for shared components and security schemes.
-- [ ] Obtain Oracle dictionary/DDL, package bodies, trigger/view definitions and consistent data evidence.
+- [x] Receive and statically inventory generated combined database install script containing table/view DDL, package specs/bodies and triggers.
+- [ ] Reconcile supplied install script against Oracle dictionary, installed object validity, grants and consistent data evidence.
 - [ ] Execute full WP1–WP8 pipeline against real source and consistent Oracle evidence.
 - [ ] Validate target against business-approved journeys.
 - [ ] Complete witnessed rehearsal, performance, restore, rollback and owner sign-off.
