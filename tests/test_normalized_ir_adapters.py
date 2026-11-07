@@ -645,7 +645,10 @@ def test_apexlang_duplicate_direct_properties_are_all_preserved_outside_unique_k
         "page 10 (\n"
         "    title: 'First title'\n"
         "    title: 'Second title'\n"
-        "    settings: { label: 'First nested', label: 'Second nested' }\n"
+        "    settings: {\n"
+        "        label: 'First nested'\n"
+        "        label: 'Second nested'\n"
+        "    }\n"
         ")\n",
         encoding="utf-8",
     )
