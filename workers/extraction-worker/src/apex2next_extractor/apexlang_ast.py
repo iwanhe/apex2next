@@ -329,6 +329,16 @@ def parse_apexlang_properties(
         offsets.append(cursor)
         cursor += len(line)
 
+    property_indents = []
+    for candidate in lines:
+        candidate_match = re.match(
+            r"^(?P<indent>[ \\t]*)(?P<name>[A-Za-z_][A-Za-z0-9_.-]*)\\s*:",
+            candidate.rstrip("\\r\\n"),
+        )
+        if candidate_match:
+            property_indents.append(len(candidate_match.group("indent").expandtabs(4)))
+    direct_indent = min(property_indents) if property_indents else 0
+
     index = 0
     while index < len(lines):
         line = lines[index]
@@ -337,7 +347,7 @@ def parse_apexlang_properties(
             r"^(?P<indent>[ \t]*)(?P<name>[A-Za-z_][A-Za-z0-9_.-]*)\s*:\s*(?P<value>.*)$",
             content,
         )
-        if not match:
+        if not match or len(match.group("indent").expandtabs(4)) != direct_indent:
             index += 1
             continue
         name = match.group("name")
