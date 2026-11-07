@@ -406,8 +406,18 @@ def resolve_references(document: dict[str, Any]) -> dict[str, Any]:
         if native_id not in (None, ""):
             by_native_id.setdefault(str(native_id), []).append(obj)
 
-    diagnostics = list(resolved_document.get("diagnostics", []))
-    dependencies = list(resolved_document.get("dependencies", []))
+    resolver_codes = {"REF001", "REF002", "REF003", "REF004"}
+    diagnostics = [
+        item for item in resolved_document.get("diagnostics", [])
+        if item.get("code") not in resolver_codes
+    ]
+    dependencies = [
+        item for item in resolved_document.get("dependencies", [])
+        if not (
+            item.get("origin") == "EXPLICIT"
+            and item.get("dependencyType") == "APEXLANG_AT_REFERENCE"
+        )
+    ]
     resolution_by_source: dict[str, list[str]] = {}
 
     for reference in references:
