@@ -284,3 +284,12 @@ The AST layer currently:
 - Emits structured diagnostics for unterminated strings, comments, fenced blocks, and declarations.
 
 The grammar file is a formal maintained specification, while the Python implementation is currently a parallel incremental parser and does not invoke ANTLR. The AST API is not yet wired into the existing APEXLang-to-IR adapter. Property AST nodes, complete array and mixed-brace parsing, grammar-driven error recovery, parser resource limits, and compatibility testing against real APEXLang source remain open work. Do not interpret successful AST construction as complete source coverage or semantic correctness.
+
+
+## 17. Typed APEXLang property AST (initial slice)
+
+Each declaration AST node now carries typed property nodes with original-source spans. The initial supported values are scalar STRING, NUMBER, BOOLEAN, NULL, multiline brace-delimited OBJECT, and bracket-delimited ARRAY. Unknown or executable expressions are retained as raw EXPRESSION values and are never evaluated.
+
+Nested object properties are recursively parsed. Duplicate property keys remain separate ordered nodes and produce diagnostic `AST102`; unterminated object/array values produce `AST101`. Direct declaration property scope is determined by indentation so nested declaration properties are not promoted to the parent declaration.
+
+This remains a conservative subset. Inline/mixed object syntax, nested object array elements, non-parenthesis multiline expression forms, grammar-driven recovery, and hard resource limits are not yet supported. The AST is not yet the source adapter's authority; Normalized IR integration waits for corpus parity and coverage tests.
