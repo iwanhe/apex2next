@@ -108,12 +108,12 @@ def classify_expression(raw_expression: str) -> dict[str, str]:
         return {"language": "UNKNOWN", "confidence": "NONE", "rule": "EXPR_NONE"}
 
     rules = (
-        ("PL_SQL", r"^(?:DECLARE\\b[\\s\\S]*?\\bBEGIN\\b|BEGIN\\b[\\s\\S]*\\bEND\\s*;?$|CREATE\\s+(?:OR\\s+REPLACE\\s+)?(?:EDITIONABLE\\s+)?(?:PROCEDURE|FUNCTION|PACKAGE(?:\\s+BODY)?|TRIGGER)\\b)", "EXPR_PLSQL_BLOCK_V1"),
-        ("SQL", r"^(?:SELECT\\b|WITH\\b[\\s\\S]*?\\bSELECT\\b|INSERT\\s+INTO\\b|UPDATE\\s+[A-Za-z0-9_$#.]+\\s+SET\\b|DELETE\\s+FROM\\b|MERGE\\s+INTO\\b)", "EXPR_SQL_STATEMENT_V1"),
-        ("JAVASCRIPT", r"^(?:(?:async\\s+)?function\\b|(?:const|let|var)\\s+[A-Za-z_$][\\w$]*\\s*=|(?:\\([^)]*\\)|[A-Za-z_$][\\w$]*)\\s*=>)", "EXPR_JAVASCRIPT_DECLARATION_V1"),
-        ("APEX", r"^&&?[A-Za-z][A-Za-z0-9_$#]*\\.$", "EXPR_APEX_SUBSTITUTION_V1"),
-        ("HTML", r"^<[A-Za-z][A-Za-z0-9-]*(?:\\s[^<>]*)?>", "EXPR_HTML_ELEMENT_V1"),
-        ("CSS", r"^(?:@media\\b|@supports\\b|@font-face\\b|:root\\s*\\{)", "EXPR_CSS_AT_RULE_V1"),
+        ("PL_SQL", r"^(?:DECLARE\b[\s\S]*?\bBEGIN\b|BEGIN\b[\s\S]*\bEND\s*;?$|CREATE\s+(?:OR\s+REPLACE\s+)?(?:EDITIONABLE\s+)?(?:PROCEDURE|FUNCTION|PACKAGE(?:\s+BODY)?|TRIGGER)\b)", "EXPR_PLSQL_BLOCK_V1"),
+        ("SQL", r"^(?:SELECT\b|WITH\b[\s\S]*?\bSELECT\b|INSERT\s+INTO\b|UPDATE\s+[A-Za-z0-9_$#.]+\s+SET\b|DELETE\s+FROM\b|MERGE\s+INTO\b)", "EXPR_SQL_STATEMENT_V1"),
+        ("JAVASCRIPT", r"^(?:(?:async\s+)?function\b|(?:const|let|var)\s+[A-Za-z_$][\w$]*\s*=|(?:\([^)]*\)|[A-Za-z_$][\w$]*)\s*=>)", "EXPR_JAVASCRIPT_DECLARATION_V1"),
+        ("APEX", r"^&&?[A-Za-z][A-Za-z0-9_$#]*\.$", "EXPR_APEX_SUBSTITUTION_V1"),
+        ("HTML", r"^<[A-Za-z][A-Za-z0-9-]*(?:\s[^<>]*)?>", "EXPR_HTML_ELEMENT_V1"),
+        ("CSS", r"^(?:@media\b|@supports\b|@font-face\b|:root\s*\{)", "EXPR_CSS_AT_RULE_V1"),
     )
     for language, pattern, rule in rules:
         if re.search(pattern, source, flags=re.IGNORECASE):
@@ -123,11 +123,13 @@ def classify_expression(raw_expression: str) -> dict[str, str]:
 
 def _expression_property(raw_expression: str, locator: dict[str, Any] | None = None) -> dict[str, Any]:
     classification = classify_expression(raw_expression)
-    value_type = classification["language"]
-    if value_type not in {"SQL", "PL_SQL", "JAVASCRIPT"}:
-        value_type = "UNKNOWN"
+    value_type = {
+        "SQL": "SQL_EXPRESSION",
+        "PL_SQL": "PL_SQL_EXPRESSION",
+        "JAVASCRIPT": "JAVASCRIPT_EXPRESSION",
+    }.get(classification["language"], "UNKNOWN")
     result: dict[str, Any] = {
-        "valueType": value_type if value_type != "UNKNOWN" else "UNKNOWN",
+        "valueType": value_type,
         "rawExpression": raw_expression,
         "preserved": True,
         "expressionLanguage": classification["language"],
