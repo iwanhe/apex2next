@@ -565,10 +565,10 @@ def test_apexlang_ast_integrated_ir_is_deterministic_for_fixed_source(tmp_path: 
     source_dir = tmp_path / "deterministic-ast-ir"
     source_dir.mkdir()
     (source_dir / "application.apx").write_text(
-        "app DEMO (\\n    name: 'Deterministic'\\n)\\n", encoding="utf-8"
+        "app DEMO (\n    name: 'Deterministic'\n)\n", encoding="utf-8"
     )
     (source_dir / "page.apx").write_text(
-        "page 10 (\\n    values: [1, 2, 3]\\n)\\n", encoding="utf-8"
+        "page 10 (\n    values: [1, 2, 3]\n)\n", encoding="utf-8"
     )
 
     first = adapt_apexlang_directory(source_dir)
