@@ -2,7 +2,16 @@
 
 from .apex_export import extract_export
 from .apexlang import extract_apexlang, parse_apexlang_text
-from .apexlang_ast import parse_apexlang_ast, tokenize_apexlang
+from .apexlang_ast import (
+    ApexLangAst,
+    ApexLangDeclaration,
+    ApexLangProperty,
+    ApexLangToken,
+    SourceSpan,
+    parse_apexlang_ast,
+    parse_apexlang_properties,
+    tokenize_apexlang,
+)
 from .normalized_ir import (
     adapt_apex_export,
     adapt_apexlang_directory,
@@ -15,7 +24,13 @@ __all__ = [
     "extract_export",
     "extract_apexlang",
     "parse_apexlang_text",
+    "ApexLangAst",
+    "ApexLangDeclaration",
+    "ApexLangProperty",
+    "ApexLangToken",
+    "SourceSpan",
     "parse_apexlang_ast",
+    "parse_apexlang_properties",
     "tokenize_apexlang",
     "adapt_apex_export",
     "adapt_apexlang_directory",
