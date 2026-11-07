@@ -249,3 +249,15 @@ Use relational columns for frequently queried identifiers/statuses and JSONB for
 ## 14. Implementation sequence
 
 See [Normalized IR v1 Development Backlog](../development/normalized-ir-v1-backlog.md). Implement the schema and contract tests first, then identity/provenance, adapters, resolver, and diagnostics. Keep each work package independently reviewable.
+
+
+## 15. Conservative expression classification
+
+The initial expression classifier is shared by the APEXLang and Oracle APEX SQL Export adapters so both formats emit the same IR property contract.
+
+- Preserve the exact extracted source in `rawExpression`; classification never rewrites or evaluates it.
+- Set `valueType` to `SQL_EXPRESSION`, `PL_SQL_EXPRESSION`, or `JAVASCRIPT_EXPRESSION` only for recognized leading syntax patterns.
+- Record `expressionLanguage`, `classificationConfidence`, and a versioned `classificationRule` on expression properties.
+- Recognize a small set of high-signal HTML, CSS, and APEX substitution forms as language metadata while retaining `valueType: UNKNOWN`, because the current IR value-type enum has no dedicated values for those languages.
+- Leave ambiguous expressions as `UNKNOWN` with `classificationConfidence: NONE`. Property names, surrounding object types, and substring matches are not sufficient evidence.
+- This is lexical classification, not a parser, validator, execution engine, or semantic equivalence proof. Extend the rule set only with positive and negative regression fixtures from representative source versions.
