@@ -206,6 +206,100 @@ This report does not certify runtime equivalence.
     return files
 
 
+
+def _extend_files(files: dict[str, str], doc: dict[str, Any]) -> None:
+    """Add fail-closed security scaffolds, explicit process stubs, and typed placeholder DTOs."""
+    objects = doc.get("objects", [])
+    auth_service = """import { Injectable, ServiceUnavailableException } from '@nestjs/common';
+@Injectable()
+export class AuthService {
+  login(): never {
+    throw new ServiceUnavailableException('Configure an identity provider before enabling authentication.');
+  }
+}
+"""
+    auth_guard = """import { CanActivate, ExecutionContext, Injectable, ServiceUnavailableException } from '@nestjs/common';
+@Injectable()
+export class AuthorizationReviewGuard implements CanActivate {
+  canActivate(_context: ExecutionContext): never {
+    throw new ServiceUnavailableException('Authorization is not migrated; access remains fail-closed.');
+  }
+}
+"""
+    files["apps/api/src/auth/auth.service.ts"] = auth_service
+    files["apps/api/src/auth/authorization-review.guard.ts"] = auth_guard
+    imports = ["import { AuthService } from './auth/auth.service';"]
+    providers = ["AuthService"]
+    for obj in sorted((o for o in objects if o.get("type") == "PROCESS"),
+                      key=lambda o: str(o.get("id", ""))):
+        identity = str(obj.get("id", "process"))
+        suffix = hashlib.sha256(identity.encode()).hexdigest()[:8]
+        class_name = "".join(p.title() for p in re.findall(r"[A-Za-z0-9]+", str(obj.get("name") or "GeneratedProcess"))) + suffix
+        file_name = _slug(str(obj.get("name") or ""), "process") + "-" + suffix
+        imports.append(f"import {{ {class_name} }} from './processes/{file_name}.service';")
+        providers.append(class_name)
+        files[f"apps/api/src/processes/{file_name}.service.ts"] = (
+            "import { Injectable, NotImplementedException } from '@nestjs/common';\n"
+            "@Injectable()\n"
+            f"export class {class_name} {{\n"
+            "  execute(): never {\n"
+            f"    throw new NotImplementedException('Source process {identity} needs manual business-logic conversion.');\n"
+            "  }\n}\n"
+        )
+    files["apps/api/src/app.module.ts"] = (
+        "import { Module } from '@nestjs/common';\n"
+        "import { HealthController } from './health.controller';\n"
+        + "\n".join(imports) + "\n"
+        + "@Module({ controllers: [HealthController], providers: [" + ", ".join(providers) + "] })\n"
+        + "export class AppModule {}\n"
+    )
+    files["apps/api/test/generated-scaffold.test.js"] = (
+        "const test = require('node:test');\n"
+        "const assert = require('node:assert/strict');\n"
+        "const fs = require('node:fs');\n"
+        "const path = require('node:path');\n"
+        "test('API scaffold includes health and fail-closed security files', () => {\n"
+        "  for (const file of ['src/health.controller.ts','src/auth/auth.service.ts',"
+        "'src/auth/authorization-review.guard.ts','src/app.module.ts']) "
+        "assert.ok(fs.existsSync(path.join(__dirname, '..', file)), file);\n"
+        "});\n"
+    )
+    files["apps/web/test/generated-routes.test.js"] = (
+        "const test = require('node:test');\n"
+        "const assert = require('node:assert/strict');\n"
+        "const fs = require('node:fs');\n"
+        "const path = require('node:path');\n"
+        "test('generated root route exists', () => {\n"
+        "  assert.ok(fs.existsSync(path.join(__dirname, '../app/page.tsx')));\n"
+        "});\n"
+    )
+    for page in (o for o in objects if o.get("type") == "PAGE"):
+        items = sorted((o for o in objects if o.get("type") == "ITEM"
+                        and o.get("parentId") == page.get("id")),
+                       key=lambda o: str(o.get("id", "")))
+        if not items:
+            continue
+        route = _route(page)
+        fields = []
+        controls = []
+        for item in items:
+            label = html.escape(str(item.get("name") or item.get("id")), quote=True)
+            field = _slug(str(item.get("name") or ""), "field").replace("-", "_")
+            field_id = _slug(str(item.get("id") or field), "field")
+            fields.append(f"  readonly {field}?: unknown;")
+            controls.append(f'<div><label htmlFor="{field_id}">{label}</label> <input id="{field_id}" name="{field}" disabled aria-label="{label}" /></div>')
+        dto_id = hashlib.sha256(str(page.get("id")).encode()).hexdigest()[:8].upper()
+        dto_name = "Page" + dto_id + "GeneratedDto"
+        files[f"apps/api/src/dto/{route}.dto.ts"] = (
+            "/** Unknown field types are intentional until database/domain metadata is reviewed. */\n"
+            f"export class {dto_name} {{\n" + "\n".join(fields) + "\n}\n"
+        )
+        route_file = f"apps/web/app/pages/{route}/page.tsx"
+        if route_file in files:
+            markup = "\n    <form aria-label='Migrated item inventory'>\n      " + "\n      ".join(controls) + "\n    </form>\n"
+            files[route_file] = files[route_file].replace("</main>", markup + "  </main>")
+
+
 def generate_project(document: dict[str, Any], output_dir: str | Path,
                      *, overwrite: bool = False) -> dict[str, Any]:
     errors = validate_ir_document(document)
@@ -217,6 +311,7 @@ def generate_project(document: dict[str, Any], output_dir: str | Path,
     graph = analyze_dependency_graph(document)
     sem = analyze_semantics(document, graph)
     files = _files(document, sem, graph)
+    _extend_files(files, document)
     manifest = {"manifestVersion": "1.0.0", "generatorVersion": GENERATOR_VERSION,
         "applicationId": document["application"]["id"], "fileCount": len(files) + 1,
         "files": {p: "sha256:" + hashlib.sha256(c.encode()).hexdigest()

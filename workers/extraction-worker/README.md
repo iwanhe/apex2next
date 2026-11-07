@@ -236,3 +236,8 @@ The generator validates IR, re-runs WP5 dependency analysis and WP6 semantic ana
 The current implementation intentionally does not generate business tables from UI metadata, execute or translate arbitrary SQL/PL/SQL/JavaScript, reproduce APEX session/security semantics, or claim functional parity. SQL/PLSQL and unsupported/plugin/security behavior remain review items. Schema conversion, data transfer, business service generation, and authentication implementation require their own validated source contracts and work packages.
 
 Generated project checks: pnpm install, pnpm build, pnpm test, and pnpm typecheck. The generated project is a structural starting point, not a production cutover artifact.
+
+
+### WP7 follow-on scaffolding
+
+The generator also emits disabled placeholder controls for page items whose parent page is explicit in IR, page-item DTO classes with unknown field types, per-process NestJS service stubs that throw NotImplementedException, and authentication/authorization scaffolding that fails closed with ServiceUnavailableException. These are explicit review placeholders, not migrated business behavior. No process endpoint is exposed and no login provider is configured.

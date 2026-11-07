@@ -18,6 +18,8 @@ def _ir():
              "source": {"file": "pages/p10.apx", "line": 4}},
             {"id": "plugin:1", "type": "PLUGIN", "sourceType": "plugin", "name": "Chart plugin",
              "properties": {}, "source": {"file": "pages/p10.apx", "line": 8}},
+            {"id": "item:10", "type": "ITEM", "sourceType": "page_item", "name": "Order Number",
+             "parentId": "page:10", "properties": {}, "source": {"file": "pages/p10.apx", "line": 3}},
         ],
         "relationships": [], "references": [], "dependencies": [], "diagnostics": [],
         "metadata": {"sourceHash": "sha256:demo", "adapterVersion": "0.1.0"},
@@ -30,7 +32,8 @@ def test_generator_emits_workspace_and_review_artifacts(tmp_path):
     route = "orders-review-" + hashlib.sha256(b"page:10").hexdigest()[:8]
     expected = ["apps/web/app/page.tsx", "apps/web/app/layout.tsx",
         f"apps/web/app/pages/{route}/page.tsx", "apps/api/src/main.ts",
-        "apps/api/src/health.controller.ts", "db/migrations/0001_baseline.sql",
+        "apps/api/src/health.controller.ts", "apps/api/src/auth/auth.service.ts",
+        "apps/api/src/auth/authorization-review.guard.ts", "db/migrations/0001_baseline.sql",
         "migration-report/source-ir.json", "migration-report/semantic-analysis.json",
         "migration-report/manual-review.md", "generation-manifest.json"]
     for relative in expected:
@@ -42,6 +45,10 @@ def test_generator_emits_workspace_and_review_artifacts(tmp_path):
     page = (root / f"apps/web/app/pages/{route}/page.tsx").read_text()
     assert "Orders / Review" in page
     assert "BEGIN NULL; END;" not in page
+    assert "disabled" in page
+    assert any((root / "apps/api/src/dto").glob("*.dto.ts"))
+    assert any((root / "apps/api/src/processes").glob("*.service.ts"))
+    assert (root / "apps/api/test/generated-scaffold.test.js").is_file()
 
 
 def test_generation_is_deterministic(tmp_path):

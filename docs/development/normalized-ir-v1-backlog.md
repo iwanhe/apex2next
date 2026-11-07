@@ -258,7 +258,10 @@ The milestone establishes a normalized structural model and deterministic refere
 - [x] Add deterministic Python generator API and CLI.
 - [x] Validate Normalized IR before writing target files.
 - [x] Generate Next.js App Router shell and stable routes for extracted PAGE objects.
-- [x] Generate NestJS API scaffold with health endpoint.
+- [x] Generate NestJS API scaffold with health endpoint and per-process fail-closed service stubs.
+- [x] Generate page-item DTO placeholders without guessing field types.
+- [x] Generate authentication/authorization scaffolding that fails closed until provider and policy configuration is reviewed.
+- [x] Generate basic target-side scaffold contract tests.
 - [x] Generate PostgreSQL baseline schema and migration ledger without guessing business tables.
 - [x] Include source IR, WP5 graph, WP6 semantic plan, summary, and manual-review diagnostics.
 - [x] Preserve manual/unsupported classifications; never execute source expressions.
