@@ -8,7 +8,7 @@ import hashlib
 import json
 import re
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from .apex_export import extract_export
 from .apexlang import extract_apexlang
@@ -183,7 +183,6 @@ def adapt_apexlang_directory(source_dir: str | Path) -> dict[str, Any]:
     diagnostics: list[dict[str, Any]] = []
     stack: list[tuple[int, str]] = []
     occurrence: dict[tuple[str, str, str], int] = {}
-    object_by_line: dict[tuple[str, int], str] = {}
 
     for declaration in declarations:
         file_name = declaration.get("file", "")
@@ -223,9 +222,10 @@ def adapt_apexlang_directory(source_dir: str | Path) -> dict[str, Any]:
                 "Object has no source-native identifier; fallback identity uses its source locator.",
                 locator=locator, object_id=object_id,
             ))
+        effective_parent_id = None if object_type == "APPLICATION" else parent_id
         obj = {
             "id": object_id, "type": object_type, "sourceType": source_type,
-            "name": name, "parentId": parent_id, "properties": properties,
+            "name": name, "parentId": effective_parent_id, "properties": properties,
             "source": locator, "fingerprint": object_fingerprint(
                 object_type, source_type, name, properties
             ),
@@ -233,8 +233,7 @@ def adapt_apexlang_directory(source_dir: str | Path) -> dict[str, Any]:
             "extensions": extensions,
         }
         objects.append(obj)
-        object_by_line[(file_name, line)] = object_id
-        if parent_id:
+        if effective_parent_id:
             relationships.append({
                 "id": "rel:" + sha256_text(f"{parent_id}|{object_id}|CONTAINS")[:24],
                 "sourceObjectId": parent_id, "targetObjectId": object_id,
@@ -282,7 +281,6 @@ def adapt_apex_export(source_text: str, source_name: str = "<memory>") -> dict[s
     calls = parsed.get("calls", [])
     flow_call = next((c for c in calls if c.get("object_type") == "APPLICATION"), None)
     flow_args = (flow_call or {}).get("arguments", {})
-    flow_raw = (flow_call or {}).get("raw_arguments", {})
     app_native_id = flow_args.get("p_id") or source_name
     app_id = stable_identity("APEX_SQL_EXPORT", "APPLICATION", app_native_id)
     app_name = flow_args.get("p_name")
