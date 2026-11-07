@@ -11,7 +11,7 @@ WP8 is phased and remains in progress. See the phase plan in ../migration/wp8-fu
 | WP8.5 | PL/SQL conversion workbench and rule registry | Implemented offline baseline; CI-verified |
 | WP8.6 | Runtime repositories, services, APIs, and PostgreSQL integration | Implemented generated runtime baseline; CI-verified |
 | WP8.7 | APEX-to-target functional parity test harness | Implemented offline baseline; CI-verified |
-| WP8.8 | Security mapping, rehearsal, rollback, and cutover readiness | Planned |
+| WP8.8 | Security mapping, rehearsal, rollback, and cutover readiness | Implemented offline baseline; CI pending |
 
 ## WP8.5 checklist
 
@@ -60,3 +60,18 @@ WP8 is phased and remains in progress. See the phase plan in ../migration/wp8-fu
 - [ ] Playwright execution against representative sanitized APEX and target pilot.
 - [ ] Business-approved critical journeys, role matrix, API contracts, and data canonicalization.
 - [ ] Evidence retention, redaction, and business-owner sign-off.
+
+
+## WP8.8 checklist
+
+- [x] Versioned cutover-readiness manifest and deterministic offline assessment report.
+- [x] Identity/role mapping with reviewed target permission non-expansion check.
+- [x] MFA, service identity, secrets, TLS, audit, least privilege, and access-test controls.
+- [x] Restore, rehearsal, reconciliation, parity, rollback, monitoring, change-window, and runbook controls.
+- [x] Four mandatory owner approvals and explicit RTO/RPO evidence.
+- [x] Fail-closed status semantics and synthetic positive/negative tests.
+- [x] Security mapping, rehearsal, rollback, and cutover runbook documented.
+- [ ] Validate mapping against real approved source/target identity inventories.
+- [ ] Execute representative restore, migration rehearsal, parity, and rollback in isolated pilot.
+- [ ] Obtain formal security, business, application, and operations sign-off.
+- [ ] Production change authority and actual cutover remain outside this offline tool.

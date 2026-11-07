@@ -1,0 +1,46 @@
+{
+  "manifestVersion": "apex2next.cutover-readiness-input.v1",
+  "project": {
+    "id": "synthetic-orders-pilot",
+    "sourceSnapshot": "fixture:oracle-scn-123",
+    "targetRelease": "fixture:next-release-42"
+  },
+  "controls": {
+    "identityMappings": [
+      {
+        "sourceRole": "ORDER_CLERK",
+        "targetRole": "orders.clerk",
+        "sourcePermissions": ["orders:read", "orders:create"],
+        "targetPermissions": ["orders:read", "orders:create"],
+        "reviewed": true,
+        "evidenceRef": "fixture:security/role-map#1"
+      }
+    ],
+    "privilegedMfa": {"value": true, "evidenceRef": "fixture:security/mfa"},
+    "serviceIdentities": {"value": true, "evidenceRef": "fixture:security/service-identities"},
+    "secretsExternalized": {"value": true, "evidenceRef": "fixture:security/secrets"},
+    "transportEncryption": {"value": true, "evidenceRef": "fixture:security/tls"},
+    "auditLogging": {"value": true, "evidenceRef": "fixture:security/audit"},
+    "leastPrivilege": {"value": true, "evidenceRef": "fixture:security/grants"},
+    "accessTests": {"value": true, "evidenceRef": "fixture:security/access-tests"},
+    "backupRestoreVerified": {"value": true, "evidenceRef": "fixture:ops/restore-test"},
+    "rehearsalCompleted": {"value": true, "evidenceRef": "fixture:ops/rehearsal"},
+    "dataReconciliation": {"value": "PASS", "evidenceRef": "fixture:data/reconciliation.json"},
+    "functionalParity": {"value": "PASS", "evidenceRef": "fixture:parity/report.json"},
+    "rollbackTested": {"value": true, "evidenceRef": "fixture:ops/rollback-test"},
+    "monitoringReady": {"value": true, "evidenceRef": "fixture:ops/monitoring"},
+    "changeWindowApproved": {"value": true, "evidenceRef": "fixture:ops/change-window"},
+    "runbookApproved": {"value": true, "evidenceRef": "fixture:ops/runbook"}
+  },
+  "rollback": {
+    "rtoMinutes": 60,
+    "rpoMinutes": 15,
+    "evidenceRef": "fixture:ops/rollback-objectives"
+  },
+  "approvals": [
+    {"role": "BUSINESS_OWNER", "approved": true, "evidenceRef": "fixture:approval/business"},
+    {"role": "APPLICATION_OWNER", "approved": true, "evidenceRef": "fixture:approval/application"},
+    {"role": "SECURITY_OWNER", "approved": true, "evidenceRef": "fixture:approval/security"},
+    {"role": "OPERATIONS_OWNER", "approved": true, "evidenceRef": "fixture:approval/operations"}
+  ]
+}

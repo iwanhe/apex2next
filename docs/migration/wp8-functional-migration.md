@@ -15,7 +15,7 @@
 | WP8.5 | PL/SQL conversion workbench | Versioned rule registry, lexical analysis, source diagnostics, unchanged candidate source | golden fixtures; no false AUTO classification | Implemented offline baseline; CI-verified |
 | WP8.6 | Runtime integration | PostgreSQL pool, generic repository, transaction helper, NestJS database/health services, API readiness, migration runner | disposable PostgreSQL integration tests, idempotent migrations, build/test/typecheck | Implemented generated runtime baseline; CI-verified |
 | WP8.7 | APEX functional parity | Paired evidence model, deterministic comparator, Playwright capture contract | synthetic comparator tests; real source/target journeys pending | Implemented offline baseline; CI-verified |
-| WP8.8 | Security and cutover | Identity/policy mapping, rehearsal, rollback, cutover checklist | security review, rehearsal evidence, sign-off | Planned |
+| WP8.8 | Security and cutover | Evidence assessor, role mapping guardrails, rehearsal/rollback/cutover runbook | synthetic assessor tests; real security/rehearsal/sign-off pending | Implemented offline baseline; CI pending |
 
 ## WP8.5 — PL/SQL conversion workbench baseline
 
@@ -54,3 +54,10 @@ No application-specific business table, entity, repository, process endpoint, or
 The offline parity engine consumes paired source/target observations and produces a deterministic report. It supports FUNCTIONAL, API, DATA, WORKFLOW, SECURITY, and UI checks with EXACT, NUMERIC_TOLERANCE, and UNORDERED_SET comparators. Missing evidence is NOT_VERIFIED; any mismatch is FAIL; only complete supplied evidence with all checks passing produces PASS. The CLI uses distinct exit codes for PASS, FAIL, invalid input, and NOT_VERIFIED.
 
 Playwright is specified as the source/target capture adapter, not falsely reported as already running. Execution is gated on a sanitized source APEX environment, a target pilot, an approved journey catalogue, equivalent test identities, and safe synthetic data. CI validates the deterministic comparator using synthetic evidence only (132 Python tests; all four CI jobs passed). It does not establish real application parity.
+
+
+## WP8.8 — Security and cutover readiness baseline
+
+The offline assessor validates a versioned manifest containing security controls, source-to-target role mappings, cutover evidence, rollback RTO/RPO, and four owner approvals. Target permissions must be a subset of the declared source permission set; any expansion fails closed. Missing evidence is NOT_VERIFIED and blocks READY. The assessor never connects to external systems or performs cutover/rollback.
+
+The operational runbook defines security mapping, isolated rehearsal, restore verification, data/functional gates, rollback boundaries (including post-cutover writes, routing, identity, integrations, queues, and split-brain prevention), and T-7/T-0/T+N checklists. Synthetic CI evidence proves only the assessor contract; real source/target inventories, restore/rehearsal results, and formal approvals are still required.
