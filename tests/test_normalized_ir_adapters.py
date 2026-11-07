@@ -559,3 +559,20 @@ def test_apexlang_ast_adapter_falls_back_when_property_parity_is_not_proven(tmp_
     assert len(parity) == 1
     assert parity[0]["details"]["astPropertyNames"] == ["homeUrl"]
     assert parity[0]["details"]["inventoryPropertyNames"] == ["navigation"]
+
+
+def test_apexlang_ast_integrated_ir_is_deterministic_for_fixed_source(tmp_path: Path) -> None:
+    source_dir = tmp_path / "deterministic-ast-ir"
+    source_dir.mkdir()
+    (source_dir / "application.apx").write_text(
+        "app DEMO (\\n    name: 'Deterministic'\\n)\\n", encoding="utf-8"
+    )
+    (source_dir / "page.apx").write_text(
+        "page 10 (\\n    values: [1, 2, 3]\\n)\\n", encoding="utf-8"
+    )
+
+    first = adapt_apexlang_directory(source_dir)
+    second = adapt_apexlang_directory(source_dir)
+
+    assert first == second
+    assert validate_ir_document(first) == []
