@@ -99,6 +99,46 @@ def _property(value: Any, raw: str | None = None, locator: dict[str, Any] | None
 
 
 
+def classify_expression(raw_expression: str) -> dict[str, str]:
+    """Classify only expressions with conservative, syntax-led evidence."""
+    import re
+
+    source = raw_expression.strip()
+    if not source:
+        return {"language": "UNKNOWN", "confidence": "NONE", "rule": "EXPR_NONE"}
+
+    rules = (
+        ("PL_SQL", r"^(?:DECLARE\\b[\\s\\S]*?\\bBEGIN\\b|BEGIN\\b[\\s\\S]*\\bEND\\s*;?$|CREATE\\s+(?:OR\\s+REPLACE\\s+)?(?:EDITIONABLE\\s+)?(?:PROCEDURE|FUNCTION|PACKAGE(?:\\s+BODY)?|TRIGGER)\\b)", "EXPR_PLSQL_BLOCK_V1"),
+        ("SQL", r"^(?:SELECT\\b|WITH\\b[\\s\\S]*?\\bSELECT\\b|INSERT\\s+INTO\\b|UPDATE\\s+[A-Za-z0-9_$#.]+\\s+SET\\b|DELETE\\s+FROM\\b|MERGE\\s+INTO\\b)", "EXPR_SQL_STATEMENT_V1"),
+        ("JAVASCRIPT", r"^(?:(?:async\\s+)?function\\b|(?:const|let|var)\\s+[A-Za-z_$][\\w$]*\\s*=|(?:\\([^)]*\\)|[A-Za-z_$][\\w$]*)\\s*=>)", "EXPR_JAVASCRIPT_DECLARATION_V1"),
+        ("APEX", r"^&&?[A-Za-z][A-Za-z0-9_$#]*\\.$", "EXPR_APEX_SUBSTITUTION_V1"),
+        ("HTML", r"^<[A-Za-z][A-Za-z0-9-]*(?:\\s[^<>]*)?>", "EXPR_HTML_ELEMENT_V1"),
+        ("CSS", r"^(?:@media\\b|@supports\\b|@font-face\\b|:root\\s*\\{)", "EXPR_CSS_AT_RULE_V1"),
+    )
+    for language, pattern, rule in rules:
+        if re.search(pattern, source, flags=re.IGNORECASE):
+            return {"language": language, "confidence": "HIGH", "rule": rule}
+    return {"language": "UNKNOWN", "confidence": "NONE", "rule": "EXPR_UNCLASSIFIED_V1"}
+
+
+def _expression_property(raw_expression: str, locator: dict[str, Any] | None = None) -> dict[str, Any]:
+    classification = classify_expression(raw_expression)
+    value_type = classification["language"]
+    if value_type not in {"SQL", "PL_SQL", "JAVASCRIPT"}:
+        value_type = "UNKNOWN"
+    result: dict[str, Any] = {
+        "valueType": value_type if value_type != "UNKNOWN" else "UNKNOWN",
+        "rawExpression": raw_expression,
+        "preserved": True,
+        "expressionLanguage": classification["language"],
+        "classificationConfidence": classification["confidence"],
+        "classificationRule": classification["rule"],
+    }
+    if locator is not None:
+        result["sourceLocator"] = locator
+    return result
+
+
 def _apexlang_property_record(
     record: dict[str, Any], file_name: str, artifact_hash: str | None
 ) -> dict[str, Any]:
@@ -126,9 +166,8 @@ def _apexlang_property_record(
     elif "value" in record:
         result["value"] = record["value"]
     else:
-        result["rawExpression"] = record.get(
-            "raw_expression", record.get("raw", "")
-        )
+        raw_expression = record.get("raw_expression", record.get("raw", ""))
+        result.update(_expression_property(raw_expression, locator))
     return result
 
 def _diagnostic(code: str, severity: str, category: str, message: str,
@@ -378,9 +417,9 @@ def adapt_apex_export(source_text: str, source_name: str = "<memory>") -> dict[s
         for key, value in sorted(args.items()):
             raw = raw_args.get(key)
             if isinstance(value, dict) and "expression" in value:
-                prop = {"valueType": "UNKNOWN", "rawExpression": value["expression"], "preserved": True}
+                prop = _expression_property(str(value["expression"]), locator)
             else:
-                prop = _property(value, raw)
+                prop = _property(value, raw, locator)
             properties[key] = prop
         obj = {
             "id": object_id, "type": canonical_type, "sourceType": call.get("routine", "unknown"),
