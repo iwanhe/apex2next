@@ -216,3 +216,20 @@ def test_apexlang_containment_stack_resets_between_source_files(tmp_path: Path) 
     second_page = next(obj for obj in document["objects"] if obj["type"] == "PAGE" and obj["name"] == "11")
 
     assert second_page["parentId"] == app_id
+
+
+
+def test_reference_resolver_reports_canonical_identity_collisions(tmp_path: Path) -> None:
+    source_dir = tmp_path / "collision-apexlang"
+    source_dir.mkdir()
+    (source_dir / "application.apx").write_text(
+        "app DEMO (\\n)\\nauthorization requester (\\n)\\n"
+        "authorization requester (\\n)\\npage 10 (\\n security { scheme: @requester }\\n)\\n",
+        encoding="utf-8",
+    )
+
+    resolved = resolve_references(adapt_apexlang_directory(source_dir))
+
+    assert any(item["code"] == "IR004" for item in resolved["diagnostics"])
+    assert resolved["references"][0]["resolutionStatus"] == "AMBIGUOUS"
+    assert validate_ir_document(resolved) == []
