@@ -123,11 +123,11 @@ Properties are represented as named records with:
 
 Supported value types: STRING, NUMBER, BOOLEAN, NULL, ARRAY, OBJECT, SQL_EXPRESSION, PL_SQL_EXPRESSION, JAVASCRIPT_EXPRESSION, UNKNOWN.
 
-A parser may decode only unambiguous scalar literals. The initial APEXLang adapter decodes single- and double-quoted strings, booleans, null, integers, and decimal/scientific numeric literals. Each extracted direct property includes its own source locator (file, line, column, and artifact hash).
+A parser may decode only unambiguous scalar literals. The initial APEXLang adapter decodes single- and double-quoted strings, booleans, null, integers, and decimal/scientific numeric literals. Each extracted property includes its own source locator (file, start line/column, end line/column, and artifact hash). Multiline values are retained as one raw expression until the next sibling property or enclosing block/declaration boundary; continuation lines are not independently interpreted as properties. Property recognition requires an explicit colon or a brace-delimited object opener, preventing nested component declarations from being misclassified as properties.
 
 Brace-delimited nested property blocks are represented recursively as `OBJECT` properties whose `value` is a map of child property records. Each child retains its own type and source locator. For example, `navigation { homeUrl: { page: 10 } }` becomes `navigation.value.homeUrl.value.page`, with `OBJECT` at each block level and `NUMBER` at the leaf.
 
-All other values are retained as `UNKNOWN` with their exact `rawExpression`; no SQL, PL/SQL, JavaScript, or APEXLang expression is evaluated. Nested blocks are no longer flattened or discarded. The complete raw declaration body remains in object extensions as the lossless fallback. The initial block parser supports multiline brace-delimited blocks; inline/mixed block syntax and multiline expression parsing remain outside this pass.
+All other values are retained as `UNKNOWN` with their exact `rawExpression`; no SQL, PL/SQL, JavaScript, or APEXLang expression is evaluated. Nested blocks are no longer flattened or discarded. The complete raw declaration body remains in object extensions as the lossless fallback. The initial block parser supports multiline brace-delimited blocks and multiline raw expressions with start/end source spans. It uses a conservative line-boundary heuristic rather than a complete APEXLang expression grammar; inline/mixed block syntax, arrays, and complex expressions whose continuation resembles a sibling property remain outside this pass.
 
 ## 7. Provenance
 
