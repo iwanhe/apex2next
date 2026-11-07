@@ -12,6 +12,7 @@ from .apexlang_ast import (
     parse_apexlang_properties,
     tokenize_apexlang,
 )
+from .dependency_graph import analyze_dependency_graph
 from .normalized_ir import (
     adapt_apex_export,
     adapt_apexlang_directory,
@@ -37,4 +38,5 @@ __all__ = [
     "object_fingerprint",
     "stable_identity",
     "resolve_references",
+    "analyze_dependency_graph",
 ]
