@@ -158,7 +158,7 @@ The AST declaration model now exposes a `properties` collection of typed `ApexLa
 
 Public API: `parse_apexlang_ast`, `parse_apexlang_properties`, and the `ApexLangProperty` / `SourceSpan` models.
 
-Current boundaries: supported inline and nested object/array values are parsed recursively, but this is not a complete APEXLang expression grammar. Error recovery is conservative and diagnostic-driven; parser limits are enforced, while fuzz/property-based testing, representative real-source corpus validation, and adapter parity remain outstanding.
+Current boundaries: supported inline and nested object/array values are parsed recursively, but this is not a complete APEXLang expression grammar. Error recovery is conservative and diagnostic-driven; parser limits are enforced, while a sanitized representative real-source corpus and AST-to-IR semantic parity remain outstanding. Seeded generated-value tests and declaration-inventory parity against committed synthetic fixtures are included.
 
 
 ### Parser hardening (WP3 initial completion)
