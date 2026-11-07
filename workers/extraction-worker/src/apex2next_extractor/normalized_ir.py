@@ -478,17 +478,14 @@ def adapt_apexlang_directory(source_dir: str | Path) -> dict[str, Any]:
                 duplicate_records = [
                     {
                         "name": prop.name,
-                        "occurrence": occurrence_index,
+                        "occurrence": 1 + sum(
+                            1 for prior in ast_node.properties[:index]
+                            if prior.name == prop.name
+                        ),
                         "property": _ast_property_to_ir(prop, file_name, artifact_hash),
                     }
-                    for prop in ast_node.properties
+                    for index, prop in enumerate(ast_node.properties)
                     if prop.name in duplicate_names
-                    for occurrence_index in [
-                        1 + sum(
-                            1 for prior in ast_node.properties[:ast_node.properties.index(prop)]
-                            if prior.name == prop.name
-                        )
-                    ]
                 ]
                 extensions["duplicateProperties"] = duplicate_records
                 diagnostics.append(_diagnostic(
