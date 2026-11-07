@@ -294,6 +294,11 @@ def _parse_table_body(body: str, table_name: str) -> tuple[list[dict[str, Any]],
                 column["default"] = "NULL"
             elif re.fullmatch(r"(?:SYSTIMESTAMP|CURRENT_TIMESTAMP)", default, re.I):
                 column["default"] = "CURRENT_TIMESTAMP"
+            elif re.fullmatch(r"SYSDATE", default, re.I):
+                column["default"] = "LOCALTIMESTAMP(0)"
+                diagnostics.append(_diag("ORAMAP012", "WARNING",
+                    "SYSDATE mapped to LOCALTIMESTAMP(0); validate server/session timezone semantics.",
+                    object_name=table_name))
             else:
                 diagnostics.append(_diag("ORAMAP007", "WARNING",
                     f"Default expression for {column['name']} requires manual conversion.",

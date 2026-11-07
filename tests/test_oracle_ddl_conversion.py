@@ -21,12 +21,13 @@ def test_converts_supported_columns_and_constraints():
     '''
     result = convert_oracle_ddl(source)
     assert result["summary"] == {
-        "sourceTables": 2, "convertedTables": 2, "blockedTables": 0, "diagnostics": 0
+        "sourceTables": 2, "convertedTables": 2, "blockedTables": 0, "diagnostics": 1
     }
     sql = result["sql"]
     assert '"DEPARTMENT_ID" INTEGER NOT NULL' in sql
     assert '"NAME" VARCHAR(80)' in sql
-    assert '"CREATED_AT" TIMESTAMP(0) WITHOUT TIME ZONE' in sql
+    assert '"CREATED_AT" TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT LOCALTIMESTAMP(0)' in sql
+    assert any(d["code"] == "ORAMAP012" for d in result["diagnostics"])
     assert '"SALARY" NUMERIC(12,2)' in sql
     assert 'REFERENCES "app"."DEPARTMENTS" ("DEPARTMENT_ID") ON DELETE CASCADE' in sql
 
