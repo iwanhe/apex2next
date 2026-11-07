@@ -178,9 +178,7 @@ def _property_records(
             stack.append(({}, record, name, line_number, raw_parts))
             continue
 
-        # Ignore a standalone closing-brace line after it has closed its parent.
-        if not masked_value.strip():
-            continue
+        # The masked value is intentionally blank for quoted literals; decode from raw source.
         value_type, value, raw_expression = _decode_property_literal(raw_value)
         record = {
             "name": name,
