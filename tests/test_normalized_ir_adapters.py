@@ -168,6 +168,7 @@ def test_reference_resolver_resolves_one_exact_in_scope_candidate(tmp_path: Path
     assert len(resolved["dependencies"]) == 1
     assert resolved["dependencies"][0]["origin"] == "EXPLICIT"
     assert resolved["metadata"]["resolverVersion"] == "0.1.0"
+    assert validate_ir_document(resolved) == []
 
 
 def test_reference_resolver_reports_dangling_candidate() -> None:
@@ -177,6 +178,7 @@ def test_reference_resolver_reports_dangling_candidate() -> None:
     assert resolved["references"][0]["resolutionStatus"] == "DANGLING"
     assert any(item["code"] == "REF001" for item in resolved["diagnostics"])
     assert resolved["dependencies"] == []
+    assert validate_ir_document(resolved) == []
 
 
 def test_reference_resolver_reports_ambiguous_candidates(tmp_path: Path) -> None:
@@ -193,3 +195,4 @@ def test_reference_resolver_reports_ambiguous_candidates(tmp_path: Path) -> None
     assert resolved["references"][0]["resolutionStatus"] == "AMBIGUOUS"
     assert len(resolved["references"][0]["candidateObjectIds"]) == 2
     assert any(item["code"] == "REF002" for item in resolved["diagnostics"])
+    assert validate_ir_document(resolved) == []
