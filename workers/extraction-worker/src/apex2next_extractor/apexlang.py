@@ -137,7 +137,7 @@ def _property_records(
         if not stripped_masked:
             continue
 
-        close_count = stripped_masked.count("}")
+        close_count = 1 if re.fullmatch(r"}", stripped_masked) else 0
         for _ in range(close_count):
             if stack:
                 parent_map, record, key, block_start, raw_parts = stack.pop()
@@ -162,7 +162,7 @@ def _property_records(
         _, masked_value = masked_match.groups()
         prefix = raw_line[:match.start(1)]
         prop_line, prop_column = locator_for(prefix, line_number)
-        opens_block = "{" in masked_value
+        opens_block = masked_value.strip() == "{"
         if opens_block:
             record: dict[str, Any] = {
                 "name": name,
