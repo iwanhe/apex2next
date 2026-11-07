@@ -111,7 +111,7 @@ def _property_records(
 ) -> list[dict[str, Any]]:
     """Extract direct and nested brace-delimited properties without evaluating expressions."""
     masked = _mask_non_code(body)
-    roots: list[dict[str, Any]] = []
+    roots: dict[str, Any] = {}
     stack: list[tuple[dict[str, Any], dict[str, Any], str, int, list[str]]] = []
     line_start = 0
 
@@ -172,7 +172,7 @@ def _property_records(
                 "raw": raw_value.strip(),
                 "children": [],
             }
-            target = stack[-1][0] if stack else {}
+            target = stack[-1][0] if stack else roots
             target[name] = record
             raw_parts = [raw_line.strip()]
             stack.append(({}, record, name, line_number, raw_parts))
@@ -193,7 +193,7 @@ def _property_records(
             record["value"] = value
         if raw_expression is not None:
             record["raw_expression"] = raw_expression
-        target = stack[-1][0] if stack else {}
+        target = stack[-1][0] if stack else roots
         target[name] = record
 
         # Keep raw source lines for any enclosing object block.
@@ -202,11 +202,10 @@ def _property_records(
 
     def as_records(mapping: dict[str, Any]) -> list[dict[str, Any]]:
         result: list[dict[str, Any]] = []
-        for key, value in mapping.items():
+        for value in mapping.values():
             record = dict(value)
-            children = record.pop("_children", None)
             if record.get("value_type") == "OBJECT":
-                nested = record.pop("value", {})
+                nested = record.get("value", {})
                 record["children"] = as_records(nested)
                 record["value"] = {
                     child["name"]: _record_to_property(child)
@@ -214,9 +213,6 @@ def _property_records(
                 }
             result.append(record)
         return result
-
-    def _unused() -> None:
-        return None
 
     return as_records(roots)
 
