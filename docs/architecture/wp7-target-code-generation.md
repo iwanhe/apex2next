@@ -63,3 +63,16 @@ The Python suite verifies schema rejection, expected workspace files, route gene
 ## Current limits
 
 This WP7 baseline is not a full converter. It emits page-item DTO placeholders only; it does not yet emit validated business DTOs, repository methods, database entities, REST endpoints for APEX processes, a configured identity provider/login flow, migrated authorization policies, interactive grids/reports, dynamic action behavior, PL/SQL rewrites, data migration pipelines, or end-to-end parity tests. Those require additional semantic rules and source artifacts. A sanitized real APEX application plus database DDL/data dictionary is required before production qualification.
+
+
+## WP8.6 — PostgreSQL runtime integration extension
+
+The current generator version adds a reusable runtime baseline to generated NestJS workspaces:
+- pg connection pool and NestJS database module with required DATABASE_URL.
+- Liveness and database-readiness endpoints.
+- Generic parameterized PostgreSQL repository primitives with strict identifier and writable-column validation.
+- Explicit transaction boundary and graceful pool shutdown.
+- A target-owned SQL migration runner using advisory locking, a migration ledger, and per-file transactions.
+- Disposable PostgreSQL integration tests.
+
+This does not generate application-specific repositories or business services from UI metadata. Such generation is blocked until source database schema, domain types, constraints, and service semantics are reviewed. TLS, secrets, telemetry, load/performance qualification, and production operations remain outside this baseline.

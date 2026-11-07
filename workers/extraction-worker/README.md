@@ -241,3 +241,18 @@ Generated project checks: pnpm install, pnpm build, pnpm test, and pnpm typechec
 ### WP7 follow-on scaffolding
 
 The generator also emits disabled placeholder controls for page items whose parent page is explicit in IR, page-item DTO classes with unknown field types, per-process NestJS service stubs that throw NotImplementedException, and authentication/authorization scaffolding that fails closed with ServiceUnavailableException. These are explicit review placeholders, not migrated business behavior. No process endpoint is exposed and no login provider is configured.
+
+
+## 5. WP8.6 — Generated PostgreSQL runtime baseline
+
+The generator emits a reusable PostgreSQL runtime foundation, not application-specific business repositories:
+- pg Pool provider requiring DATABASE_URL, bounded by DB_POOL_MAX, with connection timeouts.
+- NestJS database module and graceful shutdown.
+- /health liveness and /health/ready database-readiness endpoints.
+- Parameterized generic repository primitives. SQL values are bind parameters; table and column identifiers must match a strict lowercase allowlist and configured writable-column list.
+- Explicit transaction helper with rollback on failure and guaranteed client release.
+- pnpm db:migrate applies only checked-in target-owned SQL migrations in deterministic order, using a PostgreSQL advisory lock and per-file transaction.
+
+Start local PostgreSQL with docker compose up -d postgres, then run pnpm db:migrate. Set DATABASE_URL before starting the API. The generated integration test verifies CRUD, bind-parameter handling, identifier/column rejection, and transaction rollback against a disposable PostgreSQL database.
+
+No business schema, entity, or service is guessed from page items. Application-specific runtime generation requires reviewed schema/domain metadata and approved service contracts. Production qualification still requires TLS/secrets management, pool sizing, observability, load testing, and representative application data.

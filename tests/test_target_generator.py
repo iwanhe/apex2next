@@ -85,3 +85,35 @@ def test_manifest_hashes_every_generated_file_except_itself(tmp_path):
     assert manifest["fileCount"] == len(manifest["files"]) + 1
     for relative, digest in manifest["files"].items():
         assert digest == "sha256:" + hashlib.sha256((root / relative).read_bytes()).hexdigest()
+
+
+def test_generator_emits_postgres_runtime_contract(tmp_path):
+    generate_project(_ir(), tmp_path / "generated")
+    root = tmp_path / "generated"
+    expected = [
+        "apps/api/src/database/postgres-database.ts",
+        "apps/api/src/database/postgres-repository.ts",
+        "apps/api/src/database/database.module.ts",
+        "apps/api/test/postgres.integration.test.js",
+        "scripts/migrate.mjs",
+    ]
+    for relative in expected:
+        assert (root / relative).is_file(), relative
+    database = (root / "apps/api/src/database/postgres-database.ts").read_text()
+    repository = (root / "apps/api/src/database/postgres-repository.ts").read_text()
+    assert "BEGIN" in database and "ROLLBACK" in database and "COMMIT" in database
+    assert "VALUES (" in repository and "$1" in repository
+    assert "Unknown or non-writable columns" in repository
+    package = json.loads((root / "apps/api/package.json").read_text())
+    assert "pg" in package["dependencies"]
+    assert "@types/pg" in package["devDependencies"]
+    assert "schema_migrations" in (root / "db/migrations/0001_baseline.sql").read_text()
+
+
+def test_generator_postgres_runtime_is_deterministic(tmp_path):
+    generate_project(_ir(), tmp_path / "first")
+    generate_project(_ir(), tmp_path / "second")
+    for path in sorted((tmp_path / "first").rglob("*")):
+        if path.is_file():
+            relative = path.relative_to(tmp_path / "first")
+            assert path.read_bytes() == (tmp_path / "second" / relative).read_bytes()

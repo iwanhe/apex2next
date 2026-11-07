@@ -32,3 +32,16 @@ WP8 is phased and remains in progress. See the phase plan in ../migration/wp8-fu
 - Reconciliation covers counts, keys, aggregates, chunk hashes, LOBs, and referential integrity.
 - Functional parity requires representative sanitized APEX exports and source-side behavior evidence.
 - WP8 is not complete until all eight work packages pass their acceptance gates.
+
+
+## WP8.6 checklist
+
+- [x] PostgreSQL Pool configuration with bounded pool size and connection timeouts.
+- [x] NestJS database module and graceful pool shutdown.
+- [x] Liveness and database-readiness endpoints.
+- [x] Parameterized repository primitives with strict table/column allowlists.
+- [x] Transaction helper with BEGIN/COMMIT/ROLLBACK and guaranteed client release.
+- [x] Target-owned SQL migration runner with advisory lock and per-file transaction.
+- [x] PostgreSQL integration test for CRUD, injection resistance, allowlist rejection, and rollback.
+- [ ] Sanitized application-specific repositories/services/DTOs after WP8.1 schema and domain review.
+- [ ] Production pool sizing, TLS, secrets management, observability, and load tests.
