@@ -106,6 +106,8 @@ def _apexlang_property_record(
         "file": file_name or None,
         "line": record.get("line"),
         "column": record.get("column"),
+        "endLine": record.get("end_line"),
+        "endColumn": record.get("end_column"),
         "artifactHash": "sha256:" + artifact_hash if artifact_hash else None,
     }
     value_type = record.get("value_type", "UNKNOWN")
