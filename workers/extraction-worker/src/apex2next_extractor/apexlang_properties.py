@@ -295,15 +295,12 @@ def parse_apexlang_properties(
             # A child declaration at the same indentation ends this declaration's
             # direct property region; do not absorb its properties into this value.
             for candidate_line in range(line_no + 1, len(lines)):
-                candidate = lines[candidate_line].rstrip("\\r\\n")
+                candidate = lines[candidate_line].rstrip()
                 if not candidate.strip():
                     continue
                 indent = len(candidate) - len(candidate.lstrip(" \\t"))
                 stripped = candidate.lstrip(" \\t")
-                if indent <= direct_indent and re.match(
-                    r"[A-Za-z_][A-Za-z0-9_.-]*(?:\\s+[A-Za-z_0-9.-]+)?\\s*\\(",
-                    stripped,
-                ):
+                if indent <= direct_indent and stripped.endswith("("):
                     value_end = offsets[candidate_line]
                     break
                 if indent < direct_indent and stripped.startswith(")"):
