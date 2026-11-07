@@ -154,8 +154,11 @@ def parse_apexlang_text(source: str, file_path: str = "") -> dict[str, Any]:
 
 
 def extract_apexlang(source_dir: str | Path) -> dict[str, Any]:
-    root = Path(source_dir)
-    files = sorted(path for path in root.rglob("*.apx") if path.is_file())
+    root = Path(source_dir).resolve()
+    files = sorted(
+        path for path in root.rglob("*.apx")
+        if path.is_file() and not path.is_symlink() and root in path.resolve().parents
+    )
     declarations, references, diagnostics, file_summaries = [], set(), [], []
     for path in files:
         relative = path.relative_to(root).as_posix()
@@ -166,7 +169,7 @@ def extract_apexlang(source_dir: str | Path) -> dict[str, Any]:
         file_summaries.append({"file":relative,"declaration_count":len(parsed["declarations"])})
     version_path = root / ".apex" / "apexlang.json"
     mmd_version = None
-    if version_path.exists():
+    if version_path.is_file() and not version_path.is_symlink() and root in version_path.resolve().parents:
         try:
             mmd_version = json.loads(version_path.read_text(encoding="utf-8")).get("mmdVersion")
         except (json.JSONDecodeError, OSError) as exc:
