@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from .apex_export import extract_export
-from .apexlang import extract_apexlang
+from .apexlang import _mask_non_code, extract_apexlang
 
 ADAPTER_VERSION = "0.1.0"
 IR_VERSION = "1.0.0"
@@ -241,7 +241,7 @@ def adapt_apexlang_directory(source_dir: str | Path) -> dict[str, Any]:
             })
         if object_type != "APPLICATION":
             stack.append((indent, object_id))
-        for reference_value in sorted(set(REFERENCE_RE.findall(raw_body or ""))):
+        for reference_value in sorted(set(REFERENCE_RE.findall(_mask_non_code(raw_body or "")))):
             reference_id = "ref:" + sha256_text(f"{object_id}|{reference_value}")[:24]
             references.append({
                 "id": reference_id, "sourceObjectId": object_id,
