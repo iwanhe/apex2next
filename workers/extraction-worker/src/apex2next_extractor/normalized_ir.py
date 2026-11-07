@@ -109,7 +109,7 @@ def classify_expression(raw_expression: str) -> dict[str, str]:
 
     # Oracle alternative-quoted literals are unwrapped for classification only.
     # The caller always retains the original rawExpression unchanged.
-    alternative_quote = re.fullmatch(r"(?is)q'(.)([\\s\\S]*)(.)'", source)
+    alternative_quote = re.fullmatch(r"(?is)q'(.)([\s\S]*)(.)'", source)
     if alternative_quote:
         opening, body, closing = alternative_quote.groups()
         expected_close = {"[": "]", "(": ")", "{": "}", "<": ">"}.get(opening, opening)
