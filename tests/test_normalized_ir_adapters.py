@@ -553,7 +553,8 @@ def test_apexlang_ast_adapter_falls_back_when_property_parity_is_not_proven(tmp_
 
     assert validate_ir_document(document) == []
     assert page["properties"]["navigation"]["valueType"] == "OBJECT"
-    assert page["properties"]["navigation"]["value"]["homeUrl"]["valueType"] == "OBJECT"
+    assert page["properties"]["navigation"]["value"]["homeUrl"]["valueType"] == "UNKNOWN"
+    assert "page: 10" in page["properties"]["navigation"]["value"]["homeUrl"]["rawExpression"]
     parity = [item for item in document["diagnostics"] if item["code"] == "IRAST001"]
     assert len(parity) == 1
     assert parity[0]["details"]["astPropertyNames"] == []
