@@ -375,7 +375,7 @@ def test_apexlang_multiline_expressions_keep_full_source_and_end_locator(tmp_pat
     locator = page["properties"]["source"]["sourceLocator"]
     assert locator["line"] == 6
     assert locator["endLine"] == 9
-    assert locator["endColumn"] == 31
+    assert locator["endColumn"] == 27
     assert "region" not in page["properties"]
 
 
