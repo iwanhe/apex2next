@@ -496,3 +496,61 @@ def test_expression_classification_metadata_is_explicit_for_non_executable_marku
         assert result["language"] == language
         assert result["confidence"] in {"HIGH", "NONE"}
         assert value_type == "UNKNOWN"
+
+
+def test_apexlang_ast_properties_integrate_recursive_arrays_and_source_spans(tmp_path: Path) -> None:
+    source_dir = tmp_path / "ast-ir-integration"
+    source_dir.mkdir()
+    (source_dir / "application.apx").write_text(
+        "app DEMO (\\n    name: 'AST Integration'\\n)\\n", encoding="utf-8"
+    )
+    (source_dir / "page.apx").write_text(
+        "page 10 (\\n"
+        "    items: ['A', { name: 'B', options: [1, 2] }, [true, false]]\\n"
+        "    source: SELECT order_id FROM orders\\n"
+        ")\\n",
+        encoding="utf-8",
+    )
+
+    document = adapt_apexlang_directory(source_dir)
+    page = next(obj for obj in document["objects"] if obj["type"] == "PAGE")
+    items = page["properties"]["items"]
+
+    assert validate_ir_document(document) == []
+    assert items["valueType"] == "ARRAY"
+    assert [item["valueType"] for item in items["value"]] == ["STRING", "OBJECT", "ARRAY"]
+    nested_object = items["value"][1]
+    assert nested_object["value"]["name"]["value"] == "B"
+    assert nested_object["value"]["options"]["valueType"] == "ARRAY"
+    assert [item["value"] for item in nested_object["value"]["options"]["value"]] == [1, 2]
+    assert items["sourceLocator"]["file"] == "page.apx"
+    assert items["sourceLocator"]["line"] == 2
+    assert items["sourceLocator"]["column"] == 5
+    assert page["properties"]["source"]["valueType"] == "SQL_EXPRESSION"
+    assert page["properties"]["source"]["rawExpression"] == "SELECT order_id FROM orders"
+    assert page["properties"]["source"]["sourceLocator"]["line"] == 3
+
+
+def test_apexlang_ast_adapter_falls_back_when_property_parity_is_not_proven(tmp_path: Path) -> None:
+    source_dir = tmp_path / "ast-parity-fallback"
+    source_dir.mkdir()
+    (source_dir / "application.apx").write_text("app DEMO (\\n)\\n", encoding="utf-8")
+    (source_dir / "page.apx").write_text(
+        "page 10 (\\n"
+        "    navigation {\\n"
+        "        homeUrl: { page: 10 }\\n"
+        "    }\\n"
+        ")\\n",
+        encoding="utf-8",
+    )
+
+    document = adapt_apexlang_directory(source_dir)
+    page = next(obj for obj in document["objects"] if obj["type"] == "PAGE")
+
+    assert validate_ir_document(document) == []
+    assert page["properties"]["navigation"]["valueType"] == "OBJECT"
+    assert page["properties"]["navigation"]["value"]["homeUrl"]["valueType"] == "OBJECT"
+    parity = [item for item in document["diagnostics"] if item["code"] == "IRAST001"]
+    assert len(parity) == 1
+    assert parity[0]["details"]["astPropertyNames"] == []
+    assert parity[0]["details"]["inventoryPropertyNames"] == ["navigation"]
