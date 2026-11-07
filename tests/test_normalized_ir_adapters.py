@@ -233,3 +233,48 @@ def test_reference_resolver_reports_canonical_identity_collisions(tmp_path: Path
     assert any(item["code"] == "IR004" for item in resolved["diagnostics"])
     assert resolved["references"][0]["resolutionStatus"] == "AMBIGUOUS"
     assert validate_ir_document(resolved) == []
+
+
+
+def test_apexlang_properties_are_typed_and_keep_property_level_provenance(tmp_path: Path) -> None:
+    source_dir = tmp_path / "typed-properties"
+    source_dir.mkdir()
+    (source_dir / "application.apx").write_text(
+        "app DEMO (\\n    name: 'Demo App'\\n)\\n",
+        encoding="utf-8",
+    )
+    (source_dir / "page.apx").write_text(
+        "page 10 (\\n"
+        "    title: 'Orders'\\n"
+        "    enabled: true\\n"
+        "    pageSize: 25\\n"
+        "    ratio: 1.25\\n"
+        "    emptyValue: null\\n"
+        "    source: select_orders(:P10_ID)\\n"
+        "    nested {\\n"
+        "        hidden: 'not-a-direct-property'\\n"
+        "    }\\n"
+        ")\\n",
+        encoding="utf-8",
+    )
+
+    document = adapt_apexlang_directory(source_dir)
+    page = next(obj for obj in document["objects"] if obj["type"] == "PAGE")
+
+    assert validate_ir_document(document) == []
+    assert page["properties"]["title"]["valueType"] == "STRING"
+    assert page["properties"]["title"]["value"] == "Orders"
+    assert page["properties"]["enabled"]["valueType"] == "BOOLEAN"
+    assert page["properties"]["enabled"]["value"] is True
+    assert page["properties"]["pageSize"]["valueType"] == "NUMBER"
+    assert page["properties"]["pageSize"]["value"] == 25
+    assert page["properties"]["ratio"]["valueType"] == "NUMBER"
+    assert page["properties"]["ratio"]["value"] == 1.25
+    assert page["properties"]["emptyValue"]["valueType"] == "NULL"
+    assert page["properties"]["emptyValue"]["value"] is None
+    assert page["properties"]["source"]["valueType"] == "UNKNOWN"
+    assert page["properties"]["source"]["rawExpression"] == "select_orders(:P10_ID)"
+    assert page["properties"]["source"]["sourceLocator"]["file"] == "page.apx"
+    assert page["properties"]["source"]["sourceLocator"]["line"] == 7
+    assert page["properties"]["source"]["sourceLocator"]["column"] == 5
+    assert "nested" not in page["properties"]
