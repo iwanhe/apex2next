@@ -372,3 +372,140 @@ def adapt_apex_export(source_text: str, source_name: str = "<memory>") -> dict[s
     return _document(
         "APEX_SQL_EXPORT", application, objects, [], [], diagnostics, [artifact_hash]
     )
+
+
+
+def resolve_references(document: dict[str, Any]) -> dict[str, Any]:
+    """Resolve exact source-native references without guessing; return a new IR document."""
+    import copy
+
+    resolved_document = copy.deepcopy(document)
+    objects = resolved_document.get("objects", [])
+    references = resolved_document.get("references", [])
+    object_by_id = {obj.get("id"): obj for obj in objects if obj.get("id")}
+    application_id = resolved_document.get("application", {}).get("id")
+
+    def in_scope(candidate: dict[str, Any], scope: str | None) -> bool:
+        if not scope:
+            return True
+        current = candidate
+        visited: set[str] = set()
+        while current:
+            current_id = current.get("id")
+            if current_id == scope:
+                return True
+            if not current_id or current_id in visited:
+                return False
+            visited.add(current_id)
+            current = object_by_id.get(current.get("parentId"))
+        return False
+
+    by_native_id: dict[str, list[dict[str, Any]]] = {}
+    for obj in objects:
+        native_id = obj.get("source", {}).get("sourceNativeId")
+        if native_id not in (None, ""):
+            by_native_id.setdefault(str(native_id), []).append(obj)
+
+    diagnostics = list(resolved_document.get("diagnostics", []))
+    dependencies = list(resolved_document.get("dependencies", []))
+    resolution_by_source: dict[str, list[str]] = {}
+
+    for reference in references:
+        source_id = reference.get("sourceObjectId")
+        reference_value = reference.get("referenceValue", "")
+        reference_type = reference.get("referenceType", "")
+        scope = reference.get("scope") or application_id
+        status = "PENDING"
+        target_id: str | None = None
+        candidates: list[dict[str, Any]] = []
+
+        if source_id not in object_by_id or not reference_value:
+            status = "INVALID"
+            diagnostics.append(_diagnostic(
+                "REF004", "ERROR", "REFERENCE_INVALID",
+                "Reference has a missing source object or empty reference value.",
+                locator=reference.get("sourceLocator"), details={"referenceId": reference.get("id")},
+            ))
+        elif reference_type != "APEXLANG_AT_REFERENCE":
+            status = "UNSUPPORTED"
+            diagnostics.append(_diagnostic(
+                "REF003", "WARNING", "REFERENCE_UNSUPPORTED",
+                f"Reference syntax is not supported by this resolver: {reference_type}",
+                locator=reference.get("sourceLocator"), details={"referenceId": reference.get("id")},
+            ))
+        elif scope and scope != application_id:
+            status = "INVALID"
+            diagnostics.append(_diagnostic(
+                "REF004", "ERROR", "REFERENCE_INVALID",
+                "Reference scope does not match the current application snapshot.",
+                locator=reference.get("sourceLocator"),
+                details={"referenceId": reference.get("id"), "scope": scope},
+            ))
+        else:
+            candidates = [
+                candidate for candidate in by_native_id.get(str(reference_value), [])
+                if in_scope(candidate, scope)
+            ]
+            candidate_ids = sorted({candidate["id"] for candidate in candidates})
+            if len(candidates) == 1:
+                status = "RESOLVED"
+                target_id = candidates[0]["id"]
+                dependency_id = "dep:" + sha256_text(
+                    f"{source_id}|{target_id}|{reference_type}|EXPLICIT"
+                )[:24]
+                dependencies.append({
+                    "id": dependency_id,
+                    "sourceObjectId": source_id,
+                    "targetObjectId": target_id,
+                    "dependencyType": reference_type,
+                    "origin": "EXPLICIT",
+                    "confidence": 1.0,
+                    "sourceLocator": reference.get("sourceLocator"),
+                })
+            elif len(candidates) == 0:
+                status = "DANGLING"
+                diagnostics.append(_diagnostic(
+                    "REF001", "ERROR", "REFERENCE_DANGLING",
+                    f"No in-scope object matches reference: {reference_value}",
+                    locator=reference.get("sourceLocator"),
+                    details={"referenceId": reference.get("id"), "scope": scope},
+                ))
+            else:
+                status = "AMBIGUOUS"
+                diagnostics.append(_diagnostic(
+                    "REF002", "ERROR", "REFERENCE_AMBIGUOUS",
+                    f"Multiple in-scope objects match reference: {reference_value}",
+                    locator=reference.get("sourceLocator"),
+                    details={"referenceId": reference.get("id"), "candidateObjectIds": candidate_ids},
+                ))
+
+        reference["resolutionStatus"] = status
+        reference["targetObjectId"] = target_id
+        reference["candidateObjectIds"] = sorted({candidate["id"] for candidate in candidates})
+        if source_id:
+            resolution_by_source.setdefault(source_id, []).append(status)
+
+    for obj in objects:
+        statuses = resolution_by_source.get(obj.get("id"), [])
+        if statuses:
+            if all(status == "RESOLVED" for status in statuses):
+                obj.setdefault("status", {})["resolve"] = "SUCCESS"
+            elif any(status == "INVALID" for status in statuses):
+                obj.setdefault("status", {})["resolve"] = "FAILED"
+            else:
+                obj.setdefault("status", {})["resolve"] = "PARTIAL"
+
+    unique_dependencies = {item["id"]: item for item in dependencies}
+    resolved_document["dependencies"] = [
+        unique_dependencies[key] for key in sorted(unique_dependencies)
+    ]
+    resolved_document["diagnostics"] = sorted(
+        diagnostics,
+        key=lambda d: (
+            d.get("sourceLocator", {}).get("file", ""),
+            d.get("sourceLocator", {}).get("line") or 0,
+            d["code"], d["message"],
+        ),
+    )
+    resolved_document.setdefault("metadata", {})["resolverVersion"] = "0.1.0"
+    return resolved_document
