@@ -10,7 +10,7 @@ WP8 is phased and remains in progress. See the phase plan in ../migration/wp8-fu
 | WP8.4 | Data reconciliation and integrity report | Implemented offline baseline; CI-verified |
 | WP8.5 | PL/SQL conversion workbench and rule registry | Implemented offline baseline; CI-verified |
 | WP8.6 | Runtime repositories, services, APIs, and PostgreSQL integration | Implemented generated runtime baseline; CI-verified |
-| WP8.7 | APEX-to-target functional parity test harness | Implemented offline baseline; CI pending |
+| WP8.7 | APEX-to-target functional parity test harness | Implemented offline baseline; CI-verified |
 | WP8.8 | Security mapping, rehearsal, rollback, and cutover readiness | Planned |
 
 ## WP8.5 checklist

@@ -4,7 +4,7 @@
 
 Compare paired observations captured from the source APEX application and the migrated Next.js/NestJS target. The harness evaluates evidence supplied by test runners; it does not execute SQL/PLSQL, invoke application endpoints, automate browsers, or infer expected behavior.
 
-## Delivered offline baseline
+## Delivered offline baseline (CI-verified: 132 Python tests; all four CI jobs passed)
 
 - Versioned JSON input contract: \`apex2next.functional-parity-input.v1\`.
 - Six comparison domains: FUNCTIONAL, API, DATA, WORKFLOW, SECURITY, and UI.
