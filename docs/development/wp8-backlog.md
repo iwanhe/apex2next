@@ -12,6 +12,7 @@ WP8 is phased and remains in progress. See the phase plan in ../migration/wp8-fu
 | WP8.6 | Runtime repositories, services, APIs, and PostgreSQL integration | Implemented generated runtime baseline; CI-verified |
 | WP8.7 | APEX-to-target functional parity test harness | Implemented offline baseline; CI-verified |
 | WP8.8 | Security mapping, rehearsal, rollback, and cutover readiness | Implemented offline baseline; CI pending |
+| WP9.1 | Candidate pilot archive intake and static source assessment | Completed; qualification incomplete |
 
 ## WP8.5 checklist
 
@@ -33,7 +34,6 @@ WP8 is phased and remains in progress. See the phase plan in ../migration/wp8-fu
 - Functional parity requires representative sanitized APEX exports and source-side behavior evidence.
 - WP8 is not complete until all eight work packages pass their acceptance gates.
 
-
 ## WP8.6 checklist
 
 - [x] PostgreSQL Pool configuration with bounded pool size and connection timeouts.
@@ -47,7 +47,6 @@ WP8 is phased and remains in progress. See the phase plan in ../migration/wp8-fu
 - [ ] Sanitized application-specific repositories/services/DTOs after WP8.1 schema and domain review.
 - [ ] Production pool sizing, TLS, secrets management, observability, and load tests.
 
-
 ## WP8.7 checklist
 
 - [x] Versioned paired source/target evidence manifest and deterministic parity report.
@@ -60,7 +59,6 @@ WP8 is phased and remains in progress. See the phase plan in ../migration/wp8-fu
 - [ ] Playwright execution against representative sanitized APEX and target pilot.
 - [ ] Business-approved critical journeys, role matrix, API contracts, and data canonicalization.
 - [ ] Evidence retention, redaction, and business-owner sign-off.
-
 
 ## WP8.8 checklist
 
@@ -76,7 +74,6 @@ WP8 is phased and remains in progress. See the phase plan in ../migration/wp8-fu
 - [ ] Obtain formal security, business, application, and operations sign-off.
 - [ ] Production change authority and actual cutover remain outside this offline tool.
 
-
 ## WP9 — Real APEX application pilot & production qualification
 
 - [x] Versioned pilot intake and qualification manifest.
@@ -85,8 +82,14 @@ WP8 is phased and remains in progress. See the phase plan in ../migration/wp8-fu
 - [x] Critical/high defect thresholds and explicit RTO/RPO acceptance.
 - [x] Deterministic report, CLI exit codes, synthetic fixture and negative tests.
 - [x] Pilot selection, intake, execution, evidence and exit-criteria runbook.
-- [ ] Obtain and inspect one real sanitized APEX export.
+- [x] Receive and statically inventory candidate Oracle APEX SQL export and companion APEXLang archive; record archive hashes and page/component inventories.
+- [x] Compare cross-format page inventories and identify the missing APEXLang page 00302.
+- [ ] Obtain formal sanitization attestation and confirm source instance runtime/snapshot.
+- [ ] Implement archive-aware intake and expand SQL-export parser coverage for shared components and security schemes.
+- [ ] Obtain Oracle dictionary/DDL, package bodies, trigger/view definitions and consistent data evidence.
 - [ ] Execute full WP1–WP8 pipeline against real source and consistent Oracle evidence.
 - [ ] Validate target against business-approved journeys.
 - [ ] Complete witnessed rehearsal, performance, restore, rollback and owner sign-off.
 - [ ] Production qualification and production cutover authorization.
+
+See [WP9.1 candidate intake report](wp9.1-pilot-intake-f170134.md) for source evidence and blockers.

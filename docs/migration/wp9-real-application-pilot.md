@@ -2,7 +2,13 @@
 
 ## Objective and honest status
 
-WP9 qualifies the complete WP1–WP8 pipeline against one representative, sanitized Oracle APEX application and consistent Oracle evidence. The repository currently has synthetic APEXLang fixtures only; no real sanitized application export or witnessed pilot evidence is present. This delivery establishes intake contracts, an offline qualification assessor, evidence gates, and an execution runbook. It does not claim a real pilot was executed or production-qualified.
+WP9 qualifies the complete WP1–WP8 pipeline against one representative, sanitized Oracle APEX application and consistent Oracle evidence. A candidate Oracle APEX SQL export and a companion APEXLang archive have now been received and statically inventoried in WP9.1. Formal sanitization attestation, Oracle dictionary/DDL/PLSQL/data evidence, target pilot execution, witnessed test evidence and owner approvals are still missing. The candidate is therefore not yet a qualified pilot. This delivery establishes intake contracts, an offline qualification assessor, evidence gates, and an execution runbook; it does not claim production qualification.
+
+## WP9.1 candidate intake
+
+The 2026-11-07 static intake report is [WP9.1 — Candidate Pilot Intake: Demo Permintaan Barang](wp9.1-pilot-intake-f170134.md). It records the two uploaded archive hashes, app ID 170134, export release metadata 26.2.1, page and component inventory, cross-format discrepancy (page 00302 is missing from the APEXLang archive), parser coverage gaps, database/PLSQL dependency candidates and the current fail-closed gate assessment.
+
+The inspection was read-only. No archive source was executed and no database connection was made. The archives were not committed to Git. The report's basic source scan is not a sanitization attestation.
 
 ## Pilot selection
 
@@ -37,11 +43,11 @@ PASS requires an evidence reference. WARN is conditional, FAIL blocks, and missi
 
 ## Run assessor
 
-\`\`\`bash
-PYTHONPATH=workers/schema-analyzer/src python -m apex2next_schema_analyzer.pilot_qualification \\
-  tests/fixtures/wp9/synthetic-pilot.json \\
+```bash
+PYTHONPATH=workers/schema-analyzer/src python -m apex2next_schema_analyzer.pilot_qualification \
+  tests/fixtures/wp9/synthetic-pilot.json \
   --output /tmp/wp9-qualification-report.json
-\`\`\`
+```
 
 Exit codes: 0 QUALIFIED, 1 BLOCKED, 3 CONDITIONAL, 4 INCOMPLETE, 2 invalid input/I/O. The checked-in fixture is synthetic and validates only the assessor contract.
 
@@ -72,7 +78,7 @@ Exit codes: 0 QUALIFIED, 1 BLOCKED, 3 CONDITIONAL, 4 INCOMPLETE, 2 invalid input
 
 ## Current blockers
 
-A sanitized real APEX export and runtime version; matching Oracle dictionary/DDL/PLSQL/data evidence; disposable PostgreSQL target and target build; approved critical journeys and role matrix; witnessed rehearsal/restore/rollback/performance; formal owner approvals.
+Formal sanitization attestation and source scope; confirmed actual runtime/snapshot; matching Oracle dictionary/DDL/PLSQL/data evidence; archive-aware extraction and parser coverage; disposable PostgreSQL target and target build; approved critical journeys and role matrix; witnessed rehearsal/restore/rollback/performance; formal owner approvals.
 
 ## Safety
 
