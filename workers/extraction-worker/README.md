@@ -126,3 +126,18 @@ The original `rawExpression` is always preserved. Ambiguous snippets such as `re
 Normalized properties retain both `sourcePropertyName` and `canonicalPropertyName`. The first alias set is intentionally narrow and object-specific: APEX SQL Export PAGE `p_source` maps to canonical `source`; REGION `p_plug_source` maps to `source`. APEXLang property names are preserved as their canonical names. This mapping does not claim semantic equivalence beyond these explicit aliases.
 
 Expression properties include `expressionLanguage`, `classificationConfidence`, and `classificationRule`. The lexical classifier recognizes a limited set of SQL, PL/SQL, JavaScript, APEX substitution, HTML, and CSS forms. Unmatched expressions remain UNKNOWN and all raw expressions are retained; no source expression is executed. This remains an initial classifier, not a full language parser.
+
+
+### APEXLang grammar and AST foundation (incremental)
+
+A first structural parsing layer is available alongside the existing inventory parser:
+
+- Grammar source: `workers/extraction-worker/grammar/ApexLang.g4`.
+- Python API: `parse_apexlang_ast(source)` and `tokenize_apexlang(source)`.
+- Token records preserve exact source offsets and start/end line-column spans.
+- Declaration AST nodes preserve the raw declaration body and represent nested declarations as children.
+- Quoted strings, comments, and fenced SQL/text blocks are handled atomically so declaration-like text inside them is not counted as syntax.
+- Parentheses inside multiline expressions are balanced separately from declaration delimiters.
+- Unterminated strings, comments, fenced blocks, and declarations produce structured AST diagnostics.
+
+This is an incremental grammar/AST foundation, not yet the production parser for the adapters. It currently models declaration structure and lossless token spans; typed property nodes, complete array/mixed-brace grammar, error recovery, nesting/resource limits, and adapter integration remain follow-up work. The ANTLR grammar file is a maintained grammar specification; the Python AST parser currently runs without an ANTLR runtime dependency.
