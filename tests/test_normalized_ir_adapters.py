@@ -7,6 +7,7 @@ from apex2next_extractor.normalized_ir import (
     object_fingerprint,
     stable_identity,
     resolve_references,
+    classify_expression,
 )
 
 
@@ -63,7 +64,9 @@ def test_apex_export_adapter_preserves_raw_arguments_and_is_schema_valid() -> No
     page = next(obj for obj in document["objects"] if obj["type"] == "PAGE")
     assert page["source"]["apiRoutine"] == "create_page"
     assert page["source"]["line"] == 6
-    assert page["properties"]["p_source"]["valueType"] == "UNKNOWN"
+    assert page["properties"]["p_source"]["valueType"] == "SQL_EXPRESSION"
+    assert page["properties"]["p_source"]["expressionLanguage"] == "SQL"
+    assert page["properties"]["p_source"]["classificationConfidence"] == "HIGH"
     assert "select * from orders" in page["properties"]["p_source"]["rawExpression"]
     assert page["extensions"]["rawArguments"]["p_source"].startswith("q'[")
 
@@ -272,7 +275,8 @@ def test_apexlang_properties_are_typed_and_keep_property_level_provenance(tmp_pa
     assert page["properties"]["ratio"]["value"] == 1.25
     assert page["properties"]["emptyValue"]["valueType"] == "NULL"
     assert page["properties"]["emptyValue"]["value"] is None
-    assert page["properties"]["source"]["valueType"] == "UNKNOWN"
+    assert page["properties"]["source"]["valueType"] == "SQL_EXPRESSION"
+    assert page["properties"]["source"]["expressionLanguage"] == "SQL"
     assert page["properties"]["source"]["rawExpression"] == "select_orders(:P10_ID)"
     assert page["properties"]["source"]["sourceLocator"]["file"] == "page.apx"
     assert page["properties"]["source"]["sourceLocator"]["line"] == 7
@@ -400,3 +404,51 @@ def test_apexlang_colon_prefixed_nested_objects_stay_structured(tmp_path: Path) 
     assert validate_ir_document(document) == []
     assert navigation["valueType"] == "OBJECT"
     assert navigation["value"]["homeUrl"]["value"]["page"]["value"] == 10
+
+
+
+def test_expression_classifier_uses_conservative_syntax_evidence() -> None:
+    cases = {
+        "SELECT * FROM orders": "SQL",
+        "WITH q AS (SELECT 1 FROM dual) SELECT * FROM q": "SQL",
+        "BEGIN\n  NULL;\nEND;": "PL_SQL",
+        "DECLARE\n  v_count NUMBER;\nBEGIN\n  NULL;\nEND;": "PL_SQL",
+        "const total = items.length;": "JAVASCRIPT",
+        "async function loadData() { return []; }": "JAVASCRIPT",
+        "<div class='notice'>Hello</div>": "HTML",
+        "@media screen { .card { display: block; } }": "CSS",
+        "&P10_STATUS.": "APEX",
+        "return status": "UNKNOWN",
+        "status = 'OPEN'": "UNKNOWN",
+    }
+
+    for expression, expected in cases.items():
+        result = classify_expression(expression)
+        assert result["language"] == expected
+        assert result["confidence"] == ("HIGH" if expected != "UNKNOWN" else "NONE")
+
+
+def test_sql_expression_mapping_is_consistent_across_apexlang_and_sql_export(tmp_path: Path) -> None:
+    source_dir = tmp_path / "cross-format"
+    source_dir.mkdir()
+    (source_dir / "application.apx").write_text(
+        "app DEMO (\n    name: 'Demo'\n)\n", encoding="utf-8"
+    )
+    (source_dir / "page.apx").write_text(
+        "page 10 (\n    source: SELECT order_id FROM orders\n)\n",
+        encoding="utf-8",
+    )
+    apexlang = adapt_apexlang_directory(source_dir)
+    export = adapt_apex_export(
+        "begin wwv_flow_imp_page.create_page(p_id => 10, "
+        "p_source => q'[SELECT order_id FROM orders]'); end;",
+        "f100.sql",
+    )
+
+    lang_prop = next(obj for obj in apexlang["objects"] if obj["type"] == "PAGE")["properties"]["source"]
+    export_prop = next(obj for obj in export["objects"] if obj["type"] == "PAGE")["properties"]["p_source"]
+    for prop in (lang_prop, export_prop):
+        assert prop["valueType"] == "SQL_EXPRESSION"
+        assert prop["expressionLanguage"] == "SQL"
+        assert prop["classificationConfidence"] == "HIGH"
+        assert prop["rawExpression"].strip().upper().startswith("SELECT")
