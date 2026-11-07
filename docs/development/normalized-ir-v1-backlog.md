@@ -17,7 +17,7 @@ Deliver in small, testable work packages. The JSON Schema is the cross-language 
 | IRV1-07 | Relationships and dependency graph | Typed graph edges, cycle detection, explicit/inferred distinction | IRV1-06 | P1 | Partial structural containment only |
 | IRV1-08 | Diagnostics catalog | Stable diagnostic codes, severity, details, suggestions | IRV1-02, 06 | P1 | Initial source/schema diagnostics; resolver codes pending |
 | IRV1-09 | Regression and acceptance suite | Cross-format fixtures, determinism, preservation, resolver, safety tests | IRV1-04..08 | P1 | Partial; resolver and broad safety coverage pending |
-| IRV1-10 | Documentation and PR evidence | Usage examples, coverage matrix, limitations, CI evidence | IRV1-09 | P1 | In progress |
+| IRV1-10 | Documentation and PR evidence | Usage examples, coverage matrix, limitations, CI evidence | IRV1-09 | P1 | In progress |\n| IRV1-11 | Expression classification and cross-format mapping | Conservative language classifier, shared APEXLang/export property mapping, confidence/rule metadata, regression fixtures | IRV1-04, 05 | P1 | Initial high-confidence lexical rules implemented; grammar-backed classification pending |
 
 ## Detailed tasks and acceptance evidence
 
@@ -106,7 +106,7 @@ Deliver in small, testable work packages. The JSON Schema is the cross-language 
 
 **Done when:** acceptance criteria in the DTD are automated and CI passes.
 
-### IRV1-10 — Documentation and PR evidence
+### IRV1-11 — Expression classification and cross-format mapping\n- [x] Add shared conservative classifier for SQL, PL/SQL, JavaScript, HTML, CSS, and APEX substitution patterns.\n- [x] Map high-confidence SQL/PLSQL/JavaScript expressions to existing IR value types.\n- [x] Preserve exact raw source and record language, confidence, and rule ID.\n- [x] Use the same property mapping helper in APEXLang and APEX SQL Export adapters.\n- [x] Add positive and negative classification tests and a cross-format SQL contract test.\n- [ ] Replace lexical rules with grammar-backed classification where required; expand coverage only with representative source fixtures.\n\n**Done when:** both adapters produce the same expression-property contract for equivalent source expressions and ambiguous expressions remain UNKNOWN.\n\n### IRV1-10 — Documentation and PR evidence
 - [ ] Update architecture and parser documentation.
 - [ ] Add example IR payload and CLI invocation.
 - [ ] Document actual parser coverage and limitations.
