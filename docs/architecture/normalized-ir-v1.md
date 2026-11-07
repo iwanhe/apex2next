@@ -270,3 +270,17 @@ The initial classifier assigns a language only when a conservative syntax-led ru
 For cross-format comparison, every normalized property retains its source key in `sourcePropertyName` and receives a `canonicalPropertyName`. The initial alias catalogue is deliberately small: APEX SQL Export `PAGE.p_source` maps to `source`, and `REGION.p_plug_source` maps to `source`. APEXLang property names remain unchanged. No source key is removed, and no alias is inferred from similarity. Expand this catalogue only with documented, object-type-specific evidence and regression fixtures.
 
 Expression metadata fields are defined in the schema: `expressionLanguage`, `classificationConfidence`, and `classificationRule`. The original `rawExpression` remains authoritative and must be preserved byte-for-byte at the decoded source-text level; classifiers must never evaluate it. HTML, CSS, and APEX forms remain `valueType: UNKNOWN` until dedicated typed semantics are designed.
+
+
+## 16. APEXLang grammar and AST foundation (incremental)
+
+The repository now maintains an ANTLR grammar specification at `workers/extraction-worker/grammar/ApexLang.g4` and a dependency-free Python tokenizer/AST implementation at `apex2next_extractor.apexlang_ast`.
+
+The AST layer currently:
+- Tokenizes identifiers, numbers, quoted strings, APEX references, fenced raw blocks, and symbols while retaining byte-independent Python string offsets plus 1-based line/column coordinates.
+- Skips line/block comments and treats strings/fenced blocks atomically.
+- Builds declaration nodes with nested declaration children, full declaration spans, body spans, and lossless raw body text.
+- Balances parentheses inside expression bodies separately from declaration delimiters.
+- Emits structured diagnostics for unterminated strings, comments, fenced blocks, and declarations.
+
+The grammar file is a formal maintained specification, while the Python implementation is currently a parallel incremental parser and does not invoke ANTLR. The AST API is not yet wired into the existing APEXLang-to-IR adapter. Property AST nodes, complete array and mixed-brace parsing, grammar-driven error recovery, parser resource limits, and compatibility testing against real APEXLang source remain open work. Do not interpret successful AST construction as complete source coverage or semantic correctness.
