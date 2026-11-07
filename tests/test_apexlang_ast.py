@@ -1,3 +1,7 @@
+import random
+from pathlib import Path
+
+from apex2next_extractor.apexlang import parse_apexlang_text
 from apex2next_extractor.apexlang_ast import parse_apexlang_ast, tokenize_apexlang
 
 
@@ -219,3 +223,63 @@ def test_ast_parser_handles_deterministic_malformed_input_corpus() -> None:
         ast = parse_apexlang_ast(source)
         assert isinstance(ast.declarations, list)
         assert isinstance(ast.diagnostics, list)
+
+
+
+def test_ast_declaration_tree_matches_inventory_parser_on_synthetic_fixture_corpus() -> None:
+    fixture_root = Path("tests/fixtures/apexlang-26.2")
+    for path in sorted(fixture_root.rglob("*.apx")):
+        source = path.read_text(encoding="utf-8")
+        ast = parse_apexlang_ast(source)
+        inventory = parse_apexlang_text(source, path.as_posix())
+
+        def flatten(nodes):
+            flattened = []
+            for node in nodes:
+                flattened.append((node.kind.lower(), node.name or ""))
+                flattened.extend(flatten(node.children))
+            return flattened
+
+        inventory_declarations = [
+            (item["kind"].lower(), item["name"])
+            for item in inventory["declarations"]
+        ]
+        assert flatten(ast.declarations) == inventory_declarations, path.as_posix()
+
+
+def test_recursive_property_parser_seeded_generated_value_properties() -> None:
+    rng = random.Random(2602)
+
+    def make_value(depth: int):
+        if depth <= 0:
+            kind = rng.randrange(4)
+            if kind == 0:
+                value = f"text-{rng.randrange(1000)}"
+                return repr(value), value
+            if kind == 1:
+                value = rng.randrange(1000)
+                return str(value), value
+            if kind == 2:
+                return "true", True
+            return "false", False
+        kind = rng.randrange(3)
+        if kind == 0:
+            value = f"text-{rng.randrange(1000)}"
+            return repr(value), value
+        if kind == 1:
+            pairs = [
+                (f"key_{i}", make_value(depth - 1))
+                for i in range(rng.randrange(1, 4))
+            ]
+            source = "{ " + ", ".join(f"{key}: {raw}" for key, (raw, _) in pairs) + " }"
+            return source, {key: value for key, (_, value) in pairs}
+        items = [make_value(depth - 1) for _ in range(rng.randrange(1, 4))]
+        return "[" + ", ".join(raw for raw, _ in items) + "]", [
+            value for _, value in items
+        ]
+
+    for _ in range(60):
+        raw, expected = make_value(3)
+        ast = parse_apexlang_ast(f"page 1 (\\n    data: {raw}\\n)\\n")
+        assert ast.diagnostics == []
+        assert ast.declarations[0].properties[0].value == expected
