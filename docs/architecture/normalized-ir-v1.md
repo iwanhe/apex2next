@@ -261,3 +261,12 @@ The initial expression classifier is shared by the APEXLang and Oracle APEX SQL 
 - Recognize a small set of high-signal HTML, CSS, and APEX substitution forms as language metadata while retaining `valueType: UNKNOWN`, because the current IR value-type enum has no dedicated values for those languages.
 - Leave ambiguous expressions as `UNKNOWN` with `classificationConfidence: NONE`. Property names, surrounding object types, and substring matches are not sufficient evidence.
 - This is lexical classification, not a parser, validator, execution engine, or semantic equivalence proof. Extend the rule set only with positive and negative regression fixtures from representative source versions.
+
+
+## 6.1 Expression classification and cross-format property names (initial)
+
+The initial classifier assigns a language only when a conservative syntax-led rule matches: SQL, PL/SQL, JavaScript, APEX substitution syntax, HTML element syntax, or selected CSS at-rules. Every classification carries a stable rule identifier and confidence value. Unmatched expressions remain `UNKNOWN`; this is not a grammar-backed parser and must not be treated as proof of executable language semantics.
+
+For cross-format comparison, every normalized property retains its source key in `sourcePropertyName` and receives a `canonicalPropertyName`. The initial alias catalogue is deliberately small: APEX SQL Export `PAGE.p_source` maps to `source`, and `REGION.p_plug_source` maps to `source`. APEXLang property names remain unchanged. No source key is removed, and no alias is inferred from similarity. Expand this catalogue only with documented, object-type-specific evidence and regression fixtures.
+
+Expression metadata fields are defined in the schema: `expressionLanguage`, `classificationConfidence`, and `classificationRule`. The original `rawExpression` remains authoritative and must be preserved byte-for-byte at the decoded source-text level; classifiers must never evaluate it. HTML, CSS, and APEX forms remain `valueType: UNKNOWN` until dedicated typed semantics are designed.
