@@ -197,3 +197,22 @@ def test_reference_resolver_reports_ambiguous_candidates(tmp_path: Path) -> None
     assert len(resolved["references"][0]["candidateObjectIds"]) == 2
     assert any(item["code"] == "REF002" for item in resolved["diagnostics"])
     assert validate_ir_document(resolved) == []
+
+
+
+def test_apexlang_containment_stack_resets_between_source_files(tmp_path: Path) -> None:
+    source_dir = tmp_path / "multi-file-apexlang"
+    (source_dir / "pages").mkdir(parents=True)
+    (source_dir / "application.apx").write_text("app DEMO (\\n)\\n", encoding="utf-8")
+    (source_dir / "pages" / "p10.apx").write_text(
+        "page 10 (\\n    region grid (\\n    )\\n)\\n", encoding="utf-8"
+    )
+    (source_dir / "pages" / "p11.apx").write_text(
+        "    page 11 (\\n        name: 'Second'\\n    )\\n", encoding="utf-8"
+    )
+
+    document = adapt_apexlang_directory(source_dir)
+    app_id = document["application"]["id"]
+    second_page = next(obj for obj in document["objects"] if obj["type"] == "PAGE" and obj["name"] == "11")
+
+    assert second_page["parentId"] == app_id
