@@ -123,7 +123,9 @@ Properties are represented as named records with:
 
 Supported value types: STRING, NUMBER, BOOLEAN, NULL, ARRAY, OBJECT, SQL_EXPRESSION, PL_SQL_EXPRESSION, JAVASCRIPT_EXPRESSION, UNKNOWN.
 
-A parser may decode only unambiguous scalar literals. Expressions remain raw source text and MUST NOT be evaluated. Unknown properties and unknown nested blocks must be preserved in a lossless raw representation or source-artifact reference.
+A parser may decode only unambiguous scalar literals. The initial APEXLang adapter decodes single- and double-quoted strings, booleans, null, integers, and decimal/scientific numeric literals. Each extracted direct property includes its own source locator (file, line, column, and artifact hash).
+
+All other values are retained as `UNKNOWN` with their exact `rawExpression`; no SQL, PL/SQL, JavaScript, or APEXLang expression is evaluated. Direct properties inside nested blocks are not flattened into the parent object's property map. The complete raw declaration body remains in object extensions as a lossless fallback while nested-property normalization is developed.
 
 ## 7. Provenance
 
