@@ -203,12 +203,12 @@ def test_reference_resolver_reports_ambiguous_candidates(tmp_path: Path) -> None
 def test_apexlang_containment_stack_resets_between_source_files(tmp_path: Path) -> None:
     source_dir = tmp_path / "multi-file-apexlang"
     (source_dir / "pages").mkdir(parents=True)
-    (source_dir / "application.apx").write_text("app DEMO (\\n)\\n", encoding="utf-8")
+    (source_dir / "application.apx").write_text("app DEMO (\n)\n", encoding="utf-8")
     (source_dir / "pages" / "p10.apx").write_text(
-        "page 10 (\\n    region grid (\\n    )\\n)\\n", encoding="utf-8"
+        "page 10 (\n    region grid (\n    )\n)\n", encoding="utf-8"
     )
     (source_dir / "pages" / "p11.apx").write_text(
-        "    page 11 (\\n        name: 'Second'\\n    )\\n", encoding="utf-8"
+        "    page 11 (\n        name: 'Second'\n    )\n", encoding="utf-8"
     )
 
     document = adapt_apexlang_directory(source_dir)
