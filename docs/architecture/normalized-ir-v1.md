@@ -302,3 +302,6 @@ AST properties map to the existing IR property contract:
 The adapter records `metadata.apexlangAstParserVersion`, `metadata.apexlangAstIntegration`, and a parity summary. The AST is therefore integrated as a typed property source with explicit fallback, not as the sole declaration parser.
 
 This integration is structural, not semantic parity. The committed fixture corpus is synthetic. A sanitized representative real APEXLang project is still required before production coverage or semantic equivalence can be assessed.
+
+
+Duplicate property handling in WP4: the canonical IR `properties` object is a unique-key map and cannot itself represent repeated source keys. The adapter therefore retains every duplicate occurrence, in source order with occurrence number and full typed property payload, under `extensions.duplicateProperties`, and emits `IRAST004`. Nested OBJECT values also carry duplicate names and occurrence payloads in their own extensions. Consumers must inspect this extension and must not assume the unique-key map alone is a lossless representation when `IRAST004` is present.
