@@ -191,6 +191,24 @@
             "UNKNOWN"
           ]
         },
+        "canonicalPropertyName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourcePropertyName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expressionLanguage": {
+          "enum": ["SQL", "PL_SQL", "JAVASCRIPT", "HTML", "CSS", "APEX", "UNKNOWN"]
+        },
+        "classificationConfidence": {
+          "enum": ["HIGH", "MEDIUM", "LOW", "NONE"]
+        },
+        "classificationRule": {
+          "type": "string",
+          "minLength": 1
+        },
         "value": {},
         "rawExpression": {
           "type": [
