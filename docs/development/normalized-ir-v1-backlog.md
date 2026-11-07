@@ -253,7 +253,7 @@ The milestone establishes a normalized structural model and deterministic refere
 
 ## WP7 — Target Code Generation
 
-**Status:** Initial generator implementation complete; CI qualification pending.
+**Status:** Implemented baseline; final CI passed on `bcec64cb97effb9bf7bb6176036b10bd8b3a7a35`.
 
 - [x] Add deterministic Python generator API and CLI.
 - [x] Validate Normalized IR before writing target files.
@@ -268,7 +268,10 @@ The milestone establishes a normalized structural model and deterministic refere
 - [x] Add non-empty output protection and explicit overwrite option.
 - [x] Add SHA-256 manifest and deterministic generation tests.
 - [x] Document target workspace and CLI/API usage.
-- [ ] Validate generated target workspace with pnpm install/build/test/typecheck in CI.
+- [x] Validate generated target workspace with pnpm install/build/test/typecheck in CI.
 - [ ] Expand generator coverage only after sanitized APEX and database schema fixtures are available.
 
 **Qualification boundary:** WP7 initial generator scaffold is not a full APEX application converter. Business schema, data migration, functional APIs, authentication/authorization, dynamic actions, reports/grids, and PL/SQL behavior remain outside this implementation slice.
+
+
+**WP7 final CI evidence:** Run 42359828215 passed on final branch HEAD `bcec64cb97effb9bf7bb6176036b10bd8b3a7a35`. Ruff passed; pytest 75 passed; ANTLR grammar validation passed; Node workspace baseline passed; generated target project installation, Next.js/NestJS build, generated scaffold tests, and TypeScript typecheck all passed.
