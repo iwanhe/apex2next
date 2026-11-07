@@ -115,10 +115,10 @@ def test_native_identity_is_scoped_to_parent_for_repeated_component_names() -> N
 def test_apexlang_adapter_does_not_collect_references_from_comments_or_literals(tmp_path: Path) -> None:
     source_dir = tmp_path / "apexlang"
     source_dir.mkdir()
-    (source_dir / "application.apx").write_text("app DEMO (\\n name: 'Demo'\\n)\\n", encoding="utf-8")
+    (source_dir / "application.apx").write_text("app DEMO (\n name: 'Demo'\n)\n", encoding="utf-8")
     (source_dir / "page.apx").write_text(
-        "page 10 (\\n name: 'Orders @literal'\\n // @commented\\n "
-        "security { scheme: @real_reference }\\n)\\n",
+        "page 10 (\n name: 'Orders @literal'\n // @commented\n "
+        "security { scheme: @real_reference }\n)\n",
         encoding="utf-8",
     )
 
