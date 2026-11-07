@@ -168,7 +168,9 @@ def parse_apexlang_ast(source: str) -> ApexLangAst:
         # inside property expressions as declaration nodes.
         line_prefix = source[source.rfind("\n", 0, token.span.start_offset) + 1:token.span.start_offset]
         at_line_start = not line_prefix.strip()
-        if token.kind != "IDENTIFIER" or not at_line_start:
+        previous_value = token_value(i - 1) if i > 0 else ""
+        expression_continuation = previous_value in {"(", "[", ",", ":"}
+        if token.kind != "IDENTIFIER" or not at_line_start or expression_continuation:
             if is_symbol(i, "(") and stack:
                 node, opening, nested_parens = stack[-1]
                 stack[-1] = (node, opening, nested_parens + 1)
