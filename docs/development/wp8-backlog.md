@@ -13,6 +13,7 @@ WP8 is phased and remains in progress. See the phase plan in ../migration/wp8-fu
 | WP8.7 | APEX-to-target functional parity test harness | Implemented offline baseline; CI-verified |
 | WP8.8 | Security mapping, rehearsal, rollback, and cutover readiness | Implemented offline baseline; CI pending |
 | WP9.1 | Candidate pilot archive intake and static source assessment | Completed; qualification incomplete |
+| WP9.2 | Real pilot source/database dependency analysis and partial PostgreSQL DDL draft | Completed offline/static; live reconciliation incomplete |
 
 ## WP8.5 checklist
 
@@ -94,3 +95,23 @@ WP8 is phased and remains in progress. See the phase plan in ../migration/wp8-fu
 - [ ] Production qualification and production cutover authorization.
 
 See [WP9.1 candidate intake report](wp9.1-pilot-intake-f170134.md) for source evidence and blockers.
+
+
+## WP9.2 — Candidate application source/database analysis (offline complete)
+
+- Reconcile the 19-page Oracle APEX SQL export against the 18-page APEXLang archive; identify page 00302 as missing from APEXLang.
+- Reconcile actual APEX SQL database references against the generated combined install script; mask comments/literals to avoid false unresolved references.
+- Inventory 9 tables, 10 views, 4 package specs/bodies, 5 triggers, 4 explicit indexes and declared constraints.
+- Map relational, view, package, trigger and APEX page dependencies; mark configuration/dynamic SQL edges explicitly.
+- Review security bootstrap behavior, package bypass state, dynamic SQL, transaction ownership, submit race and document-number concurrency.
+- Produce PostgreSQL conversion disposition matrix and partial DDL draft for 3/9 tables; six identity/generated-column tables remain blocked.
+- Preserve source artifacts outside Git; analysis is static only, no database connection or source execution.
+
+Deliverables:
+- [WP9.2 static analysis](../migration/wp9.2-static-analysis-f170134.md)
+- [Object dependency map](../migration/wp9.2-object-dependency-map-f170134.md)
+- [Conversion dispositions](../migration/wp9.2-conversion-disposition-f170134.md)
+- [Partial PostgreSQL DDL draft](../migration/wp9.2-postgresql-ddl-draft.sql)
+- [Machine-readable analysis report](../migration/wp9.2-analysis-f170134.json)
+
+WP9.2 closes the offline analysis slice, not WP9 production qualification. WP9-004/005 remain incomplete until Oracle dictionary/installed-object reconciliation and semantic validation; WP9-006/008/009 remain not verified until target build, approved journeys and security evidence exist.

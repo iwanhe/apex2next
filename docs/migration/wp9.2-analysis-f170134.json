@@ -1,0 +1,95 @@
+{
+  "format": "apex2next.wp9.2-static-analysis.v1",
+  "application": {
+    "id": "170134",
+    "name": "Demo Permintaan Barang",
+    "qualification": "NOT_QUALIFIED"
+  },
+  "inputs": {
+    "apexSqlExport": {
+      "archive": "f170134.zip",
+      "bytes": 131983,
+      "sha256": "7c2cc3dcc0304bf12946bafb1684c03db8083b25d40f5c82908fb805faa135bb"
+    },
+    "apexLang": {
+      "archive": "demo-apexlang(1).zip",
+      "bytes": 74478,
+      "sha256": "8d8fb07e2b21674075136d348cd214ca8a4d17984e6d4cc758867f6f4e7832bf"
+    },
+    "installSql": {
+      "bytes": 38098,
+      "sha256": "7c71e9c56b76d5fe893d2f357e692b9e7c458adc37791784379842ec1712d66d"
+    }
+  },
+  "pageReconciliation": {
+    "sqlExportCount": 19,
+    "apexLangCount": 18,
+    "missingFromApexLang": [
+      302
+    ]
+  },
+  "objectCounts": {
+    "tables": 9,
+    "views": 10,
+    "packageSpecs": 4,
+    "packageBodies": 4,
+    "triggers": 5,
+    "indexes": 4,
+    "primaryKeys": 9,
+    "foreignKeys": 7,
+    "unique": 4,
+    "checks": 8,
+    "insertStatements": 12,
+    "mergeStatements": 7,
+    "commits": 2
+  },
+  "tableDisposition": {
+    "partialDraft": [
+      "APX_DEMO_ROLES",
+      "APX_DEMO_DOC_TYPES",
+      "APX_DEMO_DOC_SEQ"
+    ],
+    "identityBlocked": [
+      "APX_DEMO_USER_ROLES",
+      "APX_DEMO_APPROVALS",
+      "APX_DEMO_DEPARTMENTS",
+      "APX_DEMO_ITEMS",
+      "APX_DEMO_REQUESTS",
+      "APX_DEMO_REQUEST_LINES"
+    ],
+    "virtualGeneratedColumn": [
+      "APX_DEMO_REQUEST_LINES.LINE_AMOUNT"
+    ]
+  },
+  "plsqlFindings": {
+    "approvalPackage": {
+      "executeImmediate": 4,
+      "dbmsAssert": 10,
+      "raiseApplicationError": 6,
+      "whenOthers": 1,
+      "forUpdate": 2
+    },
+    "securityRisks": [
+      "fail-open bootstrap role checks",
+      "public package bypass setter; grants not supplied"
+    ],
+    "concurrencyRisks": [
+      "submit status read is not FOR UPDATE",
+      "numbering MERGE-create then increment race"
+    ],
+    "dynamicConfig": [
+      "table/column identifiers",
+      "AMOUNT_EXPR SQL fragment",
+      "VALIDATE_PROC qualified procedure"
+    ]
+  },
+  "dependencyMap": "docs/migration/wp9.2-object-dependency-map-f170134.md",
+  "conversionMatrix": "docs/migration/wp9.2-conversion-disposition-f170134.md",
+  "partialDdl": "docs/migration/wp9.2-postgresql-ddl-draft.sql",
+  "limitations": [
+    "static source only; no Oracle dictionary/live object validity",
+    "dynamic SQL/config dependencies are not fully statically resolvable",
+    "no SQL/PLSQL execution",
+    "no functional/security parity or production qualification"
+  ]
+}

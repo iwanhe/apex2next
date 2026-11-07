@@ -10,6 +10,14 @@ The 2026-11-07 static intake report is [WP9.1 — Candidate Pilot Intake: Demo P
 
 The inspection was read-only. No archive source was executed and no database connection was made. The archives were not committed to Git. The report's basic source scan is not a sanitization attestation.
 
+## WP9.2 — static source/database analysis
+
+The offline analysis is recorded in [WP9.2 static analysis](wp9.2-static-analysis-f170134.md), with a [dependency map](wp9.2-object-dependency-map-f170134.md), [conversion disposition matrix](wp9.2-conversion-disposition-f170134.md), [partial PostgreSQL DDL draft](wp9.2-postgresql-ddl-draft.sql) and [machine-readable report](wp9.2-analysis-f170134.json).
+
+The analysis reconciles the APEX SQL export and generated install script at source level, confirms that APEXLang omits page 00302, maps 9 tables/10 views/4 packages/5 triggers, and identifies security, dynamic SQL, transaction and concurrency risks. Only three tables are included in the partial PostgreSQL DDL; six identity-bearing tables and the virtual generated column remain blocked. No source SQL was executed and no Oracle connection was made.
+
+WP9.2 is complete as an offline analysis deliverable. It does not establish installed-object validity, dictionary/grant parity, functional parity, or production qualification. WP9-004/005 remain incomplete pending live owner-scoped dictionary and semantic evidence.
+
 ## Pilot selection
 
 Select one bounded but representative application with a named business/application owner, 3–5 critical journeys, at least two roles, privileged and negative authorization paths, representative pages/items/regions/validations/dynamic actions/processes/LOVs/reports/APIs/PLSQL/database objects, and relevant integrations/jobs. Avoid a trivial read-only application. Use non-production and synthetic or approved anonymized data.
