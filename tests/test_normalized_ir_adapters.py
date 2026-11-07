@@ -278,3 +278,61 @@ def test_apexlang_properties_are_typed_and_keep_property_level_provenance(tmp_pa
     assert page["properties"]["source"]["sourceLocator"]["line"] == 7
     assert page["properties"]["source"]["sourceLocator"]["column"] == 5
     assert "nested" not in page["properties"]
+
+
+
+def test_apexlang_nested_property_blocks_are_normalized_recursively(tmp_path: Path) -> None:
+    source_dir = tmp_path / "nested-properties"
+    source_dir.mkdir()
+    (source_dir / "application.apx").write_text(
+        "app DEMO (\n"
+        "    name: 'Demo'\n"
+        "    navigation {\n"
+        "        homeUrl: {\n"
+        "            page: 10\n"
+        "            clearCache: '10,RP'\n"
+        "        }\n"
+        "    }\n"
+        ")\n",
+        encoding="utf-8",
+    )
+
+    document = adapt_apexlang_directory(source_dir)
+    app = next(obj for obj in document["objects"] if obj["type"] == "APPLICATION")
+    navigation = app["properties"]["navigation"]
+    home_url = navigation["value"]["homeUrl"]
+
+    assert validate_ir_document(document) == []
+    assert navigation["valueType"] == "OBJECT"
+    assert home_url["valueType"] == "OBJECT"
+    assert home_url["value"]["page"]["valueType"] == "NUMBER"
+    assert home_url["value"]["page"]["value"] == 10
+    assert home_url["value"]["clearCache"]["value"] == "10,RP"
+    assert navigation["sourceLocator"]["file"] == "application.apx"
+    assert navigation["sourceLocator"]["line"] == 3
+    assert home_url["sourceLocator"]["line"] == 4
+    assert home_url["value"]["page"]["sourceLocator"]["line"] == 5
+    assert "navigation {" in app["extensions"]["rawDeclarationBody"]
+
+
+def test_apexlang_nested_property_expressions_are_preserved(tmp_path: Path) -> None:
+    source_dir = tmp_path / "nested-expressions"
+    source_dir.mkdir()
+    (source_dir / "application.apx").write_text(
+        "app DEMO (\n"
+        "    settings {\n"
+        "        source: select_orders(:P10_ID)\n"
+        "        label: 'Text with } brace'\n"
+        "    }\n"
+        ")\n",
+        encoding="utf-8",
+    )
+
+    document = adapt_apexlang_directory(source_dir)
+    app = next(obj for obj in document["objects"] if obj["type"] == "APPLICATION")
+    settings = app["properties"]["settings"]
+
+    assert validate_ir_document(document) == []
+    assert settings["value"]["source"]["valueType"] == "UNKNOWN"
+    assert settings["value"]["source"]["rawExpression"] == "select_orders(:P10_ID)"
+    assert settings["value"]["label"]["value"] == "Text with } brace"
