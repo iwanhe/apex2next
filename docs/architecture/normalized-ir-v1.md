@@ -272,24 +272,33 @@ For cross-format comparison, every normalized property retains its source key in
 Expression metadata fields are defined in the schema: `expressionLanguage`, `classificationConfidence`, and `classificationRule`. The original `rawExpression` remains authoritative and must be preserved byte-for-byte at the decoded source-text level; classifiers must never evaluate it. HTML, CSS, and APEX forms remain `valueType: UNKNOWN` until dedicated typed semantics are designed.
 
 
-## 16. APEXLang grammar and AST foundation (incremental)
+## 16. APEXLang grammar and AST foundation
 
-The repository now maintains an ANTLR grammar specification at `workers/extraction-worker/grammar/ApexLang.g4` and a dependency-free Python tokenizer/AST implementation at `apex2next_extractor.apexlang_ast`.
+The repository maintains an ANTLR grammar specification at `workers/extraction-worker/grammar/ApexLang.g4` and a dependency-free Python tokenizer/AST implementation at `apex2next_extractor.apexlang_ast`.
 
-The AST layer currently:
-- Tokenizes identifiers, numbers, quoted strings, APEX references, fenced raw blocks, and symbols while retaining byte-independent Python string offsets plus 1-based line/column coordinates.
-- Skips line/block comments and treats strings/fenced blocks atomically.
-- Builds declaration nodes with nested declaration children, full declaration spans, body spans, and lossless raw body text.
-- Balances parentheses inside expression bodies separately from declaration delimiters.
-- Emits structured diagnostics for unterminated strings, comments, fenced blocks, and declarations.
+The AST layer:
+- Retains source offsets and 1-based line/column spans for declarations and typed properties.
+- Treats comments, quoted strings, and fenced blocks atomically during tokenization.
+- Builds nested declaration nodes and preserves raw declaration bodies.
+- Parses supported scalar, recursive OBJECT, and ARRAY values, including inline objects, arrays of objects, and nested arrays.
+- Preserves unrecognized expressions as raw source; it never evaluates source expressions.
+- Emits deterministic diagnostics for malformed containers, duplicate keys, and resource-limit violations.
 
-The grammar file is a formal maintained specification, while the Python implementation is currently a parallel incremental parser and does not invoke ANTLR. The AST API is not yet wired into the existing APEXLang-to-IR adapter. Property AST nodes, complete array and mixed-brace parsing, grammar-driven error recovery, parser resource limits, and compatibility testing against real APEXLang source remain open work. Do not interpret successful AST construction as complete source coverage or semantic correctness.
+The ANTLR grammar is validated in CI using the pinned ANTLR 4.13.2 tool. The runtime parser remains dependency-free Python and is not generated from or runtime-backed by ANTLR. Grammar validation is not proof of complete syntax coverage.
 
+## 17. APEXLang AST-to-IR integration (WP4)
 
-## 17. Typed APEXLang property AST (initial slice)
+The APEXLang Normalized IR adapter now parses each source artifact through both the existing inventory parser and the typed AST parser. The inventory parser remains authoritative for declaration discovery, canonical object types, stable identity, containment, and reference extraction. AST property nodes are used for IR properties only when the declaration key and ordered direct-property names match the inventory parser exactly.
 
-Each declaration AST node now carries typed property nodes with original-source spans. The initial supported values are scalar STRING, NUMBER, BOOLEAN, NULL, multiline brace-delimited OBJECT, and bracket-delimited ARRAY. Unknown or executable expressions are retained as raw EXPRESSION values and are never evaluated.
+When parity cannot be established, the adapter falls back to the legacy inventory property mapping and emits `IRAST001` with both property-name lists. This prevents partial AST coverage from silently dropping existing source properties. AST parser diagnostics are carried into IR diagnostics with file and source-span provenance; file-level AST errors mark affected objects as parse `PARTIAL`.
 
-Nested object properties are recursively parsed. Duplicate property keys remain separate ordered nodes and produce diagnostic `AST102`; unterminated object/array values produce `AST101`. Direct declaration property scope is determined by indentation so nested declaration properties are not promoted to the parent declaration.
+AST properties map to the existing IR property contract:
+- Scalars retain typed `valueType`, `value`, `sourceLocator`, and original raw source in `extensions.rawSourceValue`.
+- Objects recursively map child properties; duplicate child names are reported and their original text remains available in raw source extensions.
+- Arrays retain ordered items as typed property records, including nested objects and arrays.
+- Expressions pass through the shared conservative classifier. The normalized logical expression is exposed as `rawExpression`, while exact AST source formatting remains in `extensions.rawSourceValue`.
+- Source property names and canonical names remain separate; APEXLang names are not aliased by guesswork.
 
-This remains a conservative subset. Inline/mixed object syntax, nested object array elements, non-parenthesis multiline expression forms, grammar-driven recovery, and hard resource limits are not yet supported. The AST is not yet the source adapter's authority; Normalized IR integration waits for corpus parity and coverage tests.
+The adapter records `metadata.apexlangAstParserVersion`, `metadata.apexlangAstIntegration`, and a parity summary. The AST is therefore integrated as a typed property source with explicit fallback, not as the sole declaration parser.
+
+This integration is structural, not semantic parity. The committed fixture corpus is synthetic. A sanitized representative real APEXLang project is still required before production coverage or semantic equivalence can be assessed.
