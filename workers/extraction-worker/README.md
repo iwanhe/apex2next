@@ -84,3 +84,17 @@ resolved_ir = resolve_references(apexlang_ir)
 It resolves only exact source-native identifier matches inside the declared application scope. A single candidate becomes RESOLVED and creates an EXPLICIT dependency; zero candidates become DANGLING; multiple candidates become AMBIGUOUS. Unsupported syntax and invalid source/scope data receive diagnostics. The function returns a deep copy and does not mutate the input snapshot. Name similarity, fuzzy matching, and guessed targets are deliberately not used.
 
 Validate an emitted document with `validate_ir_document(document)`; schema validity proves contract shape only.
+
+
+### APEXLang typed property extraction
+
+The APEXLang parser now exposes `property_details` alongside the backward-compatible `properties` map. The Normalized IR adapter decodes only unambiguous scalar literals:
+
+- Single- and double-quoted strings
+- Boolean literals
+- Null literals
+- Integer, decimal, and scientific-notation numbers
+
+Each normalized property includes a property-level source locator with file, line, column, and source artifact hash. Values that are not recognized as scalar literals are preserved as `valueType: UNKNOWN` with their original `rawExpression`; they are never evaluated. Direct properties inside nested blocks are not flattened into the parent object. The full raw declaration body remains available in `extensions.rawDeclarationBody`.
+
+This is intentionally a conservative first pass. Nested property-path normalization, multiline expressions, and typed SQL/PLSQL/JavaScript classification require additional grammar and source-version fixtures.
