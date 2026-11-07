@@ -109,52 +109,133 @@ def _decode_property_literal(raw: str) -> tuple[str, Any, str | None]:
 def _property_records(
     body: str, *, start_line: int = 1, start_column: int = 1
 ) -> list[dict[str, Any]]:
-    """Extract direct scalar properties with exact raw text and source coordinates."""
+    """Extract direct and nested brace-delimited properties without evaluating expressions."""
     masked = _mask_non_code(body)
-    records: list[dict[str, Any]] = []
-    paren = brace = bracket = 0
+    roots: list[dict[str, Any]] = []
+    stack: list[tuple[dict[str, Any], dict[str, Any], str, int, list[str]]] = []
     line_start = 0
-    for index, char in enumerate(masked + "\n"):
-        if char == "(":
-            paren += 1
-        elif char == ")":
-            paren -= 1
-        elif char == "{":
-            brace += 1
-        elif char == "}":
-            brace -= 1
-        elif char == "[":
-            bracket += 1
-        elif char == "]":
-            bracket -= 1
-        elif char == "\n":
-            raw_line = body[line_start:index]
-            if paren == brace == bracket == 0:
-                match = re.match(r"^[ \t]*([A-Za-z][A-Za-z0-9_]*)\s*:\s*(.*?)\s*$", raw_line)
-                if match:
-                    name, raw_value = match.groups()
-                    value_type, value, raw_expression = _decode_property_literal(raw_value)
-                    prefix = raw_line[:match.start(1)]
-                    line_number = start_line + body.count("\n", 0, line_start)
-                    column = (
-                        start_column + len(prefix)
-                        if line_number == start_line
-                        else len(prefix) + 1
-                    )
-                    record: dict[str, Any] = {
-                        "name": name,
-                        "value_type": value_type,
-                        "line": line_number,
-                        "column": column,
-                        "raw": raw_value,
-                    }
-                    if value_type in {"STRING", "NUMBER", "BOOLEAN", "NULL"}:
-                        record["value"] = value
-                    if raw_expression is not None:
-                        record["raw_expression"] = raw_expression
-                    records.append(record)
-            line_start = index + 1
-    return records
+
+    def locator_for(prefix: str, line_number: int) -> tuple[int, int]:
+        column = (
+            start_column + len(prefix)
+            if line_number == start_line
+            else len(prefix) + 1
+        )
+        return line_number, column
+
+    lines = body.splitlines(keepends=True)
+    masked_lines = masked.splitlines(keepends=True)
+    if len(masked_lines) < len(lines):
+        masked_lines.extend([""] * (len(lines) - len(masked_lines)))
+
+    for raw_line_with_newline, masked_line_with_newline in zip(lines, masked_lines):
+        raw_line = raw_line_with_newline.rstrip("\r\n")
+        masked_line = masked_line_with_newline.rstrip("\r\n")
+        line_number = start_line + body.count("\n", 0, line_start)
+        line_start += len(raw_line_with_newline)
+        stripped_masked = masked_line.strip()
+        if not stripped_masked:
+            continue
+
+        close_count = stripped_masked.count("}")
+        for _ in range(close_count):
+            if stack:
+                parent_map, record, key, block_start, raw_parts = stack.pop()
+                record["value"] = parent_map
+                record["valueType"] = "OBJECT"
+                record["extensions"] = {
+                    "rawBlock": "\n".join(raw_parts + [raw_line.strip()])
+                }
+
+        match = re.match(
+            r"^[ \t]*([A-Za-z][A-Za-z0-9_]*)\s*(?::\s*)?(.*?)[ \t]*$",
+            raw_line,
+        )
+        masked_match = re.match(
+            r"^[ \t]*([A-Za-z][A-Za-z0-9_]*)\s*(?::\s*)?(.*?)[ \t]*$",
+            masked_line,
+        )
+        if not match or not masked_match:
+            continue
+
+        name, raw_value = match.groups()
+        _, masked_value = masked_match.groups()
+        prefix = raw_line[:match.start(1)]
+        prop_line, prop_column = locator_for(prefix, line_number)
+        opens_block = "{" in masked_value
+        if opens_block:
+            record: dict[str, Any] = {
+                "name": name,
+                "value_type": "OBJECT",
+                "line": prop_line,
+                "column": prop_column,
+                "raw": raw_value.strip(),
+                "children": [],
+            }
+            target = stack[-1][0] if stack else {}
+            target[name] = record
+            raw_parts = [raw_line.strip()]
+            stack.append(({}, record, name, line_number, raw_parts))
+            continue
+
+        # Ignore a standalone closing-brace line after it has closed its parent.
+        if not masked_value.strip():
+            continue
+        value_type, value, raw_expression = _decode_property_literal(raw_value)
+        record = {
+            "name": name,
+            "value_type": value_type,
+            "line": prop_line,
+            "column": prop_column,
+            "raw": raw_value.strip(),
+        }
+        if value_type in {"STRING", "NUMBER", "BOOLEAN", "NULL"}:
+            record["value"] = value
+        if raw_expression is not None:
+            record["raw_expression"] = raw_expression
+        target = stack[-1][0] if stack else {}
+        target[name] = record
+
+        # Keep raw source lines for any enclosing object block.
+        for frame in stack:
+            frame[4].append(raw_line.strip())
+
+    def as_records(mapping: dict[str, Any]) -> list[dict[str, Any]]:
+        result: list[dict[str, Any]] = []
+        for key, value in mapping.items():
+            record = dict(value)
+            children = record.pop("_children", None)
+            if record.get("value_type") == "OBJECT":
+                nested = record.pop("value", {})
+                record["children"] = as_records(nested)
+                record["value"] = {
+                    child["name"]: _record_to_property(child)
+                    for child in record["children"]
+                }
+            result.append(record)
+        return result
+
+    def _unused() -> None:
+        return None
+
+    return as_records(roots)
+
+
+def _record_to_property(record: dict[str, Any]) -> dict[str, Any]:
+    value_type = record.get("value_type", "UNKNOWN")
+    result: dict[str, Any] = {"valueType": value_type}
+    if "value" in record:
+        result["value"] = record["value"]
+    if "raw_expression" in record:
+        result["rawExpression"] = record["raw_expression"]
+        result["preserved"] = True
+    if value_type == "OBJECT":
+        result["value"] = {
+            child["name"]: _record_to_property(child)
+            for child in record.get("children", [])
+        }
+        result["extensions"] = record.get("extensions", {})
+    return result
 
 
 def _direct_properties(body: str) -> dict[str, Any]:
@@ -198,8 +279,8 @@ def parse_apexlang_text(source: str, file_path: str = "") -> dict[str, Any]:
             "properties":_direct_properties(source[opening + 1:closing]),
             "property_details":_property_records(
                 source[opening + 1:closing],
-                start_line=source.count("\\n", 0, opening) + 1,
-                start_column=(opening - source.rfind("\\n", 0, opening) + 1),
+                start_line=source.count("\n", 0, opening) + 1,
+                start_column=(opening - source.rfind("\n", 0, opening) + 1),
             ),
             "raw_body":source[opening + 1:closing],
         })
