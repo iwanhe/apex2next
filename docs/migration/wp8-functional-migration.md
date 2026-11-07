@@ -61,3 +61,8 @@ Playwright is specified as the source/target capture adapter, not falsely report
 The offline assessor validates a versioned manifest containing security controls, source-to-target role mappings, cutover evidence, rollback RTO/RPO, and four owner approvals. Target permissions must be a subset of the declared source permission set; any expansion fails closed. Missing evidence is NOT_VERIFIED and blocks READY. The assessor never connects to external systems or performs cutover/rollback.
 
 The operational runbook defines security mapping, isolated rehearsal, restore verification, data/functional gates, rollback boundaries (including post-cutover writes, routing, identity, integrations, queues, and split-brain prevention), and T-7/T-0/T+N checklists. Synthetic CI evidence proves only the assessor contract; real source/target inventories, restore/rehearsal results, and formal approvals are still required.
+
+
+## WP9 — Real application pilot and production qualification
+
+WP9 adds an offline intake and qualification assessor for one representative sanitized APEX application. Twelve evidence gates cover source intake/version, extraction/IR, Oracle metadata/schema, PL/SQL/dependencies, target runtime, data rehearsal, functional parity, security, performance/operations, restore/rollback and owner sign-off. Missing evidence, WARN, FAIL, nonzero critical/high defects or missing RTO/RPO prevent qualification. Synthetic CI evidence validates only the assessor contract. A real sanitized export, consistent Oracle evidence, target pilot, witnessed rehearsals and formal approvals remain required.

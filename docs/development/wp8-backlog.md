@@ -75,3 +75,18 @@ WP8 is phased and remains in progress. See the phase plan in ../migration/wp8-fu
 - [ ] Execute representative restore, migration rehearsal, parity, and rollback in isolated pilot.
 - [ ] Obtain formal security, business, application, and operations sign-off.
 - [ ] Production change authority and actual cutover remain outside this offline tool.
+
+
+## WP9 — Real APEX application pilot & production qualification
+
+- [x] Versioned pilot intake and qualification manifest.
+- [x] Source format, sanitization attestation, runtime, snapshot, artifact path/size/hash structure checks.
+- [x] Twelve fail-closed qualification gates spanning WP1–WP8, data, parity, security, performance, rollback and sign-off.
+- [x] Critical/high defect thresholds and explicit RTO/RPO acceptance.
+- [x] Deterministic report, CLI exit codes, synthetic fixture and negative tests.
+- [x] Pilot selection, intake, execution, evidence and exit-criteria runbook.
+- [ ] Obtain and inspect one real sanitized APEX export.
+- [ ] Execute full WP1–WP8 pipeline against real source and consistent Oracle evidence.
+- [ ] Validate target against business-approved journeys.
+- [ ] Complete witnessed rehearsal, performance, restore, rollback and owner sign-off.
+- [ ] Production qualification and production cutover authorization.
