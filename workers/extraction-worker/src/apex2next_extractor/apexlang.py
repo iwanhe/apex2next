@@ -199,7 +199,7 @@ def parse_apexlang_text(source: str, file_path: str = "") -> dict[str, Any]:
             "property_details":_property_records(
                 source[opening + 1:closing],
                 start_line=source.count("\\n", 0, opening) + 1,
-                start_column=(opening - source.rfind("\\n", 0, opening)),
+                start_column=(opening - source.rfind("\\n", 0, opening) + 1),
             ),
             "raw_body":source[opening + 1:closing],
         })
