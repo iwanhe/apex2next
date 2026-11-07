@@ -15,6 +15,19 @@ from .apexlang import _mask_non_code, extract_apexlang
 
 ADAPTER_VERSION = "0.1.0"
 IR_VERSION = "1.0.0"
+
+
+# Keep source keys and add canonical keys only for established aliases.
+APEX_EXPORT_PROPERTY_ALIASES = {
+    ("PAGE", "p_source"): "source",
+    ("REGION", "p_plug_source"): "source",
+}
+
+
+def _canonical_property_name(object_type: str, source_name: str, source_format: str) -> str:
+    if source_format == "APEX_SQL_EXPORT":
+        return APEX_EXPORT_PROPERTY_ALIASES.get((object_type, source_name), source_name)
+    return source_name
 REFERENCE_RE = re.compile(r"(?<![A-Za-z0-9_])@([A-Za-z0-9_./-]+)")
 
 
@@ -300,9 +313,13 @@ def adapt_apexlang_directory(source_dir: str | Path) -> dict[str, Any]:
         property_records = declaration.get("property_details", [])
         if property_records:
             properties = {
-                record["name"]: _apexlang_property_record(
-                    record, file_name, artifact_hash
-                )
+                record["name"]: {
+                    **_apexlang_property_record(record, file_name, artifact_hash),
+                    "sourcePropertyName": record["name"],
+                    "canonicalPropertyName": _canonical_property_name(
+                        object_type, record["name"], "APEXLANG"
+                    ),
+                }
                 for record in property_records
             }
         else:
@@ -431,6 +448,8 @@ def adapt_apex_export(source_text: str, source_name: str = "<memory>") -> dict[s
                 prop = _expression_property(str(value["expression"]), locator)
             else:
                 prop = _property(value, raw, locator)
+            prop["sourcePropertyName"] = key
+            prop["canonicalPropertyName"] = _canonical_property_name(canonical_type, key, "APEX_SQL_EXPORT")
             properties[key] = prop
         obj = {
             "id": object_id, "type": canonical_type, "sourceType": call.get("routine", "unknown"),
