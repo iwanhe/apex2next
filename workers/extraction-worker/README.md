@@ -213,3 +213,26 @@ print(plan["summary"])
 The API classifies components as AUTOMATIC, ASSISTED, MANUAL, or UNSUPPORTED and returns expression-level plans, rule IDs, confidence, provenance, preservation metadata, and SEM001–SEM008 diagnostics. No component is currently AUTOMATIC. Unknown expressions, plug-ins, security behavior, unresolved references, and PL/SQL require review. The report is deterministic and non-mutating; source expressions are never executed and no target code is generated.
 
 See `docs/architecture/wp6-semantic-analysis.md` for mapping, diagnostics, and qualification limits. The initial rules require validation against a sanitized representative APEX application before production code generation.
+
+
+## 5. WP7 — Target project generation
+
+Generate a buildable Next.js/NestJS/PostgreSQL scaffold from a schema-valid Normalized IR snapshot:
+
+```bash
+PYTHONPATH=workers/extraction-worker/src python -m apex2next_extractor.generator_cli \
+  build/application-ir.json --output build/generated-target
+```
+
+Python API:
+
+```python
+from apex2next_extractor import generate_project
+result = generate_project(ir_document, "build/generated-target")
+```
+
+The generator validates IR, re-runs WP5 dependency analysis and WP6 semantic analysis, then emits deterministic Next.js App Router page shells, a NestJS health API, a PostgreSQL baseline migration, source/semantic/dependency reports, manual-review diagnostics, and a SHA-256 generation manifest. It refuses a non-empty output directory unless overwrite is explicitly enabled.
+
+The current implementation intentionally does not generate business tables from UI metadata, execute or translate arbitrary SQL/PL/SQL/JavaScript, reproduce APEX session/security semantics, or claim functional parity. SQL/PLSQL and unsupported/plugin/security behavior remain review items. Schema conversion, data transfer, business service generation, and authentication implementation require their own validated source contracts and work packages.
+
+Generated project checks: pnpm install, pnpm build, pnpm test, and pnpm typecheck. The generated project is a structural starting point, not a production cutover artifact.

@@ -20,7 +20,7 @@ APEX2NEXT is a migration platform intended to inventory, analyze, convert, migra
 
 This repository is the foundation for the reusable converter and pilot migration. Detailed scope and design decisions are documented under [docs/](docs/).
 
-## Documentation
+- [WP6 Semantic Analysis](docs/architecture/wp6-semantic-analysis.md)\n- [WP7 Target Code Generation](docs/architecture/wp7-target-code-generation.md)\n\n## Documentation
 
 - [Architecture Blueprint](docs/architecture/blueprint.md)
 - [Functional Requirements Specification](docs/architecture/frs.md)

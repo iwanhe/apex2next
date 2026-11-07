@@ -14,6 +14,7 @@ from .apexlang_ast import (
 )
 from .dependency_graph import analyze_dependency_graph
 from .semantic_analysis import analyze_semantics
+from .generator import GENERATOR_VERSION, generate_project
 from .normalized_ir import (
     adapt_apex_export,
     adapt_apexlang_directory,
@@ -41,4 +42,6 @@ __all__ = [
     "resolve_references",
     "analyze_dependency_graph",
     "analyze_semantics",
+    "GENERATOR_VERSION",
+    "generate_project",
 ]

@@ -249,3 +249,23 @@ The milestone establishes a normalized structural model and deterministic refere
 - [x] Non-mutating deterministic report, tests, and documentation.
 
 **Qualification boundary:** This closes the implementation baseline and test contract, not behavior-level equivalence, complete APEX component coverage, complete PL/SQL conversion, or production readiness. A sanitized real APEX export and runtime-version-specific fixtures remain required.
+
+
+## WP7 — Target Code Generation
+
+**Status:** Initial generator implementation complete; CI qualification pending.
+
+- [x] Add deterministic Python generator API and CLI.
+- [x] Validate Normalized IR before writing target files.
+- [x] Generate Next.js App Router shell and stable routes for extracted PAGE objects.
+- [x] Generate NestJS API scaffold with health endpoint.
+- [x] Generate PostgreSQL baseline schema and migration ledger without guessing business tables.
+- [x] Include source IR, WP5 graph, WP6 semantic plan, summary, and manual-review diagnostics.
+- [x] Preserve manual/unsupported classifications; never execute source expressions.
+- [x] Add non-empty output protection and explicit overwrite option.
+- [x] Add SHA-256 manifest and deterministic generation tests.
+- [x] Document target workspace and CLI/API usage.
+- [ ] Validate generated target workspace with pnpm install/build/test/typecheck in CI.
+- [ ] Expand generator coverage only after sanitized APEX and database schema fixtures are available.
+
+**Qualification boundary:** WP7 initial generator scaffold is not a full APEX application converter. Business schema, data migration, functional APIs, authentication/authorization, dynamic actions, reports/grids, and PL/SQL behavior remain outside this implementation slice.
