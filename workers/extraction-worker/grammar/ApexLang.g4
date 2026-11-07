@@ -18,7 +18,8 @@ declarationBody
     ;
 
 property
-    : IDENTIFIER COLON propertyValue
+    : IDENTIFIER COLON LBRACE declarationBody RBRACE
+    | IDENTIFIER COLON propertyValue
     | IDENTIFIER LBRACE declarationBody RBRACE
     | IDENTIFIER declarationName? LBRACE declarationBody RBRACE
     ;
