@@ -38,6 +38,18 @@ class ApexLangDeclaration:
     body_span: SourceSpan
     raw_body: str
     children: list["ApexLangDeclaration"] = field(default_factory=list)
+    properties: list["ApexLangProperty"] = field(default_factory=list)
+
+
+@dataclass
+class ApexLangProperty:
+    name: str
+    value_type: Literal["STRING", "NUMBER", "BOOLEAN", "NULL", "OBJECT", "ARRAY", "EXPRESSION", "UNKNOWN"]
+    raw_value: str
+    value: object
+    span: SourceSpan
+    children: list["ApexLangProperty"] = field(default_factory=list)
+    items: list["ApexLangProperty"] = field(default_factory=list)
 
 
 @dataclass
@@ -230,3 +242,151 @@ def parse_apexlang_ast(source: str) -> ApexLangAst:
             node.body_span = _span(source, opening + 1, len(source))
             node.span = _span(source, node.span.start_offset, len(source))
     return ApexLangAst(declarations, tokens, diagnostics)
+
+
+
+def _matching_delimiter(source: str, opening_offset: int, opening: str, closing: str) -> int | None:
+    """Find a matching delimiter while ignoring quoted strings and comments."""
+    tokens, _ = tokenize_apexlang(source)
+    depth = 0
+    for token in tokens:
+        if token.span.start_offset < opening_offset or token.kind != "SYMBOL":
+            continue
+        if token.value == opening:
+            depth += 1
+        elif token.value == closing:
+            depth -= 1
+            if depth == 0:
+                return token.span.start_offset
+    return None
+
+
+def _decode_ast_scalar(raw: str) -> tuple[str, object]:
+    value = raw.strip()
+    if len(value) >= 2 and value[0] == "'" and value[-1] == "'":
+        return "STRING", value[1:-1].replace("''", "'")
+    if len(value) >= 2 and value[0] == '"' and value[-1] == '"':
+        return "STRING", value[1:-1].replace('""', '"')
+    if value.lower() in {"true", "false"}:
+        return "BOOLEAN", value.lower() == "true"
+    if value.lower() in {"null", "none"}:
+        return "NULL", None
+    try:
+        if any(char in value for char in ".eE"):
+            return "NUMBER", float(value)
+        return "NUMBER", int(value)
+    except ValueError:
+        return "EXPRESSION", None
+
+
+def _split_top_level_items(raw: str) -> list[str]:
+    """Split array items on commas outside nested delimiters and quoted tokens."""
+    tokens, _ = tokenize_apexlang(raw)
+    boundaries: list[int] = []
+    stack: list[str] = []
+    pairs = {")": "(", "]": "[", "}": "{"}
+    for token in tokens:
+        if token.kind != "SYMBOL":
+            continue
+        if token.value in {"(", "[", "{"}:
+            stack.append(token.value)
+        elif token.value in pairs:
+            if stack and stack[-1] == pairs[token.value]:
+                stack.pop()
+        elif token.value == "," and not stack:
+            boundaries.append(token.span.start_offset)
+    parts: list[str] = []
+    start = 0
+    for boundary in boundaries:
+        part = raw[start:boundary].strip()
+        if part:
+            parts.append(part)
+        start = boundary + 1
+    tail = raw[start:].strip()
+    if tail:
+        parts.append(tail)
+    return parts
+
+
+def parse_apexlang_properties(
+    source: str, *, base_offset: int = 0
+) -> tuple[list[ApexLangProperty], list[dict[str, object]]]:
+    """Parse typed scalars, multiline object blocks, and arrays without evaluating expressions."""
+    properties: list[ApexLangProperty] = []
+    diagnostics: list[dict[str, object]] = []
+    seen: set[str] = set()
+    lines = source.splitlines(keepends=True)
+    offsets: list[int] = []
+    cursor = 0
+    for line in lines:
+        offsets.append(cursor)
+        cursor += len(line)
+
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+        content = line.rstrip("\r\n")
+        match = re.match(
+            r"^(?P<indent>[ \t]*)(?P<name>[A-Za-z_][A-Za-z0-9_.-]*)\s*:\s*(?P<value>.*)$",
+            content,
+        )
+        if not match:
+            index += 1
+            continue
+        name = match.group("name")
+        raw_value = match.group("value").strip()
+        value_type: str
+        value: object = None
+        children: list[ApexLangProperty] = []
+        items: list[ApexLangProperty] = []
+        end_index = index
+        property_start = offsets[index] + match.start("name")
+        if raw_value.startswith("{") or raw_value.startswith("["):
+            opener = raw_value[0]
+            closer = "}" if opener == "{" else "]"
+            absolute_open = offsets[index] + content.find(opener, match.start("value"))
+            close = _matching_delimiter(source, absolute_open, opener, closer)
+            if close is None:
+                diagnostics.append({
+                    "code": "AST101", "severity": "WARNING",
+                    "message": f"Unterminated {('object' if opener == '{' else 'array')} property: {name}",
+                    "span": _span(source, property_start, len(source)).__dict__,
+                })
+                raw_value = source[absolute_open:]
+                end_index = len(lines) - 1
+                value_type = "UNKNOWN"
+            else:
+                raw_value = source[absolute_open:close + 1]
+                inner = source[absolute_open + 1:close]
+                end_index = source.count("\n", 0, close)
+                if opener == "{":
+                    value_type = "OBJECT"
+                    children, nested_diagnostics = parse_apexlang_properties(inner)
+                    diagnostics.extend(nested_diagnostics)
+                    value = {child.name: child.value for child in children}
+                else:
+                    value_type = "ARRAY"
+                    for item_raw in _split_top_level_items(inner):
+                        item_type, item_value = _decode_ast_scalar(item_raw)
+                        items.append(ApexLangProperty(
+                            name="", value_type=item_type, raw_value=item_raw,
+                            value=item_value, span=_span(source, absolute_open + 1, close),
+                        ))
+                    value = [item.value for item in items]
+        else:
+            value_type, value = _decode_ast_scalar(raw_value)
+        span_end = offsets[end_index] + len(lines[end_index].rstrip("\r\n"))
+        prop = ApexLangProperty(
+            name=name, value_type=value_type, raw_value=raw_value, value=value,
+            span=_span(source, property_start, span_end), children=children, items=items,
+        )
+        if name in seen:
+            diagnostics.append({
+                "code": "AST102", "severity": "WARNING",
+                "message": f"Duplicate property name preserved: {name}",
+                "span": prop.span.__dict__,
+            })
+        seen.add(name)
+        properties.append(prop)
+        index = max(index + 1, end_index + 1)
+    return properties, diagnostics
