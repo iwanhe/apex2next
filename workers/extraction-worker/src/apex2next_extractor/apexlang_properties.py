@@ -315,7 +315,7 @@ def parse_apexlang_properties(
             source,
             value_start,
             value_end,
-            property_start=offsets[line_no] + match.start(),
+            property_start=offsets[line_no] + match.start("name"),
             base_offset=base_offset,
             full_source=original,
             depth=0,
