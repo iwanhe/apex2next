@@ -631,20 +631,21 @@ def test_apexlang_adapter_reports_ast_only_declarations_without_synthesizing_obj
     assert diagnostic["details"] == {"sourceType": "futureComponent", "name": "Widget"}
 
 
+
 def test_apexlang_duplicate_direct_properties_are_all_preserved_outside_unique_key_map(
     tmp_path: Path,
 ) -> None:
     source_dir = tmp_path / "duplicate-direct-properties"
     source_dir.mkdir()
     (source_dir / "application.apx").write_text(
-        "app DEMO (\\n    name: 'Duplicate test'\\n)\\n",
+        "app DEMO (\n    name: 'Duplicate test'\n)\n",
         encoding="utf-8",
     )
     (source_dir / "page.apx").write_text(
-        "page 10 (\\n"
-        "    title: 'First title'\\n"
-        "    title: 'Second title'\\n"
-        ")\\n",
+        "page 10 (\n"
+        "    title: 'First title'\n"
+        "    title: 'Second title'\n"
+        ")\n",
         encoding="utf-8",
     )
 
