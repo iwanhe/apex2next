@@ -327,7 +327,8 @@ def adapt_apex_export(source_text: str, source_name: str = "<memory>") -> dict[s
             properties[key] = prop
         obj = {
             "id": object_id, "type": canonical_type, "sourceType": call.get("routine", "unknown"),
-            "name": str(name) if name is not None else None, "parentId": app_id,
+            "name": str(name) if name is not None else None,
+            "parentId": None if canonical_type == "APPLICATION" else app_id,
             "properties": properties, "source": locator,
             "fingerprint": object_fingerprint(
                 canonical_type, call.get("routine", "unknown"),
