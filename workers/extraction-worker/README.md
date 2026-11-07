@@ -97,7 +97,7 @@ The APEXLang parser now exposes `property_details` alongside the backward-compat
 
 Each normalized property includes a property-level source locator with file, line, column, and source artifact hash. Values that are not recognized as scalar literals are preserved as `valueType: UNKNOWN` with their original `rawExpression`; they are never evaluated. Direct properties inside nested blocks are not flattened into the parent object. The full raw declaration body remains available in `extensions.rawDeclarationBody`.
 
-This is intentionally a conservative first pass. Nested property-path normalization, multiline expressions, and typed SQL/PLSQL/JavaScript classification require additional grammar and source-version fixtures.
+This is intentionally a conservative first pass. Nested property-path normalization and full expression grammar coverage remain future work. A conservative lexical classifier now labels only high-confidence SQL, PL/SQL, and JavaScript expressions; HTML, CSS, and APEX substitution forms are recorded as language metadata while retaining UNKNOWN valueType.
 
 
 ### Nested APEXLang properties
@@ -112,3 +112,10 @@ This parser pass intentionally does not claim support for every inline/mixed bra
 Property extraction preserves a multiline expression as one raw value until the next sibling property or enclosing block/declaration boundary. The IR property locator includes start and end line/column coordinates. Property declarations are recognized only through an explicit colon or a brace-delimited object opener, so nested component declarations such as region/process blocks are not treated as property values.
 
 This is a conservative line-boundary heuristic, not a complete APEXLang expression grammar. Ambiguous continuation layouts, inline/mixed blocks, arrays, and semantic SQL/PLSQL parsing remain unsupported. Expressions are never evaluated.
+
+
+### Conservative expression classification and cross-format mapping
+
+Both source adapters use the same expression-property normalizer. When a raw expression matches a high-signal syntax pattern, the IR records a language, confidence, and versioned rule ID. SQL, PL/SQL, and JavaScript use the corresponding IR expression value types. HTML, CSS, and APEX substitution patterns retain `valueType: UNKNOWN` and expose their language only as metadata because the current schema has no dedicated value types for them.
+
+The original `rawExpression` is always preserved. Ambiguous snippets such as `return status` or `status = 'OPEN'` remain UNKNOWN; the classifier does not infer a language from property names, evaluate expressions, or claim semantic validity. The rules are lexical first-pass evidence and need grammar-backed expansion plus representative production fixtures.
