@@ -162,9 +162,45 @@ def tokenize_apexlang(source: str) -> tuple[list[ApexLangToken], list[dict[str, 
     return tokens, diagnostics
 
 
-def parse_apexlang_ast(source: str) -> ApexLangAst:
-    """Build declaration nodes from tokenized source; nested declarations are structural children."""
+def parse_apexlang_ast(
+    source: str, *, max_source_chars: int = 2_000_000,
+    max_tokens: int = 250_000, max_nesting_depth: int = 128,
+) -> ApexLangAst:
+    """Build a bounded AST; reject oversized or excessively nested input deterministically."""
+    if len(source) > max_source_chars:
+        return ApexLangAst([], [], [{
+            "code": "AST900", "severity": "ERROR",
+            "message": f"Source exceeds configured limit of {max_source_chars} characters.",
+            "span": _span(source, 0, len(source)).__dict__,
+        }])
     tokens, diagnostics = tokenize_apexlang(source)
+    if len(tokens) > max_tokens:
+        return ApexLangAst([], tokens[:max_tokens], [{
+            "code": "AST901", "severity": "ERROR",
+            "message": f"Token count exceeds configured limit of {max_tokens}.",
+            "span": _span(source, 0, len(source)).__dict__,
+        }])
+    nesting = 0
+    maximum_nesting = 0
+    matching = {")": "(", "]": "[", "}": "{"}
+    delimiters: list[str] = []
+    for token in tokens:
+        if token.kind != "SYMBOL":
+            continue
+        if token.value in "([{":
+            delimiters.append(token.value)
+            nesting += 1
+            maximum_nesting = max(maximum_nesting, nesting)
+        elif token.value in ")]}":
+            if delimiters and delimiters[-1] == matching[token.value]:
+                delimiters.pop()
+                nesting -= 1
+    if maximum_nesting > max_nesting_depth:
+        return ApexLangAst([], tokens, diagnostics + [{
+            "code": "AST903", "severity": "ERROR",
+            "message": f"Delimiter nesting exceeds configured limit of {max_nesting_depth}.",
+            "span": _span(source, 0, len(source)).__dict__,
+        }])
     declarations: list[ApexLangDeclaration] = []
     stack: list[tuple[ApexLangDeclaration, int, int]] = []
     i = 0
