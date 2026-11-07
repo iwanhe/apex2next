@@ -280,6 +280,6 @@ def test_recursive_property_parser_seeded_generated_value_properties() -> None:
 
     for _ in range(60):
         raw, expected = make_value(3)
-        ast = parse_apexlang_ast(f"page 1 (\\n    data: {raw}\\n)\\n")
+        ast = parse_apexlang_ast(f"page 1 (\n    data: {raw}\n)\n")
         assert ast.diagnostics == []
         assert ast.declarations[0].properties[0].value == expected
