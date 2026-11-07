@@ -12,12 +12,13 @@ def _json(value: Any) -> str:
 def build_runtime_files(files: dict[str, str]) -> dict[str, str]:
     """Return WP8.6 runtime files and update generated package metadata."""
     root_package = json.loads(files["package.json"])
-    root_package["scripts"]["db:migrate"] = "node scripts/migrate.mjs"
+    root_package["scripts"]["db:migrate"] = "pnpm --filter @generated/api db:migrate"
 
     api_package = json.loads(files["apps/api/package.json"])
     api_package["dependencies"]["pg"] = "^8.16.3"
     api_package["devDependencies"]["@types/pg"] = "^8.15.5"
     api_package["scripts"]["test"] = "pnpm build && node --test"
+    api_package["scripts"]["db:migrate"] = "node scripts/migrate.mjs"
 
     files["README.md"] = files["README.md"].replace(
         "then run pnpm dev. Web is on port 3000; API health is on port 3001/health.",
@@ -30,7 +31,16 @@ def build_runtime_files(files: dict[str, str]) -> dict[str, str]:
         "repository base; configure DATABASE_URL and review migrations.",
     )
 
+    app_module = files["apps/api/src/app.module.ts"].replace(
+        "import { Module } from '@nestjs/common';",
+        "import { Module } from '@nestjs/common';\\nimport { DatabaseModule } from './database/database.module';",
+    ).replace(
+        "@Module({ controllers:",
+        "@Module({ imports: [DatabaseModule], controllers:",
+    )
+
     return {
+        "apps/api/src/app.module.ts": app_module,
         "package.json": _json(root_package) + "\n",
         "apps/api/package.json": _json(api_package) + "\n",
         ".env.example": (
@@ -242,7 +252,7 @@ CREATE TABLE IF NOT EXISTS app.schema_migrations (
   applied_at timestamptz NOT NULL DEFAULT now()
 );
 """,
-        "scripts/migrate.mjs": r"""import { readdir, readFile } from 'node:fs/promises';
+        "apps/api/scripts/migrate.mjs": r"""import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import pg from 'pg';
@@ -252,7 +262,7 @@ const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
   throw new Error('DATABASE_URL is required to run reviewed target migrations.');
 }
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const migrationsDir = path.join(root, 'db', 'migrations');
 const pool = new Pool({ connectionString, max: 1, connectionTimeoutMillis: 5000 });
 const client = await pool.connect();

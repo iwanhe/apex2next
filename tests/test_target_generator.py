@@ -95,7 +95,7 @@ def test_generator_emits_postgres_runtime_contract(tmp_path):
         "apps/api/src/database/postgres-repository.ts",
         "apps/api/src/database/database.module.ts",
         "apps/api/test/postgres.integration.test.js",
-        "scripts/migrate.mjs",
+        "apps/api/scripts/migrate.mjs",
     ]
     for relative in expected:
         assert (root / relative).is_file(), relative
@@ -108,6 +108,8 @@ def test_generator_emits_postgres_runtime_contract(tmp_path):
     assert "pg" in package["dependencies"]
     assert "@types/pg" in package["devDependencies"]
     assert "schema_migrations" in (root / "db/migrations/0001_baseline.sql").read_text()
+    app_module = (root / "apps/api/src/app.module.ts").read_text()
+    assert "DatabaseModule" in app_module and "imports:" in app_module
 
 
 def test_generator_postgres_runtime_is_deterministic(tmp_path):

@@ -42,7 +42,7 @@ The target generator now emits a PostgreSQL runtime foundation:
 - /health liveness endpoint and /health/ready database readiness probe.
 - Generic repository primitives for find/insert/update/delete. Dynamic values use bind parameters; table and column identifiers are restricted to reviewed lowercase identifiers and writable-column allowlists.
 - Explicit transaction helper with BEGIN/COMMIT/ROLLBACK and guaranteed client release.
-- Target-owned migration runner with a PostgreSQL advisory lock, migration ledger, deterministic file order, and one transaction per migration.
+- API-package migration runner with a PostgreSQL advisory lock, migration ledger, deterministic file order, and one transaction per migration.
 - Disposable PostgreSQL integration test for CRUD, malicious-value parameterization, identifier/column rejection, and transaction rollback.
 
 No application-specific business table, entity, repository, process endpoint, or business service is inferred from APEX UI metadata. Those require reviewed WP8.1 schema output, source dependencies, and business semantics. The runtime is a generated baseline, not a production-ready deployment: TLS, secret management, observability, pool sizing, retry policy, load testing, and real-source integration remain qualification tasks.

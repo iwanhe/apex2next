@@ -251,7 +251,7 @@ The generator emits a reusable PostgreSQL runtime foundation, not application-sp
 - /health liveness and /health/ready database-readiness endpoints.
 - Parameterized generic repository primitives. SQL values are bind parameters; table and column identifiers must match a strict lowercase allowlist and configured writable-column list.
 - Explicit transaction helper with rollback on failure and guaranteed client release.
-- pnpm db:migrate applies only checked-in target-owned SQL migrations in deterministic order, using a PostgreSQL advisory lock and per-file transaction.
+- pnpm db:migrate delegates to the API package, which applies only checked-in target-owned SQL migrations in deterministic order, using a PostgreSQL advisory lock and per-file transaction.
 
 Start local PostgreSQL with docker compose up -d postgres, then run pnpm db:migrate. Set DATABASE_URL before starting the API. The generated integration test verifies CRUD, bind-parameter handling, identifier/column rejection, and transaction rollback against a disposable PostgreSQL database.
 
