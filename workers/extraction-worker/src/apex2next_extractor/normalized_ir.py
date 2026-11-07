@@ -116,7 +116,7 @@ def _diagnostic(code: str, severity: str, category: str, message: str,
 def _document(source_format: str, application: dict[str, Any], objects: list[dict[str, Any]],
               relationships: list[dict[str, Any]], references: list[dict[str, Any]],
               diagnostics: list[dict[str, Any]], artifact_hashes: list[str]) -> dict[str, Any]:
-    hashes = sorted(set(artifact_hashes))
+    hashes = sorted(artifact_hashes)
     source_hash = "sha256:" + sha256_text(canonical_json(hashes))
     document = {
         "irVersion": IR_VERSION,
@@ -387,6 +387,12 @@ def resolve_references(document: dict[str, Any]) -> dict[str, Any]:
     objects = resolved_document.get("objects", [])
     references = resolved_document.get("references", [])
     object_by_id = {obj.get("id"): obj for obj in objects if obj.get("id")}
+    id_counts: dict[str, int] = {}
+    for obj in objects:
+        object_id = obj.get("id")
+        if object_id:
+            id_counts[object_id] = id_counts.get(object_id, 0) + 1
+    duplicate_ids = {object_id for object_id, count in id_counts.items() if count > 1}
     application_id = resolved_document.get("application", {}).get("id")
 
     def in_scope(candidate: dict[str, Any], scope: str | None) -> bool:
@@ -413,8 +419,14 @@ def resolve_references(document: dict[str, Any]) -> dict[str, Any]:
     resolver_codes = {"REF001", "REF002", "REF003", "REF004"}
     diagnostics = [
         item for item in resolved_document.get("diagnostics", [])
-        if item.get("code") not in resolver_codes
+        if item.get("code") not in resolver_codes and item.get("code") != "IR004"
     ]
+    for duplicate_id in sorted(duplicate_ids):
+        diagnostics.append(_diagnostic(
+            "IR004", "ERROR", "IDENTITY_COLLISION",
+            f"Multiple IR objects share the same canonical identity: {duplicate_id}",
+            object_id=duplicate_id, details={"occurrences": id_counts[duplicate_id]},
+        ))
     dependencies = [
         item for item in resolved_document.get("dependencies", [])
         if not (
@@ -433,11 +445,11 @@ def resolve_references(document: dict[str, Any]) -> dict[str, Any]:
         target_id: str | None = None
         candidates: list[dict[str, Any]] = []
 
-        if source_id not in object_by_id or not reference_value:
+        if source_id not in object_by_id or source_id in duplicate_ids or not reference_value:
             status = "INVALID"
             diagnostics.append(_diagnostic(
                 "REF004", "ERROR", "REFERENCE_INVALID",
-                "Reference has a missing source object or empty reference value.",
+                "Reference has a missing/ambiguous source object or empty reference value.",
                 locator=reference.get("sourceLocator"), details={"referenceId": reference.get("id")},
             ))
         elif reference_type != "APEXLANG_AT_REFERENCE":
@@ -467,15 +479,17 @@ def resolve_references(document: dict[str, Any]) -> dict[str, Any]:
                 dependency_id = "dep:" + sha256_text(
                     f"{source_id}|{target_id}|{reference_type}|EXPLICIT"
                 )[:24]
-                dependencies.append({
+                dependency = {
                     "id": dependency_id,
                     "sourceObjectId": source_id,
                     "targetObjectId": target_id,
                     "dependencyType": reference_type,
                     "origin": "EXPLICIT",
                     "confidence": 1.0,
-                    "sourceLocator": reference.get("sourceLocator"),
-                })
+                }
+                if reference.get("sourceLocator") is not None:
+                    dependency["sourceLocator"] = reference["sourceLocator"]
+                dependencies.append(dependency)
             elif len(candidates) == 0:
                 status = "DANGLING"
                 diagnostics.append(_diagnostic(
