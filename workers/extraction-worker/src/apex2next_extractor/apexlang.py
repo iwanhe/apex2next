@@ -14,8 +14,8 @@ DECLARATION_TYPES = {
     "authentication":"AUTHENTICATION", "list":"LIST", "listitem":"LIST_ITEM",
     "breadcrumb":"BREADCRUMB", "theme":"THEME", "pagegroup":"PAGE_GROUP",
     "staticfile":"STATIC_FILE", "buildoption":"BUILD_OPTION",
-    "componentsetting":"COMPONENT_SETTING", "supportingobject":"SUPPORTING_OBJECTS",
-    "supportingobjects":"SUPPORTING_OBJECTS", "savedreport":"SAVED_REPORT",
+    "componentsetting":"COMPONENT_SETTING", "supportingobject":"SUPPORTING_OBJECT",
+    "supportingobjects":"SUPPORTING_OBJECT", "savedreport":"SAVED_REPORT",
     "sort":"REPORT_SORT", "parameter":"PARAMETER", "series":"CHART_SERIES",
     "axis":"CHART_AXIS",
 }
