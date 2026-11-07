@@ -53,7 +53,8 @@ Deliver in small, testable work packages. The JSON Schema is the cross-language 
 - [x] Decode unambiguous string, boolean, null, integer, decimal, and scientific numeric literals.
 - [x] Record property-level file, line, column, and source artifact hash.
 - [x] Normalize multiline brace-delimited nested property blocks into recursive OBJECT values with child locators.
-- [ ] Support inline/mixed block syntax and multiline expression source spans.
+- [x] Preserve multiline raw expressions with property-level start/end line and column locators.
+- [ ] Support inline/mixed block syntax, arrays, and grammar-backed expression boundaries.
 - [ ] Build parent-child relationships only where source structure proves containment.
 - [ ] Retain lexical references as unresolved typed candidates; do not claim semantic resolution.
 - [ ] Add source file and declaration location provenance.
