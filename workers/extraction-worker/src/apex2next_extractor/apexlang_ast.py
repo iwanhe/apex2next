@@ -408,7 +408,7 @@ def parse_apexlang_properties(
                 while balance > 0 and lookahead < len(lines):
                     next_content = lines[lookahead].rstrip("\r\n")
                     next_match = re.match(
-                        r"^(?P<indent>[ \\t]*)(?P<name>[A-Za-z_][A-Za-z0-9_.-]*)\s*:",
+                        r"^(?P<indent>[ \t]*)(?P<name>[A-Za-z_][A-Za-z0-9_.-]*)\s*:",
                         next_content,
                     )
                     if next_match and len(next_match.group("indent").expandtabs(4)) == direct_indent:
