@@ -357,6 +357,7 @@ def adapt_apexlang_directory(source_dir: str | Path) -> dict[str, Any]:
     current_file: str | None = None
     occurrence: dict[tuple[str, str, str], int] = {}
     ast_declarations_matched = 0
+    ast_matched_keys: set[tuple[str, int, str, str]] = set()
     ast_properties_adapted = 0
     legacy_property_fallbacks = 0
 
@@ -394,6 +395,17 @@ def adapt_apexlang_directory(source_dir: str | Path) -> dict[str, Any]:
         ast_node = ast_by_declaration.get(ast_key)
         if ast_node:
             ast_declarations_matched += 1
+            ast_matched_keys.add(ast_key)
+        else:
+            diagnostics.append(_diagnostic(
+                "IRAST002", "WARNING", "ADAPTER_PARITY",
+                "No AST declaration matched the inventory declaration; legacy mapping was retained.",
+                locator={
+                    "file": file_name or None, "line": line, "column": column or 1,
+                    "artifactHash": "sha256:" + artifact_hash if artifact_hash else None,
+                },
+                details={"sourceType": source_type, "name": name},
+            ))
         ast_property_names = [prop.name for prop in ast_node.properties] if ast_node else []
         legacy_property_names = [record["name"] for record in property_records]
         use_ast_properties = bool(ast_node and ast_property_names == legacy_property_names)
@@ -497,6 +509,21 @@ def adapt_apexlang_directory(source_dir: str | Path) -> dict[str, Any]:
                 "resolutionStatus": "PENDING", "scope": app_id,
                 "sourceLocator": locator, "candidateObjectIds": [],
             })
+
+    for ast_key, ast_node in sorted(ast_by_declaration.items()):
+        if ast_key not in ast_matched_keys:
+            ast_file, _ast_line, _ast_kind, _ast_name = ast_key
+            diagnostics.append(_diagnostic(
+                "IRAST003", "WARNING", "ADAPTER_PARITY",
+                "AST declaration was not represented by the inventory parser; no IR object was synthesized.",
+                locator={
+                    "file": ast_file,
+                    "line": ast_node.span.start_line,
+                    "column": ast_node.span.start_column,
+                    "artifactHash": "sha256:" + hashes[ast_file],
+                },
+                details={"sourceType": ast_node.kind, "name": ast_node.name},
+            ))
 
     if not declarations:
         diagnostics.append(_diagnostic(
