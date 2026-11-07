@@ -645,10 +645,6 @@ def test_apexlang_duplicate_direct_properties_are_all_preserved_outside_unique_k
         "page 10 (\n"
         "    title: 'First title'\n"
         "    title: 'Second title'\n"
-        "    settings: {\n"
-        "        label: 'First nested'\n"
-        "        label: 'Second nested'\n"
-        "    }\n"
         ")\n",
         encoding="utf-8",
     )
@@ -668,9 +664,34 @@ def test_apexlang_duplicate_direct_properties_are_all_preserved_outside_unique_k
         item for item in document["diagnostics"] if item["code"] == "IRAST004"
     )
     assert diagnostic["details"]["duplicatePropertyNames"] == ["title"]
-    nested = page["properties"]["settings"]
-    assert nested["value"]["label"]["value"] == "Second nested"
-    assert nested["extensions"]["duplicatePropertyNames"] == ["label"]
+
+
+def test_apexlang_nested_duplicate_properties_are_preserved_in_ast_ir_value(
+    tmp_path: Path,
+) -> None:
+    source_dir = tmp_path / "nested-duplicate-properties"
+    source_dir.mkdir()
+    (source_dir / "application.apx").write_text(
+        "app DEMO (\n    name: 'Nested duplicate test'\n)\n",
+        encoding="utf-8",
+    )
+    (source_dir / "page.apx").write_text(
+        "page 10 (\n"
+        "    settings: {\n"
+        "        label: 'First nested'\n"
+        "        label: 'Second nested'\n"
+        "    }\n"
+        ")\n",
+        encoding="utf-8",
+    )
+
+    document = adapt_apexlang_directory(source_dir)
+    page = next(obj for obj in document["objects"] if obj["type"] == "PAGE")
+    settings = page["properties"]["settings"]
+
+    assert validate_ir_document(document) == []
+    assert settings["value"]["label"]["value"] == "Second nested"
+    assert settings["extensions"]["duplicatePropertyNames"] == ["label"]
     assert [
-        item["property"]["value"] for item in nested["extensions"]["duplicateProperties"]
+        item["property"]["value"] for item in settings["extensions"]["duplicateProperties"]
     ] == ["First nested", "Second nested"]
