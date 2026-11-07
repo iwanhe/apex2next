@@ -17,7 +17,7 @@ Deliver in small, testable work packages. The JSON Schema is the cross-language 
 | IRV1-07 | Relationships and dependency graph | Typed graph edges, cycle detection, explicit/inferred distinction | IRV1-06 | P1 | Partial structural containment only |
 | IRV1-08 | Diagnostics catalog | Stable diagnostic codes, severity, details, suggestions | IRV1-02, 06 | P1 | Initial source/schema diagnostics; resolver codes pending |
 | IRV1-09 | Regression and acceptance suite | Cross-format fixtures, determinism, preservation, resolver, safety tests | IRV1-04..08 | P1 | Partial; resolver and broad safety coverage pending |
-| IRV1-10 | Documentation and PR evidence | Usage examples, coverage matrix, limitations, CI evidence | IRV1-09 | P1 | In progress |\n| IRV1-11 | Expression classification and cross-format mapping | Conservative language classifier, shared APEXLang/export property mapping, confidence/rule metadata, regression fixtures | IRV1-04, 05 | P1 | Initial high-confidence lexical rules implemented; grammar-backed classification pending |
+| IRV1-10 | Documentation and PR evidence | Usage examples, coverage matrix, limitations, CI evidence | IRV1-09 | P1 | In progress |\n| IRV1-11 | Expression classification and cross-format mapping | Conservative language classifier, shared APEXLang/export property mapping, confidence/rule metadata, regression fixtures | IRV1-04, 05 | P1 | Initial lexical classifier + explicit canonical aliases + schema/tests implemented; grammar-backed coverage pending |
 
 ## Detailed tasks and acceptance evidence
 
@@ -126,3 +126,17 @@ Deliver in small, testable work packages. The JSON Schema is the cross-language 
 ## Scope boundary
 
 The milestone establishes a normalized structural model and deterministic reference handling for supported constructs. It does not certify complete APEX extraction, complete PL/SQL semantics, runtime behavior, or production migration readiness. A sanitized representative real application export is required before coverage can be measured credibly.
+
+
+### IRV1-11 — Expression classification and cross-format mapping (initial slice)
+- [x] Add conservative syntax-led language labels with confidence and stable rule IDs.
+- [x] Preserve unclassified expressions as UNKNOWN with raw source text.
+- [x] Add explicit canonical property names while retaining source property names.
+- [x] Add narrowly scoped APEX SQL Export aliases for PAGE.p_source and REGION.p_plug_source.
+- [x] Define classification and canonical-name metadata in the shared JSON Schema.
+- [x] Add cross-format and unknown-expression regression tests.
+- [ ] Replace lexical classification with grammar-backed classification where required.
+- [ ] Expand aliases only from documented APEX API semantics and representative export fixtures.
+- [ ] Add corpus-based precision/recall evaluation against sanitized real APEX exports and APEXLang projects.
+
+**Done when:** source property names remain lossless, supported aliases compare deterministically, unsupported expressions remain UNKNOWN, and all outputs validate against the shared IR schema.
