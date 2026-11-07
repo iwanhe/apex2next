@@ -587,7 +587,7 @@ def test_apexlang_adapter_reports_inventory_declarations_without_ast_match(
     source_dir = tmp_path / "inventory-without-ast"
     source_dir.mkdir()
     (source_dir / "page.apx").write_text(
-        "page 10 (\\n    title: 'Legacy'\\n)\\n", encoding="utf-8"
+        "page 10 (\n    title: 'Legacy'\n)\n", encoding="utf-8"
     )
 
     monkeypatch.setattr(
@@ -608,7 +608,7 @@ def test_apexlang_adapter_reports_ast_only_declarations_without_synthesizing_obj
 ) -> None:
     source_dir = tmp_path / "ast-only-declaration"
     source_dir.mkdir()
-    (source_dir / "future.apx").write_text("# source without inventory declaration\\n", encoding="utf-8")
+    (source_dir / "future.apx").write_text("# source without inventory declaration\n", encoding="utf-8")
     span = SourceSpan(0, 10, 1, 1, 1, 11)
     ast_node = ApexLangDeclaration(
         kind="futureComponent",
