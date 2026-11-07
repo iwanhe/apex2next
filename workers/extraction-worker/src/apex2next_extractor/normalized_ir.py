@@ -12,7 +12,7 @@ from typing import Any
 
 from .apex_export import extract_export
 from .apexlang import _mask_non_code, extract_apexlang
-from .apexlang_ast import ApexLangDeclaration, ApexLangProperty, parse_apexlang_ast
+from .apexlang_ast import AST_PARSER_VERSION, ApexLangDeclaration, ApexLangProperty, parse_apexlang_ast
 
 ADAPTER_VERSION = "0.1.0"
 IR_VERSION = "1.0.0"
@@ -356,6 +356,9 @@ def adapt_apexlang_directory(source_dir: str | Path) -> dict[str, Any]:
     stack: list[tuple[int, str]] = []
     current_file: str | None = None
     occurrence: dict[tuple[str, str, str], int] = {}
+    ast_declarations_matched = 0
+    ast_properties_adapted = 0
+    legacy_property_fallbacks = 0
 
     for declaration in declarations:
         file_name = declaration.get("file", "")
@@ -389,10 +392,13 @@ def adapt_apexlang_directory(source_dir: str | Path) -> dict[str, Any]:
         property_records = declaration.get("property_details", [])
         ast_key = (file_name, int(line or 0), str(source_type).casefold(), str(name or ""))
         ast_node = ast_by_declaration.get(ast_key)
+        if ast_node:
+            ast_declarations_matched += 1
         ast_property_names = [prop.name for prop in ast_node.properties] if ast_node else []
         legacy_property_names = [record["name"] for record in property_records]
         use_ast_properties = bool(ast_node and ast_property_names == legacy_property_names)
         if use_ast_properties:
+            ast_properties_adapted += 1
             properties = {
                 prop.name: {
                     **_ast_property_to_ir(prop, file_name, artifact_hash),
@@ -404,6 +410,7 @@ def adapt_apexlang_directory(source_dir: str | Path) -> dict[str, Any]:
                 for prop in ast_node.properties
             }
         else:
+            legacy_property_fallbacks += 1
             if ast_node and ast_property_names != legacy_property_names:
                 diagnostics.append(_diagnostic(
                     "IRAST001", "WARNING", "ADAPTER_PARITY",
@@ -509,10 +516,19 @@ def adapt_apexlang_directory(source_dir: str | Path) -> dict[str, Any]:
             "SOURCE_PARSER", item.get("message", "APEXLang parser diagnostic"),
             locator={"file": item.get("file"), "line": item.get("line"), "column": None},
         ))
-    return _document(
+    document = _document(
         "APEXLANG", application, objects, relationships, references, diagnostics,
         list(hashes.values()),
     )
+    document["metadata"].update({
+        "apexlangAstParserVersion": AST_PARSER_VERSION,
+        "apexlangAstIntegration": "TYPED_PROPERTIES_WITH_LEGACY_FALLBACK",
+        "apexlangAstDeclarationMatchedCount": ast_declarations_matched,
+        "apexlangAstPropertyAdaptedCount": ast_properties_adapted,
+        "apexlangLegacyPropertyFallbackCount": legacy_property_fallbacks,
+        "apexlangAstDiagnosticCount": len(ast_diagnostics),
+    })
+    return document
 
 
 def adapt_apex_export(source_text: str, source_name: str = "<memory>") -> dict[str, Any]:
