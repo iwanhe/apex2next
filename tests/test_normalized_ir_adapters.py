@@ -125,3 +125,22 @@ def test_apexlang_adapter_does_not_collect_references_from_comments_or_literals(
     document = adapt_apexlang_directory(source_dir)
 
     assert [ref["referenceValue"] for ref in document["references"]] == ["real_reference"]
+
+
+
+def test_unknown_apexlang_declaration_is_retained_with_diagnostic(tmp_path: Path) -> None:
+    source_dir = tmp_path / "unknown-apexlang"
+    source_dir.mkdir()
+    (source_dir / "future.apx").write_text(
+        "futureComponent Widget (\\n config: future_expression(x)\\n)\\n",
+        encoding="utf-8",
+    )
+
+    document = adapt_apexlang_directory(source_dir)
+
+    assert validate_ir_document(document) == []
+    assert len(document["objects"]) == 1
+    assert document["objects"][0]["type"] == "UNKNOWN"
+    assert document["objects"][0]["sourceType"] == "futureComponent"
+    assert "future_expression(x)" in document["objects"][0]["extensions"]["rawDeclarationBody"]
+    assert any(item["code"] == "IR002" for item in document["diagnostics"])
