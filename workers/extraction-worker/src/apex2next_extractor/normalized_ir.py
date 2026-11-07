@@ -262,6 +262,17 @@ def _ast_property_to_ir(prop: ApexLangProperty, file_name: str, artifact_hash: s
         duplicates = sorted({name for name in names if names.count(name) > 1})
         if duplicates:
             result["extensions"]["duplicatePropertyNames"] = duplicates
+            result["extensions"]["duplicateProperties"] = [
+                {
+                    "name": child.name,
+                    "sourceLocator": _ast_property_to_ir(
+                        child, file_name, artifact_hash
+                    )["sourceLocator"],
+                    "property": _ast_property_to_ir(child, file_name, artifact_hash),
+                }
+                for child in prop.children
+                if child.name in duplicates
+            ]
     elif prop.value_type == "ARRAY":
         result["value"] = [
             _ast_property_to_ir(item, file_name, artifact_hash) for item in prop.items
@@ -454,6 +465,38 @@ def adapt_apexlang_directory(source_dir: str | Path) -> dict[str, Any]:
                 }
         raw_body = declaration.get("raw_body")
         extensions: dict[str, Any] = {"sourceIndent": indent}
+        if ast_node:
+            ast_name_counts = {
+                property_name: ast_property_names.count(property_name)
+                for property_name in set(ast_property_names)
+            }
+            duplicate_names = sorted(
+                property_name for property_name, count in ast_name_counts.items()
+                if count > 1
+            )
+            if duplicate_names:
+                duplicate_records = [
+                    {
+                        "name": prop.name,
+                        "occurrence": occurrence_index,
+                        "property": _ast_property_to_ir(prop, file_name, artifact_hash),
+                    }
+                    for prop in ast_node.properties
+                    if prop.name in duplicate_names
+                    for occurrence_index in [
+                        1 + sum(
+                            1 for prior in ast_node.properties[:ast_node.properties.index(prop)]
+                            if prior.name == prop.name
+                        )
+                    ]
+                ]
+                extensions["duplicateProperties"] = duplicate_records
+                diagnostics.append(_diagnostic(
+                    "IRAST004", "WARNING", "PROPERTY_COLLISION",
+                    "Duplicate direct property names cannot be represented as unique keys in the IR properties map; every occurrence is preserved in extensions.duplicateProperties.",
+                    locator=locator, object_id=object_id,
+                    details={"duplicatePropertyNames": duplicate_names},
+                ))
         if raw_body is not None:
             extensions["rawDeclarationBody"] = raw_body
         if not native_id:
