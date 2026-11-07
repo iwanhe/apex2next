@@ -119,3 +119,10 @@ This is a conservative line-boundary heuristic, not a complete APEXLang expressi
 Both source adapters use the same expression-property normalizer. When a raw expression matches a high-signal syntax pattern, the IR records a language, confidence, and versioned rule ID. SQL, PL/SQL, and JavaScript use the corresponding IR expression value types. HTML, CSS, and APEX substitution patterns retain `valueType: UNKNOWN` and expose their language only as metadata because the current schema has no dedicated value types for them.
 
 The original `rawExpression` is always preserved. Ambiguous snippets such as `return status` or `status = 'OPEN'` remain UNKNOWN; the classifier does not infer a language from property names, evaluate expressions, or claim semantic validity. The rules are lexical first-pass evidence and need grammar-backed expansion plus representative production fixtures.
+
+
+### Expression classification and canonical property mapping
+
+Normalized properties retain both `sourcePropertyName` and `canonicalPropertyName`. The first alias set is intentionally narrow and object-specific: APEX SQL Export PAGE `p_source` maps to canonical `source`; REGION `p_plug_source` maps to `source`. APEXLang property names are preserved as their canonical names. This mapping does not claim semantic equivalence beyond these explicit aliases.
+
+Expression properties include `expressionLanguage`, `classificationConfidence`, and `classificationRule`. The lexical classifier recognizes a limited set of SQL, PL/SQL, JavaScript, APEX substitution, HTML, and CSS forms. Unmatched expressions remain UNKNOWN and all raw expressions are retained; no source expression is executed. This remains an initial classifier, not a full language parser.
