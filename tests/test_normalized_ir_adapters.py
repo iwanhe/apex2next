@@ -275,8 +275,8 @@ def test_apexlang_properties_are_typed_and_keep_property_level_provenance(tmp_pa
     assert page["properties"]["ratio"]["value"] == 1.25
     assert page["properties"]["emptyValue"]["valueType"] == "NULL"
     assert page["properties"]["emptyValue"]["value"] is None
-    assert page["properties"]["source"]["valueType"] == "SQL_EXPRESSION"
-    assert page["properties"]["source"]["expressionLanguage"] == "SQL"
+    assert page["properties"]["source"]["valueType"] == "UNKNOWN"
+    assert page["properties"]["source"]["expressionLanguage"] == "UNKNOWN"
     assert page["properties"]["source"]["rawExpression"] == "select_orders(:P10_ID)"
     assert page["properties"]["source"]["sourceLocator"]["file"] == "page.apx"
     assert page["properties"]["source"]["sourceLocator"]["line"] == 7
@@ -372,7 +372,9 @@ def test_apexlang_multiline_expressions_keep_full_source_and_end_locator(tmp_pat
     page = next(obj for obj in document["objects"] if obj["type"] == "PAGE")
 
     assert validate_ir_document(document) == []
-    assert page["properties"]["source"]["valueType"] == "UNKNOWN"
+    assert page["properties"]["source"]["valueType"] == "SQL_EXPRESSION"
+    assert page["properties"]["source"]["expressionLanguage"] == "SQL"
+    assert page["properties"]["source"]["classificationConfidence"] == "HIGH"
     assert page["properties"]["source"]["rawExpression"] == (
         "SELECT order_id,\norder_date\nFROM orders\nWHERE status = 'OPEN'"
     )
@@ -410,6 +412,7 @@ def test_apexlang_colon_prefixed_nested_objects_stay_structured(tmp_path: Path) 
 def test_expression_classifier_uses_conservative_syntax_evidence() -> None:
     cases = {
         "SELECT * FROM orders": "SQL",
+        "q'[SELECT * FROM orders]'": "SQL",
         "WITH q AS (SELECT 1 FROM dual) SELECT * FROM q": "SQL",
         "BEGIN\n  NULL;\nEND;": "PL_SQL",
         "DECLARE\n  v_count NUMBER;\nBEGIN\n  NULL;\nEND;": "PL_SQL",
