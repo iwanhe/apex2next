@@ -75,7 +75,42 @@ def _mask(source: str) -> str:
     return "".join(out)
 
 
+def _remove_comments(text: str) -> str:
+    """Remove SQL comments without altering quoted strings or quoted identifiers."""
+    out = list(text)
+    i = 0
+    while i < len(text):
+        if text[i] in {"'", '"'}:
+            quote = text[i]
+            i += 1
+            while i < len(text):
+                if text[i] == quote:
+                    if i + 1 < len(text) and text[i + 1] == quote:
+                        i += 2
+                        continue
+                    i += 1
+                    break
+                i += 1
+        elif text.startswith("--", i):
+            end = text.find("\n", i + 2)
+            end = len(text) if end < 0 else end
+            for pos in range(i, end):
+                out[pos] = " "
+            i = end
+        elif text.startswith("/*", i):
+            end = text.find("*/", i + 2)
+            end = len(text) if end < 0 else end + 2
+            for pos in range(i, end):
+                if out[pos] != "\n":
+                    out[pos] = " "
+            i = end
+        else:
+            i += 1
+    return "".join(out)
+
+
 def _split_top_level(text: str) -> list[str]:
+    text = _remove_comments(text)
     parts: list[str] = []
     scan = _mask(text)
     start = 0
