@@ -169,6 +169,7 @@ def test_reference_resolver_resolves_one_exact_in_scope_candidate(tmp_path: Path
     assert resolved["dependencies"][0]["origin"] == "EXPLICIT"
     assert resolved["metadata"]["resolverVersion"] == "0.1.0"
     assert validate_ir_document(resolved) == []
+    assert resolve_references(resolved) == resolved
 
 
 def test_reference_resolver_reports_dangling_candidate() -> None:
