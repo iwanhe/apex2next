@@ -645,6 +645,7 @@ def test_apexlang_duplicate_direct_properties_are_all_preserved_outside_unique_k
         "page 10 (\n"
         "    title: 'First title'\n"
         "    title: 'Second title'\n"
+        "    settings: { label: 'First nested', label: 'Second nested' }\n"
         ")\n",
         encoding="utf-8",
     )
@@ -664,3 +665,9 @@ def test_apexlang_duplicate_direct_properties_are_all_preserved_outside_unique_k
         item for item in document["diagnostics"] if item["code"] == "IRAST004"
     )
     assert diagnostic["details"]["duplicatePropertyNames"] == ["title"]
+    nested = page["properties"]["settings"]
+    assert nested["value"]["label"]["value"] == "Second nested"
+    assert nested["extensions"]["duplicatePropertyNames"] == ["label"]
+    assert [
+        item["property"]["value"] for item in nested["extensions"]["duplicateProperties"]
+    ] == ["First nested", "Second nested"]
