@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import apex2next_extractor.normalized_ir as normalized_ir_module
+from apex2next_extractor.apexlang_ast import ApexLangAst, ApexLangDeclaration, SourceSpan
 from apex2next_extractor.ir_schema import validate_ir_document
 from apex2next_extractor.normalized_ir import (
     adapt_apex_export,
@@ -576,3 +578,54 @@ def test_apexlang_ast_integrated_ir_is_deterministic_for_fixed_source(tmp_path: 
 
     assert first == second
     assert validate_ir_document(first) == []
+
+
+
+def test_apexlang_adapter_reports_inventory_declarations_without_ast_match(
+    tmp_path: Path, monkeypatch
+) -> None:
+    source_dir = tmp_path / "inventory-without-ast"
+    source_dir.mkdir()
+    (source_dir / "page.apx").write_text(
+        "page 10 (\\n    title: 'Legacy'\\n)\\n", encoding="utf-8"
+    )
+
+    monkeypatch.setattr(
+        normalized_ir_module,
+        "parse_apexlang_ast",
+        lambda _source: ApexLangAst([], [], []),
+    )
+    document = adapt_apexlang_directory(source_dir)
+
+    assert validate_ir_document(document) == []
+    assert len([item for item in document["diagnostics"] if item["code"] == "IRAST002"]) == 1
+    page = next(obj for obj in document["objects"] if obj["type"] == "PAGE")
+    assert page["properties"]["title"]["value"] == "Legacy"
+
+
+def test_apexlang_adapter_reports_ast_only_declarations_without_synthesizing_objects(
+    tmp_path: Path, monkeypatch
+) -> None:
+    source_dir = tmp_path / "ast-only-declaration"
+    source_dir.mkdir()
+    (source_dir / "future.apx").write_text("# source without inventory declaration\\n", encoding="utf-8")
+    span = SourceSpan(0, 10, 1, 1, 1, 11)
+    ast_node = ApexLangDeclaration(
+        kind="futureComponent",
+        name="Widget",
+        span=span,
+        body_span=SourceSpan(10, 10, 1, 11, 1, 11),
+        raw_body="",
+    )
+    monkeypatch.setattr(
+        normalized_ir_module,
+        "parse_apexlang_ast",
+        lambda _source: ApexLangAst([ast_node], [], []),
+    )
+
+    document = adapt_apexlang_directory(source_dir)
+
+    assert validate_ir_document(document) == []
+    assert document["objects"] == []
+    diagnostic = next(item for item in document["diagnostics"] if item["code"] == "IRAST003")
+    assert diagnostic["details"] == {"sourceType": "futureComponent", "name": "Widget"}
