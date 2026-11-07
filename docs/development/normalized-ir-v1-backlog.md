@@ -157,3 +157,21 @@ The milestone establishes a normalized structural model and deterministic refere
 - [ ] Integrate AST output into the Normalized IR adapter only after parity tests show no loss versus the current inventory parser.
 
 **Done when:** the grammar/AST layer can represent supported declarations and nested structures with exact source spans, preserves all unparsed source, reports malformed syntax, and passes the real-source regression corpus. This initial slice is not the production parser and does not claim complete APEXLang syntax support.
+
+
+### WP PARSER-02 — Typed property AST and nested values (initial slice)
+- [x] Add typed property node model with source spans.
+- [x] Attach property nodes to declaration AST nodes.
+- [x] Parse scalar string, number, boolean, and null literals conservatively.
+- [x] Parse multiline brace-delimited object values recursively.
+- [x] Parse bracket-delimited arrays of scalar values.
+- [x] Preserve unrecognized expressions without execution.
+- [x] Detect duplicate property names while retaining source order.
+- [x] Scope property extraction to the direct declaration level.
+- [x] Preserve multiline balanced-parenthesis expressions.
+- [ ] Support nested object/array values and inline/mixed brace syntax.
+- [ ] Add grammar-driven property parsing and parser recovery.
+- [ ] Add resource limits, fuzz tests, and real APEXLang corpus comparisons.
+- [ ] Compare AST property output with existing inventory adapter property records.
+
+**Done when:** supported scalar/object/array values are represented as typed AST nodes with source spans, unknown expressions remain lossless, duplicate keys are diagnosed, and regression fixtures pass. This initial slice is not full APEXLang syntax coverage.
