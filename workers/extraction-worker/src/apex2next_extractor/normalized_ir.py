@@ -107,6 +107,15 @@ def classify_expression(raw_expression: str) -> dict[str, str]:
     if not source:
         return {"language": "UNKNOWN", "confidence": "NONE", "rule": "EXPR_NONE"}
 
+    # Oracle alternative-quoted literals are unwrapped for classification only.
+    # The caller always retains the original rawExpression unchanged.
+    alternative_quote = re.fullmatch(r"(?is)q'(.)([\\s\\S]*)(.)'", source)
+    if alternative_quote:
+        opening, body, closing = alternative_quote.groups()
+        expected_close = {"[": "]", "(": ")", "{": "}", "<": ">"}.get(opening, opening)
+        if closing == expected_close:
+            source = body.strip()
+
     rules = (
         ("PL_SQL", r"^(?:DECLARE\b[\s\S]*?\bBEGIN\b|BEGIN\b[\s\S]*\bEND\s*;?$|CREATE\s+(?:OR\s+REPLACE\s+)?(?:EDITIONABLE\s+)?(?:PROCEDURE|FUNCTION|PACKAGE(?:\s+BODY)?|TRIGGER)\b)", "EXPR_PLSQL_BLOCK_V1"),
         ("SQL", r"^(?:SELECT\b|WITH\b[\s\S]*?\bSELECT\b|INSERT\s+INTO\b|UPDATE\s+[A-Za-z0-9_$#.]+\s+SET\b|DELETE\s+FROM\b|MERGE\s+INTO\b)", "EXPR_SQL_STATEMENT_V1"),
