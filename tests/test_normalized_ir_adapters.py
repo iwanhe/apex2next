@@ -240,21 +240,21 @@ def test_apexlang_properties_are_typed_and_keep_property_level_provenance(tmp_pa
     source_dir = tmp_path / "typed-properties"
     source_dir.mkdir()
     (source_dir / "application.apx").write_text(
-        "app DEMO (\\n    name: 'Demo App'\\n)\\n",
+        "app DEMO (\n    name: 'Demo App'\n)\n",
         encoding="utf-8",
     )
     (source_dir / "page.apx").write_text(
-        "page 10 (\\n"
-        "    title: 'Orders'\\n"
-        "    enabled: true\\n"
-        "    pageSize: 25\\n"
-        "    ratio: 1.25\\n"
-        "    emptyValue: null\\n"
-        "    source: select_orders(:P10_ID)\\n"
-        "    nested {\\n"
-        "        hidden: 'not-a-direct-property'\\n"
-        "    }\\n"
-        ")\\n",
+        "page 10 (\n"
+        "    title: 'Orders'\n"
+        "    enabled: true\n"
+        "    pageSize: 25\n"
+        "    ratio: 1.25\n"
+        "    emptyValue: null\n"
+        "    source: select_orders(:P10_ID)\n"
+        "    nested {\n"
+        "        hidden: 'not-a-direct-property'\n"
+        "    }\n"
+        ")\n",
         encoding="utf-8",
     )
 
