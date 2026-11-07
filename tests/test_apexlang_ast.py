@@ -71,3 +71,79 @@ def test_ast_balances_parentheses_inside_multiline_property_expressions() -> Non
     assert page.raw_body.rstrip().endswith(")")
     assert [(node.kind, node.name) for node in page.children] == [("region", "grid")]
     assert "lookup_value(foo(1, 2))" in page.raw_body
+
+
+
+def test_ast_parses_typed_scalar_object_and_array_properties_with_spans() -> None:
+    source = """page 10 (
+    title: 'Orders'
+    enabled: true
+    retries: 3
+    config: {
+        mode: 'strict'
+        timeout: 2.5
+    }
+    columns: [
+        'ORDER_ID',
+        'ORDER_DATE',
+        'TOTAL'
+    ]
+)
+"""
+    ast = parse_apexlang_ast(source)
+    page = ast.declarations[0]
+    props = {prop.name: prop for prop in page.properties}
+    assert props["title"].value_type == "STRING"
+    assert props["title"].value == "Orders"
+    assert props["enabled"].value_type == "BOOLEAN"
+    assert props["enabled"].value is True
+    assert props["retries"].value_type == "NUMBER"
+    assert props["retries"].value == 3
+    assert props["config"].value_type == "OBJECT"
+    assert [(p.name, p.value) for p in props["config"].children] == [
+        ("mode", "strict"), ("timeout", 2.5)
+    ]
+    assert props["columns"].value_type == "ARRAY"
+    assert props["columns"].value == ["ORDER_ID", "ORDER_DATE", "TOTAL"]
+    assert props["config"].span.start_line == 5
+    assert props["config"].span.end_line == 8
+    assert ast.diagnostics == []
+
+
+def test_ast_property_parser_preserves_duplicate_keys_and_unknown_expressions() -> None:
+    source = """page 10 (
+    source: coalesce(
+        lookup_value(foo(1, 2)),
+        'fallback'
+    )
+    source: :P10_SOURCE
+)
+"""
+    ast = parse_apexlang_ast(source)
+    page = ast.declarations[0]
+    assert len([prop for prop in page.properties if prop.name == "source"]) == 2
+    assert page.properties[0].value_type == "EXPRESSION"
+    assert "lookup_value(foo(1, 2))" in page.properties[0].raw_value
+    assert page.properties[1].value_type == "EXPRESSION"
+    assert any(item["code"] == "AST102" for item in ast.diagnostics)
+
+
+def test_nested_declaration_properties_do_not_leak_into_parent_property_scope() -> None:
+    source = """page 10 (
+    title: 'Page'
+    region grid (
+        title: 'Region'
+        process save (
+            source: 'begin null; end;'
+        )
+    )
+)
+"""
+    ast = parse_apexlang_ast(source)
+    page = ast.declarations[0]
+    region = page.children[0]
+    assert [(prop.name, prop.value) for prop in page.properties] == [("title", "Page")]
+    assert [(prop.name, prop.value) for prop in region.properties] == [("title", "Region")]
+    assert [(prop.name, prop.value) for prop in region.children[0].properties] == [
+        ("source", "begin null; end;")
+    ]
