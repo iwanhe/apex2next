@@ -11,7 +11,7 @@ Deliver in small, testable work packages. The JSON Schema is the cross-language 
 | IRV1-01 | Contract and taxonomy | JSON Schema, canonical object taxonomy, version policy, valid/invalid fixtures | — | P0 | Initial contract in place |
 | IRV1-02 | Core types and validators | Generated TS types, Python schema validation, contract test harness | IRV1-01 | P0 | Python validator in place; TS types/tests pending |
 | IRV1-03 | Identity and provenance | Canonical identity builder, fingerprinting, source locator model | IRV1-01 | P0 | Initial implementation + regression tests |
-| IRV1-04 | APEXLang adapter | Inventory-to-IR mapping, raw property preservation, provenance | IRV1-02, 03 | P0 | Typed scalar properties + property locators implemented; nested property normalization pending |
+| IRV1-04 | APEXLang adapter | Inventory-to-IR mapping, raw property preservation, provenance | IRV1-02, 03 | P0 | Typed scalar + recursive multiline brace-block properties implemented; broader syntax pending |
 | IRV1-05 | APEX SQL Export adapter | Export-call-to-IR mapping, raw argument preservation, provenance | IRV1-02, 03 | P0 | Initial implementation + fixture tests |
 | IRV1-06 | Reference resolver | Scope-aware candidate index, typed resolver, resolution diagnostics | IRV1-04, 05 | P1 | Initial exact-ID resolver + tests; broader type/context rules pending |
 | IRV1-07 | Relationships and dependency graph | Typed graph edges, cycle detection, explicit/inferred distinction | IRV1-06 | P1 | Partial structural containment only |
@@ -52,7 +52,8 @@ Deliver in small, testable work packages. The JSON Schema is the cross-language 
 - [x] Preserve declaration kind, names, scalar properties, unknown properties, and raw expressions.
 - [x] Decode unambiguous string, boolean, null, integer, decimal, and scientific numeric literals.
 - [x] Record property-level file, line, column, and source artifact hash.
-- [ ] Normalize nested property blocks into typed property paths.
+- [x] Normalize multiline brace-delimited nested property blocks into recursive OBJECT values with child locators.
+- [ ] Support inline/mixed block syntax and multiline expression source spans.
 - [ ] Build parent-child relationships only where source structure proves containment.
 - [ ] Retain lexical references as unresolved typed candidates; do not claim semantic resolution.
 - [ ] Add source file and declaration location provenance.
