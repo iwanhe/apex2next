@@ -234,7 +234,7 @@ export class AuthorizationReviewGuard implements CanActivate {
                       key=lambda o: str(o.get("id", ""))):
         identity = str(obj.get("id", "process"))
         suffix = hashlib.sha256(identity.encode()).hexdigest()[:8]
-        class_name = "".join(p.title() for p in re.findall(r"[A-Za-z0-9]+", str(obj.get("name") or "GeneratedProcess"))) + suffix
+        class_name = "Generated" + "".join(p.title() for p in re.findall(r"[A-Za-z0-9]+", str(obj.get("name") or "Process"))) + suffix
         file_name = _slug(str(obj.get("name") or ""), "process") + "-" + suffix
         imports.append(f"import {{ {class_name} }} from './processes/{file_name}.service';")
         providers.append(class_name)
@@ -285,6 +285,8 @@ export class AuthorizationReviewGuard implements CanActivate {
         for item in items:
             label = html.escape(str(item.get("name") or item.get("id")), quote=True)
             field = _slug(str(item.get("name") or ""), "field").replace("-", "_")
+            if not re.fullmatch(r"[A-Za-z_$][A-Za-z0-9_$]*", field):
+                field = "field_" + field
             field_id = _slug(str(item.get("id") or field), "field")
             fields.append(f"  readonly {field}?: unknown;")
             controls.append(f'<div><label htmlFor="{field_id}">{label}</label> <input id="{field_id}" name="{field}" disabled aria-label="{label}" /></div>')

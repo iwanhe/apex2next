@@ -1,6 +1,6 @@
 # WP7 — Target Code Generation
 
-**Status:** Initial generator implementation | **Generator:** 0.1.0
+**Status:** Implemented baseline | **Generator:** 0.1.0
 
 ## Purpose
 
