@@ -332,8 +332,8 @@ def parse_apexlang_properties(
     property_indents = []
     for candidate in lines:
         candidate_match = re.match(
-            r"^(?P<indent>[ \\t]*)(?P<name>[A-Za-z_][A-Za-z0-9_.-]*)\\s*:",
-            candidate.rstrip("\\r\\n"),
+            r"^(?P<indent>[ \t]*)(?P<name>[A-Za-z_][A-Za-z0-9_.-]*)\\s*:",
+            candidate.rstrip("\r\n"),
         )
         if candidate_match:
             property_indents.append(len(candidate_match.group("indent").expandtabs(4)))
