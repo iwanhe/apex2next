@@ -2,7 +2,7 @@
 
 **Delivery model:** phased; each phase has an independent acceptance gate.  
 **Current implementation:** WP8.1 conservative Oracle DDL conversion baseline.  
-**Status:** WP8 in progress; WP8 is not complete.
+**Status:** WP8 in progress; WP8.1 implemented and CI-verified; WP8 is not complete.
 
 ## Scope
 
@@ -51,6 +51,12 @@ Command: `PYTHONPATH=workers/schema-analyzer/src python -m apex2next_schema_anal
 - Input comments and string literals are masked for DDL boundary detection.
 - Stable ordering and source SHA-256 are included in the report.
 - No data, indexes, views, sequences, triggers, grants, partitions, or PL/SQL are migrated in WP8.1.
+
+## WP8.1 CI evidence
+
+- Commit: `fcd73ee71dcd65d93ba579177d26855545bbe2d5`
+- GitHub Actions run: [42363415407](https://github.com/iwanhe/apex2next/actions/runs/42363415407)
+- Result: all 4 CI jobs passed; Ruff passed; pytest 85 passed; generated Next.js/NestJS workspace build/test/typecheck passed; ANTLR validation and Node workspace baseline passed.
 
 ## WP8.1 acceptance criteria
 

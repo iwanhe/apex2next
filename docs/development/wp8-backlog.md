@@ -24,8 +24,12 @@ WP8 is phased and remains in progress. See [WP8 phase plan](../migration/wp8-fun
 - [x] Validate target schema identifier and quote source identifiers.
 - [x] Add regression tests for comments, strings, quoted identifiers, constraints, unsupported features, and deterministic output.
 - [x] Document offline/read-only execution and limitations.
-- [ ] CI verification on final WP8.1 commit.
+- [x] CI verification on final WP8.1 commit (85 pytest passed; all 4 CI jobs passed).
 - [ ] Compare a sanitized representative DDL export with Oracle dictionary metadata.
+
+## WP8.1 CI evidence
+
+Final verified commit: `fcd73ee71dcd65d93ba579177d26855545bbe2d5`. Run: [42363415407](https://github.com/iwanhe/apex2next/actions/runs/42363415407).
 
 ## WP8 global quality gates
 
