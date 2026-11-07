@@ -98,6 +98,37 @@ def _property(value: Any, raw: str | None = None, locator: dict[str, Any] | None
     return result
 
 
+
+def _apexlang_property_record(
+    record: dict[str, Any], file_name: str, artifact_hash: str | None
+) -> dict[str, Any]:
+    locator = {
+        "file": file_name or None,
+        "line": record.get("line"),
+        "column": record.get("column"),
+        "artifactHash": "sha256:" + artifact_hash if artifact_hash else None,
+    }
+    value_type = record.get("value_type", "UNKNOWN")
+    result: dict[str, Any] = {
+        "valueType": value_type,
+        "preserved": True,
+        "sourceLocator": locator,
+    }
+    if value_type == "OBJECT":
+        children = record.get("children", [])
+        result["value"] = {
+            child["name"]: _apexlang_property_record(child, file_name, artifact_hash)
+            for child in children
+        }
+        result["extensions"] = {"rawBlock": record.get("raw", "")}
+    elif "value" in record:
+        result["value"] = record["value"]
+    else:
+        result["rawExpression"] = record.get(
+            "raw_expression", record.get("raw", "")
+        )
+    return result
+
 def _diagnostic(code: str, severity: str, category: str, message: str,
                 *, locator: dict[str, Any] | None = None,
                 object_id: str | None = None, details: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -216,31 +247,12 @@ def adapt_apexlang_directory(source_dir: str | Path) -> dict[str, Any]:
         }
         property_records = declaration.get("property_details", [])
         if property_records:
-            properties = {}
-            for record in property_records:
-                property_name = record["name"]
-                property_line = record.get("line")
-                property_column = record.get("column")
-                property_locator = {
-                    "file": file_name or None,
-                    "line": property_line,
-                    "column": property_column,
-                    "artifactHash": "sha256:" + artifact_hash if artifact_hash else None,
-                }
-                raw_expression = record.get("raw_expression")
-                raw_literal = record.get("raw")
-                if "value" in record:
-                    property_value = record["value"]
-                    properties[property_name] = _property(
-                        property_value, raw=raw_literal, locator=property_locator
-                    )
-                else:
-                    properties[property_name] = {
-                        "valueType": record.get("value_type", "UNKNOWN"),
-                        "rawExpression": raw_expression if raw_expression is not None else raw_literal,
-                        "preserved": True,
-                        "sourceLocator": property_locator,
-                    }
+            properties = {
+                record["name"]: _apexlang_property_record(
+                    record, file_name, artifact_hash
+                )
+                for record in property_records
+            }
         else:
             properties = {
                 key: _property(value)
