@@ -160,7 +160,7 @@ def _property_records(
 
         name = match.group(1)
         raw_value = match.group(2)
-        is_object = match.group(3) == "{"
+        is_object = match.group(3) == "{" or (raw_value or "").strip() == "{"
         property_indent = indentation(raw_line)
         key_offset = raw_line.find(name)
         prop_line, prop_column = locator(index, key_offset)
