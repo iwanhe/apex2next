@@ -7,7 +7,6 @@ complete APEXLang grammar coverage.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-import re
 from typing import Literal
 
 
