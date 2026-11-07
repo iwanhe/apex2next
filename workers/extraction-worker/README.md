@@ -140,7 +140,7 @@ A first structural parsing layer is available alongside the existing inventory p
 - Parentheses inside multiline expressions are balanced separately from declaration delimiters.
 - Unterminated strings, comments, fenced blocks, and declarations produce structured AST diagnostics.
 
-This is an incremental grammar/AST foundation, not yet the production parser for the adapters. It currently models declaration structure and lossless token spans; typed property nodes, complete array/mixed-brace grammar, error recovery, nesting/resource limits, and adapter integration remain follow-up work. The ANTLR grammar file is a maintained grammar specification; the Python AST parser currently runs without an ANTLR runtime dependency.
+This is an incremental grammar/AST foundation, not yet the production parser for the adapters. It models declaration structure, typed property nodes, recursive supported object/array values, and lossless source spans. The Python AST parser remains dependency-free and is not generated from the maintained ANTLR grammar. Full APEXLang coverage, comprehensive recovery, and adapter integration remain qualification work.
 
 
 ### Typed APEXLang property AST (WP2 initial slice)
@@ -158,7 +158,7 @@ The AST declaration model now exposes a `properties` collection of typed `ApexLa
 
 Public API: `parse_apexlang_ast`, `parse_apexlang_properties`, and the `ApexLangProperty` / `SourceSpan` models.
 
-Current boundaries: inline object expressions, arrays containing nested object values, mixed brace forms, grammar-driven error recovery, and hard parser resource limits remain incomplete. Multiline expression continuation currently handles balanced parenthesis expressions; other multiline expression forms need additional fixtures before support is claimed.
+Current boundaries: supported inline and nested object/array values are parsed recursively, but this is not a complete APEXLang expression grammar. Error recovery is conservative and diagnostic-driven; parser limits are enforced, while fuzz/property-based testing, representative real-source corpus validation, and adapter parity remain outstanding.
 
 
 ### Parser hardening (WP3 initial completion)
