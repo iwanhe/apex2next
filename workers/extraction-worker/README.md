@@ -199,3 +199,17 @@ The graph contract is `apex2next.dependency-graph.v1`. Each edge points from a d
 Only explicit IR dependency records and uniquely resolved references become edges. PENDING, DANGLING, AMBIGUOUS, UNSUPPORTED, and INVALID references are excluded from ordering and reported. Missing or duplicate object identities and invalid endpoints are diagnosed. Cycles and downstream blocked objects are distinguished.
 
 The analyzer intentionally does not infer dependencies from names, SQL/PLSQL text, arbitrary property values, or parent-child containment. Its result is a structural planning aid; real-project coverage and typed APEX dependency semantics still require a sanitized representative application corpus.
+
+
+### WP6 — semantic analysis and transformation planning
+
+```python
+from apex2next_extractor import analyze_semantics, analyze_dependency_graph
+graph = analyze_dependency_graph(ir_document)
+plan = analyze_semantics(ir_document, graph)
+print(plan["summary"])
+```
+
+The API classifies components as AUTOMATIC, ASSISTED, MANUAL, or UNSUPPORTED and returns expression-level plans, rule IDs, confidence, provenance, preservation metadata, and SEM001–SEM008 diagnostics. No component is currently AUTOMATIC. Unknown expressions, plug-ins, security behavior, unresolved references, and PL/SQL require review. The report is deterministic and non-mutating; source expressions are never executed and no target code is generated.
+
+See `docs/architecture/wp6-semantic-analysis.md` for mapping, diagnostics, and qualification limits. The initial rules require validation against a sanitized representative APEX application before production code generation.

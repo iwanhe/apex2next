@@ -13,6 +13,7 @@ from .apexlang_ast import (
     tokenize_apexlang,
 )
 from .dependency_graph import analyze_dependency_graph
+from .semantic_analysis import analyze_semantics
 from .normalized_ir import (
     adapt_apex_export,
     adapt_apexlang_directory,
@@ -39,4 +40,5 @@ __all__ = [
     "stable_identity",
     "resolve_references",
     "analyze_dependency_graph",
+    "analyze_semantics",
 ]

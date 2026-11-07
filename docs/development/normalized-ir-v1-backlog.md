@@ -232,3 +232,20 @@ The milestone establishes a normalized structural model and deterministic refere
 - [ ] Validate graph accuracy against a sanitized representative APEX application and typed dependency semantics.
 
 **WP5 implementation boundary:** the analyzer consumes only explicit dependency records and uniquely resolved references. It deliberately does not infer dependencies from component names, SQL/PLSQL text, arbitrary property values, or containment relationships. The graph and migration order are structural planning aids, not proof of semantic or runtime dependency completeness. Cycles block their members and transitive dependents; the acyclic remainder retains a deterministic dependency-first order.
+
+
+## WP6 — Semantic Analysis & Transformation Rules
+
+**Status:** Implemented baseline  
+**Public API:** `analyze_semantics(document, dependency_graph=None)`
+
+- [x] Explicit component mapping registry for UI, API, data, security, configuration, and assets.
+- [x] AUTOMATIC / ASSISTED / MANUAL / UNSUPPORTED classification; AUTOMATIC remains unused until behavior parity is proven.
+- [x] SQL, PL/SQL, JavaScript, HTML, CSS, APEX substitution, and UNKNOWN expression planning from existing IR metadata.
+- [x] Recursive nested OBJECT property traversal and deterministic property paths.
+- [x] Stable transformation IDs, rule IDs, confidence, source provenance, and raw-source preservation metadata.
+- [x] SEM001–SEM008 diagnostics for unmapped components, unknown expressions, PL/SQL, plug-ins, security, unresolved references, cycles, and blocked objects.
+- [x] WP5 dependency graph integration and dependency-first order propagation.
+- [x] Non-mutating deterministic report, tests, and documentation.
+
+**Qualification boundary:** This closes the implementation baseline and test contract, not behavior-level equivalence, complete APEX component coverage, complete PL/SQL conversion, or production readiness. A sanitized real APEX export and runtime-version-specific fixtures remain required.
