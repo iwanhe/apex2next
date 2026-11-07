@@ -392,7 +392,7 @@ def resolve_references(document: dict[str, Any]) -> dict[str, Any]:
         visited: set[str] = set()
         while current:
             current_id = current.get("id")
-            if current_id == scope:
+            if current_id == scope or current.get("parentId") == scope:
                 return True
             if not current_id or current_id in visited:
                 return False
@@ -487,7 +487,9 @@ def resolve_references(document: dict[str, Any]) -> dict[str, Any]:
 
     for obj in objects:
         statuses = resolution_by_source.get(obj.get("id"), [])
-        if statuses:
+        if not statuses:
+            obj.setdefault("status", {})["resolve"] = "SUCCESS"
+        else:
             if all(status == "RESOLVED" for status in statuses):
                 obj.setdefault("status", {})["resolve"] = "SUCCESS"
             elif any(status == "INVALID" for status in statuses):
