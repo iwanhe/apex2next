@@ -518,6 +518,9 @@ def test_apexlang_ast_properties_integrate_recursive_arrays_and_source_spans(tmp
 
     assert validate_ir_document(document) == []
     assert items["valueType"] == "ARRAY"
+    assert document["metadata"]["apexlangAstIntegration"] == "TYPED_PROPERTIES_WITH_LEGACY_FALLBACK"
+    assert document["metadata"]["apexlangAstParserVersion"] == "0.2.0"
+    assert document["metadata"]["apexlangAstPropertyAdaptedCount"] >= 1
     assert [item["valueType"] for item in items["value"]] == ["STRING", "OBJECT", "ARRAY"]
     nested_object = items["value"][1]
     assert nested_object["value"]["name"]["value"] == "B"
@@ -526,6 +529,7 @@ def test_apexlang_ast_properties_integrate_recursive_arrays_and_source_spans(tmp
     assert items["sourceLocator"]["file"] == "page.apx"
     assert items["sourceLocator"]["line"] == 2
     assert items["sourceLocator"]["column"] == 5
+    assert items["extensions"]["rawSourceValue"].startswith("[")
     assert page["properties"]["source"]["valueType"] == "SQL_EXPRESSION"
     assert page["properties"]["source"]["rawExpression"] == "SELECT order_id FROM orders"
     assert page["properties"]["source"]["sourceLocator"]["line"] == 3
