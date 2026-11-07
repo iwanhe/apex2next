@@ -298,8 +298,8 @@ def parse_apexlang_properties(
                 candidate = lines[candidate_line].rstrip()
                 if not candidate.strip():
                     continue
-                indent = len(candidate) - len(candidate.lstrip(" \\t"))
-                stripped = candidate.lstrip(" \\t")
+                indent = len(candidate) - len(candidate.lstrip())
+                stripped = candidate.lstrip()
                 if indent <= direct_indent and stripped.endswith("("):
                     value_end = offsets[candidate_line]
                     break
