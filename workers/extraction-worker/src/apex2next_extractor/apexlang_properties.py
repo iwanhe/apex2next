@@ -303,7 +303,7 @@ def parse_apexlang_properties(
                 if indent <= direct_indent and stripped.endswith("("):
                     value_end = offsets[candidate_line]
                     break
-                if indent < direct_indent and stripped.startswith(")"):
+                if indent <= direct_indent and stripped.startswith(")"):
                     value_end = offsets[candidate_line]
                     break
         value_start, value_end = _trim_bounds(source, value_start, value_end)
