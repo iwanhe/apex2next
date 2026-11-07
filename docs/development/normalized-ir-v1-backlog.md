@@ -11,7 +11,7 @@ Deliver in small, testable work packages. The JSON Schema is the cross-language 
 | IRV1-01 | Contract and taxonomy | JSON Schema, canonical object taxonomy, version policy, valid/invalid fixtures | — | P0 | Initial contract in place |
 | IRV1-02 | Core types and validators | Generated TS types, Python schema validation, contract test harness | IRV1-01 | P0 | Python validator in place; TS types/tests pending |
 | IRV1-03 | Identity and provenance | Canonical identity builder, fingerprinting, source locator model | IRV1-01 | P0 | Initial implementation + regression tests |
-| IRV1-04 | APEXLang adapter | Inventory-to-IR mapping, raw property preservation, provenance | IRV1-02, 03 | P0 | Typed scalar + recursive multiline brace-block properties implemented; broader syntax pending |
+| IRV1-04 | APEXLang adapter | Inventory-to-IR mapping, raw property preservation, provenance | IRV1-02, 03 | P0 | AST typed-property integration with parity-guarded legacy fallback implemented; real-project corpus pending |
 | IRV1-05 | APEX SQL Export adapter | Export-call-to-IR mapping, raw argument preservation, provenance | IRV1-02, 03 | P0 | Initial implementation + fixture tests |
 | IRV1-06 | Reference resolver | Scope-aware candidate index, typed resolver, resolution diagnostics | IRV1-04, 05 | P1 | Initial exact-ID resolver + tests; broader type/context rules pending |
 | IRV1-07 | Relationships and dependency graph | Typed graph edges, cycle detection, explicit/inferred distinction | IRV1-06 | P1 | Partial structural containment only |
@@ -194,3 +194,23 @@ The milestone establishes a normalized structural model and deterministic refere
 - [ ] Expand deterministic recovery for malformed nested declarations and delimiter mismatch reporting.
 
 **Done for this incremental WP3 slice when:** recursive values, conservative expression preservation, bounded input, regression tests, and grammar-generation validation are in place. This is not production certification or complete APEXLang syntax support. Corpus-based accuracy and adapter parity remain explicit gates.
+
+
+### WP IRV1-12 — APEXLang AST-to-Normalized IR integration (WP4)
+
+- [x] Parse each `.apx` artifact through the bounded AST parser in addition to the existing inventory parser.
+- [x] Preserve the inventory parser as authority for declaration discovery, object taxonomy, stable identity, containment, and lexical reference extraction.
+- [x] Match AST declarations to inventory declarations by file, source line, declaration kind, and name.
+- [x] Use AST typed properties only when ordered direct-property names exactly match the inventory property records.
+- [x] Fall back to legacy property records on any property-name parity mismatch; emit `IRAST001` with both lists.
+- [x] Emit `IRAST002` when an inventory declaration has no AST counterpart and `IRAST003` when the AST finds a declaration absent from inventory.
+- [x] Map scalar, recursive OBJECT, and ARRAY values into the existing IR property contract.
+- [x] Preserve raw source text for every AST property in `extensions.rawSourceValue`; retain full declaration body in object extensions.
+- [x] Preserve expression text and run only the conservative, non-evaluating shared classifier.
+- [x] Add source locators to AST properties, including property-key start and value end coordinates.
+- [x] Carry AST parser diagnostics into IR and mark objects PARTIAL when their source artifact has AST ERROR diagnostics.
+- [x] Record AST parser version, integration mode, matched declaration count, AST property count, fallback count, and parser diagnostic count in IR metadata.
+- [x] Add tests for nested arrays/objects, expression mapping, parity fallback, schema validity, and deterministic output.
+- [ ] Validate against a sanitized representative real APEXLang project and evaluate semantic coverage.
+
+**Done for WP4 implementation:** typed AST properties are connected to IR with deterministic metadata and source provenance, while unmatched or uncertain syntax is explicitly diagnosed or handled by the legacy fallback. This is not full declaration-parser replacement or semantic parity certification.
