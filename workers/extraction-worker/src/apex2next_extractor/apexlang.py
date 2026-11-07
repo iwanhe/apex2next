@@ -127,9 +127,15 @@ def parse_apexlang_text(source: str, file_path: str = "") -> dict[str, Any]:
     declarations, diagnostics = [], []
     for match in DECLARATION_RE.finditer(masked):
         kind = match.group("kind")
-        object_type = DECLARATION_TYPES.get(kind.lower())
-        if not object_type:
-            continue
+        object_type = DECLARATION_TYPES.get(kind.lower(), "UNKNOWN")
+        if object_type == "UNKNOWN":
+            diagnostics.append({
+                "code": "APEXLANG003",
+                "severity": "WARNING",
+                "file": file_path,
+                "line": source.count("\\n", 0, match.start()) + 1,
+                "message": f"Unmapped declaration preserved as UNKNOWN: {kind}",
+            })
         opening = source.find("(", match.start(), match.end())
         closing = _matching_close(masked, opening)
         line = source.count("\n", 0, match.start()) + 1
