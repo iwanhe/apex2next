@@ -182,3 +182,20 @@ This is a parity-guarded typed-property integration, not a complete replacement 
 
 
 WP4 lossless duplicate-property safeguard: because the IR `properties` field is a unique-key map, repeated direct APEXLang property names are additionally preserved in source order under `extensions.duplicateProperties` and reported with `IRAST004`. For nested OBJECT properties, duplicate child names and their typed payloads are preserved in the nested property's `extensions.duplicateProperties` / `duplicatePropertyNames`. Consumers should inspect these extensions whenever duplicate-property diagnostics are present.
+
+### Dependency graph and impact analysis (WP5)
+
+After resolving references, build a deterministic dependency graph:
+
+```python
+from apex2next_extractor import analyze_dependency_graph, resolve_references
+
+resolved_ir = resolve_references(apexlang_ir)
+graph = analyze_dependency_graph(resolved_ir)
+```
+
+The graph contract is `apex2next.dependency-graph.v1`. Each edge points from a dependent object (`sourceObjectId`) to its prerequisite (`targetObjectId`); `migrationOrder` is therefore dependency-first. The report includes graph nodes/edges, strongly connected cycles, blocked nodes, deterministic migration order for the acyclic portion, per-node direct/transitive impact, and diagnostics.
+
+Only explicit IR dependency records and uniquely resolved references become edges. PENDING, DANGLING, AMBIGUOUS, UNSUPPORTED, and INVALID references are excluded from ordering and reported. Missing or duplicate object identities and invalid endpoints are diagnosed. Cycles and downstream blocked objects are distinguished.
+
+The analyzer intentionally does not infer dependencies from names, SQL/PLSQL text, arbitrary property values, or parent-child containment. Its result is a structural planning aid; real-project coverage and typed APEX dependency semantics still require a sanitized representative application corpus.
