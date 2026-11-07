@@ -1,0 +1,8 @@
+app DEMO (
+    name: 'Demo App'
+    navigation {
+        homeUrl: {
+            page: 10
+        }
+    }
+)

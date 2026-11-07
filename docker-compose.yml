@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: apex2next-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-apex2next}
+      POSTGRES_USER: ${POSTGRES_USER:-apex2next}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local_only_change_me}
+    ports:
+      - "5432:5432"
+    volumes:
+      - apex2next_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-apex2next} -d ${POSTGRES_DB:-apex2next}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  apex2next_pgdata:

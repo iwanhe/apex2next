@@ -1,0 +1,854 @@
+"""Deterministic identity, provenance, and source adapters for Normalized IR v1.
+
+All source text is treated as data. This module never executes SQL, PL/SQL, or APEXLang.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+import re
+from pathlib import Path
+from typing import Any
+
+from .apex_export import extract_export
+from .apexlang import _mask_non_code, extract_apexlang
+from .apexlang_ast import AST_PARSER_VERSION, ApexLangDeclaration, ApexLangProperty, parse_apexlang_ast
+
+ADAPTER_VERSION = "0.1.0"
+IR_VERSION = "1.0.0"
+
+
+# Keep source keys and add canonical keys only for established aliases.
+APEX_EXPORT_PROPERTY_ALIASES = {
+    ("PAGE", "p_source"): "source",
+    ("REGION", "p_plug_source"): "source",
+}
+
+
+def _canonical_property_name(object_type: str, source_name: str, source_format: str) -> str:
+    if source_format == "APEX_SQL_EXPORT":
+        return APEX_EXPORT_PROPERTY_ALIASES.get((object_type, source_name), source_name)
+    return source_name
+REFERENCE_RE = re.compile(r"(?<![A-Za-z0-9_])@([A-Za-z0-9_./-]+)")
+
+
+def canonical_json(value: Any) -> str:
+    """Serialize JSON-compatible values deterministically."""
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+
+
+def sha256_text(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def sha256_bytes(value: bytes) -> str:
+    return hashlib.sha256(value).hexdigest()
+
+
+def stable_identity(
+    source_format: str,
+    object_type: str,
+    source_native_id: Any = None,
+    *,
+    parent_id: str | None = None,
+    name: str | None = None,
+    fallback: str | None = None,
+) -> str:
+    """Build a content-independent ID; fallback identities are explicitly weaker."""
+    if source_native_id not in (None, ""):
+        key = {"nativeId": str(source_native_id), "parentId": parent_id}
+    elif name:
+        key = {"name": name, "parentId": parent_id}
+    else:
+        key = {"fallback": fallback or "unknown"}
+    payload = {"sourceFormat": source_format, "type": object_type, **key}
+    return "obj:" + hashlib.sha256(canonical_json(payload).encode("utf-8")).hexdigest()[:24]
+
+
+def object_fingerprint(
+    object_type: str, source_type: str, name: str | None, properties: dict[str, Any]
+) -> str:
+    """Fingerprint semantic source content, excluding locator and generated metadata."""
+    payload = {
+        "type": object_type,
+        "sourceType": source_type,
+        "name": name,
+        "properties": properties,
+    }
+    return "sha256:" + sha256_text(canonical_json(payload))
+
+
+def _value_type(value: Any, raw: str | None = None) -> str:
+    if isinstance(value, bool):
+        return "BOOLEAN"
+    if value is None:
+        return "NULL"
+    if isinstance(value, (int, float)):
+        return "NUMBER"
+    if isinstance(value, list):
+        return "ARRAY"
+    if isinstance(value, dict):
+        return "UNKNOWN" if "expression" in value else "OBJECT"
+    if raw is not None and value == raw.strip() and not (
+        (raw.strip().startswith("'") and raw.strip().endswith("'"))
+        or raw.strip().lower() in {"true", "false"}
+        or re.fullmatch(r"-?\d+(?:\.\d+)?", raw.strip())
+    ):
+        return "UNKNOWN"
+    return "STRING"
+
+
+def _property(value: Any, raw: str | None = None, locator: dict[str, Any] | None = None) -> dict[str, Any]:
+    result: dict[str, Any] = {"valueType": _value_type(value, raw), "preserved": True}
+    if isinstance(value, dict) and "expression" in value:
+        result["valueType"] = "UNKNOWN"
+        result["rawExpression"] = str(value["expression"])
+    elif raw is not None and _value_type(value, raw) == "UNKNOWN":
+        result["rawExpression"] = raw
+    else:
+        result["value"] = value
+    if locator is not None:
+        result["sourceLocator"] = locator
+    return result
+
+
+
+def classify_expression(raw_expression: str) -> dict[str, str]:
+    """Classify only expressions with conservative, syntax-led evidence."""
+    import re
+
+    source = raw_expression.strip()
+    if not source:
+        return {"language": "UNKNOWN", "confidence": "NONE", "rule": "EXPR_NONE"}
+
+    # Oracle alternative-quoted literals are unwrapped for classification only.
+    # The caller always retains the original rawExpression unchanged.
+    alternative_quote = re.fullmatch(r"(?is)q'(.)([\s\S]*)(.)'", source)
+    if alternative_quote:
+        opening, body, closing = alternative_quote.groups()
+        expected_close = {"[": "]", "(": ")", "{": "}", "<": ">"}.get(opening, opening)
+        if closing == expected_close:
+            source = body.strip()
+
+    rules = (
+        ("PL_SQL", r"^(?:DECLARE\b[\s\S]*?\bBEGIN\b|BEGIN\b[\s\S]*\bEND\s*;?$|CREATE\s+(?:OR\s+REPLACE\s+)?(?:EDITIONABLE\s+)?(?:PROCEDURE|FUNCTION|PACKAGE(?:\s+BODY)?|TRIGGER)\b)", "EXPR_PLSQL_BLOCK_V1"),
+        ("SQL", r"^(?:SELECT\b|WITH\b[\s\S]*?\bSELECT\b|INSERT\s+INTO\b|UPDATE\s+[A-Za-z0-9_$#.]+\s+SET\b|DELETE\s+FROM\b|MERGE\s+INTO\b)", "EXPR_SQL_STATEMENT_V1"),
+        ("JAVASCRIPT", r"^(?:(?:async\s+)?function\b|(?:const|let|var)\s+[A-Za-z_$][\w$]*\s*=|(?:\([^)]*\)|[A-Za-z_$][\w$]*)\s*=>)", "EXPR_JAVASCRIPT_DECLARATION_V1"),
+        ("APEX", r"^&&?[A-Za-z][A-Za-z0-9_$#]*\.$", "EXPR_APEX_SUBSTITUTION_V1"),
+        ("HTML", r"^<[A-Za-z][A-Za-z0-9-]*(?:\s[^<>]*)?>", "EXPR_HTML_ELEMENT_V1"),
+        ("CSS", r"^(?:@media\b|@supports\b|@font-face\b|:root\s*\{)", "EXPR_CSS_AT_RULE_V1"),
+    )
+    for language, pattern, rule in rules:
+        if re.search(pattern, source, flags=re.IGNORECASE):
+            return {"language": language, "confidence": "HIGH", "rule": rule}
+    return {"language": "UNKNOWN", "confidence": "NONE", "rule": "EXPR_UNCLASSIFIED_V1"}
+
+
+def _expression_property(raw_expression: str, locator: dict[str, Any] | None = None) -> dict[str, Any]:
+    classification = classify_expression(raw_expression)
+    value_type = {
+        "SQL": "SQL_EXPRESSION",
+        "PL_SQL": "PL_SQL_EXPRESSION",
+        "JAVASCRIPT": "JAVASCRIPT_EXPRESSION",
+    }.get(classification["language"], "UNKNOWN")
+    result: dict[str, Any] = {
+        "valueType": value_type,
+        "rawExpression": raw_expression,
+        "preserved": True,
+        "expressionLanguage": classification["language"],
+        "classificationConfidence": classification["confidence"],
+        "classificationRule": classification["rule"],
+    }
+    if locator is not None:
+        result["sourceLocator"] = locator
+    return result
+
+
+def _apexlang_property_record(
+    record: dict[str, Any], file_name: str, artifact_hash: str | None
+) -> dict[str, Any]:
+    locator = {
+        "file": file_name or None,
+        "line": record.get("line"),
+        "column": record.get("column"),
+        "endLine": record.get("end_line"),
+        "endColumn": record.get("end_column"),
+        "artifactHash": "sha256:" + artifact_hash if artifact_hash else None,
+    }
+    value_type = record.get("value_type", "UNKNOWN")
+    result: dict[str, Any] = {
+        "valueType": value_type,
+        "preserved": True,
+        "sourceLocator": locator,
+    }
+    if value_type == "OBJECT":
+        children = record.get("children", [])
+        result["value"] = {
+            child["name"]: _apexlang_property_record(child, file_name, artifact_hash)
+            for child in children
+        }
+        result["extensions"] = {"rawBlock": record.get("raw", "")}
+    elif "value" in record:
+        result["value"] = record["value"]
+    else:
+        raw_expression = record.get("raw_expression", record.get("raw", ""))
+        result.update(_expression_property(raw_expression, locator))
+    return result
+
+def _diagnostic(code: str, severity: str, category: str, message: str,
+                *, locator: dict[str, Any] | None = None,
+                object_id: str | None = None, details: dict[str, Any] | None = None) -> dict[str, Any]:
+    item: dict[str, Any] = {
+        "code": code, "severity": severity, "category": category, "message": message
+    }
+    if locator is not None:
+        item["sourceLocator"] = locator
+    if object_id is not None:
+        item["objectId"] = object_id
+    if details is not None:
+        item["details"] = details
+    return item
+
+
+def _document(source_format: str, application: dict[str, Any], objects: list[dict[str, Any]],
+              relationships: list[dict[str, Any]], references: list[dict[str, Any]],
+              diagnostics: list[dict[str, Any]], artifact_hashes: list[str]) -> dict[str, Any]:
+    hashes = sorted(artifact_hashes)
+    source_hash = "sha256:" + sha256_text(canonical_json(hashes))
+    document = {
+        "irVersion": IR_VERSION,
+        "application": application,
+        "objects": objects,
+        "relationships": relationships,
+        "references": references,
+        "dependencies": [],
+        "diagnostics": sorted(
+            diagnostics,
+            key=lambda d: (
+                d.get("sourceLocator", {}).get("file", ""),
+                d.get("sourceLocator", {}).get("line") or 0,
+                d["code"], d["message"],
+            ),
+        ),
+        "metadata": {
+            "sourceHash": source_hash,
+            "adapterVersion": ADAPTER_VERSION,
+            "schemaDialect": "https://json-schema.org/draft/2020-12/schema",
+            "sourceArtifactHashes": hashes,
+        },
+    }
+    return document
+
+
+
+def _ast_property_to_ir(prop: ApexLangProperty, file_name: str, artifact_hash: str | None) -> dict[str, Any]:
+    """Map a typed AST property into the lossless Normalized IR property contract."""
+    span = prop.span
+    locator = {
+        "file": file_name or None, "line": span.start_line, "column": span.start_column,
+        "endLine": span.end_line, "endColumn": span.end_column,
+        "artifactHash": "sha256:" + artifact_hash if artifact_hash else None,
+    }
+    result: dict[str, Any] = {
+        "valueType": prop.value_type, "preserved": True, "sourceLocator": locator,
+        "extensions": {"rawSourceValue": prop.raw_value},
+    }
+    if prop.value_type == "OBJECT":
+        names = [child.name for child in prop.children]
+        result["value"] = {
+            child.name: _ast_property_to_ir(child, file_name, artifact_hash)
+            for child in prop.children
+        }
+        duplicates = sorted({name for name in names if names.count(name) > 1})
+        if duplicates:
+            result["extensions"]["duplicatePropertyNames"] = duplicates
+            result["extensions"]["duplicateProperties"] = [
+                {
+                    "name": child.name,
+                    "sourceLocator": _ast_property_to_ir(
+                        child, file_name, artifact_hash
+                    )["sourceLocator"],
+                    "property": _ast_property_to_ir(child, file_name, artifact_hash),
+                }
+                for child in prop.children
+                if child.name in duplicates
+            ]
+    elif prop.value_type == "ARRAY":
+        result["value"] = [
+            _ast_property_to_ir(item, file_name, artifact_hash) for item in prop.items
+        ]
+    elif prop.value_type == "EXPRESSION":
+        # Keep exact source formatting in extensions while matching the adapter's
+        # established logical expression representation in rawExpression.
+        normalized_expression = "\n".join(
+            line.lstrip() for line in prop.raw_value.splitlines()
+        )
+        result.update(_expression_property(normalized_expression, locator))
+        result["extensions"] = {"rawSourceValue": prop.raw_value}
+    else:
+        result["value"] = prop.value
+    return result
+
+
+def _flatten_ast_declarations(declarations: list[ApexLangDeclaration]) -> list[ApexLangDeclaration]:
+    """Return declaration nodes in source preorder for adapter parity matching."""
+    flattened: list[ApexLangDeclaration] = []
+    for declaration in declarations:
+        flattened.append(declaration)
+        flattened.extend(_flatten_ast_declarations(declaration.children))
+    return flattened
+
+
+def adapt_apexlang_directory(source_dir: str | Path) -> dict[str, Any]:
+    """Convert the static APEXLang inventory into a schema-valid structural IR."""
+    root = Path(source_dir).resolve()
+    if not root.is_dir():
+        raise ValueError(f"APEXLang source directory does not exist: {source_dir}")
+    inventory = extract_apexlang(root)
+    declarations = inventory["declarations"]
+    artifact_bytes: dict[str, bytes] = {}
+    for path in sorted(root.rglob("*.apx")):
+        if path.is_symlink():
+            continue
+        resolved = path.resolve()
+        if root not in resolved.parents and resolved != root:
+            raise ValueError(f"Source path escapes selected root: {path}")
+        artifact_bytes[path.relative_to(root).as_posix()] = path.read_bytes()
+    version_path = root / ".apex" / "apexlang.json"
+    if version_path.is_file() and not version_path.is_symlink():
+        artifact_bytes[".apex/apexlang.json"] = version_path.read_bytes()
+
+    hashes = {name: sha256_bytes(data) for name, data in artifact_bytes.items()}
+
+    # Keep inventory declaration discovery/identity stable. Use AST properties only
+    # when declaration and property-name parity is exact; otherwise fall back safely.
+    ast_by_declaration: dict[tuple[str, int, str, str], ApexLangDeclaration] = {}
+    ast_diagnostics: list[dict[str, Any]] = []
+    for file_name, source_bytes in sorted(artifact_bytes.items()):
+        if not file_name.endswith(".apx"):
+            continue
+        parsed_ast = parse_apexlang_ast(source_bytes.decode("utf-8"))
+        for node in _flatten_ast_declarations(parsed_ast.declarations):
+            key = (file_name, node.span.start_line, node.kind.casefold(), node.name or "")
+            ast_by_declaration[key] = node
+        for item in parsed_ast.diagnostics:
+            span = item.get("span", {})
+            ast_diagnostics.append({
+                "code": str(item.get("code", "AST000")),
+                "severity": str(item.get("severity", "WARNING")),
+                "category": "AST_PARSER",
+                "message": str(item.get("message", "APEXLang AST parser diagnostic")),
+                "sourceLocator": {
+                    "file": file_name, "line": span.get("start_line"),
+                    "column": span.get("start_column"), "endLine": span.get("end_line"),
+                    "endColumn": span.get("end_column"),
+                    "artifactHash": "sha256:" + hashes[file_name],
+                },
+            })
+
+    app_decl = next((d for d in declarations if d["object_type"] == "APPLICATION"), None)
+    app_native_id = (app_decl or {}).get("name") or "application"
+    app_id = stable_identity("APEXLANG", "APPLICATION", app_native_id)
+    app_name = (app_decl or {}).get("properties", {}).get("name")
+    application = {
+        "id": app_id,
+        "name": app_name,
+        "sourceFormat": "APEXLANG",
+        "sourceVersion": {
+            "metadataVersion": inventory.get("apexlang_mmd_version"),
+            "runtimeVersion": None,
+        },
+    }
+
+    objects: list[dict[str, Any]] = []
+    relationships: list[dict[str, Any]] = []
+    references: list[dict[str, Any]] = []
+    diagnostics: list[dict[str, Any]] = []
+    stack: list[tuple[int, str]] = []
+    current_file: str | None = None
+    occurrence: dict[tuple[str, str, str], int] = {}
+    ast_declarations_matched = 0
+    ast_matched_keys: set[tuple[str, int, str, str]] = set()
+    ast_properties_adapted = 0
+    legacy_property_fallbacks = 0
+
+    for declaration in declarations:
+        file_name = declaration.get("file", "")
+        if file_name != current_file:
+            stack.clear()
+            current_file = file_name
+        line = declaration.get("line")
+        column = declaration.get("column")
+        indent = declaration.get("indent", 0)
+        while stack and stack[-1][0] >= indent:
+            stack.pop()
+        parent_id = stack[-1][1] if stack else app_id
+        object_type = declaration.get("object_type", "UNKNOWN")
+        source_type = declaration.get("kind", object_type)
+        name = declaration.get("name") or None
+        native_id = declaration.get("source_native_id") or name
+        group_key = (object_type, parent_id, str(native_id or ""))
+        occurrence[group_key] = occurrence.get(group_key, 0) + 1
+        fallback = f"{file_name}:{line}:{occurrence[group_key]}"
+        identity_parent_id = None if object_type == "APPLICATION" else parent_id
+        object_id = stable_identity(
+            "APEXLANG", object_type, native_id,
+            parent_id=identity_parent_id, name=name, fallback=fallback
+        )
+        artifact_hash = hashes.get(file_name)
+        locator = {
+            "file": file_name or None, "line": line, "column": column or 1,
+            "artifactHash": "sha256:" + artifact_hash if artifact_hash else None,
+            "sourceNativeId": native_id,
+        }
+        property_records = declaration.get("property_details", [])
+        ast_key = (file_name, int(line or 0), str(source_type).casefold(), str(name or ""))
+        ast_node = ast_by_declaration.get(ast_key)
+        if ast_node:
+            ast_declarations_matched += 1
+            ast_matched_keys.add(ast_key)
+        else:
+            diagnostics.append(_diagnostic(
+                "IRAST002", "WARNING", "ADAPTER_PARITY",
+                "No AST declaration matched the inventory declaration; legacy mapping was retained.",
+                locator={
+                    "file": file_name or None, "line": line, "column": column or 1,
+                    "artifactHash": "sha256:" + artifact_hash if artifact_hash else None,
+                },
+                details={"sourceType": source_type, "name": name},
+            ))
+        ast_property_names = [prop.name for prop in ast_node.properties] if ast_node else []
+        legacy_property_names = [record["name"] for record in property_records]
+        use_ast_properties = bool(ast_node and ast_property_names == legacy_property_names)
+        if use_ast_properties:
+            ast_properties_adapted += 1
+            properties = {
+                prop.name: {
+                    **_ast_property_to_ir(prop, file_name, artifact_hash),
+                    "sourcePropertyName": prop.name,
+                    "canonicalPropertyName": _canonical_property_name(
+                        object_type, prop.name, "APEXLANG"
+                    ),
+                }
+                for prop in ast_node.properties
+            }
+        else:
+            legacy_property_fallbacks += 1
+            if ast_node and ast_property_names != legacy_property_names:
+                diagnostics.append(_diagnostic(
+                    "IRAST001", "WARNING", "ADAPTER_PARITY",
+                    "AST and inventory property names differ; legacy inventory mapping was retained.",
+                    locator={
+                        "file": file_name or None, "line": line, "column": column or 1,
+                        "artifactHash": "sha256:" + artifact_hash if artifact_hash else None,
+                    },
+                    details={
+                        "astPropertyNames": ast_property_names,
+                        "inventoryPropertyNames": legacy_property_names,
+                    },
+                ))
+            if property_records:
+                properties = {
+                    record["name"]: {
+                        **_apexlang_property_record(record, file_name, artifact_hash),
+                        "sourcePropertyName": record["name"],
+                        "canonicalPropertyName": _canonical_property_name(
+                            object_type, record["name"], "APEXLANG"
+                        ),
+                    }
+                    for record in property_records
+                }
+            else:
+                properties = {
+                    key: _property(value)
+                    for key, value in sorted(declaration.get("properties", {}).items())
+                }
+        raw_body = declaration.get("raw_body")
+        extensions: dict[str, Any] = {"sourceIndent": indent}
+        if ast_node:
+            ast_name_counts = {
+                property_name: ast_property_names.count(property_name)
+                for property_name in set(ast_property_names)
+            }
+            duplicate_names = sorted(
+                property_name for property_name, count in ast_name_counts.items()
+                if count > 1
+            )
+            if duplicate_names:
+                duplicate_records = [
+                    {
+                        "name": prop.name,
+                        "occurrence": 1 + sum(
+                            1 for prior in ast_node.properties[:index]
+                            if prior.name == prop.name
+                        ),
+                        "property": _ast_property_to_ir(prop, file_name, artifact_hash),
+                    }
+                    for index, prop in enumerate(ast_node.properties)
+                    if prop.name in duplicate_names
+                ]
+                extensions["duplicateProperties"] = duplicate_records
+                diagnostics.append(_diagnostic(
+                    "IRAST004", "WARNING", "PROPERTY_COLLISION",
+                    "Duplicate direct property names cannot be represented as unique keys in the IR properties map; every occurrence is preserved in extensions.duplicateProperties.",
+                    locator=locator, object_id=object_id,
+                    details={"duplicatePropertyNames": duplicate_names},
+                ))
+        if raw_body is not None:
+            extensions["rawDeclarationBody"] = raw_body
+        if not native_id:
+            diagnostics.append(_diagnostic(
+                "SRC001", "WARNING", "PROVENANCE",
+                "Object has no source-native identifier; fallback identity uses its source locator.",
+                locator=locator, object_id=object_id,
+            ))
+        effective_parent_id = None if object_type == "APPLICATION" else parent_id
+        obj = {
+            "id": object_id, "type": object_type, "sourceType": source_type,
+            "name": name, "parentId": effective_parent_id, "properties": properties,
+            "source": locator, "fingerprint": object_fingerprint(
+                object_type, source_type, name, properties
+            ),
+            "status": {
+                "parse": (
+                    "PARTIAL"
+                    if any(
+                        item.get("sourceLocator", {}).get("file") == file_name
+                        and item.get("severity") == "ERROR"
+                        for item in ast_diagnostics
+                    )
+                    else "SUCCESS"
+                ),
+                "resolve": "PENDING",
+                "conversion": "PENDING",
+            },
+            "extensions": extensions,
+        }
+        objects.append(obj)
+        if object_type == "UNKNOWN":
+            diagnostics.append(_diagnostic(
+                "IR002", "WARNING", "UNSUPPORTED_SOURCE_OBJECT",
+                f"Unmapped APEXLang declaration preserved as UNKNOWN: {source_type}",
+                locator=locator, object_id=object_id,
+                details={"sourceType": source_type, "rawDeclarationBody": raw_body},
+            ))
+        if effective_parent_id:
+            relationships.append({
+                "id": "rel:" + sha256_text(f"{parent_id}|{object_id}|CONTAINS")[:24],
+                "sourceObjectId": parent_id, "targetObjectId": object_id,
+                "relationshipType": "CONTAINS", "sourceLocator": locator,
+            })
+        if object_type != "APPLICATION":
+            stack.append((indent, object_id))
+        for reference_value in sorted(set(REFERENCE_RE.findall(_mask_non_code(raw_body or "")))):
+            reference_id = "ref:" + sha256_text(f"{object_id}|{reference_value}")[:24]
+            references.append({
+                "id": reference_id, "sourceObjectId": object_id,
+                "referenceType": "APEXLANG_AT_REFERENCE",
+                "referenceValue": reference_value, "targetObjectId": None,
+                "resolutionStatus": "PENDING", "scope": app_id,
+                "sourceLocator": locator, "candidateObjectIds": [],
+            })
+
+    for ast_key, ast_node in sorted(ast_by_declaration.items()):
+        if ast_key not in ast_matched_keys:
+            ast_file, _ast_line, _ast_kind, _ast_name = ast_key
+            diagnostics.append(_diagnostic(
+                "IRAST003", "WARNING", "ADAPTER_PARITY",
+                "AST declaration was not represented by the inventory parser; no IR object was synthesized.",
+                locator={
+                    "file": ast_file,
+                    "line": ast_node.span.start_line,
+                    "column": ast_node.span.start_column,
+                    "artifactHash": "sha256:" + hashes[ast_file],
+                },
+                details={"sourceType": ast_node.kind, "name": ast_node.name},
+            ))
+
+    if not declarations:
+        diagnostics.append(_diagnostic(
+            "SRC003", "WARNING", "EXTRACTION",
+            "No supported APEXLang declarations were found; the source may use unsupported syntax.",
+        ))
+    if inventory.get("apexlang_mmd_version"):
+        diagnostics.append(_diagnostic(
+            "SRC002", "INFO", "SOURCE_VERSION",
+            "APEXLang metadata version was found; Oracle APEX runtime version remains unverified.",
+            details={"metadataVersion": inventory["apexlang_mmd_version"], "runtimeVersion": None},
+        ))
+    diagnostics.extend(ast_diagnostics)
+    for item in inventory.get("diagnostics", []):
+        diagnostics.append(_diagnostic(
+            item.get("code", "APEXLANG000"), item.get("severity", "WARNING"),
+            "SOURCE_PARSER", item.get("message", "APEXLang parser diagnostic"),
+            locator={"file": item.get("file"), "line": item.get("line"), "column": None},
+        ))
+    document = _document(
+        "APEXLANG", application, objects, relationships, references, diagnostics,
+        list(hashes.values()),
+    )
+    document["metadata"].update({
+        "apexlangAstParserVersion": AST_PARSER_VERSION,
+        "apexlangAstIntegration": "TYPED_PROPERTIES_WITH_LEGACY_FALLBACK",
+        "apexlangAstDeclarationMatchedCount": ast_declarations_matched,
+        "apexlangAstPropertyAdaptedCount": ast_properties_adapted,
+        "apexlangLegacyPropertyFallbackCount": legacy_property_fallbacks,
+        "apexlangAstDiagnosticCount": len(ast_diagnostics),
+    })
+    return document
+
+
+def adapt_apex_export(source_text: str, source_name: str = "<memory>") -> dict[str, Any]:
+    """Convert supported static APEX import API calls into Normalized IR."""
+    artifact_hash = sha256_text(source_text)
+    parsed = extract_export(source_text)
+    calls = parsed.get("calls", [])
+    flow_call = next((c for c in calls if c.get("object_type") == "APPLICATION"), None)
+    flow_args = (flow_call or {}).get("arguments", {})
+    app_native_id = flow_args.get("p_id") or source_name
+    app_id = stable_identity("APEX_SQL_EXPORT", "APPLICATION", app_native_id)
+    app_name = flow_args.get("p_name")
+    application = {
+        "id": app_id, "name": app_name, "sourceFormat": "APEX_SQL_EXPORT",
+        "sourceVersion": {"metadataVersion": None, "runtimeVersion": None},
+    }
+    objects: list[dict[str, Any]] = []
+    diagnostics: list[dict[str, Any]] = []
+    occurrence: dict[tuple[str, str], int] = {}
+    for call in calls:
+        object_type = call.get("object_type", "OTHER")
+        canonical_type = object_type if object_type in {
+            "APPLICATION", "PAGE", "REGION", "ITEM", "BUTTON", "BRANCH",
+            "VALIDATION", "PROCESS", "DYNAMIC_ACTION", "DYNAMIC_ACTION_ACTION",
+            "LIST", "LIST_ITEM", "LOV", "AUTHENTICATION", "AUTHORIZATION",
+            "THEME", "PLUGIN",
+        } else "UNKNOWN"
+        args = call.get("arguments", {})
+        raw_args = call.get("raw_arguments", {})
+        native_id = args.get("p_id") or args.get("p_plug_id") or args.get("p_button_id")
+        name = next((args.get(key) for key in (
+            "p_name", "p_plug_name", "p_item_name", "p_button_name", "p_process_name"
+        ) if args.get(key) is not None), None)
+        group_key = (canonical_type, str(native_id or name or ""))
+        occurrence[group_key] = occurrence.get(group_key, 0) + 1
+        fallback = f"{source_name}:{call.get('line')}:{occurrence[group_key]}"
+        identity_parent_id = None if canonical_type == "APPLICATION" else app_id
+        object_id = stable_identity(
+            "APEX_SQL_EXPORT", canonical_type, native_id,
+            parent_id=identity_parent_id, name=str(name) if name is not None else None,
+            fallback=fallback,
+        )
+        locator = {
+            "file": source_name, "line": call.get("line"), "column": call.get("column"),
+            "artifactHash": "sha256:" + artifact_hash,
+            "sourceNativeId": native_id, "apiRoutine": call.get("routine"),
+        }
+        properties: dict[str, Any] = {}
+        for key, value in sorted(args.items()):
+            raw = raw_args.get(key)
+            if isinstance(value, dict) and "expression" in value:
+                prop = _expression_property(str(value["expression"]), locator)
+            else:
+                prop = _property(value, raw, locator)
+            prop["sourcePropertyName"] = key
+            prop["canonicalPropertyName"] = _canonical_property_name(canonical_type, key, "APEX_SQL_EXPORT")
+            properties[key] = prop
+        obj = {
+            "id": object_id, "type": canonical_type, "sourceType": call.get("routine", "unknown"),
+            "name": str(name) if name is not None else None,
+            "parentId": None if canonical_type == "APPLICATION" else app_id,
+            "properties": properties, "source": locator,
+            "fingerprint": object_fingerprint(
+                canonical_type, call.get("routine", "unknown"),
+                str(name) if name is not None else None, properties,
+            ),
+            "status": {"parse": "SUCCESS", "resolve": "PENDING", "conversion": "PENDING"},
+            "extensions": {"rawArguments": raw_args},
+        }
+        objects.append(obj)
+        if canonical_type == "UNKNOWN":
+            diagnostics.append(_diagnostic(
+                "IR002", "WARNING", "UNSUPPORTED_SOURCE_OBJECT",
+                f"Unmapped APEX import API routine preserved as UNKNOWN: {call.get('routine')}",
+                locator=locator, object_id=object_id,
+                details={"routine": call.get("routine"), "rawArguments": raw_args},
+            ))
+    for item in parsed.get("diagnostics", []):
+        diagnostics.append(_diagnostic(
+            item.get("code", "APEXEXP000"), item.get("severity", "WARNING"),
+            "SOURCE_PARSER", item.get("message", "APEX export parser diagnostic"),
+            locator={"file": source_name, "line": item.get("line"), "column": None,
+                     "artifactHash": "sha256:" + artifact_hash},
+        ))
+    if not calls:
+        diagnostics.append(_diagnostic(
+            "SRC003", "WARNING", "EXTRACTION",
+            "No supported APEX import API calls were found in the supplied export text.",
+            locator={"file": source_name, "artifactHash": "sha256:" + artifact_hash},
+        ))
+    return _document(
+        "APEX_SQL_EXPORT", application, objects, [], [], diagnostics, [artifact_hash]
+    )
+
+
+
+def resolve_references(document: dict[str, Any]) -> dict[str, Any]:
+    """Resolve exact source-native references without guessing; return a new IR document."""
+    import copy
+
+    resolved_document = copy.deepcopy(document)
+    objects = resolved_document.get("objects", [])
+    references = resolved_document.get("references", [])
+    object_by_id = {obj.get("id"): obj for obj in objects if obj.get("id")}
+    id_counts: dict[str, int] = {}
+    for obj in objects:
+        object_id = obj.get("id")
+        if object_id:
+            id_counts[object_id] = id_counts.get(object_id, 0) + 1
+    duplicate_ids = {object_id for object_id, count in id_counts.items() if count > 1}
+    application_id = resolved_document.get("application", {}).get("id")
+
+    def in_scope(candidate: dict[str, Any], scope: str | None) -> bool:
+        if not scope:
+            return True
+        current = candidate
+        visited: set[str] = set()
+        while current:
+            current_id = current.get("id")
+            if current_id == scope or current.get("parentId") == scope:
+                return True
+            if not current_id or current_id in visited:
+                return False
+            visited.add(current_id)
+            current = object_by_id.get(current.get("parentId"))
+        return False
+
+    by_native_id: dict[str, list[dict[str, Any]]] = {}
+    for obj in objects:
+        native_id = obj.get("source", {}).get("sourceNativeId")
+        if native_id not in (None, ""):
+            by_native_id.setdefault(str(native_id), []).append(obj)
+
+    resolver_codes = {"REF001", "REF002", "REF003", "REF004"}
+    diagnostics = [
+        item for item in resolved_document.get("diagnostics", [])
+        if item.get("code") not in resolver_codes and item.get("code") != "IR004"
+    ]
+    for duplicate_id in sorted(duplicate_ids):
+        diagnostics.append(_diagnostic(
+            "IR004", "ERROR", "IDENTITY_COLLISION",
+            f"Multiple IR objects share the same canonical identity: {duplicate_id}",
+            object_id=duplicate_id, details={"occurrences": id_counts[duplicate_id]},
+        ))
+    dependencies = [
+        item for item in resolved_document.get("dependencies", [])
+        if not (
+            item.get("origin") == "EXPLICIT"
+            and item.get("dependencyType") == "APEXLANG_AT_REFERENCE"
+        )
+    ]
+    resolution_by_source: dict[str, list[str]] = {}
+
+    for reference in references:
+        source_id = reference.get("sourceObjectId")
+        reference_value = reference.get("referenceValue", "")
+        reference_type = reference.get("referenceType", "")
+        scope = reference.get("scope") or application_id
+        status = "PENDING"
+        target_id: str | None = None
+        candidates: list[dict[str, Any]] = []
+
+        if source_id not in object_by_id or source_id in duplicate_ids or not reference_value:
+            status = "INVALID"
+            diagnostics.append(_diagnostic(
+                "REF004", "ERROR", "REFERENCE_INVALID",
+                "Reference has a missing/ambiguous source object or empty reference value.",
+                locator=reference.get("sourceLocator"), details={"referenceId": reference.get("id")},
+            ))
+        elif reference_type != "APEXLANG_AT_REFERENCE":
+            status = "UNSUPPORTED"
+            diagnostics.append(_diagnostic(
+                "REF003", "WARNING", "REFERENCE_UNSUPPORTED",
+                f"Reference syntax is not supported by this resolver: {reference_type}",
+                locator=reference.get("sourceLocator"), details={"referenceId": reference.get("id")},
+            ))
+        elif scope and scope != application_id:
+            status = "INVALID"
+            diagnostics.append(_diagnostic(
+                "REF004", "ERROR", "REFERENCE_INVALID",
+                "Reference scope does not match the current application snapshot.",
+                locator=reference.get("sourceLocator"),
+                details={"referenceId": reference.get("id"), "scope": scope},
+            ))
+        else:
+            candidates = [
+                candidate for candidate in by_native_id.get(str(reference_value), [])
+                if in_scope(candidate, scope)
+            ]
+            candidate_ids = sorted({candidate["id"] for candidate in candidates})
+            if len(candidates) == 1:
+                status = "RESOLVED"
+                target_id = candidates[0]["id"]
+                dependency_id = "dep:" + sha256_text(
+                    f"{source_id}|{target_id}|{reference_type}|EXPLICIT"
+                )[:24]
+                dependency = {
+                    "id": dependency_id,
+                    "sourceObjectId": source_id,
+                    "targetObjectId": target_id,
+                    "dependencyType": reference_type,
+                    "origin": "EXPLICIT",
+                    "confidence": 1.0,
+                }
+                if reference.get("sourceLocator") is not None:
+                    dependency["sourceLocator"] = reference["sourceLocator"]
+                dependencies.append(dependency)
+            elif len(candidates) == 0:
+                status = "DANGLING"
+                diagnostics.append(_diagnostic(
+                    "REF001", "ERROR", "REFERENCE_DANGLING",
+                    f"No in-scope object matches reference: {reference_value}",
+                    locator=reference.get("sourceLocator"),
+                    details={"referenceId": reference.get("id"), "scope": scope},
+                ))
+            else:
+                status = "AMBIGUOUS"
+                diagnostics.append(_diagnostic(
+                    "REF002", "ERROR", "REFERENCE_AMBIGUOUS",
+                    f"Multiple in-scope objects match reference: {reference_value}",
+                    locator=reference.get("sourceLocator"),
+                    details={"referenceId": reference.get("id"), "candidateObjectIds": candidate_ids},
+                ))
+
+        reference["resolutionStatus"] = status
+        reference["targetObjectId"] = target_id
+        reference["candidateObjectIds"] = sorted({candidate["id"] for candidate in candidates})
+        if source_id:
+            resolution_by_source.setdefault(source_id, []).append(status)
+
+    for obj in objects:
+        statuses = resolution_by_source.get(obj.get("id"), [])
+        if not statuses:
+            obj.setdefault("status", {})["resolve"] = "SUCCESS"
+        else:
+            if all(status == "RESOLVED" for status in statuses):
+                obj.setdefault("status", {})["resolve"] = "SUCCESS"
+            elif any(status == "INVALID" for status in statuses):
+                obj.setdefault("status", {})["resolve"] = "FAILED"
+            else:
+                obj.setdefault("status", {})["resolve"] = "PARTIAL"
+
+    unique_dependencies = {item["id"]: item for item in dependencies}
+    resolved_document["dependencies"] = [
+        unique_dependencies[key] for key in sorted(unique_dependencies)
+    ]
+    resolved_document["diagnostics"] = sorted(
+        diagnostics,
+        key=lambda d: (
+            d.get("sourceLocator", {}).get("file", ""),
+            d.get("sourceLocator", {}).get("line") or 0,
+            d["code"], d["message"],
+        ),
+    )
+    resolved_document.setdefault("metadata", {})["resolverVersion"] = "0.1.0"
+    return resolved_document

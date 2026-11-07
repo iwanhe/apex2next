@@ -1,0 +1,21 @@
+[project]
+name = "apex2next-workers"
+version = "0.1.0"
+description = "Parsing, analysis, conversion, and validation workers for APEX2NEXT"
+requires-python = ">=3.12"
+dependencies = ["jsonschema>=4.23,<5"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3", "ruff>=0.8", "mypy>=1.13"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["workers/extraction-worker/src", "workers/schema-analyzer/src"]
+python_files = ["test_*.py"]

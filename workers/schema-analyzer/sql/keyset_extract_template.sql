@@ -1,0 +1,25 @@
+-- WP8.3 Oracle keyset extraction template (review and parameterize per table).
+-- Execute only in a separately approved read-only source session.
+-- Use a consistent SCN across all chunks (AS OF SCN :snapshot_scn) where supported.
+-- Replace PK_COLUMN / TABLE_NAME with validated identifiers; bind values, never concatenate values.
+-- ORDER BY must exactly match the unique primary/alternate key used for checkpoint boundaries.
+--
+-- First page:
+-- SELECT <explicit_column_list>
+-- FROM APP_OWNER.TABLE_NAME AS OF SCN :snapshot_scn
+-- WHERE PK_COLUMN <= :upper_bound
+-- ORDER BY PK_COLUMN
+-- FETCH FIRST :chunk_size ROWS ONLY;
+--
+-- Subsequent pages:
+-- SELECT <explicit_column_list>
+-- FROM APP_OWNER.TABLE_NAME AS OF SCN :snapshot_scn
+-- WHERE PK_COLUMN > :last_key AND PK_COLUMN <= :upper_bound
+-- ORDER BY PK_COLUMN
+-- FETCH FIRST :chunk_size ROWS ONLY;
+--
+-- Composite keys require lexicographic predicates, for example:
+-- (K1 > :last_k1) OR (K1 = :last_k1 AND K2 > :last_k2)
+-- plus the fixed upper-bound predicate. Validate plans and datatype binds.
+--
+-- This is a template only. No SQL is executed by the WP8.3 offline worker.

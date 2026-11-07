@@ -1,0 +1,128 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, feat/foundation-and-architecture-docs]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  node:
+    name: Node workspace baseline
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.0.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Check configuration formatting
+        run: pnpm exec prettier --check package.json tsconfig.base.json pnpm-workspace.yaml
+
+  python:
+    name: Python worker checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install tooling and schema validator
+        run: python -m pip install --upgrade pip ruff pytest jsonschema
+
+      - name: Ruff
+        run: python -m ruff check workers tests
+
+      - name: Pytest
+        run: python -m pytest
+
+  target-generation:
+    name: Generated target workspace build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.0.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Python generator dependencies
+        run: python -m pip install --upgrade pip jsonschema
+
+      - name: Generate target project from synthetic APEXLang fixture
+        run: |
+          PYTHONPATH=workers/extraction-worker/src python -c "from apex2next_extractor import adapt_apexlang_directory, generate_project; ir=adapt_apexlang_directory('tests/fixtures/apexlang-26.2'); print(generate_project(ir, '/tmp/apex2next-generated'))"
+
+      - name: Install generated workspace dependencies
+        working-directory: /tmp/apex2next-generated
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build generated Next.js and NestJS applications
+        working-directory: /tmp/apex2next-generated
+        run: pnpm build
+
+      - name: Test generated workspace
+        working-directory: /tmp/apex2next-generated
+        run: pnpm test
+
+      - name: Typecheck generated workspace
+        working-directory: /tmp/apex2next-generated
+        run: pnpm typecheck
+
+  antlr-grammar:
+    name: ANTLR grammar validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Download pinned ANTLR tool
+        run: curl --fail --silent --show-error --location https://www.antlr.org/download/antlr-4.13.2-complete.jar --output "$RUNNER_TEMP/antlr-4.13.2-complete.jar"
+
+      - name: Generate Python parser to validate grammar
+        run: |
+          java -jar "$RUNNER_TEMP/antlr-4.13.2-complete.jar" \
+            -Dlanguage=Python3 -visitor -no-listener \
+            -o "$RUNNER_TEMP/apex2next-antlr" \
+            workers/extraction-worker/grammar/ApexLang.g4
