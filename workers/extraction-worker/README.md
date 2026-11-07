@@ -47,3 +47,30 @@ if diagnostics:
 ```
 
 The validator checks structure only. A schema-valid document is not evidence of complete extraction, reference resolution, conversion readiness, or semantic parity. Unknown source properties and expressions should remain represented in the IR.
+
+## 4. Normalized Application IR v1 adapters
+
+The first adapter implementation is available through the Python API:
+
+```python
+from apex2next_extractor import adapt_apexlang_directory, adapt_apex_export
+
+apexlang_ir = adapt_apexlang_directory("./path/to/apexlang-project")
+export_ir = adapt_apex_export(
+    open("f100.sql", encoding="utf-8").read(),
+    source_name="f100.sql",
+)
+```
+
+Both adapters emit the shared `apex2next.application-ir.v1` shape. Stable object IDs are derived from source format, canonical type, source-native identifier, and parent scope where applicable. Fingerprints are content-derived and intentionally separate from identity. Source artifact SHA-256 hashes and source locators are retained.
+
+The APEXLang adapter retains each declaration's raw body in extensions, maps recognized declarations, and collects lexical `@reference` candidates as PENDING. The SQL-export adapter maps supported import API calls and preserves every raw argument; unknown routines remain UNKNOWN objects with diagnostics. Neither adapter executes source content.
+
+Current limitations:
+- APEXLang parsing remains a static inventory parser, not a complete grammar. Nested declaration relationships are inferred from source indentation and must be validated against representative real projects.
+- The APEX SQL-export parser recognizes only its current import API routine subset. It does not model every export call or establish all parent-child relationships.
+- References are candidates only; the scope-aware resolver is a subsequent work package.
+- Fallback identities without a stable source-native key are less robust than IDs based on native identifiers.
+- The adapters do not claim semantic parity, conversion readiness, or runtime behavior.
+
+Validate an emitted document with `validate_ir_document(document)`; schema validity proves contract shape only.
