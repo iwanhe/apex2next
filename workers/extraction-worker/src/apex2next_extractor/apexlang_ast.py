@@ -153,7 +153,7 @@ def parse_apexlang_ast(source: str) -> ApexLangAst:
     """Build declaration nodes from tokenized source; nested declarations are structural children."""
     tokens, diagnostics = tokenize_apexlang(source)
     declarations: list[ApexLangDeclaration] = []
-    stack: list[tuple[ApexLangDeclaration, int]] = []
+    stack: list[tuple[ApexLangDeclaration, int, int]] = []
     i = 0
 
     def token_value(index: int) -> str:
@@ -169,12 +169,19 @@ def parse_apexlang_ast(source: str) -> ApexLangAst:
         line_prefix = source[source.rfind("\n", 0, token.span.start_offset) + 1:token.span.start_offset]
         at_line_start = not line_prefix.strip()
         if token.kind != "IDENTIFIER" or not at_line_start:
-            if is_symbol(i, ")") and stack:
-                node, opening = stack.pop()
-                closing = token.span.end_offset
-                node.span = _span(source, node.span.start_offset, closing)
-                node.body_span = _span(source, opening + 1, token.span.start_offset)
-                node.raw_body = source[opening + 1:token.span.start_offset]
+            if is_symbol(i, "(") and stack:
+                node, opening, nested_parens = stack[-1]
+                stack[-1] = (node, opening, nested_parens + 1)
+            elif is_symbol(i, ")") and stack:
+                node, opening, nested_parens = stack[-1]
+                if nested_parens:
+                    stack[-1] = (node, opening, nested_parens - 1)
+                else:
+                    stack.pop()
+                    closing = token.span.end_offset
+                    node.span = _span(source, node.span.start_offset, closing)
+                    node.body_span = _span(source, opening + 1, token.span.start_offset)
+                    node.raw_body = source[opening + 1:token.span.start_offset]
             i += 1
             continue
 
@@ -207,11 +214,11 @@ def parse_apexlang_ast(source: str) -> ApexLangAst:
             stack[-1][0].children.append(node)
         else:
             declarations.append(node)
-        stack.append((node, opening_token.span.start_offset))
+        stack.append((node, opening_token.span.start_offset, 0))
         i = open_index + 1
 
     if stack:
-        for node, opening in stack:
+        for node, opening, _nested_parens in stack:
             diagnostics.append({
                 "code": "AST004", "severity": "WARNING",
                 "message": f"Unterminated declaration: {node.kind} {node.name or ''}".strip(),
