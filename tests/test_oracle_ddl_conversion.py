@@ -1,0 +1,82 @@
+from apex2next_schema_analyzer.ddl_conversion import convert_oracle_ddl
+
+
+def test_converts_supported_columns_and_constraints():
+    source = '''
+    CREATE TABLE HR.DEPARTMENTS (
+      DEPARTMENT_ID NUMBER(6) NOT NULL,
+      NAME VARCHAR2(80 CHAR),
+      CREATED_AT DATE DEFAULT SYSDATE,
+      CONSTRAINT DEPT_PK PRIMARY KEY (DEPARTMENT_ID),
+      CONSTRAINT DEPT_NAME_UQ UNIQUE (NAME)
+    );
+    CREATE TABLE HR.EMPLOYEES (
+      EMPLOYEE_ID NUMBER(10) NOT NULL,
+      DEPARTMENT_ID NUMBER(6),
+      SALARY NUMBER(12,2),
+      CONSTRAINT EMP_PK PRIMARY KEY (EMPLOYEE_ID),
+      CONSTRAINT EMP_DEPT_FK FOREIGN KEY (DEPARTMENT_ID)
+        REFERENCES HR.DEPARTMENTS (DEPARTMENT_ID) ON DELETE CASCADE
+    );
+    '''
+    result = convert_oracle_ddl(source)
+    assert result["summary"] == {
+        "sourceTables": 2, "convertedTables": 2, "blockedTables": 0, "diagnostics": 0
+    }
+    sql = result["sql"]
+    assert '"DEPARTMENT_ID" INTEGER NOT NULL' in sql
+    assert '"NAME" VARCHAR(80)' in sql
+    assert '"CREATED_AT" TIMESTAMP(0) WITHOUT TIME ZONE' in sql
+    assert '"SALARY" NUMERIC(12,2)' in sql
+    assert 'REFERENCES "app"."DEPARTMENTS" ("DEPARTMENT_ID") ON DELETE CASCADE' in sql
+
+
+def test_blocks_unknown_datatype_without_partial_table_output():
+    result = convert_oracle_ddl("CREATE TABLE T (ID NUMBER(10), PAYLOAD XMLTYPE);")
+    assert result["summary"]["blockedTables"] == 1
+    assert 'CREATE TABLE "app"."T"' not in result["sql"]
+    assert any(d["code"] == "ORAMAP006" for d in result["diagnostics"])
+
+
+def test_does_not_parse_create_table_inside_comments_or_string_literals():
+    source = """
+    -- CREATE TABLE GHOST (ID NUMBER);
+    CREATE TABLE REAL_TABLE (ID NUMBER(4));
+    INSERT INTO X VALUES ('CREATE TABLE STRING_GHOST (ID NUMBER)');
+    /* CREATE TABLE COMMENT_GHOST (ID NUMBER); */
+    """
+    result = convert_oracle_ddl(source)
+    assert [t["name"] for t in result["tables"]] == ["REAL_TABLE"]
+
+
+def test_preserves_quoted_identifier_and_escapes_target_identifier():
+    result = convert_oracle_ddl('CREATE TABLE "Order" ("Order ID" NUMBER(8));')
+    assert 'CREATE TABLE "app"."Order"' in result["sql"]
+    assert '"Order ID" INTEGER' in result["sql"]
+
+
+def test_unresolved_foreign_key_is_reported_and_not_emitted():
+    result = convert_oracle_ddl(
+        "CREATE TABLE CHILD (ID NUMBER(4), PARENT_ID NUMBER(4), "
+        "CONSTRAINT FK_PARENT FOREIGN KEY (PARENT_ID) REFERENCES OTHER_TABLE (ID));"
+    )
+    assert result["summary"]["convertedTables"] == 1
+    assert "FOREIGN KEY" not in result["sql"]
+    assert any(d["code"] == "ORAMAP008" for d in result["diagnostics"])
+
+
+def test_rejects_unsafe_target_schema_identifier():
+    import pytest
+    with pytest.raises(ValueError):
+        convert_oracle_ddl("CREATE TABLE T (ID NUMBER(4));", target_schema='app"; DROP SCHEMA public;--')
+
+
+def test_generation_is_deterministic():
+    source = "CREATE TABLE T (ID NUMBER(8), NAME VARCHAR2(20));"
+    assert convert_oracle_ddl(source) == convert_oracle_ddl(source)
+
+
+def test_does_not_emit_unsupported_check_expression():
+    result = convert_oracle_ddl("CREATE TABLE T (ID NUMBER(8), CONSTRAINT CK CHECK (ID > 0));")
+    assert "CHECK" not in result["sql"]
+    assert any(d["code"] == "ORAMAP004" for d in result["diagnostics"])
