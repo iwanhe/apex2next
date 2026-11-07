@@ -33,7 +33,7 @@ def build_runtime_files(files: dict[str, str]) -> dict[str, str]:
 
     app_module = files["apps/api/src/app.module.ts"].replace(
         "import { Module } from '@nestjs/common';",
-        "import { Module } from '@nestjs/common';\\nimport { DatabaseModule } from './database/database.module';",
+        "import { Module } from '@nestjs/common';\nimport { DatabaseModule } from './database/database.module';",
     ).replace(
         "@Module({ controllers:",
         "@Module({ imports: [DatabaseModule], controllers:",
