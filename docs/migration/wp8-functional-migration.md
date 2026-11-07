@@ -14,7 +14,7 @@
 | WP8.4 | Data reconciliation | Counts, PK coverage, aggregates, chunk hashes, LOB, FK validation | deterministic tests; sanitized source/target validation pending | Implemented offline baseline; CI-verified |
 | WP8.5 | PL/SQL conversion workbench | Versioned rule registry, lexical analysis, source diagnostics, unchanged candidate source | golden fixtures; no false AUTO classification | Implemented offline baseline; CI-verified |
 | WP8.6 | Runtime integration | PostgreSQL pool, generic repository, transaction helper, NestJS database/health services, API readiness, migration runner | disposable PostgreSQL integration tests, idempotent migrations, build/test/typecheck | Implemented generated runtime baseline; CI-verified |
-| WP8.7 | APEX functional parity | Source-to-target test model, Playwright journeys, server assertions | representative sanitized APEX and target journeys | Planned |
+| WP8.7 | APEX functional parity | Paired evidence model, deterministic comparator, Playwright capture contract | synthetic comparator tests; real source/target journeys pending | Implemented offline baseline; CI pending |
 | WP8.8 | Security and cutover | Identity/policy mapping, rehearsal, rollback, cutover checklist | security review, rehearsal evidence, sign-off | Planned |
 
 ## WP8.5 — PL/SQL conversion workbench baseline
@@ -47,3 +47,10 @@ The target generator now emits a PostgreSQL runtime foundation:
 - CI applies migrations twice to verify runner idempotency.
 
 No application-specific business table, entity, repository, process endpoint, or business service is inferred from APEX UI metadata. Those require reviewed WP8.1 schema output, source dependencies, and business semantics. The runtime is a generated baseline, not a production-ready deployment: TLS, secret management, observability, pool sizing, retry policy, load testing, and real-source integration remain qualification tasks.
+
+
+## WP8.7 — Functional parity harness baseline
+
+The offline parity engine consumes paired source/target observations and produces a deterministic report. It supports FUNCTIONAL, API, DATA, WORKFLOW, SECURITY, and UI checks with EXACT, NUMERIC_TOLERANCE, and UNORDERED_SET comparators. Missing evidence is NOT_VERIFIED; any mismatch is FAIL; only complete supplied evidence with all checks passing produces PASS. The CLI uses distinct exit codes for PASS, FAIL, invalid input, and NOT_VERIFIED.
+
+Playwright is specified as the source/target capture adapter, not falsely reported as already running. Execution is gated on a sanitized source APEX environment, a target pilot, an approved journey catalogue, equivalent test identities, and safe synthetic data. Current CI validates the deterministic comparator using synthetic evidence only; it does not establish real application parity.

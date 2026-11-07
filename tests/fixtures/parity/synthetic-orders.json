@@ -1,0 +1,108 @@
+{
+  "manifestVersion": "apex2next.functional-parity-input.v1",
+  "application": {
+    "id": "synthetic-orders-demo",
+    "sourceSnapshot": "fixture:apexlang-26.2",
+    "targetBuild": "generated-fixture"
+  },
+  "checks": [
+    {
+      "id": "FUNC-001",
+      "category": "FUNCTIONAL",
+      "description": "Order form required-field validation",
+      "comparator": "EXACT",
+      "source": {
+        "value": {
+          "field": "P10_ORDER_NAME",
+          "valid": false,
+          "error": "Required"
+        },
+        "evidenceRef": "fixture:source/validation.json#FUNC-001"
+      },
+      "target": {
+        "value": {
+          "field": "orderName",
+          "valid": false,
+          "error": "Required"
+        },
+        "evidenceRef": "fixture:target/validation.json#FUNC-001"
+      }
+    },
+    {
+      "id": "API-001",
+      "category": "API",
+      "description": "Order lookup HTTP status",
+      "comparator": "EXACT",
+      "source": {
+        "value": 200,
+        "evidenceRef": "fixture:source/api.json#API-001"
+      },
+      "target": {
+        "value": 200,
+        "evidenceRef": "fixture:target/api.json#API-001"
+      }
+    },
+    {
+      "id": "DATA-001",
+      "category": "DATA",
+      "description": "Order identifiers returned by search",
+      "comparator": "UNORDERED_SET",
+      "source": {
+        "value": [
+          "ORD-100",
+          "ORD-101"
+        ],
+        "evidenceRef": "fixture:source/data.json#DATA-001"
+      },
+      "target": {
+        "value": [
+          "ORD-101",
+          "ORD-100"
+        ],
+        "evidenceRef": "fixture:target/data.json#DATA-001"
+      }
+    },
+    {
+      "id": "WORKFLOW-001",
+      "category": "WORKFLOW",
+      "description": "Approved request reaches the same terminal state",
+      "comparator": "EXACT",
+      "source": {
+        "value": "APPROVED",
+        "evidenceRef": "fixture:source/workflow.json#WORKFLOW-001"
+      },
+      "target": {
+        "value": "APPROVED",
+        "evidenceRef": "fixture:target/workflow.json#WORKFLOW-001"
+      }
+    },
+    {
+      "id": "SEC-001",
+      "category": "SECURITY",
+      "description": "Unauthorized role is denied access",
+      "comparator": "EXACT",
+      "source": {
+        "value": 403,
+        "evidenceRef": "fixture:source/security.json#SEC-001"
+      },
+      "target": {
+        "value": 403,
+        "evidenceRef": "fixture:target/security.json#SEC-001"
+      }
+    },
+    {
+      "id": "UI-001",
+      "category": "UI",
+      "description": "Page title parity",
+      "comparator": "EXACT",
+      "source": {
+        "value": "Orders",
+        "evidenceRef": "fixture:source/ui.json#UI-001"
+      },
+      "target": {
+        "value": "Orders",
+        "evidenceRef": "fixture:target/ui.json#UI-001"
+      }
+    }
+  ]
+}

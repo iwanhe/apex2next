@@ -10,7 +10,7 @@ WP8 is phased and remains in progress. See the phase plan in ../migration/wp8-fu
 | WP8.4 | Data reconciliation and integrity report | Implemented offline baseline; CI-verified |
 | WP8.5 | PL/SQL conversion workbench and rule registry | Implemented offline baseline; CI-verified |
 | WP8.6 | Runtime repositories, services, APIs, and PostgreSQL integration | Implemented generated runtime baseline; CI-verified |
-| WP8.7 | APEX-to-target functional parity test harness | Planned |
+| WP8.7 | APEX-to-target functional parity test harness | Implemented offline baseline; CI pending |
 | WP8.8 | Security mapping, rehearsal, rollback, and cutover readiness | Planned |
 
 ## WP8.5 checklist
@@ -46,3 +46,17 @@ WP8 is phased and remains in progress. See the phase plan in ../migration/wp8-fu
 - [x] CI verifies migration idempotency by applying the migration runner twice.
 - [ ] Sanitized application-specific repositories/services/DTOs after WP8.1 schema and domain review.
 - [ ] Production pool sizing, TLS, secrets management, observability, and load tests.
+
+
+## WP8.7 checklist
+
+- [x] Versioned paired source/target evidence manifest and deterministic parity report.
+- [x] Functional, API, data, workflow, security, and UI comparison domains.
+- [x] Exact, explicit numeric-tolerance, and unordered-set comparators.
+- [x] Missing evidence is NOT_VERIFIED; mismatches are FAIL; no silent PASS.
+- [x] CLI exit codes and stable diagnostic codes.
+- [x] Golden synthetic fixtures and negative tests.
+- [x] Playwright source/target capture contract documented.
+- [ ] Playwright execution against representative sanitized APEX and target pilot.
+- [ ] Business-approved critical journeys, role matrix, API contracts, and data canonicalization.
+- [ ] Evidence retention, redaction, and business-owner sign-off.
