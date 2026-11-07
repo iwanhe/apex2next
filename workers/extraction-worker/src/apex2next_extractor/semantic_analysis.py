@@ -54,9 +54,12 @@ EXPRESSION_RULES = {
 def _diag(code: str, severity: str, message: str, *, object_id: str | None = None,
           locator: dict[str, Any] | None = None, details: dict[str, Any] | None = None) -> dict[str, Any]:
     item = {"code": code, "severity": severity, "category": "SEMANTIC_ANALYSIS", "message": message}
-    if object_id is not None: item["objectId"] = object_id
-    if locator is not None: item["sourceLocator"] = locator
-    if details is not None: item["details"] = details
+    if object_id is not None:
+        item["objectId"] = object_id
+    if locator is not None:
+        item["sourceLocator"] = locator
+    if details is not None:
+        item["details"] = details
     return item
 
 def _stable_id(payload: Any) -> str:
@@ -67,7 +70,8 @@ def _walk_properties(properties: dict[str, Any], prefix: str = ""):
     for name in sorted(properties):
         prop = properties[name]
         path = f"{prefix}.{name}" if prefix else name
-        if not isinstance(prop, dict): continue
+        if not isinstance(prop, dict):
+            continue
         yield path, prop
         nested = prop.get("value")
         if prop.get("valueType") == "OBJECT" and isinstance(nested, dict):

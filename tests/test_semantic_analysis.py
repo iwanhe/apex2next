@@ -17,8 +17,11 @@ def _document():
       "dependencies":[],"diagnostics":[],"metadata":{"sourceHash":"sha256:test","adapterVersion":"0.1.0"}}
 
 def test_component_and_expression_classification_is_deterministic_and_non_mutating():
-    doc=_document(); before=deepcopy(doc)
-    first=analyze_semantics(doc); assert first==analyze_semantics(doc); assert doc==before
+    doc = _document()
+    before = deepcopy(doc)
+    first = analyze_semantics(doc)
+    assert first == analyze_semantics(doc)
+    assert doc == before
     by_id={x["objectId"]:x for x in first["objects"]}
     assert by_id["page:1"]["component"]["classification"]=="ASSISTED"
     assert by_id["future:1"]["component"]["classification"]=="UNSUPPORTED"
@@ -38,7 +41,8 @@ def test_dependency_cycle_blocks_semantic_transform_order():
     doc["dependencies"]=[
       {"id":"d1","sourceObjectId":"page:1","targetObjectId":"plugin:1","dependencyType":"USES","origin":"EXPLICIT"},
       {"id":"d2","sourceObjectId":"plugin:1","targetObjectId":"page:1","dependencyType":"USES","origin":"EXPLICIT"}]
-    graph=analyze_dependency_graph(doc); result=analyze_semantics(doc,graph)
+    graph = analyze_dependency_graph(doc)
+    result = analyze_semantics(doc, graph)
     assert any(x["code"]=="SEM007" for x in result["diagnostics"])
     assert set(graph["blockedObjectIds"])=={"page:1","plugin:1"}
 
