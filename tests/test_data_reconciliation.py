@@ -110,3 +110,10 @@ def test_missing_chunk_receipts_prevent_pass():
     report = reconcile_snapshots(src, tgt)
     assert report["status"] == "WARN"
     assert any(x["code"] == "REC020" for x in report["diagnostics"])
+
+def test_key_evidence_must_cover_every_table_row():
+    src, tgt = snapshots(table(keys=[]), table(keys=[]))
+    report = reconcile_snapshots(src, tgt)
+    assert report["tables"][0]["primaryKey"]["keyEvidenceCountMismatch"] is True
+    assert report["status"] == "FAIL"
+
