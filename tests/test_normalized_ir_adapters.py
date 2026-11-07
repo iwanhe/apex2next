@@ -629,3 +629,37 @@ def test_apexlang_adapter_reports_ast_only_declarations_without_synthesizing_obj
     assert document["objects"] == []
     diagnostic = next(item for item in document["diagnostics"] if item["code"] == "IRAST003")
     assert diagnostic["details"] == {"sourceType": "futureComponent", "name": "Widget"}
+
+
+def test_apexlang_duplicate_direct_properties_are_all_preserved_outside_unique_key_map(
+    tmp_path: Path,
+) -> None:
+    source_dir = tmp_path / "duplicate-direct-properties"
+    source_dir.mkdir()
+    (source_dir / "application.apx").write_text(
+        "app DEMO (\\n    name: 'Duplicate test'\\n)\\n",
+        encoding="utf-8",
+    )
+    (source_dir / "page.apx").write_text(
+        "page 10 (\\n"
+        "    title: 'First title'\\n"
+        "    title: 'Second title'\\n"
+        ")\\n",
+        encoding="utf-8",
+    )
+
+    document = adapt_apexlang_directory(source_dir)
+    page = next(obj for obj in document["objects"] if obj["type"] == "PAGE")
+
+    assert validate_ir_document(document) == []
+    assert page["properties"]["title"]["value"] == "Second title"
+    preserved = page["extensions"]["duplicateProperties"]
+    assert [item["occurrence"] for item in preserved] == [1, 2]
+    assert [item["property"]["value"] for item in preserved] == [
+        "First title",
+        "Second title",
+    ]
+    diagnostic = next(
+        item for item in document["diagnostics"] if item["code"] == "IRAST004"
+    )
+    assert diagnostic["details"]["duplicatePropertyNames"] == ["title"]
