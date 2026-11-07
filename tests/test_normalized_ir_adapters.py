@@ -6,6 +6,7 @@ from apex2next_extractor.normalized_ir import (
     adapt_apexlang_directory,
     object_fingerprint,
     stable_identity,
+    resolve_references,
 )
 
 
@@ -144,3 +145,51 @@ def test_unknown_apexlang_declaration_is_retained_with_diagnostic(tmp_path: Path
     assert document["objects"][0]["sourceType"] == "futureComponent"
     assert "future_expression(x)" in document["objects"][0]["extensions"]["rawDeclarationBody"]
     assert any(item["code"] == "IR002" for item in document["diagnostics"])
+
+
+
+def test_reference_resolver_resolves_one_exact_in_scope_candidate(tmp_path: Path) -> None:
+    source_dir = tmp_path / "resolved-apexlang"
+    source_dir.mkdir()
+    (source_dir / "application.apx").write_text(
+        "app DEMO (\\n name: 'Demo'\\n)\\nauthorization requester (\\n name: 'Requester'\\n)\\n"
+        "page 10 (\\n security { scheme: @requester }\\n)\\n",
+        encoding="utf-8",
+    )
+
+    source_document = adapt_apexlang_directory(source_dir)
+    resolved = resolve_references(source_document)
+
+    assert source_document["references"][0]["resolutionStatus"] == "PENDING"
+    assert resolved["references"][0]["resolutionStatus"] == "RESOLVED"
+    assert resolved["references"][0]["targetObjectId"] == next(
+        obj["id"] for obj in resolved["objects"] if obj["type"] == "AUTHORIZATION"
+    )
+    assert len(resolved["dependencies"]) == 1
+    assert resolved["dependencies"][0]["origin"] == "EXPLICIT"
+    assert resolved["metadata"]["resolverVersion"] == "0.1.0"
+
+
+def test_reference_resolver_reports_dangling_candidate() -> None:
+    source_document = adapt_apexlang_directory(FIXTURE)
+    resolved = resolve_references(source_document)
+
+    assert resolved["references"][0]["resolutionStatus"] == "DANGLING"
+    assert any(item["code"] == "REF001" for item in resolved["diagnostics"])
+    assert resolved["dependencies"] == []
+
+
+def test_reference_resolver_reports_ambiguous_candidates(tmp_path: Path) -> None:
+    source_dir = tmp_path / "ambiguous-apexlang"
+    source_dir.mkdir()
+    (source_dir / "application.apx").write_text(
+        "app DEMO (\\n name: 'Demo'\\n)\\nauthorization requester (\\n)\\n"
+        "authentication requester (\\n)\\npage 10 (\\n security { scheme: @requester }\\n)\\n",
+        encoding="utf-8",
+    )
+
+    resolved = resolve_references(adapt_apexlang_directory(source_dir))
+
+    assert resolved["references"][0]["resolutionStatus"] == "AMBIGUOUS"
+    assert len(resolved["references"][0]["candidateObjectIds"]) == 2
+    assert any(item["code"] == "REF002" for item in resolved["diagnostics"])
