@@ -277,7 +277,8 @@ def test_apexlang_properties_are_typed_and_keep_property_level_provenance(tmp_pa
     assert page["properties"]["source"]["sourceLocator"]["file"] == "page.apx"
     assert page["properties"]["source"]["sourceLocator"]["line"] == 7
     assert page["properties"]["source"]["sourceLocator"]["column"] == 5
-    assert "nested" not in page["properties"]
+    assert page["properties"]["nested"]["valueType"] == "OBJECT"
+    assert page["properties"]["nested"]["value"]["hidden"]["value"] == "not-a-direct-property"
 
 
 
