@@ -125,7 +125,9 @@ Supported value types: STRING, NUMBER, BOOLEAN, NULL, ARRAY, OBJECT, SQL_EXPRESS
 
 A parser may decode only unambiguous scalar literals. The initial APEXLang adapter decodes single- and double-quoted strings, booleans, null, integers, and decimal/scientific numeric literals. Each extracted direct property includes its own source locator (file, line, column, and artifact hash).
 
-All other values are retained as `UNKNOWN` with their exact `rawExpression`; no SQL, PL/SQL, JavaScript, or APEXLang expression is evaluated. Direct properties inside nested blocks are not flattened into the parent object's property map. The complete raw declaration body remains in object extensions as a lossless fallback while nested-property normalization is developed.
+Brace-delimited nested property blocks are represented recursively as `OBJECT` properties whose `value` is a map of child property records. Each child retains its own type and source locator. For example, `navigation { homeUrl: { page: 10 } }` becomes `navigation.value.homeUrl.value.page`, with `OBJECT` at each block level and `NUMBER` at the leaf.
+
+All other values are retained as `UNKNOWN` with their exact `rawExpression`; no SQL, PL/SQL, JavaScript, or APEXLang expression is evaluated. Nested blocks are no longer flattened or discarded. The complete raw declaration body remains in object extensions as the lossless fallback. The initial block parser supports multiline brace-delimited blocks; inline/mixed block syntax and multiline expression parsing remain outside this pass.
 
 ## 7. Provenance
 
