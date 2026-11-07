@@ -84,7 +84,7 @@ def _skip_trivia(text: str, index: int) -> int:
 
 def _read_identifier(text: str, index: int) -> tuple[str, int]:
     cursor = index
-    while cursor < len(text) and (text[cursor].isalnum() or text[cursor] in "_$# ."):
+    while cursor < len(text) and (text[cursor].isalnum() or text[cursor] in "_$#."):
         cursor += 1
     return text[index:cursor].strip(), cursor
 
