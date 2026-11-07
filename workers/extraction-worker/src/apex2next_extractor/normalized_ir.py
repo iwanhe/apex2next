@@ -182,10 +182,14 @@ def adapt_apexlang_directory(source_dir: str | Path) -> dict[str, Any]:
     references: list[dict[str, Any]] = []
     diagnostics: list[dict[str, Any]] = []
     stack: list[tuple[int, str]] = []
+    current_file: str | None = None
     occurrence: dict[tuple[str, str, str], int] = {}
 
     for declaration in declarations:
         file_name = declaration.get("file", "")
+        if file_name != current_file:
+            stack.clear()
+            current_file = file_name
         line = declaration.get("line")
         column = declaration.get("column")
         indent = declaration.get("indent", 0)
