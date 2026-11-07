@@ -63,7 +63,7 @@ def _split_top_level(
     newline_positions: list[int] = []
     cursor = start
     while cursor < end:
-        newline = text.find("\\n", cursor, end)
+        newline = text.find("\n", cursor, end)
         if newline < 0:
             break
         newline_positions.append(newline)
@@ -85,10 +85,10 @@ def _split_top_level(
                         nesting.pop()
             token_index += 1
         next_line = newline + 1
-        while next_line < end and text[next_line] in " \\t":
+        while next_line < end and text[next_line] in " \t":
             next_line += 1
         if not nesting and re.match(
-            r"[A-Za-z_][A-Za-z0-9_.-]*\\s*:", text[next_line:end]
+            r"[A-Za-z_][A-Za-z0-9_.-]*\s*:", text[next_line:end]
         ):
             separators.add(newline)
 
@@ -199,7 +199,7 @@ def _parse_object(
     for segment_start, segment_end in _split_top_level(source, start, end):
         segment = source[segment_start:segment_end]
         match = re.match(
-            r"\\s*([A-Za-z_][A-Za-z0-9_.-]*)\\s*:\\s*", segment
+            r"\s*([A-Za-z_][A-Za-z0-9_.-]*)\s*:\s*", segment
         )
         if not match:
             diagnostics.append(
@@ -264,8 +264,8 @@ def parse_apexlang_properties(
     candidates: list[tuple[int, re.Match[str]]] = []
     for line_no, line in enumerate(lines):
         match = re.match(
-            r"^(?P<indent>[ \\t]*)(?P<name>[A-Za-z_][A-Za-z0-9_.-]*)\\s*:\\s*",
-            line.rstrip("\\r\\n"),
+            r"^(?P<indent>[ \t]*)(?P<name>[A-Za-z_][A-Za-z0-9_.-]*)\s*:\s*",
+            line.rstrip("\r\n"),
         )
         if match:
             candidates.append((line_no, match))
