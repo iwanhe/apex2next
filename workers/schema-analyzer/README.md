@@ -94,3 +94,6 @@ percentage, per-table/per-domain statuses, snapshot IDs, and explicit limitation
 does not certify APEX behavior, SQL semantics, timezone/collation, Oracle empty-string behavior,
 or business-rule equivalence. Validate source queries, target receipts, LOB canonicalization,
 and performance against sanitized representative data before production use.
+
+
+WP8.4 CI verification: commit `1ba9c65e7ceed123f56f6780eeec639ef856cd7a`; run https://github.com/iwanhe/apex2next/actions/runs/42366139624. All four jobs passed; Ruff passed and pytest reported 111 passed. This verifies the offline implementation only, not production source/target qualification.

@@ -7,7 +7,7 @@ WP8 is phased and remains in progress. See the [phase plan](../migration/wp8-fun
 | WP8.1 | Conservative Oracle CREATE TABLE to PostgreSQL DDL draft | Implemented; CI-verified |
 | WP8.2 | Read-only Oracle metadata extraction and dictionary reconciliation | Implemented baseline; CI-verified |
 | WP8.3 | Restartable chunked data migration engine | Implemented offline baseline; CI-verified |
-| WP8.4 | Data reconciliation and integrity report | Implemented offline baseline; CI pending |
+| WP8.4 | Data reconciliation and integrity report | Implemented offline baseline; CI-verified |
 | WP8.5 | PL/SQL conversion workbench and rule registry | Planned |
 | WP8.6 | Runtime repositories, services, APIs, and PostgreSQL integration | Planned |
 | WP8.7 | APEX-to-target functional parity test harness | Planned |
@@ -36,6 +36,7 @@ WP8 is phased and remains in progress. See the [phase plan](../migration/wp8-fun
 - [x] Compare LOB row counts, byte lengths, and canonical SHA-256 evidence.
 - [x] Emit deterministic JSON, PASS/WARN/FAIL status, and stable diagnostics.
 - [x] Add synthetic regression tests for mismatches, missing evidence, determinism, and immutability.
+- [x] CI: commit `1ba9c65e7ceed123f56f6780eeec639ef856cd7a`; all four jobs passed, Ruff passed, and 111 pytest tests passed (run [42366139624](https://github.com/iwanhe/apex2next/actions/runs/42366139624)).
 - [ ] Validate query recipes, target receipts, LOB canonicalization, and scale on sanitized representative data.
 - [ ] Add streaming/external-sort key comparison for very large tables if measured report size or memory requires it.
 

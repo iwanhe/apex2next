@@ -11,7 +11,7 @@
 | WP8.1 | Oracle schema conversion | DDL parser subset, datatype mapping, PostgreSQL SQL draft, diagnostics | deterministic tests; unsupported constructs blocked/reported | Implemented; CI-verified |
 | WP8.2 | Source schema extraction | Read-only dictionary scripts, DBMS_METADATA DDL export, stable manifest, reconciliation | synthetic tests; sanitized Oracle validation pending | Implemented baseline; CI-verified |
 | WP8.3 | Data migration engine | Bounded chunks, typed JSONL contract, durable checkpoints, retries, idempotent sink contract | restart/retry/tamper tests; live adapters pending | Implemented offline baseline; CI-verified |
-| WP8.4 | Data reconciliation | Counts, PK coverage, aggregates, chunk hashes, LOB length/hash, FK validation | deterministic offline tests; sanitized source/target validation pending | Implemented offline baseline; CI pending |
+| WP8.4 | Data reconciliation | Counts, PK coverage, aggregates, chunk hashes, LOB length/hash, FK validation | deterministic offline tests; sanitized source/target validation pending | Implemented offline baseline; CI-verified |
 | WP8.5 | PL/SQL conversion workbench | Rule registry, parse/diagnose supported SQL/PLSQL subset, manual-review stubs | golden fixtures and no false AUTO classification | Planned |
 | WP8.6 | Runtime integration | Generated repositories/services/API contracts and DB integration tests | disposable PostgreSQL integration tests | Planned |
 | WP8.7 | APEX functional parity | Source-to-target test model, Playwright journeys, server assertions | representative sanitized APEX and target journeys | Planned |
@@ -32,6 +32,8 @@ Operational safeguards: secure/encrypt chunk files and checkpoint database, rest
 The `reconcile_snapshots(source, target, ...)` API consumes normalized JSON evidence. For each table it compares row counts and deltas; exact single/composite primary-key coverage (including duplicate, missing, and extra keys); configured COUNT/SUM/MIN/MAX aggregates; FK violation baselines; and LOB row counts, byte lengths, and SHA-256. Optional WP8.3 chunk manifests are compared with target chunk receipts by ID, checksum, and row count.
 
 The report is deterministic JSON with table/domain statuses, coverage percentage, diagnostic codes, and a summary. FAIL is used for data mismatches and target integrity regressions. WARN is used when evidence is missing/incomplete or source-side FK violations already exist. Missing evidence is never silently treated as PASS. SUM tolerance is explicit and applies only to SUM; counts, MIN, and MAX are exact.
+
+CI verification: commit `1ba9c65e7ceed123f56f6780eeec639ef856cd7a`; [run 42366139624](https://github.com/iwanhe/apex2next/actions/runs/42366139624) passed all four jobs. Ruff passed and pytest reported 111 passed. This is CI verification of the offline baseline, not production qualification.
 
 No live database reader, source query runner, target receipt writer, streaming key-diff engine, or LOB byte reader is included. Source/target evidence must be produced by separately reviewed, consistent-snapshot queries. Target receipts must be emitted only after atomic target-side verification. LOB hashes require identical canonical byte representation. Large key lists can produce large reports and require scale validation.
 
