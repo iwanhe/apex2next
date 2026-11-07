@@ -10,6 +10,9 @@ from dataclasses import dataclass, field
 from typing import Literal
 
 
+AST_PARSER_VERSION = "0.2.0"
+
+
 TokenKind = Literal["IDENTIFIER", "NUMBER", "STRING", "REFERENCE", "RAW_BLOCK", "SYMBOL"]
 
 
