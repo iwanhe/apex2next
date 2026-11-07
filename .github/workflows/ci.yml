@@ -58,3 +58,26 @@ jobs:
 
       - name: Pytest
         run: python -m pytest
+
+  antlr-grammar:
+    name: ANTLR grammar validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Download pinned ANTLR tool
+        run: curl --fail --silent --show-error --location https://www.antlr.org/download/antlr-4.13.2-complete.jar --output "$RUNNER_TEMP/antlr-4.13.2-complete.jar"
+
+      - name: Generate Python parser to validate grammar
+        run: |
+          java -jar "$RUNNER_TEMP/antlr-4.13.2-complete.jar" \
+            -Dlanguage=Python3 -visitor -no-listener \
+            -o "$RUNNER_TEMP/apex2next-antlr" \
+            workers/extraction-worker/grammar/ApexLang.g4
