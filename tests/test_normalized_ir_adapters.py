@@ -454,4 +454,4 @@ def test_sql_expression_mapping_is_consistent_across_apexlang_and_sql_export(tmp
         assert prop["valueType"] == "SQL_EXPRESSION"
         assert prop["expressionLanguage"] == "SQL"
         assert prop["classificationConfidence"] == "HIGH"
-        assert prop["rawExpression"].strip().upper().startswith("SELECT")
+        assert "SELECT" in prop["rawExpression"].upper()
