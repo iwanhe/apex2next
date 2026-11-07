@@ -269,7 +269,7 @@ def _ast_property_to_ir(prop: ApexLangProperty, file_name: str, artifact_hash: s
     elif prop.value_type == "EXPRESSION":
         # Keep exact source formatting in extensions while matching the adapter's
         # established logical expression representation in rawExpression.
-        normalized_expression = "\\n".join(
+        normalized_expression = "\n".join(
             line.lstrip() for line in prop.raw_value.splitlines()
         )
         result.update(_expression_property(normalized_expression, locator))
