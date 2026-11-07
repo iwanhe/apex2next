@@ -140,3 +140,20 @@ The milestone establishes a normalized structural model and deterministic refere
 - [ ] Add corpus-based precision/recall evaluation against sanitized real APEX exports and APEXLang projects.
 
 **Done when:** source property names remain lossless, supported aliases compare deterministically, unsupported expressions remain UNKNOWN, and all outputs validate against the shared IR schema.
+
+
+### WP PARSER-01 — APEXLang grammar and AST foundation (initial slice)
+- [x] Add a version-controlled ANTLR grammar specification for declaration, property, literal, reference, and expression-token structure.
+- [x] Add a dependency-free tokenizer with source offsets and 1-based line/column spans.
+- [x] Add declaration AST nodes with nested declaration children and raw-body preservation.
+- [x] Treat comments, strings, and fenced blocks atomically during tokenization.
+- [x] Balance parentheses inside expression bodies independently from declaration boundaries.
+- [x] Emit diagnostics for unterminated strings, comments, fenced blocks, and declarations.
+- [x] Export the AST/tokenizer API and document its current boundary.
+- [ ] Parse property declarations into typed AST nodes, including colon-prefixed object blocks.
+- [ ] Implement complete arrays, inline/mixed brace blocks, and balanced expression AST nodes.
+- [ ] Add deterministic error recovery, nesting/file-size limits, and fuzz/property-based tests.
+- [ ] Compare grammar and parser behavior against sanitized real APEXLang project fixtures.
+- [ ] Integrate AST output into the Normalized IR adapter only after parity tests show no loss versus the current inventory parser.
+
+**Done when:** the grammar/AST layer can represent supported declarations and nested structures with exact source spans, preserves all unparsed source, reports malformed syntax, and passes the real-source regression corpus. This initial slice is not the production parser and does not claim complete APEXLang syntax support.
