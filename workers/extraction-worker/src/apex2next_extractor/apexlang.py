@@ -85,40 +85,86 @@ def _matching_close(masked: str, opening: int) -> int | None:
     return None
 
 
-def _direct_properties(body: str) -> dict[str, Any]:
+def _decode_property_literal(raw: str) -> tuple[str, Any, str | None]:
+    """Decode only unambiguous scalar literals; retain all other source as an expression."""
+    value = raw.strip()
+    if len(value) >= 2 and value[0] == "'" and value[-1] == "'":
+        return "STRING", value[1:-1].replace("''", "'"), None
+    if len(value) >= 2 and value[0] == chr(34) and value[-1] == chr(34):
+        try:
+            return "STRING", json.loads(value), None
+        except json.JSONDecodeError:
+            return "UNKNOWN", None, value
+    if value.lower() in {"true", "false"}:
+        return "BOOLEAN", value.lower() == "true", None
+    if value.lower() in {"null", "none"}:
+        return "NULL", None, None
+    if re.fullmatch(r"[+-]?\\d+", value):
+        return "NUMBER", int(value), None
+    if re.fullmatch(r"[+-]?(?:\\d+\\.\\d*|\\.\\d+)(?:[eE][+-]?\\d+)?|[+-]?\\d+[eE][+-]?\\d+", value):
+        return "NUMBER", float(value), None
+    return "UNKNOWN", None, value
+
+
+def _property_records(
+    body: str, *, start_line: int = 1, start_column: int = 1
+) -> list[dict[str, Any]]:
+    """Extract direct scalar properties with exact raw text and source coordinates."""
     masked = _mask_non_code(body)
-    result: dict[str, Any] = {}
+    records: list[dict[str, Any]] = []
     paren = brace = bracket = 0
     line_start = 0
-    for i, ch in enumerate(masked + "\n"):
-        if ch == "(":
+    for index, char in enumerate(masked + "\\n"):
+        if char == "(":
             paren += 1
-        elif ch == ")":
+        elif char == ")":
             paren -= 1
-        elif ch == "{":
+        elif char == "{":
             brace += 1
-        elif ch == "}":
+        elif char == "}":
             brace -= 1
-        elif ch == "[":
+        elif char == "[":
             bracket += 1
-        elif ch == "]":
+        elif char == "]":
             bracket -= 1
-        elif ch == "\n":
+        elif char == "\\n":
+            raw_line = body[line_start:index]
             if paren == brace == bracket == 0:
-                raw_line = body[line_start:i].strip()
-                match = re.match(r"([A-Za-z][A-Za-z0-9_]*)\s*:\s*(.*?)\s*$", raw_line)
+                match = re.match(r"^[ \\t]*([A-Za-z][A-Za-z0-9_]*)\\s*:\\s*(.*?)\\s*$", raw_line)
                 if match:
-                    key, raw = match.groups()
-                    if raw.startswith("'") and raw.endswith("'") and len(raw) >= 2:
-                        value: Any = raw[1:-1].replace("''", "'")
-                    elif raw.lower() in {"true", "false"}:
-                        value = raw.lower() == "true"
-                    elif re.fullmatch(r"-?\d+", raw):
-                        value = int(raw)
-                    else:
-                        value = raw
-                    result[key] = value
-            line_start = i + 1
+                    name, raw_value = match.groups()
+                    value_type, value, raw_expression = _decode_property_literal(raw_value)
+                    prefix = raw_line[:match.start(1)]
+                    line_number = start_line + body.count("\\n", 0, line_start)
+                    column = (
+                        start_column + len(prefix)
+                        if line_number == start_line
+                        else len(prefix) + 1
+                    )
+                    record: dict[str, Any] = {
+                        "name": name,
+                        "value_type": value_type,
+                        "line": line_number,
+                        "column": column,
+                        "raw": raw_value,
+                    }
+                    if value_type in {"STRING", "NUMBER", "BOOLEAN", "NULL"}:
+                        record["value"] = value
+                    if raw_expression is not None:
+                        record["raw_expression"] = raw_expression
+                    records.append(record)
+            line_start = index + 1
+    return records
+
+
+def _direct_properties(body: str) -> dict[str, Any]:
+    """Backward-compatible scalar/property map for existing inventory consumers."""
+    result: dict[str, Any] = {}
+    for record in _property_records(body):
+        if "value" in record:
+            result[record["name"]] = record["value"]
+        else:
+            result[record["name"]] = record["raw_expression"]
     return result
 
 
@@ -150,6 +196,11 @@ def parse_apexlang_text(source: str, file_path: str = "") -> dict[str, Any]:
             "object_type":object_type, "kind":kind, "name":match.group("name") or "",
             "line":line, "column":column, "indent":indent, "file":file_path,
             "properties":_direct_properties(source[opening + 1:closing]),
+            "property_details":_property_records(
+                source[opening + 1:closing],
+                start_line=source.count("\\n", 0, opening) + 1,
+                start_column=(opening - source.rfind("\\n", 0, opening)),
+            ),
             "raw_body":source[opening + 1:closing],
         })
     return {
