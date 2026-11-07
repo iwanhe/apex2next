@@ -73,14 +73,20 @@ def _keys(table: str, src: dict[str, Any], tgt: dict[str, Any], diags: list) -> 
     ss, ts = set(sk), set(tk)
     missing, extra = sorted(ss - ts), sorted(ts - ss)
     sd, td = len(sk) - len(ss), len(tk) - len(ts)
-    status = "FAIL" if missing or extra or sd or td else "PASS"
-    if status == "FAIL":
+    count_mismatch = ((_count(src.get("rowCount")) and len(sk) != src["rowCount"]) or
+                      (_count(tgt.get("rowCount")) and len(tk) != tgt["rowCount"]))
+    status = "FAIL" if missing or extra or sd or td or count_mismatch else "PASS"
+    if missing or extra or sd or td:
         diags.append(_diag("REC007", "FAIL", "Primary-key coverage has duplicates, missing, or extra keys.", table))
+    if count_mismatch:
+        diags.append(_diag("REC023", "FAIL",
+            "Primary-key evidence must include exactly one key per table row.", table))
     matched = len(ss & ts)
     return {"status": status, "sourceKeyCount": len(sk), "targetKeyCount": len(tk),
             "sourceDuplicateCount": sd, "targetDuplicateCount": td,
             "missingInTarget": missing, "extraInTarget": extra, "matchedUniqueKeys": matched,
-            "coveragePercent": round(matched / len(ss) * 100, 6) if ss else 100.0}
+            "coveragePercent": round(matched / len(ss) * 100, 6) if ss else 100.0,
+            "keyEvidenceCountMismatch": bool(count_mismatch)}
 
 
 def _aggregates(table: str, src: dict, tgt: dict, diags: list) -> dict | None:
