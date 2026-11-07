@@ -8,8 +8,8 @@ WP8 is phased and remains in progress. See the phase plan in ../migration/wp8-fu
 | WP8.2 | Read-only Oracle metadata extraction and dictionary reconciliation | Implemented baseline; CI-verified |
 | WP8.3 | Restartable chunked data migration engine | Implemented offline baseline; CI-verified |
 | WP8.4 | Data reconciliation and integrity report | Implemented offline baseline; CI-verified |
-| WP8.5 | PL/SQL conversion workbench and rule registry | Implemented offline baseline; CI pending |
-| WP8.6 | Runtime repositories, services, APIs, and PostgreSQL integration | Planned |
+| WP8.5 | PL/SQL conversion workbench and rule registry | Implemented offline baseline; CI-verified |
+| WP8.6 | Runtime repositories, services, APIs, and PostgreSQL integration | Implemented generated runtime baseline; CI-verified |
 | WP8.7 | APEX-to-target functional parity test harness | Planned |
 | WP8.8 | Security mapping, rehearsal, rollback, and cutover readiness | Planned |
 
@@ -38,10 +38,11 @@ WP8 is phased and remains in progress. See the phase plan in ../migration/wp8-fu
 
 - [x] PostgreSQL Pool configuration with bounded pool size and connection timeouts.
 - [x] NestJS database module and graceful pool shutdown.
-- [x] Liveness and database-readiness endpoints.
+- [x] Liveness and database-readiness endpoints backed by a NestJS health service.
 - [x] Parameterized repository primitives with strict table/column allowlists.
 - [x] Transaction helper with BEGIN/COMMIT/ROLLBACK and guaranteed client release.
 - [x] Target-owned SQL migration runner with advisory lock and per-file transaction.
 - [x] PostgreSQL integration test for CRUD, injection resistance, allowlist rejection, and rollback.
+- [x] CI verifies migration idempotency by applying the migration runner twice.
 - [ ] Sanitized application-specific repositories/services/DTOs after WP8.1 schema and domain review.
 - [ ] Production pool sizing, TLS, secrets management, observability, and load tests.
