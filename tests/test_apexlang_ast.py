@@ -51,3 +51,23 @@ def test_ast_preserves_fenced_blocks_and_ignores_comments() -> None:
 def test_ast_reports_unterminated_declarations_and_strings() -> None:
     ast = parse_apexlang_ast("page 10 (\n name: 'unterminated\n")
     assert {item["code"] for item in ast.diagnostics} >= {"AST003", "AST004"}
+
+
+
+def test_ast_balances_parentheses_inside_multiline_property_expressions() -> None:
+    source = """page 10 (
+    source: coalesce(
+        lookup_value(foo(1, 2)),
+        'fallback'
+    )
+    region grid (
+        name: 'Orders'
+    )
+)
+"""
+    ast = parse_apexlang_ast(source)
+    assert ast.diagnostics == []
+    page = ast.declarations[0]
+    assert page.raw_body.rstrip().endswith(")")
+    assert [(node.kind, node.name) for node in page.children] == [("region", "grid")]
+    assert "lookup_value(foo(1, 2))" in page.raw_body
