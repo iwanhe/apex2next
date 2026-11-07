@@ -223,8 +223,8 @@ def test_reference_resolver_reports_canonical_identity_collisions(tmp_path: Path
     source_dir = tmp_path / "collision-apexlang"
     source_dir.mkdir()
     (source_dir / "application.apx").write_text(
-        "app DEMO (\\n)\\nauthorization requester (\\n)\\n"
-        "authorization requester (\\n)\\npage 10 (\\n security { scheme: @requester }\\n)\\n",
+        "app DEMO (\n)\nauthorization requester (\n)\n"
+        "authorization requester (\n)\npage 10 (\n security { scheme: @requester }\n)\n",
         encoding="utf-8",
     )
 
