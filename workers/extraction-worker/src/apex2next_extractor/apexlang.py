@@ -133,14 +133,18 @@ def parse_apexlang_text(source: str, file_path: str = "") -> dict[str, Any]:
         opening = source.find("(", match.start(), match.end())
         closing = _matching_close(masked, opening)
         line = source.count("\n", 0, match.start()) + 1
+        line_start = source.rfind("\n", 0, match.start()) + 1
+        column = match.start() - line_start + 1
+        indent = len(match.group("indent").expandtabs(4))
         if closing is None:
             diagnostics.append({"code":"APEXLANG001","severity":"ERROR","file":file_path,
                                 "line":line,"message":f"Unterminated declaration: {kind}"})
             continue
         declarations.append({
             "object_type":object_type, "kind":kind, "name":match.group("name") or "",
-            "line":line, "file":file_path,
+            "line":line, "column":column, "indent":indent, "file":file_path,
             "properties":_direct_properties(source[opening + 1:closing]),
+            "raw_body":source[opening + 1:closing],
         })
     return {
         "declarations":declarations,
