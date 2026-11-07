@@ -132,7 +132,7 @@ def test_unknown_apexlang_declaration_is_retained_with_diagnostic(tmp_path: Path
     source_dir = tmp_path / "unknown-apexlang"
     source_dir.mkdir()
     (source_dir / "future.apx").write_text(
-        "futureComponent Widget (\\n config: future_expression(x)\\n)\\n",
+        "futureComponent Widget (\n config: future_expression(x)\n)\n",
         encoding="utf-8",
     )
 
