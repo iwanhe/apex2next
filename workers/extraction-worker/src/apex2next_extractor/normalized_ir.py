@@ -42,7 +42,7 @@ def stable_identity(
 ) -> str:
     """Build a content-independent ID; fallback identities are explicitly weaker."""
     if source_native_id not in (None, ""):
-        key = {"nativeId": str(source_native_id)}
+        key = {"nativeId": str(source_native_id), "parentId": parent_id}
     elif name:
         key = {"name": name, "parentId": parent_id}
     else:
@@ -199,8 +199,10 @@ def adapt_apexlang_directory(source_dir: str | Path) -> dict[str, Any]:
         group_key = (object_type, parent_id, str(native_id or ""))
         occurrence[group_key] = occurrence.get(group_key, 0) + 1
         fallback = f"{file_name}:{line}:{occurrence[group_key]}"
+        identity_parent_id = None if object_type == "APPLICATION" else parent_id
         object_id = stable_identity(
-            "APEXLANG", object_type, native_id, parent_id=parent_id, name=name, fallback=fallback
+            "APEXLANG", object_type, native_id,
+            parent_id=identity_parent_id, name=name, fallback=fallback
         )
         artifact_hash = hashes.get(file_name)
         locator = {
@@ -308,9 +310,11 @@ def adapt_apex_export(source_text: str, source_name: str = "<memory>") -> dict[s
         group_key = (canonical_type, str(native_id or name or ""))
         occurrence[group_key] = occurrence.get(group_key, 0) + 1
         fallback = f"{source_name}:{call.get('line')}:{occurrence[group_key]}"
+        identity_parent_id = None if canonical_type == "APPLICATION" else app_id
         object_id = stable_identity(
             "APEX_SQL_EXPORT", canonical_type, native_id,
-            parent_id=app_id, name=str(name) if name is not None else None, fallback=fallback,
+            parent_id=identity_parent_id, name=str(name) if name is not None else None,
+            fallback=fallback,
         )
         locator = {
             "file": source_name, "line": call.get("line"), "column": call.get("column"),
