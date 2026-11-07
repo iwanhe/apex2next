@@ -1,50 +1,36 @@
 # Oracle Schema Analyzer — POC
 
-A conservative static inventory scanner for Oracle DDL text. It identifies common `CREATE` object headers and high-confidence `REFERENCES` dependencies, returning JSON inventory and explicit limitations.
+Static Oracle DDL inventory and conservative PostgreSQL conversion. The tools are offline: they do not connect to Oracle or PostgreSQL and never execute source or generated SQL.
 
-## Input preparation
-Export application-owned DDL from Oracle using a privilege-appropriate DBMS_METADATA workflow. Keep the extraction account read-only and exclude Oracle-maintained/internal schemas.
+## WP8.2 — Read-only metadata extraction
 
-## Run
+The SQL scripts in sql/ use owner-scoped ALL_* dictionary views. Run with SQLcl (recommended for CLOB spooling) or compatible SQL*Plus:
 
-```bash
-PYTHONPATH=workers/schema-analyzer/src \
-  python -m apex2next_schema_analyzer schema-export.sql --output build/oracle-inventory.json
+```sql
+define OWNER = 'APP_OWNER'
+@workers/schema-analyzer/sql/dictionary_inventory.sql
+@workers/schema-analyzer/sql/ddl_export.sql
 ```
 
-## Initial inventory categories
-Tables, views, materialized views, indexes, sequences, synonyms, procedures, functions, packages/package bodies, types/type bodies, triggers, database links, contexts, jobs, and users.
+CSV outputs cover objects/status, columns, constraints, indexes, dependencies, partitions, grants, and synonyms. The DDL script uses DBMS_METADATA.GET_DDL for a documented object-type allowlist. Verify CLOB completeness, quoting, per-object errors, and object-type support on the actual Oracle release.
 
-## Safety and limitations
-- Input is treated as text; no DDL is executed.
-- This is a first-pass object-header inventory, not a full Oracle SQL/PLSQL grammar.
-- Dynamic SQL and dependencies hidden in PL/SQL bodies are not resolved.
-- Column-level metadata, constraints, indexes, grants, partitions, scheduler settings, and object source must be extracted and modeled in later increments.
-- Review diagnostics and reconcile the inventory against Oracle dictionary views before treating it as complete.
+Normalize dictionary_objects.csv. DDL_FILE is optional and must be relative to the DDL directory:
 
+```bash
+PYTHONPATH=workers/schema-analyzer/src python -m apex2next_schema_analyzer.metadata_manifest build dictionary_objects.csv --ddl-dir ./ddl --owner APP_OWNER --extracted-at 2026-11-07T10:00:00+07:00 --output build/oracle-metadata-manifest.json
+PYTHONPATH=workers/schema-analyzer/src python -m apex2next_schema_analyzer.metadata_manifest reconcile build/oracle-metadata-manifest.json dictionary_objects.csv --output build/oracle-metadata-reconciliation.json
+```
+
+The manifest includes owner/type/name keys, object status, last DDL time, extraction status, and SHA-256 for available DDL. Missing DDL, duplicate rows, and unsafe paths are explicit diagnostics. Reconciliation checks object keys and per-type counts against a dictionary snapshot.
+
+Security: use a dedicated read-only owner-scoped account and ALL_* visibility. Do not use SYS/SYSTEM, broad DBA roles, SELECT ANY DICTIONARY, or SELECT ANY TABLE solely for this workflow. Keep credentials, wallets, connection strings, and production extracts out of Git. Exact grants depend on Oracle version and organizational policy.
+
+Limitations: ALL_DEPENDENCIES does not reveal dynamic SQL or every runtime dependency. Partition NUM_ROWS and LAST_ANALYZED are optimizer statistics, not exact live row counts. DBMS_METADATA support varies by object type and privilege. Missing DDL is an extraction gap, not proof that an object is absent.
 
 ## WP8.1 — Conservative Oracle DDL conversion
 
-Create a PostgreSQL DDL draft and JSON review report from an Oracle DDL text export:
-
 ```bash
-PYTHONPATH=workers/schema-analyzer/src \
-  python -m apex2next_schema_analyzer.ddl_conversion schema-export.sql \
-  --target-schema app \
-  --output build/schema-conversion.json \
-  --sql-output build/postgres-schema.sql
+PYTHONPATH=workers/schema-analyzer/src python -m apex2next_schema_analyzer.ddl_conversion schema-export.sql --target-schema app --output build/schema-conversion.json --sql-output build/postgres-schema.sql
 ```
 
-Python API:
-
-```python
-from apex2next_schema_analyzer import convert_oracle_ddl
-
-result = convert_oracle_ddl(oracle_ddl_text, target_schema="app")
-print(result["sql"])
-print(result["diagnostics"])
-```
-
-The first conversion allowlist covers CREATE TABLE, a conservative set of scalar datatypes, primary keys, unique constraints, and table-level foreign keys when both tables are in the same input. Unknown datatypes block the entire table. Unsupported defaults, CHECK constraints, and external FK targets produce review diagnostics. Oracle identity/generated columns and inline REFERENCES are blocked rather than silently weakened.
-
-The tool is offline and read-only: it treats DDL as text, never connects to Oracle/PostgreSQL, and never executes generated SQL. It does not yet convert indexes, views, sequences, triggers, grants, partitions, virtual columns, PL/SQL, or data. Always reconcile the source inventory with Oracle dictionary metadata and review generated SQL before execution.
+The initial allowlist covers CREATE TABLE, conservative scalar datatypes, PK/UNIQUE constraints, and in-snapshot FKs. Unknown datatypes and identity/generated semantics block affected tables. Unsupported defaults, CHECK constraints, and external FK targets produce diagnostics. Review generated SQL before execution.
