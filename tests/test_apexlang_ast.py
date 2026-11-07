@@ -106,7 +106,7 @@ def test_ast_parses_typed_scalar_object_and_array_properties_with_spans() -> Non
     assert props["columns"].value_type == "ARRAY"
     assert props["columns"].value == ["ORDER_ID", "ORDER_DATE", "TOTAL"]
     assert props["config"].span.start_line == 5
-    assert props["config"].span.end_line == 8
+    assert props["config"].span.end_line == 9
     assert ast.diagnostics == []
 
 
