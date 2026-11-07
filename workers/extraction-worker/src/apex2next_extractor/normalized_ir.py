@@ -214,10 +214,38 @@ def adapt_apexlang_directory(source_dir: str | Path) -> dict[str, Any]:
             "artifactHash": "sha256:" + artifact_hash if artifact_hash else None,
             "sourceNativeId": native_id,
         }
-        properties = {
-            key: _property(value)
-            for key, value in sorted(declaration.get("properties", {}).items())
-        }
+        property_records = declaration.get("property_details", [])
+        if property_records:
+            properties = {}
+            for record in property_records:
+                property_name = record["name"]
+                property_line = record.get("line")
+                property_column = record.get("column")
+                property_locator = {
+                    "file": file_name or None,
+                    "line": property_line,
+                    "column": property_column,
+                    "artifactHash": "sha256:" + artifact_hash if artifact_hash else None,
+                }
+                raw_expression = record.get("raw_expression")
+                raw_literal = record.get("raw")
+                if "value" in record:
+                    property_value = record["value"]
+                    properties[property_name] = _property(
+                        property_value, raw=raw_literal, locator=property_locator
+                    )
+                else:
+                    properties[property_name] = {
+                        "valueType": record.get("value_type", "UNKNOWN"),
+                        "rawExpression": raw_expression if raw_expression is not None else raw_literal,
+                        "preserved": True,
+                        "sourceLocator": property_locator,
+                    }
+        else:
+            properties = {
+                key: _property(value)
+                for key, value in sorted(declaration.get("properties", {}).items())
+            }
         raw_body = declaration.get("raw_body")
         extensions: dict[str, Any] = {"sourceIndent": indent}
         if raw_body is not None:
