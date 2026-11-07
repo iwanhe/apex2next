@@ -188,9 +188,9 @@ The milestone establishes a normalized structural model and deterministic refere
 - [x] Add malformed-input regression corpus and nested-value/source-span tests.
 - [x] Validate the maintained ANTLR grammar by generating a Python parser with pinned ANTLR 4.13.2 in CI.
 - [x] Keep the Python parser dependency-free and explicitly separate from ANTLR code generation/runtime.
-- [ ] Add property-based fuzzing with Hypothesis or an equivalent dependency once the parser API stabilizes.
+- [x] Add seeded generated-value/property-style tests over recursive objects and arrays, plus deterministic malformed-input cases.
+- [x] Compare AST declaration preorder with the existing inventory parser over the committed synthetic APEXLang fixture corpus.
 - [ ] Validate behavior against a sanitized representative real APEXLang project corpus.
-- [ ] Establish parser-vs-inventory parity before making the AST authoritative for the Normalized IR adapter.
 - [ ] Expand deterministic recovery for malformed nested declarations and delimiter mismatch reporting.
 
 **Done for this incremental WP3 slice when:** recursive values, conservative expression preservation, bounded input, regression tests, and grammar-generation validation are in place. This is not production certification or complete APEXLang syntax support. Corpus-based accuracy and adapter parity remain explicit gates.
