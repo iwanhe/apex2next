@@ -1,31 +1,38 @@
 # Oracle Schema Analyzer — POC
 
-Static Oracle DDL inventory and conservative PostgreSQL conversion. The tools are offline: they do not connect to Oracle or PostgreSQL and never execute source or generated SQL.
+Static Oracle metadata inventory and conservative PostgreSQL conversion. The tools are offline: they do not connect to Oracle or PostgreSQL and never execute source or generated SQL.
+
+## WP8.3 — Restartable chunked data migration
+
+WP8.3 defines a file-based extraction/load contract, not a live database connector.
+
+1. Extract rows from a consistent Oracle snapshot using a unique, non-null key and keyset pagination. Use explicit column lists, bound values, deterministic ORDER BY, and a stable SCN where Flashback Query is available. The SQL template is in [sql/keyset_extract_template.sql](sql/keyset_extract_template.sql).
+2. Stream the rows in key order into bounded JSONL chunks. The manifest records owner/table, key fields, chunk ordinal, row count, first/last key, and SHA-256.
+3. Run the loader with a durable SQLite checkpoint ledger. A loaded chunk is skipped after restart; a failed chunk can be retried.
+4. Implement the target adapter so each chunk is applied atomically and idempotently by migration ID + chunk ID + checksum. A retry after target commit but before checkpoint commit must be a no-op at the target.
+
+Example offline manifest generation:
+
+```python
+from pathlib import Path
+from apex2next_schema_analyzer.data_migration import build_chunk_manifest
+
+manifest = build_chunk_manifest(
+    rows, Path("build/orders"), migration_id="orders-2026-01",
+    source_owner="APP", source_table="ORDERS", key_fields=["ORDER_ID"],
+    chunk_size=5000, created_at="2026-11-07T10:00:00+07:00",
+)
+```
+
+The checkpoint database is local operational state and must be backed up with the migration workspace. Protect it as operational data. The JSONL chunks can contain sensitive business data: encrypt at rest and in transit, restrict access, set retention/deletion policy, and never commit real exports to Git.
+
+The `IdempotentTargetSink` protocol is the PostgreSQL adapter boundary. It must atomically register the migration/chunk/checksum and load the chunk in one transaction, rejecting the same chunk ID with a different checksum. The current repository includes a fake sink for tests only; no PostgreSQL driver or live adapter is implemented.
 
 ## WP8.2 — Read-only metadata extraction
 
-The SQL scripts in sql/ use owner-scoped ALL_* dictionary views. Run with SQLcl (recommended for CLOB spooling) or compatible SQL*Plus:
+The SQL scripts in sql/ use owner-scoped ALL_* views. Run with SQLcl (recommended for CLOB spooling) or compatible SQL*Plus. CSV outputs cover objects/status, columns, constraints, indexes, dependencies, partitions, grants, and synonyms. The DDL script uses DBMS_METADATA.GET_DDL for a documented object-type allowlist. Verify CLOB completeness, quoting, per-object errors, and object-type support on the actual Oracle release.
 
-```sql
-define OWNER = 'APP_OWNER'
-@workers/schema-analyzer/sql/dictionary_inventory.sql
-@workers/schema-analyzer/sql/ddl_export.sql
-```
-
-CSV outputs cover objects/status, columns, constraints, indexes, dependencies, partitions, grants, and synonyms. The DDL script uses DBMS_METADATA.GET_DDL for a documented object-type allowlist. Verify CLOB completeness, quoting, per-object errors, and object-type support on the actual Oracle release.
-
-Normalize dictionary_objects.csv. DDL_FILE is optional and must be relative to the DDL directory:
-
-```bash
-PYTHONPATH=workers/schema-analyzer/src python -m apex2next_schema_analyzer.metadata_manifest build dictionary_objects.csv --ddl-dir ./ddl --owner APP_OWNER --extracted-at 2026-11-07T10:00:00+07:00 --output build/oracle-metadata-manifest.json
-PYTHONPATH=workers/schema-analyzer/src python -m apex2next_schema_analyzer.metadata_manifest reconcile build/oracle-metadata-manifest.json dictionary_objects.csv --output build/oracle-metadata-reconciliation.json
-```
-
-The manifest includes owner/type/name keys, object status, last DDL time, extraction status, and SHA-256 for available DDL. Missing DDL, duplicate rows, and unsafe paths are explicit diagnostics. Reconciliation checks object keys and per-type counts against a dictionary snapshot.
-
-Security: use a dedicated read-only owner-scoped account and ALL_* visibility. Do not use SYS/SYSTEM, broad DBA roles, SELECT ANY DICTIONARY, or SELECT ANY TABLE solely for this workflow. Keep credentials, wallets, connection strings, and production extracts out of Git. Exact grants depend on Oracle version and organizational policy.
-
-Limitations: ALL_DEPENDENCIES does not reveal dynamic SQL or every runtime dependency. Partition NUM_ROWS and LAST_ANALYZED are optimizer statistics, not exact live row counts. DBMS_METADATA support varies by object type and privilege. Missing DDL is an extraction gap, not proof that an object is absent.
+The offline manifest normalizer records object keys, status, last DDL time, extraction status, and SHA-256 for available DDL. Reconciliation checks object keys and per-type counts. Use a dedicated read-only account; do not use SYS/SYSTEM or broad dictionary/table privileges solely for this workflow. Keep credentials, wallets, connection strings, and production extracts out of Git.
 
 ## WP8.1 — Conservative Oracle DDL conversion
 

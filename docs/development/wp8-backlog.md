@@ -5,24 +5,26 @@ WP8 is phased and remains in progress. See the [phase plan](../migration/wp8-fun
 | ID | Work package | Status |
 |---|---|---|
 | WP8.1 | Conservative Oracle CREATE TABLE to PostgreSQL DDL draft | Implemented; CI-verified |
-| WP8.2 | Read-only Oracle metadata extraction and dictionary reconciliation | Implemented baseline; CI pending |
-| WP8.3 | Restartable chunked data migration engine | Planned |
+| WP8.2 | Read-only Oracle metadata extraction and dictionary reconciliation | Implemented baseline; CI-verified |
+| WP8.3 | Restartable chunked data migration engine | Implemented offline baseline; CI pending |
 | WP8.4 | Data reconciliation and integrity report | Planned |
 | WP8.5 | PL/SQL conversion workbench and rule registry | Planned |
 | WP8.6 | Runtime repositories, services, APIs, and PostgreSQL integration | Planned |
 | WP8.7 | APEX-to-target functional parity test harness | Planned |
 | WP8.8 | Security mapping, rehearsal, rollback, and cutover readiness | Planned |
 
-## WP8.2 checklist
+## WP8.3 checklist
 
-- [x] SQLcl/SQL*Plus read-only inventory scripts using owner-scoped ALL_* views.
-- [x] Export objects, columns, constraints, indexes, dependencies, partitions, grants, and synonyms.
-- [x] DBMS_METADATA DDL export script with explicit object allowlist.
-- [x] Stable JSON manifest, explicit timestamp, and SHA-256 for extracted DDL.
-- [x] Missing DDL, duplicate rows, and path traversal diagnostics.
-- [x] Object-key and per-type count reconciliation.
-- [x] Synthetic regression tests and security/coverage documentation.
-- [ ] Validate SQLcl/SQL*Plus output and DBMS_METADATA coverage against a sanitized representative Oracle schema.
+- [x] Deterministic bounded JSONL chunk manifest with unique ordered key contract.
+- [x] Per-chunk row counts, key boundaries, and SHA-256 checksums.
+- [x] Durable SQLite checkpoint ledger with pending/running/loaded/failed states.
+- [x] Retry/resume behavior and skip of durable loaded chunks.
+- [x] Target sink idempotency contract for commit/checkpoint crash windows.
+- [x] Checksum and row-count verification before target load.
+- [x] Synthetic tests for restart, retry, failure recovery, tampering, and partial-load rejection.
+- [x] Oracle keyset extraction template and operational/security guidance.
+- [ ] Validate snapshot SCN, keyset SQL plans, type fidelity, and throughput on a sanitized representative Oracle schema and disposable PostgreSQL target.
+- [ ] Implement and test a real PostgreSQL adapter after database integration design and credentials are explicitly approved.
 
 ## WP8 global quality gates
 
