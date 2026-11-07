@@ -169,9 +169,11 @@ def assess_cutover_readiness(manifest: dict[str, Any]) -> dict[str, Any]:
         if control_id in {"CUT-003", "CUT-004"} and isinstance(item, dict):
             expected = "PASS"
             actual = item.get("value")
-            if actual in {"FAIL", "NOT_VERIFIED", "WARN"}:
+            if actual == expected:
+                item = {**item, "value": True}
+            elif isinstance(actual, str) and actual in {"FAIL", "NOT_VERIFIED", "WARN"}:
                 item = {**item, "value": False}
-            elif actual != expected:
+            else:
                 item = {**item, "value": None}
         results.append(_evidence_check(control_id, description, item))
     results.extend(_approval_checks(manifest.get("approvals")))
