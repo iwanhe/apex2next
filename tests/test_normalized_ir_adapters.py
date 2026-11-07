@@ -450,8 +450,49 @@ def test_sql_expression_mapping_is_consistent_across_apexlang_and_sql_export(tmp
 
     lang_prop = next(obj for obj in apexlang["objects"] if obj["type"] == "PAGE")["properties"]["source"]
     export_prop = next(obj for obj in export["objects"] if obj["type"] == "PAGE")["properties"]["p_source"]
+    assert lang_prop["sourcePropertyName"] == "source"
+    assert lang_prop["canonicalPropertyName"] == "source"
+    assert export_prop["sourcePropertyName"] == "p_source"
+    assert export_prop["canonicalPropertyName"] == "source"
+
     for prop in (lang_prop, export_prop):
         assert prop["valueType"] == "SQL_EXPRESSION"
         assert prop["expressionLanguage"] == "SQL"
         assert prop["classificationConfidence"] == "HIGH"
+        assert prop["classificationRule"] == "EXPR_SQL_STATEMENT_V1"
         assert "SELECT" in prop["rawExpression"].upper()
+
+
+
+def test_cross_format_mapping_preserves_source_property_keys_and_unknowns() -> None:
+    apexlang = adapt_apexlang_directory(FIXTURE)
+    export = adapt_apex_export(
+        "begin wwv_flow_imp_page.create_page(p_id => 10, "
+        "p_source => custom_expression('keep exact text')); end;",
+        "f100.sql",
+    )
+    export_page = next(obj for obj in export["objects"] if obj["type"] == "PAGE")
+    prop = export_page["properties"]["p_source"]
+
+    assert "p_source" in export_page["properties"]
+    assert prop["sourcePropertyName"] == "p_source"
+    assert prop["canonicalPropertyName"] == "source"
+    assert prop["valueType"] == "UNKNOWN"
+    assert prop["expressionLanguage"] == "UNKNOWN"
+    assert prop["rawExpression"] == "custom_expression('keep exact text')"
+    assert validate_ir_document(apexlang) == []
+    assert validate_ir_document(export) == []
+
+
+def test_expression_classification_metadata_is_explicit_for_non_executable_markup() -> None:
+    cases = {
+        "<section>hello</section>": ("HTML", "UNKNOWN"),
+        "@media screen { .card { display: block; } }": ("CSS", "UNKNOWN"),
+        "&P10_STATUS.": ("APEX", "UNKNOWN"),
+        "return status": ("UNKNOWN", "UNKNOWN"),
+    }
+    for source, (language, value_type) in cases.items():
+        result = classify_expression(source)
+        assert result["language"] == language
+        assert result["confidence"] in {"HIGH", "NONE"}
+        assert value_type == "UNKNOWN"
