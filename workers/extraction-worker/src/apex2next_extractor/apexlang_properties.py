@@ -37,15 +37,27 @@ def _split_top_level(text: str, start: int, end: int, *, commas: bool = True) ->
             elif token.value in ")]}":
                 if depth and depth[-1] == pairs[token.value]: depth.pop()
             elif token.value == "," and commas and not depth: separators.add(absolute)
+    newline_positions = []
     cursor = start
     while cursor < end:
-        newline = text.find("\n", cursor, end)
+        newline = text.find("\\n", cursor, end)
         if newline < 0: break
-        next_line = newline + 1
-        while next_line < end and text[next_line] in " \t": next_line += 1
-        if re.match(r"[A-Za-z_][A-Za-z0-9_.-]*\s*:", text[next_line:end]):
-            separators.add(newline)
+        newline_positions.append(newline)
         cursor = newline + 1
+    token_index = 0
+    nesting: list[str] = []
+    for newline in newline_positions:
+        while token_index < len(tokens) and start + tokens[token_index].span.start_offset < newline:
+            token = tokens[token_index]
+            if token.kind == "SYMBOL":
+                if token.value in "([{": nesting.append(token.value)
+                elif token.value in ")]}":
+                    if nesting and nesting[-1] == pairs[token.value]: nesting.pop()
+            token_index += 1
+        next_line = newline + 1
+        while next_line < end and text[next_line] in " \\t": next_line += 1
+        if not nesting and re.match(r"[A-Za-z_][A-Za-z0-9_.-]*\\s*:", text[next_line:end]):
+            separators.add(newline)
     result: list[tuple[int, int]] = []
     cursor = start
     for separator in sorted(separators):
