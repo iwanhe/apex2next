@@ -152,8 +152,8 @@ def test_reference_resolver_resolves_one_exact_in_scope_candidate(tmp_path: Path
     source_dir = tmp_path / "resolved-apexlang"
     source_dir.mkdir()
     (source_dir / "application.apx").write_text(
-        "app DEMO (\\n name: 'Demo'\\n)\\nauthorization requester (\\n name: 'Requester'\\n)\\n"
-        "page 10 (\\n security { scheme: @requester }\\n)\\n",
+        "app DEMO (\n name: 'Demo'\n)\nauthorization requester (\n name: 'Requester'\n)\n"
+        "page 10 (\n security { scheme: @requester }\n)\n",
         encoding="utf-8",
     )
 
@@ -183,8 +183,8 @@ def test_reference_resolver_reports_ambiguous_candidates(tmp_path: Path) -> None
     source_dir = tmp_path / "ambiguous-apexlang"
     source_dir.mkdir()
     (source_dir / "application.apx").write_text(
-        "app DEMO (\\n name: 'Demo'\\n)\\nauthorization requester (\\n)\\n"
-        "authentication requester (\\n)\\npage 10 (\\n security { scheme: @requester }\\n)\\n",
+        "app DEMO (\n name: 'Demo'\n)\nauthorization requester (\n)\n"
+        "authentication requester (\n)\npage 10 (\n security { scheme: @requester }\n)\n",
         encoding="utf-8",
     )
 
