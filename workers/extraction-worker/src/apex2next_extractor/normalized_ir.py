@@ -12,6 +12,7 @@ from typing import Any
 
 from .apex_export import extract_export
 from .apexlang import _mask_non_code, extract_apexlang
+from .apexlang_ast import ApexLangDeclaration, ApexLangProperty, parse_apexlang_ast
 
 ADAPTER_VERSION = "0.1.0"
 IR_VERSION = "1.0.0"
@@ -239,6 +240,49 @@ def _document(source_format: str, application: dict[str, Any], objects: list[dic
     return document
 
 
+
+def _ast_property_to_ir(prop: ApexLangProperty, file_name: str, artifact_hash: str | None) -> dict[str, Any]:
+    """Map a typed AST property into the lossless Normalized IR property contract."""
+    span = prop.span
+    locator = {
+        "file": file_name or None, "line": span.start_line, "column": span.start_column,
+        "endLine": span.end_line, "endColumn": span.end_column,
+        "artifactHash": "sha256:" + artifact_hash if artifact_hash else None,
+    }
+    result: dict[str, Any] = {
+        "valueType": prop.value_type, "preserved": True, "sourceLocator": locator,
+        "extensions": {"rawSourceValue": prop.raw_value},
+    }
+    if prop.value_type == "OBJECT":
+        names = [child.name for child in prop.children]
+        result["value"] = {
+            child.name: _ast_property_to_ir(child, file_name, artifact_hash)
+            for child in prop.children
+        }
+        duplicates = sorted({name for name in names if names.count(name) > 1})
+        if duplicates:
+            result["extensions"]["duplicatePropertyNames"] = duplicates
+    elif prop.value_type == "ARRAY":
+        result["value"] = [
+            _ast_property_to_ir(item, file_name, artifact_hash) for item in prop.items
+        ]
+    elif prop.value_type == "EXPRESSION":
+        result.update(_expression_property(prop.raw_value, locator))
+        result["extensions"] = {"rawSourceValue": prop.raw_value}
+    else:
+        result["value"] = prop.value
+    return result
+
+
+def _flatten_ast_declarations(declarations: list[ApexLangDeclaration]) -> list[ApexLangDeclaration]:
+    """Return declaration nodes in source preorder for adapter parity matching."""
+    flattened: list[ApexLangDeclaration] = []
+    for declaration in declarations:
+        flattened.append(declaration)
+        flattened.extend(_flatten_ast_declarations(declaration.children))
+    return flattened
+
+
 def adapt_apexlang_directory(source_dir: str | Path) -> dict[str, Any]:
     """Convert the static APEXLang inventory into a schema-valid structural IR."""
     root = Path(source_dir).resolve()
@@ -259,6 +303,33 @@ def adapt_apexlang_directory(source_dir: str | Path) -> dict[str, Any]:
         artifact_bytes[".apex/apexlang.json"] = version_path.read_bytes()
 
     hashes = {name: sha256_bytes(data) for name, data in artifact_bytes.items()}
+
+    # Keep inventory declaration discovery/identity stable. Use AST properties only
+    # when declaration and property-name parity is exact; otherwise fall back safely.
+    ast_by_declaration: dict[tuple[str, int, str, str], ApexLangDeclaration] = {}
+    ast_diagnostics: list[dict[str, Any]] = []
+    for file_name, source_bytes in sorted(artifact_bytes.items()):
+        if not file_name.endswith(".apx"):
+            continue
+        parsed_ast = parse_apexlang_ast(source_bytes.decode("utf-8"))
+        for node in _flatten_ast_declarations(parsed_ast.declarations):
+            key = (file_name, node.span.start_line, node.kind.casefold(), node.name or "")
+            ast_by_declaration[key] = node
+        for item in parsed_ast.diagnostics:
+            span = item.get("span", {})
+            ast_diagnostics.append({
+                "code": str(item.get("code", "AST000")),
+                "severity": str(item.get("severity", "WARNING")),
+                "category": "AST_PARSER",
+                "message": str(item.get("message", "APEXLang AST parser diagnostic")),
+                "sourceLocator": {
+                    "file": file_name, "line": span.get("start_line"),
+                    "column": span.get("start_column"), "endLine": span.get("end_line"),
+                    "endColumn": span.get("end_column"),
+                    "artifactHash": "sha256:" + hashes[file_name],
+                },
+            })
+
     app_decl = next((d for d in declarations if d["object_type"] == "APPLICATION"), None)
     app_native_id = (app_decl or {}).get("name") or "application"
     app_id = stable_identity("APEXLANG", "APPLICATION", app_native_id)
@@ -311,22 +382,52 @@ def adapt_apexlang_directory(source_dir: str | Path) -> dict[str, Any]:
             "sourceNativeId": native_id,
         }
         property_records = declaration.get("property_details", [])
-        if property_records:
+        ast_key = (file_name, int(line or 0), str(source_type).casefold(), str(name or ""))
+        ast_node = ast_by_declaration.get(ast_key)
+        ast_property_names = [prop.name for prop in ast_node.properties] if ast_node else []
+        legacy_property_names = [record["name"] for record in property_records]
+        use_ast_properties = bool(ast_node and ast_property_names == legacy_property_names)
+        if use_ast_properties:
             properties = {
-                record["name"]: {
-                    **_apexlang_property_record(record, file_name, artifact_hash),
-                    "sourcePropertyName": record["name"],
+                prop.name: {
+                    **_ast_property_to_ir(prop, file_name, artifact_hash),
+                    "sourcePropertyName": prop.name,
                     "canonicalPropertyName": _canonical_property_name(
-                        object_type, record["name"], "APEXLANG"
+                        object_type, prop.name, "APEXLANG"
                     ),
                 }
-                for record in property_records
+                for prop in ast_node.properties
             }
         else:
-            properties = {
-                key: _property(value)
-                for key, value in sorted(declaration.get("properties", {}).items())
-            }
+            if ast_node and ast_property_names != legacy_property_names:
+                diagnostics.append(_diagnostic(
+                    "IRAST001", "WARNING", "ADAPTER_PARITY",
+                    "AST and inventory property names differ; legacy inventory mapping was retained.",
+                    locator={
+                        "file": file_name or None, "line": line, "column": column or 1,
+                        "artifactHash": "sha256:" + artifact_hash if artifact_hash else None,
+                    },
+                    details={
+                        "astPropertyNames": ast_property_names,
+                        "inventoryPropertyNames": legacy_property_names,
+                    },
+                ))
+            if property_records:
+                properties = {
+                    record["name"]: {
+                        **_apexlang_property_record(record, file_name, artifact_hash),
+                        "sourcePropertyName": record["name"],
+                        "canonicalPropertyName": _canonical_property_name(
+                            object_type, record["name"], "APEXLANG"
+                        ),
+                    }
+                    for record in property_records
+                }
+            else:
+                properties = {
+                    key: _property(value)
+                    for key, value in sorted(declaration.get("properties", {}).items())
+                }
         raw_body = declaration.get("raw_body")
         extensions: dict[str, Any] = {"sourceIndent": indent}
         if raw_body is not None:
@@ -344,7 +445,19 @@ def adapt_apexlang_directory(source_dir: str | Path) -> dict[str, Any]:
             "source": locator, "fingerprint": object_fingerprint(
                 object_type, source_type, name, properties
             ),
-            "status": {"parse": "SUCCESS", "resolve": "PENDING", "conversion": "PENDING"},
+            "status": {
+                "parse": (
+                    "PARTIAL"
+                    if any(
+                        item.get("sourceLocator", {}).get("file") == file_name
+                        and item.get("severity") == "ERROR"
+                        for item in ast_diagnostics
+                    )
+                    else "SUCCESS"
+                ),
+                "resolve": "PENDING",
+                "conversion": "PENDING",
+            },
             "extensions": extensions,
         }
         objects.append(obj)
@@ -384,6 +497,7 @@ def adapt_apexlang_directory(source_dir: str | Path) -> dict[str, Any]:
             "APEXLang metadata version was found; Oracle APEX runtime version remains unverified.",
             details={"metadataVersion": inventory["apexlang_mmd_version"], "runtimeVersion": None},
         ))
+    diagnostics.extend(ast_diagnostics)
     for item in inventory.get("diagnostics", []):
         diagnostics.append(_diagnostic(
             item.get("code", "APEXLANG000"), item.get("severity", "WARNING"),
