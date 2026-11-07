@@ -211,6 +211,7 @@ The milestone establishes a normalized structural model and deterministic refere
 - [x] Carry AST parser diagnostics into IR and mark objects PARTIAL when their source artifact has AST ERROR diagnostics.
 - [x] Record AST parser version, integration mode, matched declaration count, AST property count, fallback count, and parser diagnostic count in IR metadata.
 - [x] Add tests for nested arrays/objects, expression mapping, parity fallback, schema validity, and deterministic output.
+- [x] Preserve every occurrence of duplicate direct and nested property names in `extensions.duplicateProperties`; emit `IRAST004` when the unique-key IR property map cannot represent all direct occurrences.
 - [ ] Validate against a sanitized representative real APEXLang project and evaluate semantic coverage.
 
-**Done for WP4 implementation:** typed AST properties are connected to IR with deterministic metadata and source provenance, while unmatched or uncertain syntax is explicitly diagnosed or handled by the legacy fallback. This is not full declaration-parser replacement or semantic parity certification.
+**Done for WP4 implementation:** typed AST properties are connected to IR with deterministic metadata and source provenance, unmatched or uncertain syntax is explicitly diagnosed or handled by the legacy fallback, and duplicate property occurrences are retained outside the unique-key property map. This is not full declaration-parser replacement or semantic parity certification.
