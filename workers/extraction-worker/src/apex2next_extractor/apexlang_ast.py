@@ -397,7 +397,34 @@ def parse_apexlang_properties(
                     value = [item.value for item in items]
         else:
             value_type, value = _decode_ast_scalar(raw_value)
-        span_end = offsets[end_index] + len(lines[end_index].rstrip("\r\n"))
+            if value_type == "EXPRESSION":
+                expression_parts = [raw_value]
+                balance = sum(
+                    1 if token.value == "(" else -1 if token.value == ")" else 0
+                    for token in tokenize_apexlang(raw_value)[0]
+                    if token.kind == "SYMBOL"
+                )
+                lookahead = index + 1
+                while balance > 0 and lookahead < len(lines):
+                    next_content = lines[lookahead].rstrip("\r\n")
+                    next_match = re.match(
+                        r"^(?P<indent>[ \\t]*)(?P<name>[A-Za-z_][A-Za-z0-9_.-]*)\\s*:",
+                        next_content,
+                    )
+                    if next_match and len(next_match.group("indent").expandtabs(4)) == direct_indent:
+                        break
+                    part = next_content.strip()
+                    expression_parts.append(part)
+                    balance += sum(
+                        1 if token.value == "(" else -1 if token.value == ")" else 0
+                        for token in tokenize_apexlang(part)[0]
+                        if token.kind == "SYMBOL"
+                    )
+                    end_index = lookahead
+                    lookahead += 1
+                raw_value = "\\n".join(expression_parts)
+                value_type, value = _decode_ast_scalar(raw_value)
+        span_end = offsets[end_index] + len(lines[end_index].rstrip("\\r\\n"))
         prop = ApexLangProperty(
             name=name, value_type=value_type, raw_value=raw_value, value=value,
             span=_span(full_source or source, base_offset + property_start, base_offset + span_end),
