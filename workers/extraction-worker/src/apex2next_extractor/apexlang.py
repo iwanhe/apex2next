@@ -187,7 +187,7 @@ def _property_records(
             next_stripped = next_masked.strip()
             if next_stripped in {"}", ")"}:
                 break
-            if re.match(r"^[ \t]*[A-Za-z][A-Za-z0-9_]*[ \t]+[A-Za-z][A-Za-z0-9_]*[ \t]*\\(", next_masked):
+            if re.match(r"^[ \t]*[A-Za-z][A-Za-z0-9_]*[ \t]+[A-Za-z][A-Za-z0-9_]*[ \t]*\(", next_masked):
                 break
             next_match = property_match(next_raw)
             if next_match is not None and indentation(next_raw) <= property_indent:
