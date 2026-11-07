@@ -502,13 +502,13 @@ def test_apexlang_ast_properties_integrate_recursive_arrays_and_source_spans(tmp
     source_dir = tmp_path / "ast-ir-integration"
     source_dir.mkdir()
     (source_dir / "application.apx").write_text(
-        "app DEMO (\\n    name: 'AST Integration'\\n)\\n", encoding="utf-8"
+        "app DEMO (\n    name: 'AST Integration'\n)\n", encoding="utf-8"
     )
     (source_dir / "page.apx").write_text(
-        "page 10 (\\n"
-        "    items: ['A', { name: 'B', options: [1, 2] }, [true, false]]\\n"
-        "    source: SELECT order_id FROM orders\\n"
-        ")\\n",
+        "page 10 (\n"
+        "    items: ['A', { name: 'B', options: [1, 2] }, [true, false]]\n"
+        "    source: SELECT order_id FROM orders\n"
+        ")\n",
         encoding="utf-8",
     )
 
@@ -538,13 +538,13 @@ def test_apexlang_ast_properties_integrate_recursive_arrays_and_source_spans(tmp
 def test_apexlang_ast_adapter_falls_back_when_property_parity_is_not_proven(tmp_path: Path) -> None:
     source_dir = tmp_path / "ast-parity-fallback"
     source_dir.mkdir()
-    (source_dir / "application.apx").write_text("app DEMO (\\n)\\n", encoding="utf-8")
+    (source_dir / "application.apx").write_text("app DEMO (\n)\n", encoding="utf-8")
     (source_dir / "page.apx").write_text(
-        "page 10 (\\n"
-        "    navigation {\\n"
-        "        homeUrl: { page: 10 }\\n"
-        "    }\\n"
-        ")\\n",
+        "page 10 (\n"
+        "    navigation {\n"
+        "        homeUrl: { page: 10 }\n"
+        "    }\n"
+        ")\n",
         encoding="utf-8",
     )
 
