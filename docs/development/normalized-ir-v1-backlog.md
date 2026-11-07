@@ -215,3 +215,20 @@ The milestone establishes a normalized structural model and deterministic refere
 - [ ] Validate against a sanitized representative real APEXLang project and evaluate semantic coverage.
 
 **Done for WP4 implementation:** typed AST properties are connected to IR with deterministic metadata and source provenance, unmatched or uncertain syntax is explicitly diagnosed or handled by the legacy fallback, and duplicate property occurrences are retained outside the unique-key property map. This is not full declaration-parser replacement or semantic parity certification.
+
+### WP IRV1-13 — Dependency Graph & Impact Analysis (WP5)
+
+- [x] Build a deterministic graph from explicit Normalized IR dependency records.
+- [x] Add resolved references as explicit edges when the resolver has supplied a unique target.
+- [x] Keep edge direction explicit: source object depends on target object; migration order is dependency-first.
+- [x] Validate missing, duplicate, and out-of-snapshot endpoints with DEP001–DEP002 diagnostics.
+- [x] Exclude PENDING, DANGLING, AMBIGUOUS, UNSUPPORTED, and INVALID references from migration-order edges and report DEP003.
+- [x] Collapse duplicate semantic edges deterministically while retaining source locator provenance.
+- [x] Detect strongly connected components and self-cycles; distinguish cycle members from downstream blocked objects (DEP005–DEP006).
+- [x] Produce a stable topological migration order for the acyclic portion of the graph.
+- [x] Produce direct and transitive dependent impact lists for each graph node.
+- [x] Add regression tests for ordering, transitive impact, cycles, downstream blocking, unresolved references, resolved references, invalid endpoints, duplicate identities, and deterministic output.
+- [x] Export the analyzer through the extraction worker public API and document its contract.
+- [ ] Validate graph accuracy against a sanitized representative APEX application and typed dependency semantics.
+
+**WP5 implementation boundary:** the analyzer consumes only explicit dependency records and uniquely resolved references. It deliberately does not infer dependencies from component names, SQL/PLSQL text, arbitrary property values, or containment relationships. The graph and migration order are structural planning aids, not proof of semantic or runtime dependency completeness. Cycles block their members and transitive dependents; the acyclic remainder retains a deterministic dependency-first order.
