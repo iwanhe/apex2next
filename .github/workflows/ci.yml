@@ -116,6 +116,10 @@ jobs:
         working-directory: /tmp/apex2next-generated
         run: pnpm db:migrate
 
+      - name: Verify migration runner idempotency
+        working-directory: /tmp/apex2next-generated
+        run: pnpm db:migrate
+
       - name: Test generated workspace
         working-directory: /tmp/apex2next-generated
         run: pnpm test

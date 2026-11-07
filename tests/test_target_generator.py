@@ -94,6 +94,7 @@ def test_generator_emits_postgres_runtime_contract(tmp_path):
         "apps/api/src/database/postgres-database.ts",
         "apps/api/src/database/postgres-repository.ts",
         "apps/api/src/database/database.module.ts",
+        "apps/api/src/database/database-health.service.ts",
         "apps/api/test/postgres.integration.test.js",
         "apps/api/scripts/migrate.mjs",
     ]
@@ -110,6 +111,8 @@ def test_generator_emits_postgres_runtime_contract(tmp_path):
     assert "schema_migrations" in (root / "db/migrations/0001_baseline.sql").read_text()
     app_module = (root / "apps/api/src/app.module.ts").read_text()
     assert "DatabaseModule" in app_module and "imports:" in app_module
+    database_module = (root / "apps/api/src/database/database.module.ts").read_text()
+    assert "DatabaseHealthService" in database_module
 
 
 def test_generator_postgres_runtime_is_deterministic(tmp_path):

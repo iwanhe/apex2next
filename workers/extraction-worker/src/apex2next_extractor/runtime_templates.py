@@ -196,6 +196,7 @@ export class PostgresRepository<Row extends Record<string, unknown>> {
         "apps/api/src/database/database.module.ts": """import { Global, Module } from '@nestjs/common';
 import { Pool } from 'pg';
 import { PostgresDatabase } from './postgres-database';
+import { DatabaseHealthService } from './database-health.service';
 
 @Global()
 @Module({
@@ -215,26 +216,20 @@ import { PostgresDatabase } from './postgres-database';
         idleTimeoutMillis: 30000, application_name: 'apex2next-generated-api',
       }));
     },
-  }],
-  exports: [PostgresDatabase],
+  }, DatabaseHealthService],
+  exports: [PostgresDatabase, DatabaseHealthService],
 })
 export class DatabaseModule {}
 """,
-        "apps/api/src/health.controller.ts": """import {
-  Controller, Get, ServiceUnavailableException,
+        "apps/api/src/database/database-health.service.ts": """import {
+  Injectable, ServiceUnavailableException,
 } from '@nestjs/common';
-import { PostgresDatabase } from './database/postgres-database';
+import { PostgresDatabase } from './postgres-database';
 
-@Controller()
-export class HealthController {
+@Injectable()
+export class DatabaseHealthService {
   constructor(private readonly database: PostgresDatabase) {}
 
-  @Get('health')
-  health() {
-    return { status: 'ok', service: 'apex2next-generated-api' };
-  }
-
-  @Get('health/ready')
   async readiness() {
     try {
       await this.database.query('SELECT 1');
@@ -242,6 +237,24 @@ export class HealthController {
     } catch {
       throw new ServiceUnavailableException('Database is not ready.');
     }
+  }
+}
+""",
+        "apps/api/src/health.controller.ts": """import { Controller, Get } from '@nestjs/common';
+import { DatabaseHealthService } from './database/database-health.service';
+
+@Controller()
+export class HealthController {
+  constructor(private readonly databaseHealth: DatabaseHealthService) {}
+
+  @Get('health')
+  health() {
+    return { status: 'ok', service: 'apex2next-generated-api' };
+  }
+
+  @Get('health/ready')
+  readiness() {
+    return this.databaseHealth.readiness();
   }
 }
 """,
