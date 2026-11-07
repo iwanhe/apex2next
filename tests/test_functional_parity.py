@@ -103,3 +103,16 @@ def test_empty_checks_are_rejected():
     manifest["checks"] = []
     with pytest.raises(ValueError, match="non-empty"):
         compare_parity(manifest)
+
+
+def test_checked_in_synthetic_fixture_passes_all_six_domains():
+    import json
+    from pathlib import Path
+
+    fixture = Path("tests/fixtures/parity/synthetic-orders.json")
+    report = compare_parity(json.loads(fixture.read_text(encoding="utf-8")))
+    assert report["status"] == "PASS"
+    assert report["summary"] == {"total": 6, "PASS": 6, "FAIL": 0, "NOT_VERIFIED": 0}
+    assert set(report["categories"]) == {
+        "FUNCTIONAL", "API", "DATA", "WORKFLOW", "SECURITY", "UI"
+    }

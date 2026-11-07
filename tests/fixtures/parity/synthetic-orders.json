@@ -13,7 +13,6 @@
       "comparator": "EXACT",
       "source": {
         "value": {
-          "field": "P10_ORDER_NAME",
           "valid": false,
           "error": "Required"
         },
@@ -21,7 +20,6 @@
       },
       "target": {
         "value": {
-          "field": "orderName",
           "valid": false,
           "error": "Required"
         },

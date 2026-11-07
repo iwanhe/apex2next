@@ -25,7 +25,7 @@ PYTHONPATH=workers/extraction-worker/src python -m apex2next_extractor.parity_cl
   --output /tmp/orders-parity-report.json
 \`\`\`
 
-The checked-in synthetic example deliberately includes paired observations for all six domains. It is a contract/engine fixture only, not evidence that a real APEX app has matching behavior.
+The checked-in synthetic example includes six paired observations, one per domain, and is expected to PASS. It is a contract/engine fixture only, not evidence that a real APEX app has matching behavior.
 
 ## Evidence contract
 
