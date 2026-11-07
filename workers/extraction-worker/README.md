@@ -105,3 +105,10 @@ This is intentionally a conservative first pass. Nested property-path normalizat
 Multiline brace-delimited property blocks are normalized recursively as `OBJECT` values. For example, a `navigation` block containing a `homeUrl` block and a numeric `page` property becomes nested property records; each node keeps its own `valueType` and source locator. Non-literal leaf expressions remain `UNKNOWN` with the original `rawExpression`. The complete declaration body is still retained as the lossless source fallback.
 
 This parser pass intentionally does not claim support for every inline/mixed brace form or multiline expression grammar. It does not evaluate any source expression.
+
+
+### Multiline APEXLang property expressions
+
+Property extraction preserves a multiline expression as one raw value until the next sibling property or enclosing block/declaration boundary. The IR property locator includes start and end line/column coordinates. Property declarations are recognized only through an explicit colon or a brace-delimited object opener, so nested component declarations such as region/process blocks are not treated as property values.
+
+This is a conservative line-boundary heuristic, not a complete APEXLang expression grammar. Ambiguous continuation layouts, inline/mixed blocks, arrays, and semantic SQL/PLSQL parsing remain unsupported. Expressions are never evaluated.
