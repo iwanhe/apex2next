@@ -7,6 +7,7 @@ from .normalized_ir import (
     adapt_apexlang_directory,
     object_fingerprint,
     stable_identity,
+    resolve_references,
 )
 
 __all__ = [
@@ -17,4 +18,5 @@ __all__ = [
     "adapt_apexlang_directory",
     "object_fingerprint",
     "stable_identity",
+    "resolve_references",
 ]
