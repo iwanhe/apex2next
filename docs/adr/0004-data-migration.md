@@ -13,4 +13,4 @@ Start with offline snapshot migration using bounded chunks, durable checkpoints,
 Reconciliation includes row counts, key coverage, business aggregates, chunk checksums, LOB length/hash, and referential integrity.
 
 ## Consequences
-The first release has a manageable operating model. Low-downtime migration is a later capability with additional infrastructure and testing.
+The first release has a manageable operating model. Low-downtime migration is a later capability with additional infrastructure and testing. WP8.1 adds an offline, conservative DDL conversion draft; it does not connect to either database or perform data transfer.

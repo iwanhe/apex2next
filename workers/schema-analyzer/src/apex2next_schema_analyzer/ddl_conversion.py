@@ -77,12 +77,13 @@ def _mask(source: str) -> str:
 
 def _split_top_level(text: str) -> list[str]:
     parts: list[str] = []
+    scan = _mask(text)
     start = 0
     depth = 0
     quote: str | None = None
     i = 0
-    while i < len(text):
-        ch = text[i]
+    while i < len(scan):
+        ch = scan[i]
         if quote:
             if ch == quote:
                 if i + 1 < len(text) and text[i + 1] == quote:
@@ -269,8 +270,17 @@ def _parse_table_body(body: str, table_name: str) -> tuple[list[dict[str, Any]],
             continue
         type_end = type_match.end()
         target_type, reason = _type_mapping(type_match.group(0))
+        tail = remainder[type_end:]
         column = {"name": _unquote_identifier(col_name), "sourceType": type_match.group(0).strip(),
-                  "targetType": target_type, "nullable": not bool(re.search(r"\bNOT\s+NULL\b", remainder[type_end:], re.I))}
+                  "targetType": target_type, "nullable": not bool(re.search(r"\bNOT\s+NULL\b", tail, re.I))}
+        if re.search(r"\b(?:GENERATED|IDENTITY)\b", tail, re.I):
+            column["blockedReason"] = "Identity/generated column semantics require explicit sequence and value-generation design."
+            diagnostics.append(_diag("ORAMAP010", "ERROR",
+                f"Column {column['name']}: identity/generated semantics are not auto-converted.", object_name=table_name))
+        if re.search(r"\bREFERENCES\b", tail, re.I):
+            column["blockedReason"] = "Inline REFERENCES constraint requires table-level manual review."
+            diagnostics.append(_diag("ORAMAP011", "ERROR",
+                f"Column {column['name']}: inline REFERENCES is not auto-converted.", object_name=table_name))
         if reason:
             column["blockedReason"] = reason
             diagnostics.append(_diag("ORAMAP006", "ERROR",
