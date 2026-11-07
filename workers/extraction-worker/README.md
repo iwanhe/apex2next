@@ -98,3 +98,10 @@ The APEXLang parser now exposes `property_details` alongside the backward-compat
 Each normalized property includes a property-level source locator with file, line, column, and source artifact hash. Values that are not recognized as scalar literals are preserved as `valueType: UNKNOWN` with their original `rawExpression`; they are never evaluated. Direct properties inside nested blocks are not flattened into the parent object. The full raw declaration body remains available in `extensions.rawDeclarationBody`.
 
 This is intentionally a conservative first pass. Nested property-path normalization, multiline expressions, and typed SQL/PLSQL/JavaScript classification require additional grammar and source-version fixtures.
+
+
+### Nested APEXLang properties
+
+Multiline brace-delimited property blocks are normalized recursively as `OBJECT` values. For example, a `navigation` block containing a `homeUrl` block and a numeric `page` property becomes nested property records; each node keeps its own `valueType` and source locator. Non-literal leaf expressions remain `UNKNOWN` with the original `rawExpression`. The complete declaration body is still retained as the lossless source fallback.
+
+This parser pass intentionally does not claim support for every inline/mixed brace form or multiline expression grammar. It does not evaluate any source expression.
