@@ -111,6 +111,7 @@ def _property(
     value_start: int,
     value_end: int,
     *,
+    property_start: int | None = None,
     base_offset: int,
     full_source: str,
     depth: int,
@@ -118,7 +119,8 @@ def _property(
 ) -> ApexLangProperty:
     raw_start, raw_end = _trim_bounds(source, value_start, value_end)
     raw = source[raw_start:raw_end]
-    span = _span(full_source, base_offset + value_start, base_offset + value_end)
+    span_start = value_start if property_start is None else property_start
+    span = _span(full_source, base_offset + span_start, base_offset + value_end)
     if depth > _MAX_PROPERTY_DEPTH:
         diagnostics.append(
             {
@@ -226,6 +228,7 @@ def _parse_object(
             source,
             value_start,
             segment_end,
+            property_start=segment_start,
             base_offset=base_offset,
             full_source=full_source,
             depth=depth,
@@ -312,6 +315,7 @@ def parse_apexlang_properties(
             source,
             value_start,
             value_end,
+            property_start=offsets[line_no] + match.start(),
             base_offset=base_offset,
             full_source=original,
             depth=0,
