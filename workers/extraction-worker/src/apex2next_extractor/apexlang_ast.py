@@ -7,6 +7,7 @@ complete APEXLang grammar coverage.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import re
 from typing import Literal
 
 
@@ -196,6 +197,12 @@ def parse_apexlang_ast(source: str) -> ApexLangAst:
                     node.span = _span(source, node.span.start_offset, closing)
                     node.body_span = _span(source, opening + 1, token.span.start_offset)
                     node.raw_body = source[opening + 1:token.span.start_offset]
+                    node.properties, property_diagnostics = parse_apexlang_properties(
+                        node.raw_body,
+                        base_offset=opening + 1,
+                        full_source=source,
+                    )
+                    diagnostics.extend(property_diagnostics)
             i += 1
             continue
 
@@ -309,7 +316,7 @@ def _split_top_level_items(raw: str) -> list[str]:
 
 
 def parse_apexlang_properties(
-    source: str, *, base_offset: int = 0
+    source: str, *, base_offset: int = 0, full_source: str | None = None
 ) -> tuple[list[ApexLangProperty], list[dict[str, object]]]:
     """Parse typed scalars, multiline object blocks, and arrays without evaluating expressions."""
     properties: list[ApexLangProperty] = []
@@ -350,7 +357,7 @@ def parse_apexlang_properties(
                 diagnostics.append({
                     "code": "AST101", "severity": "WARNING",
                     "message": f"Unterminated {('object' if opener == '{' else 'array')} property: {name}",
-                    "span": _span(source, property_start, len(source)).__dict__,
+                    "span": _span(full_source or source, base_offset + property_start, base_offset + len(source)).__dict__,
                 })
                 raw_value = source[absolute_open:]
                 end_index = len(lines) - 1
@@ -361,7 +368,11 @@ def parse_apexlang_properties(
                 end_index = source.count("\n", 0, close)
                 if opener == "{":
                     value_type = "OBJECT"
-                    children, nested_diagnostics = parse_apexlang_properties(inner)
+                    children, nested_diagnostics = parse_apexlang_properties(
+                        inner,
+                        base_offset=base_offset + absolute_open + 1,
+                        full_source=full_source or source,
+                    )
                     diagnostics.extend(nested_diagnostics)
                     value = {child.name: child.value for child in children}
                 else:
@@ -370,7 +381,8 @@ def parse_apexlang_properties(
                         item_type, item_value = _decode_ast_scalar(item_raw)
                         items.append(ApexLangProperty(
                             name="", value_type=item_type, raw_value=item_raw,
-                            value=item_value, span=_span(source, absolute_open + 1, close),
+                            value=item_value,
+                            span=_span(full_source or source, base_offset + absolute_open + 1, base_offset + close),
                         ))
                     value = [item.value for item in items]
         else:
@@ -378,7 +390,8 @@ def parse_apexlang_properties(
         span_end = offsets[end_index] + len(lines[end_index].rstrip("\r\n"))
         prop = ApexLangProperty(
             name=name, value_type=value_type, raw_value=raw_value, value=value,
-            span=_span(source, property_start, span_end), children=children, items=items,
+            span=_span(full_source or source, base_offset + property_start, base_offset + span_end),
+            children=children, items=items,
         )
         if name in seen:
             diagnostics.append({
