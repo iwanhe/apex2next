@@ -99,9 +99,9 @@ def _decode_property_literal(raw: str) -> tuple[str, Any, str | None]:
         return "BOOLEAN", value.lower() == "true", None
     if value.lower() in {"null", "none"}:
         return "NULL", None, None
-    if re.fullmatch(r"[+-]?\\d+", value):
+    if re.fullmatch(r"[+-]?\d+", value):
         return "NUMBER", int(value), None
-    if re.fullmatch(r"[+-]?(?:\\d+\\.\\d*|\\.\\d+)(?:[eE][+-]?\\d+)?|[+-]?\\d+[eE][+-]?\\d+", value):
+    if re.fullmatch(r"[+-]?(?:\d+\.\d*|\.\d+)(?:[eE][+-]?\d+)?|[+-]?\d+[eE][+-]?\d+", value):
         return "NUMBER", float(value), None
     return "UNKNOWN", None, value
 
@@ -114,7 +114,7 @@ def _property_records(
     records: list[dict[str, Any]] = []
     paren = brace = bracket = 0
     line_start = 0
-    for index, char in enumerate(masked + "\\n"):
+    for index, char in enumerate(masked + "\n"):
         if char == "(":
             paren += 1
         elif char == ")":
@@ -127,15 +127,15 @@ def _property_records(
             bracket += 1
         elif char == "]":
             bracket -= 1
-        elif char == "\\n":
+        elif char == "\n":
             raw_line = body[line_start:index]
             if paren == brace == bracket == 0:
-                match = re.match(r"^[ \\t]*([A-Za-z][A-Za-z0-9_]*)\\s*:\\s*(.*?)\\s*$", raw_line)
+                match = re.match(r"^[ \t]*([A-Za-z][A-Za-z0-9_]*)\s*:\s*(.*?)\s*$", raw_line)
                 if match:
                     name, raw_value = match.groups()
                     value_type, value, raw_expression = _decode_property_literal(raw_value)
                     prefix = raw_line[:match.start(1)]
-                    line_number = start_line + body.count("\\n", 0, line_start)
+                    line_number = start_line + body.count("\n", 0, line_start)
                     column = (
                         start_column + len(prefix)
                         if line_number == start_line
