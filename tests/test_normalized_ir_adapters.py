@@ -337,3 +337,66 @@ def test_apexlang_nested_property_expressions_are_preserved(tmp_path: Path) -> N
     assert settings["value"]["source"]["valueType"] == "UNKNOWN"
     assert settings["value"]["source"]["rawExpression"] == "select_orders(:P10_ID)"
     assert settings["value"]["label"]["value"] == "Text with } brace"
+
+
+
+def test_apexlang_multiline_expressions_keep_full_source_and_end_locator(tmp_path: Path) -> None:
+    source_dir = tmp_path / "multiline-expression"
+    source_dir.mkdir()
+    (source_dir / "application.apx").write_text(
+        "app DEMO (\n"
+        "    name: 'Demo'\n"
+        ")\n",
+        encoding="utf-8",
+    )
+    (source_dir / "page.apx").write_text(
+        "page 10 (\n"
+        "    name: 'Orders'\n"
+        "    region grid (\n"
+        "        name: 'Orders Grid'\n"
+        "    )\n"
+        "    source: SELECT order_id,\n"
+        "             order_date\n"
+        "      FROM orders\n"
+        "     WHERE status = 'OPEN'\n"
+        "    title: 'Order List'\n"
+        ")\n",
+        encoding="utf-8",
+    )
+
+    document = adapt_apexlang_directory(source_dir)
+    page = next(obj for obj in document["objects"] if obj["type"] == "PAGE")
+
+    assert validate_ir_document(document) == []
+    assert page["properties"]["source"]["valueType"] == "UNKNOWN"
+    assert page["properties"]["source"]["rawExpression"] == (
+        "SELECT order_id,\norder_date\nFROM orders\nWHERE status = 'OPEN'"
+    )
+    locator = page["properties"]["source"]["sourceLocator"]
+    assert locator["line"] == 6
+    assert locator["endLine"] == 9
+    assert locator["endColumn"] == 31
+    assert "region" not in page["properties"]
+
+
+def test_apexlang_colon_prefixed_nested_objects_stay_structured(tmp_path: Path) -> None:
+    source_dir = tmp_path / "colon-nested"
+    source_dir.mkdir()
+    (source_dir / "application.apx").write_text(
+        "app DEMO (\n"
+        "    navigation: {\n"
+        "        homeUrl: {\n"
+        "            page: 10\n"
+        "        }\n"
+        "    }\n"
+        ")\n",
+        encoding="utf-8",
+    )
+
+    document = adapt_apexlang_directory(source_dir)
+    app = next(obj for obj in document["objects"] if obj["type"] == "APPLICATION")
+    navigation = app["properties"]["navigation"]
+
+    assert validate_ir_document(document) == []
+    assert navigation["valueType"] == "OBJECT"
+    assert navigation["value"]["homeUrl"]["value"]["page"]["value"] == 10
