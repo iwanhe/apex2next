@@ -25,7 +25,7 @@ property
     ;
 
 propertyValue
-    : (STRING | NUMBER | IDENTIFIER | REFERENCE | RAW_BLOCK | SYMBOL)+
+    : (STRING | NUMBER | IDENTIFIER | REFERENCE | RAW_BLOCK | SYMBOL | LPAREN propertyValue? RPAREN | LBRACK propertyValue? RBRACK)+
     ;
 
 expressionToken
@@ -41,6 +41,8 @@ LPAREN: '(';
 RPAREN: ')';
 LBRACE: '{';
 RBRACE: '}';
+LBRACK: '[';
+RBRACK: ']';
 COLON: ':';
 REFERENCE: '@' [A-Za-z0-9_./-]+;
 NUMBER: [+-]? [0-9]+ ('.' [0-9]+)? ([eE] [+-]? [0-9]+)?;
