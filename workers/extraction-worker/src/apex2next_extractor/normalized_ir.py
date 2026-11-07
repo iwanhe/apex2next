@@ -235,6 +235,13 @@ def adapt_apexlang_directory(source_dir: str | Path) -> dict[str, Any]:
             "extensions": extensions,
         }
         objects.append(obj)
+        if object_type == "UNKNOWN":
+            diagnostics.append(_diagnostic(
+                "IR002", "WARNING", "UNSUPPORTED_SOURCE_OBJECT",
+                f"Unmapped APEXLang declaration preserved as UNKNOWN: {source_type}",
+                locator=locator, object_id=object_id,
+                details={"sourceType": source_type, "rawDeclarationBody": raw_body},
+            ))
         if effective_parent_id:
             relationships.append({
                 "id": "rel:" + sha256_text(f"{parent_id}|{object_id}|CONTAINS")[:24],
