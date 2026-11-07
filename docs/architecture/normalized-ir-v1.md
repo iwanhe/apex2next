@@ -106,6 +106,10 @@ Identity strategy, in order:
 
 Do not use content hash as the primary identity. Do not resolve name-only collisions globally. Identity collision must produce a diagnostic, not an arbitrary winner.
 
+Initial adapter implementation (version 0.1.0) uses a deterministic SHA-256-derived identifier over source format, canonical object type, parent identity, and source-native identifier. Application roots have no parent. When no native identifier exists, the adapter falls back to parent-scoped name; if neither is available, it uses a source locator fallback and emits a low-confidence diagnostic. The digest is shortened for the public IR ID; collision detection remains a required resolver/validation hardening item.
+
+The content fingerprint is a separate SHA-256 over canonical JSON containing canonical type, source type, name, and normalized properties. It excludes source locator and generated metadata. Artifact hashes are full SHA-256 values and are retained in object provenance and snapshot metadata.
+
 For cross-snapshot comparison, implementations must retain the source-native key and identity strategy used. UUID database primary keys may wrap canonical identities, but must not replace the deterministic identity contract.
 
 ## 6. Properties and expression preservation
