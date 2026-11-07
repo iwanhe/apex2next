@@ -6,18 +6,18 @@ This backlog implements [Normalized Application IR v1](../architecture/normalize
 
 Deliver in small, testable work packages. The JSON Schema is the cross-language source of truth. Do not implement target code generation in this milestone.
 
-| ID | Work package | Main deliverables | Depends on | Priority |
-|---|---|---|---|---|
-| IRV1-01 | Contract and taxonomy | JSON Schema, canonical object taxonomy, version policy, valid/invalid fixtures | — | P0 |
-| IRV1-02 | Core types and validators | Generated TS types, Python schema validation, contract test harness | IRV1-01 | P0 |
-| IRV1-03 | Identity and provenance | Canonical identity builder, fingerprinting, source locator model | IRV1-01 | P0 |
-| IRV1-04 | APEXLang adapter | Inventory-to-IR mapping, raw property preservation, provenance | IRV1-02, 03 | P0 |
-| IRV1-05 | APEX SQL Export adapter | Export-call-to-IR mapping, raw argument preservation, provenance | IRV1-02, 03 | P0 |
-| IRV1-06 | Reference resolver | Scope-aware candidate index, typed resolver, resolution diagnostics | IRV1-04, 05 | P1 |
-| IRV1-07 | Relationships and dependency graph | Typed graph edges, cycle detection, explicit/inferred distinction | IRV1-06 | P1 |
-| IRV1-08 | Diagnostics catalog | Stable diagnostic codes, severity, details, suggestions | IRV1-02, 06 | P1 |
-| IRV1-09 | Regression and acceptance suite | Cross-format fixtures, determinism, preservation, resolver, safety tests | IRV1-04..08 | P1 |
-| IRV1-10 | Documentation and PR evidence | Usage examples, coverage matrix, limitations, CI evidence | IRV1-09 | P1 |
+| ID | Work package | Main deliverables | Depends on | Priority | Status |
+|---|---|---|---|---|---|
+| IRV1-01 | Contract and taxonomy | JSON Schema, canonical object taxonomy, version policy, valid/invalid fixtures | — | P0 | Initial contract in place |
+| IRV1-02 | Core types and validators | Generated TS types, Python schema validation, contract test harness | IRV1-01 | P0 | Python validator in place; TS types/tests pending |
+| IRV1-03 | Identity and provenance | Canonical identity builder, fingerprinting, source locator model | IRV1-01 | P0 | Initial implementation + regression tests |
+| IRV1-04 | APEXLang adapter | Inventory-to-IR mapping, raw property preservation, provenance | IRV1-02, 03 | P0 | Initial implementation + fixture tests |
+| IRV1-05 | APEX SQL Export adapter | Export-call-to-IR mapping, raw argument preservation, provenance | IRV1-02, 03 | P0 | Initial implementation + fixture tests |
+| IRV1-06 | Reference resolver | Scope-aware candidate index, typed resolver, resolution diagnostics | IRV1-04, 05 | P1 | Not started |
+| IRV1-07 | Relationships and dependency graph | Typed graph edges, cycle detection, explicit/inferred distinction | IRV1-06 | P1 | Partial structural containment only |
+| IRV1-08 | Diagnostics catalog | Stable diagnostic codes, severity, details, suggestions | IRV1-02, 06 | P1 | Initial source/schema diagnostics; resolver codes pending |
+| IRV1-09 | Regression and acceptance suite | Cross-format fixtures, determinism, preservation, resolver, safety tests | IRV1-04..08 | P1 | Partial; resolver and broad safety coverage pending |
+| IRV1-10 | Documentation and PR evidence | Usage examples, coverage matrix, limitations, CI evidence | IRV1-09 | P1 | In progress |
 
 ## Detailed tasks and acceptance evidence
 
