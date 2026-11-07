@@ -179,3 +179,6 @@ If the two parsers disagree, the adapter retains the legacy inventory mapping an
 Recursive object/array properties map to the existing IR property contract. Expressions use the shared conservative classifier without execution. Exact AST property source remains available under `extensions.rawSourceValue`; declaration source remains available under `extensions.rawDeclarationBody`. IR metadata records the AST parser version, integration mode, declaration match count, property adaptation count, legacy fallback count, and AST diagnostic count.
 
 This is a parity-guarded typed-property integration, not a complete replacement of the inventory parser. Real-project coverage and semantic equivalence remain unverified until a sanitized representative APEXLang project is available.
+
+
+WP4 lossless duplicate-property safeguard: because the IR `properties` field is a unique-key map, repeated direct APEXLang property names are additionally preserved in source order under `extensions.duplicateProperties` and reported with `IRAST004`. For nested OBJECT properties, duplicate child names and their typed payloads are preserved in the nested property's `extensions.duplicateProperties` / `duplicatePropertyNames`. Consumers should inspect these extensions whenever duplicate-property diagnostics are present.
