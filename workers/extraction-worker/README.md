@@ -141,3 +141,21 @@ A first structural parsing layer is available alongside the existing inventory p
 - Unterminated strings, comments, fenced blocks, and declarations produce structured AST diagnostics.
 
 This is an incremental grammar/AST foundation, not yet the production parser for the adapters. It currently models declaration structure and lossless token spans; typed property nodes, complete array/mixed-brace grammar, error recovery, nesting/resource limits, and adapter integration remain follow-up work. The ANTLR grammar file is a maintained grammar specification; the Python AST parser currently runs without an ANTLR runtime dependency.
+
+
+### Typed APEXLang property AST (WP2 initial slice)
+
+The AST declaration model now exposes a `properties` collection of typed `ApexLangProperty` nodes:
+
+- Scalar types: STRING, NUMBER, BOOLEAN, NULL.
+- Multiline brace-delimited OBJECT values with recursively parsed child properties.
+- Bracket-delimited ARRAY values with scalar item nodes.
+- Non-literal source remains EXPRESSION with its original raw value; it is never evaluated.
+- Duplicate property keys are retained in source order and reported as `AST102`.
+- Unterminated object/array values produce `AST101`.
+- Property and nested property nodes retain source spans in the original source file.
+- Property collection is scoped to the direct declaration level, so child declaration properties are not copied into their parent.
+
+Public API: `parse_apexlang_ast`, `parse_apexlang_properties`, and the `ApexLangProperty` / `SourceSpan` models.
+
+Current boundaries: inline object expressions, arrays containing nested object values, mixed brace forms, grammar-driven error recovery, and hard parser resource limits remain incomplete. Multiline expression continuation currently handles balanced parenthesis expressions; other multiline expression forms need additional fixtures before support is claimed.
