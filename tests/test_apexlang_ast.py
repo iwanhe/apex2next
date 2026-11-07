@@ -147,3 +147,75 @@ def test_nested_declaration_properties_do_not_leak_into_parent_property_scope() 
     assert [(prop.name, prop.value) for prop in region.children[0].properties] == [
         ("source", "begin null; end;")
     ]
+
+
+def test_ast_supports_nested_objects_arrays_and_inline_mixed_values() -> None:
+    source = """page 10 (
+    settings: { mode: 'strict', retries: 3, nested: { enabled: true } }
+    columns: [
+        'ORDER_ID',
+        { name: 'TOTAL', options: ['sum', 'avg'] },
+        ['A', 'B']
+    ]
+)
+"""
+    ast = parse_apexlang_ast(source)
+    props = {prop.name: prop for prop in ast.declarations[0].properties}
+    settings = props["settings"]
+    assert settings.value_type == "OBJECT"
+    assert [(p.name, p.value) for p in settings.children] == [
+        ("mode", "strict"), ("retries", 3), ("nested", {"enabled": True})
+    ]
+    columns = props["columns"]
+    assert columns.value_type == "ARRAY"
+    assert [item.value_type for item in columns.items] == ["STRING", "OBJECT", "ARRAY"]
+    object_item = columns.items[1]
+    assert [(p.name, p.value) for p in object_item.children] == [
+        ("name", "TOTAL"), ("options", ["sum", "avg"])
+    ]
+    assert columns.items[0].span.start_offset < columns.items[1].span.start_offset
+    assert ast.diagnostics == []
+
+
+def test_ast_property_parser_preserves_expression_and_nested_duplicate_diagnostics() -> None:
+    source = """page 10 (
+    config: {
+        name: 'first',
+        name: 'second',
+        expression: build_value(
+            nested_call(1, 2),
+            'x,y'
+        )
+    }
+)
+"""
+    ast = parse_apexlang_ast(source)
+    config = ast.declarations[0].properties[0]
+    assert [p.name for p in config.children] == ["name", "name", "expression"]
+    assert "nested_call(1, 2)" in config.children[2].raw_value
+    assert sum(d["code"] == "AST102" for d in ast.diagnostics) == 1
+
+
+def test_ast_reports_resource_limits_without_recursing_or_executing() -> None:
+    oversized = parse_apexlang_ast("page 1 ()", max_source_chars=4)
+    assert oversized.diagnostics[0]["code"] == "AST900"
+    too_many_tokens = parse_apexlang_ast("page 1 ()", max_tokens=2)
+    assert too_many_tokens.diagnostics[0]["code"] == "AST901"
+    too_deep = parse_apexlang_ast("page 1 (" + "(" * 5 + ")" * 5 + ")", max_nesting_depth=3)
+    assert too_deep.diagnostics[-1]["code"] == "AST903"
+
+
+def test_ast_parser_handles_deterministic_malformed_input_corpus() -> None:
+    # Small deterministic fuzz-style corpus: malformed delimiters, strings, and comments.
+    samples = [
+        "page 1 ( config: { a: [1, 2 } )",
+        "page 2 ( source: call(1, 2\n region x ( name: 'x' ) )",
+        "page 3 ( title: 'unterminated )",
+        "page 4 ( /* comment never closes",
+        "page 5 ( values: [[[[[]]]]] )",
+        "page 6 ( data: { a: { b: { c: true } } } )",
+    ]
+    for source in samples:
+        ast = parse_apexlang_ast(source)
+        assert isinstance(ast.declarations, list)
+        assert isinstance(ast.diagnostics, list)
