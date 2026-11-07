@@ -133,7 +133,7 @@ def parse_apexlang_text(source: str, file_path: str = "") -> dict[str, Any]:
                 "code": "APEXLANG003",
                 "severity": "WARNING",
                 "file": file_path,
-                "line": source.count("\\n", 0, match.start()) + 1,
+                "line": source.count("\n", 0, match.start()) + 1,
                 "message": f"Unmapped declaration preserved as UNKNOWN: {kind}",
             })
         opening = source.find("(", match.start(), match.end())
