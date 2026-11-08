@@ -18,6 +18,12 @@ The analysis reconciles the APEX SQL export and generated install script at sour
 
 WP9.2 is complete as an offline analysis deliverable. It does not establish installed-object validity, dictionary/grant parity, functional parity, or production qualification. WP9-004/005 remain incomplete pending live owner-scoped dictionary and semantic evidence.
 
+## WP9.3 — source validation & PostgreSQL target schema (offline part)
+
+Recorded in [WP9.3 source validation & target schema](wp9.3-source-validation-schema-f170134.md), using the [schema conversion engine](../architecture/wp9.3-schema-conversion-engine.md) (schema-plan 0.3.0). The source `install.sql` hash matches WP9.2. The generated migration emits all 9 tables, with every PK, FK, UNIQUE and CHECK, the 4 indexes, 6 identity columns and the stored generated column. 8 of the 10 views are emitted; the 2 views that depend on PL/SQL have a target design. The migration is verified on PostgreSQL 16: the catalog equals the plan, behavior tests pass, re-apply is atomic, and output is deterministic. Twelve dependency checks run, including APEX consumer references. The only failure is source finding SRC-001: the page 100 KPI region selects columns that `APX_DEMO_DASH_KPI_V` does not define in `install.sql`.
+
+WP9-004 advances to "reviewed target DDL draft". It is **not** reconciled: Oracle Dictionary evidence (WP9.3b), grants, object validity and the SRC-001/page 00302 resolutions are still outstanding. Triggers and packages are inventoried for WP9.4 and are not converted.
+
 ## Pilot selection
 
 Select one bounded but representative application with a named business/application owner, 3–5 critical journeys, at least two roles, privileged and negative authorization paths, representative pages/items/regions/validations/dynamic actions/processes/LOVs/reports/APIs/PLSQL/database objects, and relevant integrations/jobs. Avoid a trivial read-only application. Use non-production and synthetic or approved anonymized data.

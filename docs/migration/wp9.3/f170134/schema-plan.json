@@ -1,0 +1,6449 @@
+{
+  "format": "apex2next.schema-plan.v1",
+  "converterVersion": "0.3.0",
+  "ruleRegistrySha256": "2210687c65d791eca77a444df486a2d58d3536aeb943b1ec86d9fec3f3e901b0",
+  "source": {
+    "name": "install.sql",
+    "sha256": "sha256:7c71e9c56b76d5fe893d2f357e692b9e7c458adc37791784379842ec1712d66d",
+    "bytes": 38098
+  },
+  "targetSchema": "app",
+  "summary": {
+    "statements": 56,
+    "objectsByType": {
+      "CHECK": {
+        "AUTOMATIC": 8
+      },
+      "DATA": {
+        "MANUAL": 15
+      },
+      "FOREIGN KEY": {
+        "ASSISTED": 1,
+        "AUTOMATIC": 6
+      },
+      "GENERATED COLUMN": {
+        "ASSISTED": 1
+      },
+      "IDENTITY": {
+        "ASSISTED": 6
+      },
+      "INDEX": {
+        "AUTOMATIC": 4
+      },
+      "PACKAGE": {
+        "MANUAL": 4
+      },
+      "PACKAGE BODY": {
+        "MANUAL": 4
+      },
+      "PRIMARY KEY": {
+        "AUTOMATIC": 9
+      },
+      "TABLE": {
+        "ASSISTED": 9
+      },
+      "TRIGGER": {
+        "MANUAL": 5
+      },
+      "UNIQUE": {
+        "AUTOMATIC": 4
+      },
+      "VIEW": {
+        "ASSISTED": 8,
+        "MANUAL": 2
+      }
+    },
+    "dispositions": {
+      "ASSISTED": 25,
+      "AUTOMATIC": 31,
+      "MANUAL": 30
+    },
+    "tables": {
+      "source": 9,
+      "emitted": 9
+    },
+    "views": {
+      "source": 10,
+      "emitted": 8
+    },
+    "indexes": {
+      "source": 4,
+      "emitted": 4
+    },
+    "validationPassed": false
+  },
+  "checks": [
+    {
+      "id": "DEP-001",
+      "title": "Foreign-key targets resolve to tables in the input",
+      "status": "PASS",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "id": "DEP-002",
+      "title": "Foreign keys reference a PRIMARY KEY or UNIQUE key",
+      "status": "PASS",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "id": "DEP-003",
+      "title": "Foreign-key column types are compatible after alignment",
+      "status": "PASS",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "id": "DEP-004",
+      "title": "View dependencies resolve and are acyclic",
+      "status": "PASS",
+      "failures": [],
+      "notes": [
+        "1. APX_DEMO_APPROVALS_V",
+        "2. APX_DEMO_USER_ROLES_V",
+        "3. APX_DEMO_DEPARTMENTS_V",
+        "4. APX_DEMO_ITEMS_V",
+        "5. APX_DEMO_REQUESTS_V",
+        "6. APX_DEMO_REQUEST_LINES_V",
+        "7. APX_DEMO_DASH_C1_S1_V",
+        "8. APX_DEMO_REQUEST_SUMMARY_V",
+        "9. APX_DEMO_DASH_KPI_V",
+        "10. APX_DEMO_DASH_C2_S1_V"
+      ]
+    },
+    {
+      "id": "DEP-005",
+      "title": "Index/trigger/comment/ALTER TABLE targets resolve",
+      "status": "PASS",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "id": "DEP-006",
+      "title": "Trigger column references exist and do not write generated columns",
+      "status": "PASS",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "id": "DEP-007",
+      "title": "PL/SQL calls from views/triggers resolve to declared package members",
+      "status": "PASS",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "id": "DEP-008",
+      "title": "No PostgreSQL relation-namespace collisions (tables, views, indexes, key indexes, sequences)",
+      "status": "PASS",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "id": "DEP-009",
+      "title": "Identifiers fit 63 bytes and do not collide after case folding",
+      "status": "PASS",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "id": "DEP-010",
+      "title": "Independent WP8 inventory parser agrees on object counts",
+      "status": "PASS",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "id": "DEP-011",
+      "title": "Every source statement is accounted for with a disposition",
+      "status": "PASS",
+      "failures": [],
+      "notes": [
+        "ALTER_TABLE: 3",
+        "ANONYMOUS_BLOCK: 1",
+        "DML: 14",
+        "INDEX: 4",
+        "PACKAGE: 4",
+        "PACKAGE_BODY: 4",
+        "TABLE: 9",
+        "TCL: 2",
+        "TRIGGER: 5",
+        "VIEW: 10"
+      ]
+    },
+    {
+      "id": "DEP-012",
+      "title": "APEX consumer object/column/package references resolve against the source schema",
+      "status": "FAIL",
+      "failures": [
+        "page 100 create_page_plug Ringkasan [p_plug_source]: APX_DEMO_DASH_KPI_V.SEQ not found",
+        "page 100 create_page_plug Ringkasan [p_plug_source]: APX_DEMO_DASH_KPI_V.ICON not found",
+        "page 100 create_page_plug Ringkasan [p_plug_source]: APX_DEMO_DASH_KPI_V.LABEL not found",
+        "page 100 create_page_plug Ringkasan [p_plug_source]: APX_DEMO_DASH_KPI_V.METRIC_VALUE not found"
+      ],
+      "notes": [
+        "34 reference(s) checked",
+        "consumer depends on not-emitted object: APX_DEMO_APPROVALS_V (VIEW (not emitted))",
+        "consumer depends on not-emitted object: APX_DEMO_DASH_KPI_V (VIEW (not emitted))"
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "type": "TABLE",
+      "name": "APX_DEMO_ROLES",
+      "line": 12,
+      "disposition": "ASSISTED",
+      "emitted": true,
+      "findingCodes": [
+        "SCH004"
+      ]
+    },
+    {
+      "type": "PRIMARY KEY",
+      "name": "APX_DEMO_ROLES_PK",
+      "line": 16,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_ROLES"
+    },
+    {
+      "type": "TABLE",
+      "name": "APX_DEMO_USER_ROLES",
+      "line": 19,
+      "disposition": "ASSISTED",
+      "emitted": true,
+      "findingCodes": [
+        "SCH003",
+        "SCH004",
+        "SCH005",
+        "SCH006"
+      ]
+    },
+    {
+      "type": "PRIMARY KEY",
+      "name": "APX_DEMO_USER_ROLES_PK",
+      "line": 27,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_USER_ROLES"
+    },
+    {
+      "type": "UNIQUE",
+      "name": "APX_DEMO_USER_ROLES_U1",
+      "line": 28,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_USER_ROLES"
+    },
+    {
+      "type": "FOREIGN KEY",
+      "name": "APX_DEMO_USER_ROLES_FK1",
+      "line": 29,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_USER_ROLES"
+    },
+    {
+      "type": "IDENTITY",
+      "name": "APX_DEMO_USER_ROLES.USER_ROLE_ID",
+      "line": 20,
+      "disposition": "ASSISTED",
+      "emitted": true,
+      "findingCodes": [
+        "SCH005",
+        "SCH006"
+      ]
+    },
+    {
+      "type": "TABLE",
+      "name": "APX_DEMO_DOC_TYPES",
+      "line": 33,
+      "disposition": "ASSISTED",
+      "emitted": true,
+      "findingCodes": [
+        "SCH002",
+        "SCH004"
+      ]
+    },
+    {
+      "type": "PRIMARY KEY",
+      "name": "APX_DEMO_DOC_TYPES_PK",
+      "line": 46,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_DOC_TYPES"
+    },
+    {
+      "type": "FOREIGN KEY",
+      "name": "APX_DEMO_DOC_TYPES_FK1",
+      "line": 47,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_DOC_TYPES"
+    },
+    {
+      "type": "FOREIGN KEY",
+      "name": "APX_DEMO_DOC_TYPES_FK2",
+      "line": 48,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_DOC_TYPES"
+    },
+    {
+      "type": "TABLE",
+      "name": "APX_DEMO_DOC_SEQ",
+      "line": 51,
+      "disposition": "ASSISTED",
+      "emitted": true,
+      "findingCodes": [
+        "SCH002",
+        "SCH004"
+      ]
+    },
+    {
+      "type": "PRIMARY KEY",
+      "name": "APX_DEMO_DOC_SEQ_PK",
+      "line": 55,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_DOC_SEQ"
+    },
+    {
+      "type": "TABLE",
+      "name": "APX_DEMO_APPROVALS",
+      "line": 58,
+      "disposition": "ASSISTED",
+      "emitted": true,
+      "findingCodes": [
+        "EXP002",
+        "SCH002",
+        "SCH003",
+        "SCH004",
+        "SCH005",
+        "SCH006",
+        "SCH011"
+      ]
+    },
+    {
+      "type": "PRIMARY KEY",
+      "name": "APX_DEMO_APPROVALS_PK",
+      "line": 72,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_APPROVALS"
+    },
+    {
+      "type": "CHECK",
+      "name": "APX_DEMO_APPROVALS_CK1",
+      "line": 73,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_APPROVALS"
+    },
+    {
+      "type": "FOREIGN KEY",
+      "name": "APX_DEMO_APPROVALS_FK1",
+      "line": 74,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_APPROVALS"
+    },
+    {
+      "type": "IDENTITY",
+      "name": "APX_DEMO_APPROVALS.APPROVAL_ID",
+      "line": 59,
+      "disposition": "ASSISTED",
+      "emitted": true,
+      "findingCodes": [
+        "SCH005",
+        "SCH006"
+      ]
+    },
+    {
+      "type": "TABLE",
+      "name": "APX_DEMO_DEPARTMENTS",
+      "line": 87,
+      "disposition": "ASSISTED",
+      "emitted": true,
+      "findingCodes": [
+        "SCH003",
+        "SCH004",
+        "SCH005",
+        "SCH006"
+      ]
+    },
+    {
+      "type": "PRIMARY KEY",
+      "name": "APX_DEMO_DEPARTMENTS_PK",
+      "line": 96,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_DEPARTMENTS"
+    },
+    {
+      "type": "UNIQUE",
+      "name": "APX_DEMO_DEPARTMENTS_U1",
+      "line": 97,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_DEPARTMENTS"
+    },
+    {
+      "type": "CHECK",
+      "name": "APX_DEMO_DEPARTMENTS_CK1",
+      "line": 98,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_DEPARTMENTS"
+    },
+    {
+      "type": "IDENTITY",
+      "name": "APX_DEMO_DEPARTMENTS.DEPARTMENT_ID",
+      "line": 88,
+      "disposition": "ASSISTED",
+      "emitted": true,
+      "findingCodes": [
+        "SCH005",
+        "SCH006"
+      ]
+    },
+    {
+      "type": "TABLE",
+      "name": "APX_DEMO_ITEMS",
+      "line": 101,
+      "disposition": "ASSISTED",
+      "emitted": true,
+      "findingCodes": [
+        "SCH002",
+        "SCH003",
+        "SCH004",
+        "SCH005",
+        "SCH006"
+      ]
+    },
+    {
+      "type": "PRIMARY KEY",
+      "name": "APX_DEMO_ITEMS_PK",
+      "line": 113,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_ITEMS"
+    },
+    {
+      "type": "UNIQUE",
+      "name": "APX_DEMO_ITEMS_U1",
+      "line": 114,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_ITEMS"
+    },
+    {
+      "type": "CHECK",
+      "name": "APX_DEMO_ITEMS_CK1",
+      "line": 115,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_ITEMS"
+    },
+    {
+      "type": "CHECK",
+      "name": "APX_DEMO_ITEMS_CK2",
+      "line": 116,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_ITEMS"
+    },
+    {
+      "type": "CHECK",
+      "name": "APX_DEMO_ITEMS_CK3",
+      "line": 117,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_ITEMS"
+    },
+    {
+      "type": "IDENTITY",
+      "name": "APX_DEMO_ITEMS.ITEM_ID",
+      "line": 102,
+      "disposition": "ASSISTED",
+      "emitted": true,
+      "findingCodes": [
+        "SCH005",
+        "SCH006"
+      ]
+    },
+    {
+      "type": "TABLE",
+      "name": "APX_DEMO_REQUESTS",
+      "line": 120,
+      "disposition": "ASSISTED",
+      "emitted": true,
+      "findingCodes": [
+        "EXP019",
+        "SCH003",
+        "SCH004",
+        "SCH005",
+        "SCH006",
+        "SCH011",
+        "SCH021"
+      ]
+    },
+    {
+      "type": "PRIMARY KEY",
+      "name": "APX_DEMO_REQUESTS_PK",
+      "line": 133,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_REQUESTS"
+    },
+    {
+      "type": "UNIQUE",
+      "name": "APX_DEMO_REQUESTS_U1",
+      "line": 134,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_REQUESTS"
+    },
+    {
+      "type": "CHECK",
+      "name": "APX_DEMO_REQUESTS_CK1",
+      "line": 135,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_REQUESTS"
+    },
+    {
+      "type": "FOREIGN KEY",
+      "name": "APX_DEMO_REQUESTS_FK1",
+      "line": 155,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_REQUESTS"
+    },
+    {
+      "type": "IDENTITY",
+      "name": "APX_DEMO_REQUESTS.REQUEST_ID",
+      "line": 121,
+      "disposition": "ASSISTED",
+      "emitted": true,
+      "findingCodes": [
+        "SCH005",
+        "SCH006"
+      ]
+    },
+    {
+      "type": "TABLE",
+      "name": "APX_DEMO_REQUEST_LINES",
+      "line": 138,
+      "disposition": "ASSISTED",
+      "emitted": true,
+      "findingCodes": [
+        "SCH002",
+        "SCH003",
+        "SCH004",
+        "SCH005",
+        "SCH006",
+        "SCH009",
+        "SCH021"
+      ]
+    },
+    {
+      "type": "PRIMARY KEY",
+      "name": "APX_DEMO_REQUEST_LINES_PK",
+      "line": 149,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_REQUEST_LINES"
+    },
+    {
+      "type": "CHECK",
+      "name": "APX_DEMO_REQUEST_LINES_CK1",
+      "line": 150,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_REQUEST_LINES"
+    },
+    {
+      "type": "CHECK",
+      "name": "APX_DEMO_REQUEST_LINES_CK2",
+      "line": 151,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_REQUEST_LINES"
+    },
+    {
+      "type": "FOREIGN KEY",
+      "name": "APX_DEMO_REQUEST_LINES_FK1",
+      "line": 157,
+      "disposition": "ASSISTED",
+      "emitted": true,
+      "findingCodes": [
+        "SCH031"
+      ],
+      "table": "APX_DEMO_REQUEST_LINES"
+    },
+    {
+      "type": "FOREIGN KEY",
+      "name": "APX_DEMO_REQUEST_LINES_FK2",
+      "line": 159,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_REQUEST_LINES"
+    },
+    {
+      "type": "IDENTITY",
+      "name": "APX_DEMO_REQUEST_LINES.LINE_ID",
+      "line": 139,
+      "disposition": "ASSISTED",
+      "emitted": true,
+      "findingCodes": [
+        "SCH005",
+        "SCH006"
+      ]
+    },
+    {
+      "type": "GENERATED COLUMN",
+      "name": "APX_DEMO_REQUEST_LINES.LINE_AMOUNT",
+      "line": 144,
+      "disposition": "ASSISTED",
+      "emitted": true,
+      "findingCodes": [
+        "SCH009"
+      ]
+    },
+    {
+      "type": "INDEX",
+      "name": "APX_DEMO_APPROVALS_N1",
+      "line": 76,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_APPROVALS"
+    },
+    {
+      "type": "INDEX",
+      "name": "APX_DEMO_REQUESTS_N1",
+      "line": 156,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_REQUESTS"
+    },
+    {
+      "type": "INDEX",
+      "name": "APX_DEMO_REQUEST_LINES_N1",
+      "line": 158,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_REQUEST_LINES"
+    },
+    {
+      "type": "INDEX",
+      "name": "APX_DEMO_REQUEST_LINES_N2",
+      "line": 160,
+      "disposition": "AUTOMATIC",
+      "emitted": true,
+      "findingCodes": [],
+      "table": "APX_DEMO_REQUEST_LINES"
+    },
+    {
+      "type": "VIEW",
+      "name": "APX_DEMO_APPROVALS_V",
+      "line": 859,
+      "disposition": "MANUAL",
+      "emitted": false,
+      "findingCodes": [
+        "EXP009",
+        "VIW001",
+        "VIW007"
+      ],
+      "dependencyOrder": 1
+    },
+    {
+      "type": "VIEW",
+      "name": "APX_DEMO_USER_ROLES_V",
+      "line": 878,
+      "disposition": "ASSISTED",
+      "emitted": true,
+      "findingCodes": [
+        "VIW001",
+        "VIW007"
+      ],
+      "dependencyOrder": 2
+    },
+    {
+      "type": "VIEW",
+      "name": "APX_DEMO_DEPARTMENTS_V",
+      "line": 888,
+      "disposition": "ASSISTED",
+      "emitted": true,
+      "findingCodes": [
+        "VIW001",
+        "VIW007"
+      ],
+      "dependencyOrder": 3
+    },
+    {
+      "type": "VIEW",
+      "name": "APX_DEMO_ITEMS_V",
+      "line": 899,
+      "disposition": "ASSISTED",
+      "emitted": true,
+      "findingCodes": [
+        "VIW001",
+        "VIW007"
+      ],
+      "dependencyOrder": 4
+    },
+    {
+      "type": "VIEW",
+      "name": "APX_DEMO_REQUESTS_V",
+      "line": 913,
+      "disposition": "ASSISTED",
+      "emitted": true,
+      "findingCodes": [
+        "EXP005",
+        "VIW001",
+        "VIW007"
+      ],
+      "dependencyOrder": 5
+    },
+    {
+      "type": "VIEW",
+      "name": "APX_DEMO_REQUEST_LINES_V",
+      "line": 929,
+      "disposition": "ASSISTED",
+      "emitted": true,
+      "findingCodes": [
+        "EXP005",
+        "VIW001",
+        "VIW007"
+      ],
+      "dependencyOrder": 6
+    },
+    {
+      "type": "VIEW",
+      "name": "APX_DEMO_DASH_KPI_V",
+      "line": 944,
+      "disposition": "MANUAL",
+      "emitted": false,
+      "findingCodes": [
+        "EXP004",
+        "VIW001",
+        "VIW005",
+        "VIW007"
+      ],
+      "blockedBy": [
+        "APX_DEMO_APPROVALS_V"
+      ],
+      "dependencyOrder": 9
+    },
+    {
+      "type": "VIEW",
+      "name": "APX_DEMO_DASH_C1_S1_V",
+      "line": 950,
+      "disposition": "ASSISTED",
+      "emitted": true,
+      "findingCodes": [
+        "VIW001",
+        "VIW007"
+      ],
+      "dependencyOrder": 7
+    },
+    {
+      "type": "VIEW",
+      "name": "APX_DEMO_DASH_C2_S1_V",
+      "line": 953,
+      "disposition": "ASSISTED",
+      "emitted": true,
+      "findingCodes": [
+        "VIW001",
+        "VIW007"
+      ],
+      "dependencyOrder": 10
+    },
+    {
+      "type": "VIEW",
+      "name": "APX_DEMO_REQUEST_SUMMARY_V",
+      "line": 1019,
+      "disposition": "ASSISTED",
+      "emitted": true,
+      "findingCodes": [
+        "EXP001",
+        "VIW001",
+        "VIW007"
+      ],
+      "dependencyOrder": 8
+    },
+    {
+      "type": "TRIGGER",
+      "name": "APX_DEMO_USER_ROLES_TRG",
+      "line": 735,
+      "disposition": "MANUAL",
+      "emitted": false,
+      "findingCodes": [
+        "TRG001"
+      ],
+      "table": "APX_DEMO_USER_ROLES"
+    },
+    {
+      "type": "TRIGGER",
+      "name": "APX_DEMO_DEPARTMENTS_TRG",
+      "line": 750,
+      "disposition": "MANUAL",
+      "emitted": false,
+      "findingCodes": [
+        "TRG001"
+      ],
+      "table": "APX_DEMO_DEPARTMENTS"
+    },
+    {
+      "type": "TRIGGER",
+      "name": "APX_DEMO_ITEMS_TRG",
+      "line": 764,
+      "disposition": "MANUAL",
+      "emitted": false,
+      "findingCodes": [
+        "TRG001"
+      ],
+      "table": "APX_DEMO_ITEMS"
+    },
+    {
+      "type": "TRIGGER",
+      "name": "APX_DEMO_REQUESTS_TRG",
+      "line": 779,
+      "disposition": "MANUAL",
+      "emitted": false,
+      "findingCodes": [
+        "TRG001",
+        "TRG003"
+      ],
+      "table": "APX_DEMO_REQUESTS"
+    },
+    {
+      "type": "TRIGGER",
+      "name": "APX_DEMO_REQUEST_LINES_TRG",
+      "line": 818,
+      "disposition": "MANUAL",
+      "emitted": false,
+      "findingCodes": [
+        "TRG001",
+        "TRG002",
+        "TRG003"
+      ],
+      "table": "APX_DEMO_REQUEST_LINES"
+    },
+    {
+      "type": "PACKAGE",
+      "name": "APX_DEMO_SEC_PKG",
+      "line": 171,
+      "disposition": "MANUAL",
+      "emitted": false,
+      "findingCodes": [
+        "PLS001"
+      ]
+    },
+    {
+      "type": "PACKAGE BODY",
+      "name": "APX_DEMO_SEC_PKG",
+      "line": 231,
+      "disposition": "MANUAL",
+      "emitted": false,
+      "findingCodes": [
+        "PLS001"
+      ]
+    },
+    {
+      "type": "PACKAGE",
+      "name": "APX_DEMO_DOC_PKG",
+      "line": 318,
+      "disposition": "MANUAL",
+      "emitted": false,
+      "findingCodes": [
+        "PLS001"
+      ]
+    },
+    {
+      "type": "PACKAGE BODY",
+      "name": "APX_DEMO_DOC_PKG",
+      "line": 338,
+      "disposition": "MANUAL",
+      "emitted": false,
+      "findingCodes": [
+        "PLS001"
+      ]
+    },
+    {
+      "type": "PACKAGE",
+      "name": "APX_DEMO_APPROVAL_PKG",
+      "line": 383,
+      "disposition": "MANUAL",
+      "emitted": false,
+      "findingCodes": [
+        "PLS001"
+      ]
+    },
+    {
+      "type": "PACKAGE BODY",
+      "name": "APX_DEMO_APPROVAL_PKG",
+      "line": 457,
+      "disposition": "MANUAL",
+      "emitted": false,
+      "findingCodes": [
+        "PLS001"
+      ]
+    },
+    {
+      "type": "PACKAGE",
+      "name": "APX_DEMO_REQUEST_PKG",
+      "line": 964,
+      "disposition": "MANUAL",
+      "emitted": false,
+      "findingCodes": [
+        "PLS001"
+      ]
+    },
+    {
+      "type": "PACKAGE BODY",
+      "name": "APX_DEMO_REQUEST_PKG",
+      "line": 983,
+      "disposition": "MANUAL",
+      "emitted": false,
+      "findingCodes": [
+        "PLS001"
+      ]
+    },
+    {
+      "type": "DATA",
+      "name": "MERGE APX_DEMO_ROLES",
+      "line": 1040,
+      "disposition": "MANUAL",
+      "emitted": false,
+      "findingCodes": [
+        "DAT001"
+      ]
+    },
+    {
+      "type": "DATA",
+      "name": "MERGE APX_DEMO_ROLES",
+      "line": 1046,
+      "disposition": "MANUAL",
+      "emitted": false,
+      "findingCodes": [
+        "DAT001"
+      ]
+    },
+    {
+      "type": "DATA",
+      "name": "MERGE APX_DEMO_ROLES",
+      "line": 1052,
+      "disposition": "MANUAL",
+      "emitted": false,
+      "findingCodes": [
+        "DAT001"
+      ]
+    },
+    {
+      "type": "DATA",
+      "name": "MERGE APX_DEMO_ROLES",
+      "line": 1058,
+      "disposition": "MANUAL",
+      "emitted": false,
+      "findingCodes": [
+        "DAT001"
+      ]
+    },
+    {
+      "type": "DATA",
+      "name": "MERGE APX_DEMO_ROLES",
+      "line": 1064,
+      "disposition": "MANUAL",
+      "emitted": false,
+      "findingCodes": [
+        "DAT001"
+      ]
+    },
+    {
+      "type": "DATA",
+      "name": "MERGE APX_DEMO_DOC_TYPES",
+      "line": 1070,
+      "disposition": "MANUAL",
+      "emitted": false,
+      "findingCodes": [
+        "DAT001"
+      ]
+    },
+    {
+      "type": "DATA",
+      "name": "INSERT APX_DEMO_DEPARTMENTS",
+      "line": 1086,
+      "disposition": "MANUAL",
+      "emitted": false,
+      "findingCodes": [
+        "DAT001"
+      ]
+    },
+    {
+      "type": "DATA",
+      "name": "INSERT APX_DEMO_DEPARTMENTS",
+      "line": 1087,
+      "disposition": "MANUAL",
+      "emitted": false,
+      "findingCodes": [
+        "DAT001"
+      ]
+    },
+    {
+      "type": "DATA",
+      "name": "INSERT APX_DEMO_DEPARTMENTS",
+      "line": 1088,
+      "disposition": "MANUAL",
+      "emitted": false,
+      "findingCodes": [
+        "DAT001"
+      ]
+    },
+    {
+      "type": "DATA",
+      "name": "INSERT APX_DEMO_ITEMS",
+      "line": 1090,
+      "disposition": "MANUAL",
+      "emitted": false,
+      "findingCodes": [
+        "DAT001"
+      ]
+    },
+    {
+      "type": "DATA",
+      "name": "INSERT APX_DEMO_ITEMS",
+      "line": 1091,
+      "disposition": "MANUAL",
+      "emitted": false,
+      "findingCodes": [
+        "DAT001"
+      ]
+    },
+    {
+      "type": "DATA",
+      "name": "INSERT APX_DEMO_ITEMS",
+      "line": 1092,
+      "disposition": "MANUAL",
+      "emitted": false,
+      "findingCodes": [
+        "DAT001"
+      ]
+    },
+    {
+      "type": "DATA",
+      "name": "INSERT APX_DEMO_ITEMS",
+      "line": 1093,
+      "disposition": "MANUAL",
+      "emitted": false,
+      "findingCodes": [
+        "DAT001"
+      ]
+    },
+    {
+      "type": "DATA",
+      "name": "INSERT APX_DEMO_ITEMS",
+      "line": 1094,
+      "disposition": "MANUAL",
+      "emitted": false,
+      "findingCodes": [
+        "DAT001"
+      ]
+    },
+    {
+      "type": "DATA",
+      "name": "DECLARE L_ITEM",
+      "line": 1096,
+      "disposition": "MANUAL",
+      "emitted": false,
+      "findingCodes": [
+        "DAT001"
+      ]
+    }
+  ],
+  "tables": [
+    {
+      "kind": "TABLE",
+      "name": "APX_DEMO_ROLES",
+      "owner": null,
+      "line": 12,
+      "columns": [
+        {
+          "name": "ROLE_CODE",
+          "line": 13,
+          "nullable": false,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (30)",
+          "targetType": "varchar(30)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "role_code"
+        },
+        {
+          "name": "ROLE_NAME",
+          "line": 14,
+          "nullable": false,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (100)",
+          "targetType": "varchar(100)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "role_name"
+        },
+        {
+          "name": "DESCRIPTION",
+          "line": 15,
+          "nullable": true,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (400)",
+          "targetType": "varchar(400)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "description"
+        }
+      ],
+      "constraints": [
+        {
+          "name": "APX_DEMO_ROLES_PK",
+          "line": 16,
+          "origin": "CREATE TABLE",
+          "enabled": true,
+          "validated": true,
+          "kind": "PRIMARY KEY",
+          "columns": [
+            "ROLE_CODE"
+          ],
+          "findings": [],
+          "targetName": "apx_demo_roles_pk",
+          "emit": true
+        }
+      ],
+      "findings": [
+        {
+          "code": "SCH004",
+          "disposition": "ASSISTED",
+          "message": "Character columns: Oracle stores '' as NULL and VARCHAR2 length semantics depend on BYTE/CHAR/NLS_LENGTH_SEMANTICS.",
+          "object": "APX_DEMO_ROLES",
+          "line": 12,
+          "detail": "role_code, role_name, description"
+        }
+      ],
+      "comments": {},
+      "targetName": "apx_demo_roles",
+      "blockedReasons": [],
+      "emit": true,
+      "omitted": []
+    },
+    {
+      "kind": "TABLE",
+      "name": "APX_DEMO_USER_ROLES",
+      "owner": null,
+      "line": 19,
+      "columns": [
+        {
+          "name": "USER_ROLE_ID",
+          "line": 20,
+          "nullable": false,
+          "findings": [
+            {
+              "code": "SCH005",
+              "disposition": "ASSISTED",
+              "message": "Identity BY DEFAULT ON NULL mapped to GENERATED BY DEFAULT AS IDENTITY: an explicit NULL insert fails in PostgreSQL instead of generating a value; writers must omit the column.",
+              "object": "APX_DEMO_USER_ROLES.USER_ROLE_ID",
+              "line": 20
+            },
+            {
+              "code": "SCH006",
+              "disposition": "ASSISTED",
+              "message": "Identity on unconstrained NUMBER mapped to bigint; Oracle default identity MAXVALUE exceeds bigint.",
+              "object": "APX_DEMO_USER_ROLES.USER_ROLE_ID",
+              "line": 20
+            }
+          ],
+          "omitted": [],
+          "sourceType": "number",
+          "targetType": "bigint",
+          "typeFamily": "integer",
+          "identity": {
+            "mode": "BY DEFAULT",
+            "onNull": true,
+            "options": {},
+            "droppedOptions": [],
+            "manualOptions": [],
+            "target": "GENERATED BY DEFAULT AS IDENTITY"
+          },
+          "targetName": "user_role_id"
+        },
+        {
+          "name": "USERNAME",
+          "line": 21,
+          "nullable": false,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (255)",
+          "targetType": "varchar(255)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "username"
+        },
+        {
+          "name": "ROLE_CODE",
+          "line": 22,
+          "nullable": false,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (30)",
+          "targetType": "varchar(30)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "role_code"
+        },
+        {
+          "name": "CREATED_BY",
+          "line": 23,
+          "nullable": true,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (255)",
+          "targetType": "varchar(255)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "created_by"
+        },
+        {
+          "name": "CREATED_ON",
+          "line": 24,
+          "nullable": true,
+          "findings": [
+            {
+              "code": "SCH003",
+              "disposition": "ASSISTED",
+              "message": "Oracle DATE mapped to timestamp(0) without time zone (DATE stores time-of-day); confirm timezone policy.",
+              "object": "APX_DEMO_USER_ROLES.CREATED_ON",
+              "line": 24,
+              "detail": "date"
+            }
+          ],
+          "omitted": [],
+          "sourceType": "date",
+          "targetType": "timestamp(0) without time zone",
+          "typeFamily": "timestamp",
+          "targetName": "created_on"
+        },
+        {
+          "name": "UPDATED_BY",
+          "line": 25,
+          "nullable": true,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (255)",
+          "targetType": "varchar(255)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "updated_by"
+        },
+        {
+          "name": "UPDATED_ON",
+          "line": 26,
+          "nullable": true,
+          "findings": [
+            {
+              "code": "SCH003",
+              "disposition": "ASSISTED",
+              "message": "Oracle DATE mapped to timestamp(0) without time zone (DATE stores time-of-day); confirm timezone policy.",
+              "object": "APX_DEMO_USER_ROLES.UPDATED_ON",
+              "line": 26,
+              "detail": "date"
+            }
+          ],
+          "omitted": [],
+          "sourceType": "date",
+          "targetType": "timestamp(0) without time zone",
+          "typeFamily": "timestamp",
+          "targetName": "updated_on"
+        }
+      ],
+      "constraints": [
+        {
+          "name": "APX_DEMO_USER_ROLES_PK",
+          "line": 27,
+          "origin": "CREATE TABLE",
+          "enabled": true,
+          "validated": true,
+          "kind": "PRIMARY KEY",
+          "columns": [
+            "USER_ROLE_ID"
+          ],
+          "findings": [],
+          "targetName": "apx_demo_user_roles_pk",
+          "emit": true
+        },
+        {
+          "name": "APX_DEMO_USER_ROLES_U1",
+          "line": 28,
+          "origin": "CREATE TABLE",
+          "enabled": true,
+          "validated": true,
+          "kind": "UNIQUE",
+          "columns": [
+            "USERNAME",
+            "ROLE_CODE"
+          ],
+          "findings": [],
+          "targetName": "apx_demo_user_roles_u1",
+          "emit": true
+        },
+        {
+          "name": "APX_DEMO_USER_ROLES_FK1",
+          "line": 29,
+          "origin": "CREATE TABLE",
+          "enabled": true,
+          "validated": true,
+          "columns": [
+            "ROLE_CODE"
+          ],
+          "kind": "FOREIGN KEY",
+          "targetOwner": null,
+          "target": "APX_DEMO_ROLES",
+          "targetColumns": [
+            "ROLE_CODE"
+          ],
+          "findings": [],
+          "targetName": "apx_demo_user_roles_fk1",
+          "emit": true
+        }
+      ],
+      "findings": [
+        {
+          "code": "SCH004",
+          "disposition": "ASSISTED",
+          "message": "Character columns: Oracle stores '' as NULL and VARCHAR2 length semantics depend on BYTE/CHAR/NLS_LENGTH_SEMANTICS.",
+          "object": "APX_DEMO_USER_ROLES",
+          "line": 19,
+          "detail": "username, role_code, created_by, updated_by"
+        }
+      ],
+      "comments": {},
+      "targetName": "apx_demo_user_roles",
+      "blockedReasons": [],
+      "emit": true,
+      "omitted": []
+    },
+    {
+      "kind": "TABLE",
+      "name": "APX_DEMO_DOC_TYPES",
+      "owner": null,
+      "line": 33,
+      "columns": [
+        {
+          "name": "DOC_TYPE",
+          "line": 34,
+          "nullable": false,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (10)",
+          "targetType": "varchar(10)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "doc_type"
+        },
+        {
+          "name": "DOC_NAME",
+          "line": 35,
+          "nullable": false,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (100)",
+          "targetType": "varchar(100)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "doc_name"
+        },
+        {
+          "name": "PREFIX",
+          "line": 36,
+          "nullable": false,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (10)",
+          "targetType": "varchar(10)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "prefix"
+        },
+        {
+          "name": "TABLE_NAME",
+          "line": 37,
+          "nullable": false,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (128)",
+          "targetType": "varchar(128)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "table_name"
+        },
+        {
+          "name": "PK_COLUMN",
+          "line": 38,
+          "nullable": false,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (128)",
+          "targetType": "varchar(128)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "pk_column"
+        },
+        {
+          "name": "NUMBER_COLUMN",
+          "line": 39,
+          "nullable": false,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (128)",
+          "targetType": "varchar(128)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "number_column"
+        },
+        {
+          "name": "STATUS_COLUMN",
+          "line": 40,
+          "nullable": false,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (128)",
+          "targetType": "varchar(128)",
+          "typeFamily": "text",
+          "character": true,
+          "default": {
+            "source": "'STATUS'",
+            "onNull": false,
+            "target": "'STATUS'"
+          },
+          "targetName": "status_column"
+        },
+        {
+          "name": "AMOUNT_EXPR",
+          "line": 41,
+          "nullable": true,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (4000)",
+          "targetType": "varchar(4000)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "amount_expr"
+        },
+        {
+          "name": "VALIDATE_PROC",
+          "line": 42,
+          "nullable": true,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (261)",
+          "targetType": "varchar(261)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "validate_proc"
+        },
+        {
+          "name": "APPROVER1_ROLE",
+          "line": 43,
+          "nullable": true,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (30)",
+          "targetType": "varchar(30)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "approver1_role"
+        },
+        {
+          "name": "APPROVER2_ROLE",
+          "line": 44,
+          "nullable": true,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (30)",
+          "targetType": "varchar(30)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "approver2_role"
+        },
+        {
+          "name": "LEVEL2_LIMIT",
+          "line": 45,
+          "nullable": false,
+          "findings": [
+            {
+              "code": "SCH002",
+              "disposition": "ASSISTED",
+              "message": "Unconstrained NUMBER mapped to numeric; verify range/scale against data.",
+              "object": "APX_DEMO_DOC_TYPES.LEVEL2_LIMIT",
+              "line": 45,
+              "detail": "number"
+            }
+          ],
+          "omitted": [],
+          "sourceType": "number",
+          "targetType": "numeric",
+          "typeFamily": "numeric",
+          "default": {
+            "source": "0",
+            "onNull": false,
+            "target": "0"
+          },
+          "targetName": "level2_limit"
+        }
+      ],
+      "constraints": [
+        {
+          "name": "APX_DEMO_DOC_TYPES_PK",
+          "line": 46,
+          "origin": "CREATE TABLE",
+          "enabled": true,
+          "validated": true,
+          "kind": "PRIMARY KEY",
+          "columns": [
+            "DOC_TYPE"
+          ],
+          "findings": [],
+          "targetName": "apx_demo_doc_types_pk",
+          "emit": true
+        },
+        {
+          "name": "APX_DEMO_DOC_TYPES_FK1",
+          "line": 47,
+          "origin": "CREATE TABLE",
+          "enabled": true,
+          "validated": true,
+          "columns": [
+            "APPROVER1_ROLE"
+          ],
+          "kind": "FOREIGN KEY",
+          "targetOwner": null,
+          "target": "APX_DEMO_ROLES",
+          "targetColumns": [
+            "ROLE_CODE"
+          ],
+          "findings": [],
+          "targetName": "apx_demo_doc_types_fk1",
+          "emit": true
+        },
+        {
+          "name": "APX_DEMO_DOC_TYPES_FK2",
+          "line": 48,
+          "origin": "CREATE TABLE",
+          "enabled": true,
+          "validated": true,
+          "columns": [
+            "APPROVER2_ROLE"
+          ],
+          "kind": "FOREIGN KEY",
+          "targetOwner": null,
+          "target": "APX_DEMO_ROLES",
+          "targetColumns": [
+            "ROLE_CODE"
+          ],
+          "findings": [],
+          "targetName": "apx_demo_doc_types_fk2",
+          "emit": true
+        }
+      ],
+      "findings": [
+        {
+          "code": "SCH004",
+          "disposition": "ASSISTED",
+          "message": "Character columns: Oracle stores '' as NULL and VARCHAR2 length semantics depend on BYTE/CHAR/NLS_LENGTH_SEMANTICS.",
+          "object": "APX_DEMO_DOC_TYPES",
+          "line": 33,
+          "detail": "doc_type, doc_name, prefix, table_name, pk_column, number_column, status_column, amount_expr, validate_proc, approver1_role, approver2_role"
+        }
+      ],
+      "comments": {},
+      "targetName": "apx_demo_doc_types",
+      "blockedReasons": [],
+      "emit": true,
+      "omitted": []
+    },
+    {
+      "kind": "TABLE",
+      "name": "APX_DEMO_DOC_SEQ",
+      "owner": null,
+      "line": 51,
+      "columns": [
+        {
+          "name": "DOC_TYPE",
+          "line": 52,
+          "nullable": false,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (10)",
+          "targetType": "varchar(10)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "doc_type"
+        },
+        {
+          "name": "PERIOD",
+          "line": 53,
+          "nullable": false,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (4)",
+          "targetType": "varchar(4)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "period"
+        },
+        {
+          "name": "LAST_NO",
+          "line": 54,
+          "nullable": false,
+          "findings": [
+            {
+              "code": "SCH002",
+              "disposition": "ASSISTED",
+              "message": "Unconstrained NUMBER mapped to numeric; verify range/scale against data.",
+              "object": "APX_DEMO_DOC_SEQ.LAST_NO",
+              "line": 54,
+              "detail": "number"
+            }
+          ],
+          "omitted": [],
+          "sourceType": "number",
+          "targetType": "numeric",
+          "typeFamily": "numeric",
+          "default": {
+            "source": "0",
+            "onNull": false,
+            "target": "0"
+          },
+          "targetName": "last_no"
+        }
+      ],
+      "constraints": [
+        {
+          "name": "APX_DEMO_DOC_SEQ_PK",
+          "line": 55,
+          "origin": "CREATE TABLE",
+          "enabled": true,
+          "validated": true,
+          "kind": "PRIMARY KEY",
+          "columns": [
+            "DOC_TYPE",
+            "PERIOD"
+          ],
+          "findings": [],
+          "targetName": "apx_demo_doc_seq_pk",
+          "emit": true
+        }
+      ],
+      "findings": [
+        {
+          "code": "SCH004",
+          "disposition": "ASSISTED",
+          "message": "Character columns: Oracle stores '' as NULL and VARCHAR2 length semantics depend on BYTE/CHAR/NLS_LENGTH_SEMANTICS.",
+          "object": "APX_DEMO_DOC_SEQ",
+          "line": 51,
+          "detail": "doc_type, period"
+        }
+      ],
+      "comments": {},
+      "targetName": "apx_demo_doc_seq",
+      "blockedReasons": [],
+      "emit": true,
+      "omitted": []
+    },
+    {
+      "kind": "TABLE",
+      "name": "APX_DEMO_APPROVALS",
+      "owner": null,
+      "line": 58,
+      "columns": [
+        {
+          "name": "APPROVAL_ID",
+          "line": 59,
+          "nullable": false,
+          "findings": [
+            {
+              "code": "SCH005",
+              "disposition": "ASSISTED",
+              "message": "Identity BY DEFAULT ON NULL mapped to GENERATED BY DEFAULT AS IDENTITY: an explicit NULL insert fails in PostgreSQL instead of generating a value; writers must omit the column.",
+              "object": "APX_DEMO_APPROVALS.APPROVAL_ID",
+              "line": 59
+            },
+            {
+              "code": "SCH006",
+              "disposition": "ASSISTED",
+              "message": "Identity on unconstrained NUMBER mapped to bigint; Oracle default identity MAXVALUE exceeds bigint.",
+              "object": "APX_DEMO_APPROVALS.APPROVAL_ID",
+              "line": 59
+            }
+          ],
+          "omitted": [],
+          "sourceType": "number",
+          "targetType": "bigint",
+          "typeFamily": "integer",
+          "identity": {
+            "mode": "BY DEFAULT",
+            "onNull": true,
+            "options": {},
+            "droppedOptions": [],
+            "manualOptions": [],
+            "target": "GENERATED BY DEFAULT AS IDENTITY"
+          },
+          "targetName": "approval_id"
+        },
+        {
+          "name": "DOC_TYPE",
+          "line": 60,
+          "nullable": false,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (10)",
+          "targetType": "varchar(10)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "doc_type"
+        },
+        {
+          "name": "DOC_ID",
+          "line": 61,
+          "nullable": false,
+          "findings": [
+            {
+              "code": "SCH002",
+              "disposition": "ASSISTED",
+              "message": "Unconstrained NUMBER mapped to numeric; verify range/scale against data.",
+              "object": "APX_DEMO_APPROVALS.DOC_ID",
+              "line": 61,
+              "detail": "number"
+            }
+          ],
+          "omitted": [],
+          "sourceType": "number",
+          "targetType": "numeric",
+          "typeFamily": "numeric",
+          "targetName": "doc_id"
+        },
+        {
+          "name": "DOC_NO",
+          "line": 62,
+          "nullable": true,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (30)",
+          "targetType": "varchar(30)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "doc_no"
+        },
+        {
+          "name": "APPROVAL_LEVEL",
+          "line": 63,
+          "nullable": false,
+          "findings": [
+            {
+              "code": "SCH002",
+              "disposition": "ASSISTED",
+              "message": "Unconstrained NUMBER mapped to numeric; verify range/scale against data.",
+              "object": "APX_DEMO_APPROVALS.APPROVAL_LEVEL",
+              "line": 63,
+              "detail": "number"
+            }
+          ],
+          "omitted": [],
+          "sourceType": "number",
+          "targetType": "numeric",
+          "typeFamily": "numeric",
+          "default": {
+            "source": "1",
+            "onNull": false,
+            "target": "1"
+          },
+          "targetName": "approval_level"
+        },
+        {
+          "name": "APPROVER_ROLE",
+          "line": 64,
+          "nullable": false,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (30)",
+          "targetType": "varchar(30)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "approver_role"
+        },
+        {
+          "name": "AMOUNT",
+          "line": 65,
+          "nullable": true,
+          "findings": [
+            {
+              "code": "SCH002",
+              "disposition": "ASSISTED",
+              "message": "Unconstrained NUMBER mapped to numeric; verify range/scale against data.",
+              "object": "APX_DEMO_APPROVALS.AMOUNT",
+              "line": 65,
+              "detail": "number"
+            }
+          ],
+          "omitted": [],
+          "sourceType": "number",
+          "targetType": "numeric",
+          "typeFamily": "numeric",
+          "targetName": "amount"
+        },
+        {
+          "name": "REQUESTED_BY",
+          "line": 66,
+          "nullable": false,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (255)",
+          "targetType": "varchar(255)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "requested_by"
+        },
+        {
+          "name": "REQUESTED_ON",
+          "line": 67,
+          "nullable": false,
+          "findings": [
+            {
+              "code": "SCH003",
+              "disposition": "ASSISTED",
+              "message": "Oracle DATE mapped to timestamp(0) without time zone (DATE stores time-of-day); confirm timezone policy.",
+              "object": "APX_DEMO_APPROVALS.REQUESTED_ON",
+              "line": 67,
+              "detail": "date"
+            },
+            {
+              "code": "SCH011",
+              "disposition": "ASSISTED",
+              "message": "Default expression converted with registered rewrites.",
+              "object": "APX_DEMO_APPROVALS.REQUESTED_ON",
+              "line": 67,
+              "detail": "sysdate"
+            },
+            {
+              "code": "EXP002",
+              "disposition": "ASSISTED",
+              "message": "SYSDATE rewritten to LOCALTIMESTAMP(0); confirm database/session timezone policy.",
+              "object": "APX_DEMO_APPROVALS.REQUESTED_ON",
+              "line": 67
+            }
+          ],
+          "omitted": [],
+          "sourceType": "date",
+          "targetType": "timestamp(0) without time zone",
+          "typeFamily": "timestamp",
+          "default": {
+            "source": "sysdate",
+            "onNull": false,
+            "target": "LOCALTIMESTAMP(0)"
+          },
+          "targetName": "requested_on"
+        },
+        {
+          "name": "STATUS",
+          "line": 68,
+          "nullable": false,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (20)",
+          "targetType": "varchar(20)",
+          "typeFamily": "text",
+          "character": true,
+          "default": {
+            "source": "'PENDING'",
+            "onNull": false,
+            "target": "'PENDING'"
+          },
+          "targetName": "status"
+        },
+        {
+          "name": "ACTED_BY",
+          "line": 69,
+          "nullable": true,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (255)",
+          "targetType": "varchar(255)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "acted_by"
+        },
+        {
+          "name": "ACTED_ON",
+          "line": 70,
+          "nullable": true,
+          "findings": [
+            {
+              "code": "SCH003",
+              "disposition": "ASSISTED",
+              "message": "Oracle DATE mapped to timestamp(0) without time zone (DATE stores time-of-day); confirm timezone policy.",
+              "object": "APX_DEMO_APPROVALS.ACTED_ON",
+              "line": 70,
+              "detail": "date"
+            }
+          ],
+          "omitted": [],
+          "sourceType": "date",
+          "targetType": "timestamp(0) without time zone",
+          "typeFamily": "timestamp",
+          "targetName": "acted_on"
+        },
+        {
+          "name": "NOTE",
+          "line": 71,
+          "nullable": true,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (1000)",
+          "targetType": "varchar(1000)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "note"
+        }
+      ],
+      "constraints": [
+        {
+          "name": "APX_DEMO_APPROVALS_PK",
+          "line": 72,
+          "origin": "CREATE TABLE",
+          "enabled": true,
+          "validated": true,
+          "kind": "PRIMARY KEY",
+          "columns": [
+            "APPROVAL_ID"
+          ],
+          "findings": [],
+          "targetName": "apx_demo_approvals_pk",
+          "emit": true
+        },
+        {
+          "name": "APX_DEMO_APPROVALS_CK1",
+          "line": 73,
+          "origin": "CREATE TABLE",
+          "enabled": true,
+          "validated": true,
+          "kind": "CHECK",
+          "expression": "status in ('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED')",
+          "columns": [
+            "STATUS"
+          ],
+          "findings": [],
+          "targetName": "apx_demo_approvals_ck1",
+          "emit": true,
+          "targetExpression": "status in ('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED')"
+        },
+        {
+          "name": "APX_DEMO_APPROVALS_FK1",
+          "line": 74,
+          "origin": "CREATE TABLE",
+          "enabled": true,
+          "validated": true,
+          "columns": [
+            "DOC_TYPE"
+          ],
+          "kind": "FOREIGN KEY",
+          "targetOwner": null,
+          "target": "APX_DEMO_DOC_TYPES",
+          "targetColumns": [
+            "DOC_TYPE"
+          ],
+          "findings": [],
+          "targetName": "apx_demo_approvals_fk1",
+          "emit": true
+        }
+      ],
+      "findings": [
+        {
+          "code": "SCH004",
+          "disposition": "ASSISTED",
+          "message": "Character columns: Oracle stores '' as NULL and VARCHAR2 length semantics depend on BYTE/CHAR/NLS_LENGTH_SEMANTICS.",
+          "object": "APX_DEMO_APPROVALS",
+          "line": 58,
+          "detail": "doc_type, doc_no, approver_role, requested_by, status, acted_by, note"
+        }
+      ],
+      "comments": {},
+      "targetName": "apx_demo_approvals",
+      "blockedReasons": [],
+      "emit": true,
+      "omitted": []
+    },
+    {
+      "kind": "TABLE",
+      "name": "APX_DEMO_DEPARTMENTS",
+      "owner": null,
+      "line": 87,
+      "columns": [
+        {
+          "name": "DEPARTMENT_ID",
+          "line": 88,
+          "nullable": false,
+          "findings": [
+            {
+              "code": "SCH005",
+              "disposition": "ASSISTED",
+              "message": "Identity BY DEFAULT ON NULL mapped to GENERATED BY DEFAULT AS IDENTITY: an explicit NULL insert fails in PostgreSQL instead of generating a value; writers must omit the column.",
+              "object": "APX_DEMO_DEPARTMENTS.DEPARTMENT_ID",
+              "line": 88
+            },
+            {
+              "code": "SCH006",
+              "disposition": "ASSISTED",
+              "message": "Identity on unconstrained NUMBER mapped to bigint; Oracle default identity MAXVALUE exceeds bigint.",
+              "object": "APX_DEMO_DEPARTMENTS.DEPARTMENT_ID",
+              "line": 88
+            }
+          ],
+          "omitted": [],
+          "sourceType": "number",
+          "targetType": "bigint",
+          "typeFamily": "integer",
+          "identity": {
+            "mode": "BY DEFAULT",
+            "onNull": true,
+            "options": {},
+            "droppedOptions": [],
+            "manualOptions": [],
+            "target": "GENERATED BY DEFAULT AS IDENTITY"
+          },
+          "targetName": "department_id"
+        },
+        {
+          "name": "DEPT_CODE",
+          "line": 89,
+          "nullable": false,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (20)",
+          "targetType": "varchar(20)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "dept_code"
+        },
+        {
+          "name": "DEPT_NAME",
+          "line": 90,
+          "nullable": false,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (100)",
+          "targetType": "varchar(100)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "dept_name"
+        },
+        {
+          "name": "ACTIVE_YN",
+          "line": 91,
+          "nullable": true,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (1)",
+          "targetType": "varchar(1)",
+          "typeFamily": "text",
+          "character": true,
+          "default": {
+            "source": "'Y'",
+            "onNull": false,
+            "target": "'Y'"
+          },
+          "targetName": "active_yn"
+        },
+        {
+          "name": "CREATED_BY",
+          "line": 92,
+          "nullable": true,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (255)",
+          "targetType": "varchar(255)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "created_by"
+        },
+        {
+          "name": "CREATED_ON",
+          "line": 93,
+          "nullable": true,
+          "findings": [
+            {
+              "code": "SCH003",
+              "disposition": "ASSISTED",
+              "message": "Oracle DATE mapped to timestamp(0) without time zone (DATE stores time-of-day); confirm timezone policy.",
+              "object": "APX_DEMO_DEPARTMENTS.CREATED_ON",
+              "line": 93,
+              "detail": "date"
+            }
+          ],
+          "omitted": [],
+          "sourceType": "date",
+          "targetType": "timestamp(0) without time zone",
+          "typeFamily": "timestamp",
+          "targetName": "created_on"
+        },
+        {
+          "name": "UPDATED_BY",
+          "line": 94,
+          "nullable": true,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (255)",
+          "targetType": "varchar(255)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "updated_by"
+        },
+        {
+          "name": "UPDATED_ON",
+          "line": 95,
+          "nullable": true,
+          "findings": [
+            {
+              "code": "SCH003",
+              "disposition": "ASSISTED",
+              "message": "Oracle DATE mapped to timestamp(0) without time zone (DATE stores time-of-day); confirm timezone policy.",
+              "object": "APX_DEMO_DEPARTMENTS.UPDATED_ON",
+              "line": 95,
+              "detail": "date"
+            }
+          ],
+          "omitted": [],
+          "sourceType": "date",
+          "targetType": "timestamp(0) without time zone",
+          "typeFamily": "timestamp",
+          "targetName": "updated_on"
+        }
+      ],
+      "constraints": [
+        {
+          "name": "APX_DEMO_DEPARTMENTS_PK",
+          "line": 96,
+          "origin": "CREATE TABLE",
+          "enabled": true,
+          "validated": true,
+          "kind": "PRIMARY KEY",
+          "columns": [
+            "DEPARTMENT_ID"
+          ],
+          "findings": [],
+          "targetName": "apx_demo_departments_pk",
+          "emit": true
+        },
+        {
+          "name": "APX_DEMO_DEPARTMENTS_U1",
+          "line": 97,
+          "origin": "CREATE TABLE",
+          "enabled": true,
+          "validated": true,
+          "kind": "UNIQUE",
+          "columns": [
+            "DEPT_CODE"
+          ],
+          "findings": [],
+          "targetName": "apx_demo_departments_u1",
+          "emit": true
+        },
+        {
+          "name": "APX_DEMO_DEPARTMENTS_CK1",
+          "line": 98,
+          "origin": "CREATE TABLE",
+          "enabled": true,
+          "validated": true,
+          "kind": "CHECK",
+          "expression": "active_yn in ('Y', 'N')",
+          "columns": [
+            "ACTIVE_YN"
+          ],
+          "findings": [],
+          "targetName": "apx_demo_departments_ck1",
+          "emit": true,
+          "targetExpression": "active_yn in ('Y', 'N')"
+        }
+      ],
+      "findings": [
+        {
+          "code": "SCH004",
+          "disposition": "ASSISTED",
+          "message": "Character columns: Oracle stores '' as NULL and VARCHAR2 length semantics depend on BYTE/CHAR/NLS_LENGTH_SEMANTICS.",
+          "object": "APX_DEMO_DEPARTMENTS",
+          "line": 87,
+          "detail": "dept_code, dept_name, active_yn, created_by, updated_by"
+        }
+      ],
+      "comments": {},
+      "targetName": "apx_demo_departments",
+      "blockedReasons": [],
+      "emit": true,
+      "omitted": []
+    },
+    {
+      "kind": "TABLE",
+      "name": "APX_DEMO_ITEMS",
+      "owner": null,
+      "line": 101,
+      "columns": [
+        {
+          "name": "ITEM_ID",
+          "line": 102,
+          "nullable": false,
+          "findings": [
+            {
+              "code": "SCH005",
+              "disposition": "ASSISTED",
+              "message": "Identity BY DEFAULT ON NULL mapped to GENERATED BY DEFAULT AS IDENTITY: an explicit NULL insert fails in PostgreSQL instead of generating a value; writers must omit the column.",
+              "object": "APX_DEMO_ITEMS.ITEM_ID",
+              "line": 102
+            },
+            {
+              "code": "SCH006",
+              "disposition": "ASSISTED",
+              "message": "Identity on unconstrained NUMBER mapped to bigint; Oracle default identity MAXVALUE exceeds bigint.",
+              "object": "APX_DEMO_ITEMS.ITEM_ID",
+              "line": 102
+            }
+          ],
+          "omitted": [],
+          "sourceType": "number",
+          "targetType": "bigint",
+          "typeFamily": "integer",
+          "identity": {
+            "mode": "BY DEFAULT",
+            "onNull": true,
+            "options": {},
+            "droppedOptions": [],
+            "manualOptions": [],
+            "target": "GENERATED BY DEFAULT AS IDENTITY"
+          },
+          "targetName": "item_id"
+        },
+        {
+          "name": "ITEM_CODE",
+          "line": 103,
+          "nullable": false,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (30)",
+          "targetType": "varchar(30)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "item_code"
+        },
+        {
+          "name": "ITEM_NAME",
+          "line": 104,
+          "nullable": false,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (200)",
+          "targetType": "varchar(200)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "item_name"
+        },
+        {
+          "name": "CATEGORY",
+          "line": 105,
+          "nullable": false,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (20)",
+          "targetType": "varchar(20)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "category"
+        },
+        {
+          "name": "UOM",
+          "line": 106,
+          "nullable": false,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (10)",
+          "targetType": "varchar(10)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "uom"
+        },
+        {
+          "name": "STD_PRICE",
+          "line": 107,
+          "nullable": false,
+          "findings": [
+            {
+              "code": "SCH002",
+              "disposition": "ASSISTED",
+              "message": "Unconstrained NUMBER mapped to numeric; verify range/scale against data.",
+              "object": "APX_DEMO_ITEMS.STD_PRICE",
+              "line": 107,
+              "detail": "number"
+            }
+          ],
+          "omitted": [],
+          "sourceType": "number",
+          "targetType": "numeric",
+          "typeFamily": "numeric",
+          "default": {
+            "source": "0",
+            "onNull": false,
+            "target": "0"
+          },
+          "targetName": "std_price"
+        },
+        {
+          "name": "ACTIVE_YN",
+          "line": 108,
+          "nullable": true,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (1)",
+          "targetType": "varchar(1)",
+          "typeFamily": "text",
+          "character": true,
+          "default": {
+            "source": "'Y'",
+            "onNull": false,
+            "target": "'Y'"
+          },
+          "targetName": "active_yn"
+        },
+        {
+          "name": "CREATED_BY",
+          "line": 109,
+          "nullable": true,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (255)",
+          "targetType": "varchar(255)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "created_by"
+        },
+        {
+          "name": "CREATED_ON",
+          "line": 110,
+          "nullable": true,
+          "findings": [
+            {
+              "code": "SCH003",
+              "disposition": "ASSISTED",
+              "message": "Oracle DATE mapped to timestamp(0) without time zone (DATE stores time-of-day); confirm timezone policy.",
+              "object": "APX_DEMO_ITEMS.CREATED_ON",
+              "line": 110,
+              "detail": "date"
+            }
+          ],
+          "omitted": [],
+          "sourceType": "date",
+          "targetType": "timestamp(0) without time zone",
+          "typeFamily": "timestamp",
+          "targetName": "created_on"
+        },
+        {
+          "name": "UPDATED_BY",
+          "line": 111,
+          "nullable": true,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (255)",
+          "targetType": "varchar(255)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "updated_by"
+        },
+        {
+          "name": "UPDATED_ON",
+          "line": 112,
+          "nullable": true,
+          "findings": [
+            {
+              "code": "SCH003",
+              "disposition": "ASSISTED",
+              "message": "Oracle DATE mapped to timestamp(0) without time zone (DATE stores time-of-day); confirm timezone policy.",
+              "object": "APX_DEMO_ITEMS.UPDATED_ON",
+              "line": 112,
+              "detail": "date"
+            }
+          ],
+          "omitted": [],
+          "sourceType": "date",
+          "targetType": "timestamp(0) without time zone",
+          "typeFamily": "timestamp",
+          "targetName": "updated_on"
+        }
+      ],
+      "constraints": [
+        {
+          "name": "APX_DEMO_ITEMS_PK",
+          "line": 113,
+          "origin": "CREATE TABLE",
+          "enabled": true,
+          "validated": true,
+          "kind": "PRIMARY KEY",
+          "columns": [
+            "ITEM_ID"
+          ],
+          "findings": [],
+          "targetName": "apx_demo_items_pk",
+          "emit": true
+        },
+        {
+          "name": "APX_DEMO_ITEMS_U1",
+          "line": 114,
+          "origin": "CREATE TABLE",
+          "enabled": true,
+          "validated": true,
+          "kind": "UNIQUE",
+          "columns": [
+            "ITEM_CODE"
+          ],
+          "findings": [],
+          "targetName": "apx_demo_items_u1",
+          "emit": true
+        },
+        {
+          "name": "APX_DEMO_ITEMS_CK1",
+          "line": 115,
+          "origin": "CREATE TABLE",
+          "enabled": true,
+          "validated": true,
+          "kind": "CHECK",
+          "expression": "category in ('ATK', 'IT', 'CONSUMABLE')",
+          "columns": [
+            "CATEGORY"
+          ],
+          "findings": [],
+          "targetName": "apx_demo_items_ck1",
+          "emit": true,
+          "targetExpression": "category in ('ATK', 'IT', 'CONSUMABLE')"
+        },
+        {
+          "name": "APX_DEMO_ITEMS_CK2",
+          "line": 116,
+          "origin": "CREATE TABLE",
+          "enabled": true,
+          "validated": true,
+          "kind": "CHECK",
+          "expression": "std_price >= 0",
+          "columns": [
+            "STD_PRICE"
+          ],
+          "findings": [],
+          "targetName": "apx_demo_items_ck2",
+          "emit": true,
+          "targetExpression": "std_price >= 0"
+        },
+        {
+          "name": "APX_DEMO_ITEMS_CK3",
+          "line": 117,
+          "origin": "CREATE TABLE",
+          "enabled": true,
+          "validated": true,
+          "kind": "CHECK",
+          "expression": "active_yn in ('Y', 'N')",
+          "columns": [
+            "ACTIVE_YN"
+          ],
+          "findings": [],
+          "targetName": "apx_demo_items_ck3",
+          "emit": true,
+          "targetExpression": "active_yn in ('Y', 'N')"
+        }
+      ],
+      "findings": [
+        {
+          "code": "SCH004",
+          "disposition": "ASSISTED",
+          "message": "Character columns: Oracle stores '' as NULL and VARCHAR2 length semantics depend on BYTE/CHAR/NLS_LENGTH_SEMANTICS.",
+          "object": "APX_DEMO_ITEMS",
+          "line": 101,
+          "detail": "item_code, item_name, category, uom, active_yn, created_by, updated_by"
+        }
+      ],
+      "comments": {},
+      "targetName": "apx_demo_items",
+      "blockedReasons": [],
+      "emit": true,
+      "omitted": []
+    },
+    {
+      "kind": "TABLE",
+      "name": "APX_DEMO_REQUESTS",
+      "owner": null,
+      "line": 120,
+      "columns": [
+        {
+          "name": "REQUEST_ID",
+          "line": 121,
+          "nullable": false,
+          "findings": [
+            {
+              "code": "SCH005",
+              "disposition": "ASSISTED",
+              "message": "Identity BY DEFAULT ON NULL mapped to GENERATED BY DEFAULT AS IDENTITY: an explicit NULL insert fails in PostgreSQL instead of generating a value; writers must omit the column.",
+              "object": "APX_DEMO_REQUESTS.REQUEST_ID",
+              "line": 121
+            },
+            {
+              "code": "SCH006",
+              "disposition": "ASSISTED",
+              "message": "Identity on unconstrained NUMBER mapped to bigint; Oracle default identity MAXVALUE exceeds bigint.",
+              "object": "APX_DEMO_REQUESTS.REQUEST_ID",
+              "line": 121
+            }
+          ],
+          "omitted": [],
+          "sourceType": "number",
+          "targetType": "bigint",
+          "typeFamily": "integer",
+          "identity": {
+            "mode": "BY DEFAULT",
+            "onNull": true,
+            "options": {},
+            "droppedOptions": [],
+            "manualOptions": [],
+            "target": "GENERATED BY DEFAULT AS IDENTITY"
+          },
+          "targetName": "request_id"
+        },
+        {
+          "name": "REQUEST_NO",
+          "line": 122,
+          "nullable": true,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (30)",
+          "targetType": "varchar(30)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "request_no"
+        },
+        {
+          "name": "DEPARTMENT_ID",
+          "line": 123,
+          "nullable": false,
+          "findings": [
+            {
+              "code": "SCH021",
+              "disposition": "ASSISTED",
+              "message": "Foreign-key column type aligned to the referenced key type.",
+              "object": "APX_DEMO_REQUESTS.DEPARTMENT_ID",
+              "line": 123,
+              "detail": "bigint via APX_DEMO_REQUESTS_FK1"
+            }
+          ],
+          "omitted": [],
+          "sourceType": "number",
+          "targetType": "bigint",
+          "typeFamily": "integer",
+          "targetName": "department_id"
+        },
+        {
+          "name": "REQUEST_DATE",
+          "line": 124,
+          "nullable": false,
+          "findings": [
+            {
+              "code": "SCH003",
+              "disposition": "ASSISTED",
+              "message": "Oracle DATE mapped to timestamp(0) without time zone (DATE stores time-of-day); confirm timezone policy.",
+              "object": "APX_DEMO_REQUESTS.REQUEST_DATE",
+              "line": 124,
+              "detail": "date"
+            },
+            {
+              "code": "SCH011",
+              "disposition": "ASSISTED",
+              "message": "Default expression converted with registered rewrites.",
+              "object": "APX_DEMO_REQUESTS.REQUEST_DATE",
+              "line": 124,
+              "detail": "trunc(sysdate)"
+            },
+            {
+              "code": "EXP019",
+              "disposition": "ASSISTED",
+              "message": "TRUNC(SYSDATE) rewritten to CAST(CURRENT_DATE AS timestamp(0)); confirm timezone policy.",
+              "object": "APX_DEMO_REQUESTS.REQUEST_DATE",
+              "line": 124
+            }
+          ],
+          "omitted": [],
+          "sourceType": "date",
+          "targetType": "timestamp(0) without time zone",
+          "typeFamily": "timestamp",
+          "default": {
+            "source": "trunc(sysdate)",
+            "onNull": false,
+            "target": "CAST(CURRENT_DATE AS timestamp(0))"
+          },
+          "targetName": "request_date"
+        },
+        {
+          "name": "NEED_DATE",
+          "line": 125,
+          "nullable": true,
+          "findings": [
+            {
+              "code": "SCH003",
+              "disposition": "ASSISTED",
+              "message": "Oracle DATE mapped to timestamp(0) without time zone (DATE stores time-of-day); confirm timezone policy.",
+              "object": "APX_DEMO_REQUESTS.NEED_DATE",
+              "line": 125,
+              "detail": "date"
+            }
+          ],
+          "omitted": [],
+          "sourceType": "date",
+          "targetType": "timestamp(0) without time zone",
+          "typeFamily": "timestamp",
+          "targetName": "need_date"
+        },
+        {
+          "name": "PURPOSE",
+          "line": 126,
+          "nullable": false,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (300)",
+          "targetType": "varchar(300)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "purpose"
+        },
+        {
+          "name": "NOTES",
+          "line": 127,
+          "nullable": true,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (1000)",
+          "targetType": "varchar(1000)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "notes"
+        },
+        {
+          "name": "STATUS",
+          "line": 128,
+          "nullable": false,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (20)",
+          "targetType": "varchar(20)",
+          "typeFamily": "text",
+          "character": true,
+          "default": {
+            "source": "'DRAFT'",
+            "onNull": false,
+            "target": "'DRAFT'"
+          },
+          "targetName": "status"
+        },
+        {
+          "name": "CREATED_BY",
+          "line": 129,
+          "nullable": true,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (255)",
+          "targetType": "varchar(255)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "created_by"
+        },
+        {
+          "name": "CREATED_ON",
+          "line": 130,
+          "nullable": true,
+          "findings": [
+            {
+              "code": "SCH003",
+              "disposition": "ASSISTED",
+              "message": "Oracle DATE mapped to timestamp(0) without time zone (DATE stores time-of-day); confirm timezone policy.",
+              "object": "APX_DEMO_REQUESTS.CREATED_ON",
+              "line": 130,
+              "detail": "date"
+            }
+          ],
+          "omitted": [],
+          "sourceType": "date",
+          "targetType": "timestamp(0) without time zone",
+          "typeFamily": "timestamp",
+          "targetName": "created_on"
+        },
+        {
+          "name": "UPDATED_BY",
+          "line": 131,
+          "nullable": true,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (255)",
+          "targetType": "varchar(255)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "updated_by"
+        },
+        {
+          "name": "UPDATED_ON",
+          "line": 132,
+          "nullable": true,
+          "findings": [
+            {
+              "code": "SCH003",
+              "disposition": "ASSISTED",
+              "message": "Oracle DATE mapped to timestamp(0) without time zone (DATE stores time-of-day); confirm timezone policy.",
+              "object": "APX_DEMO_REQUESTS.UPDATED_ON",
+              "line": 132,
+              "detail": "date"
+            }
+          ],
+          "omitted": [],
+          "sourceType": "date",
+          "targetType": "timestamp(0) without time zone",
+          "typeFamily": "timestamp",
+          "targetName": "updated_on"
+        }
+      ],
+      "constraints": [
+        {
+          "name": "APX_DEMO_REQUESTS_PK",
+          "line": 133,
+          "origin": "CREATE TABLE",
+          "enabled": true,
+          "validated": true,
+          "kind": "PRIMARY KEY",
+          "columns": [
+            "REQUEST_ID"
+          ],
+          "findings": [],
+          "targetName": "apx_demo_requests_pk",
+          "emit": true
+        },
+        {
+          "name": "APX_DEMO_REQUESTS_U1",
+          "line": 134,
+          "origin": "CREATE TABLE",
+          "enabled": true,
+          "validated": true,
+          "kind": "UNIQUE",
+          "columns": [
+            "REQUEST_NO"
+          ],
+          "findings": [],
+          "targetName": "apx_demo_requests_u1",
+          "emit": true
+        },
+        {
+          "name": "APX_DEMO_REQUESTS_CK1",
+          "line": 135,
+          "origin": "CREATE TABLE",
+          "enabled": true,
+          "validated": true,
+          "kind": "CHECK",
+          "expression": "status in ('DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED', 'CANCELLED', 'FULFILLED', 'CLOSED')",
+          "columns": [
+            "STATUS"
+          ],
+          "findings": [],
+          "targetName": "apx_demo_requests_ck1",
+          "emit": true,
+          "targetExpression": "status in ('DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED', 'CANCELLED', 'FULFILLED', 'CLOSED')"
+        },
+        {
+          "name": "APX_DEMO_REQUESTS_FK1",
+          "line": 155,
+          "origin": "ALTER TABLE",
+          "enabled": true,
+          "validated": true,
+          "columns": [
+            "DEPARTMENT_ID"
+          ],
+          "kind": "FOREIGN KEY",
+          "targetOwner": null,
+          "target": "APX_DEMO_DEPARTMENTS",
+          "targetColumns": [
+            "DEPARTMENT_ID"
+          ],
+          "findings": [],
+          "targetName": "apx_demo_requests_fk1",
+          "emit": true
+        }
+      ],
+      "findings": [
+        {
+          "code": "SCH004",
+          "disposition": "ASSISTED",
+          "message": "Character columns: Oracle stores '' as NULL and VARCHAR2 length semantics depend on BYTE/CHAR/NLS_LENGTH_SEMANTICS.",
+          "object": "APX_DEMO_REQUESTS",
+          "line": 120,
+          "detail": "request_no, purpose, notes, status, created_by, updated_by"
+        }
+      ],
+      "comments": {},
+      "targetName": "apx_demo_requests",
+      "blockedReasons": [],
+      "emit": true,
+      "omitted": []
+    },
+    {
+      "kind": "TABLE",
+      "name": "APX_DEMO_REQUEST_LINES",
+      "owner": null,
+      "line": 138,
+      "columns": [
+        {
+          "name": "LINE_ID",
+          "line": 139,
+          "nullable": false,
+          "findings": [
+            {
+              "code": "SCH005",
+              "disposition": "ASSISTED",
+              "message": "Identity BY DEFAULT ON NULL mapped to GENERATED BY DEFAULT AS IDENTITY: an explicit NULL insert fails in PostgreSQL instead of generating a value; writers must omit the column.",
+              "object": "APX_DEMO_REQUEST_LINES.LINE_ID",
+              "line": 139
+            },
+            {
+              "code": "SCH006",
+              "disposition": "ASSISTED",
+              "message": "Identity on unconstrained NUMBER mapped to bigint; Oracle default identity MAXVALUE exceeds bigint.",
+              "object": "APX_DEMO_REQUEST_LINES.LINE_ID",
+              "line": 139
+            }
+          ],
+          "omitted": [],
+          "sourceType": "number",
+          "targetType": "bigint",
+          "typeFamily": "integer",
+          "identity": {
+            "mode": "BY DEFAULT",
+            "onNull": true,
+            "options": {},
+            "droppedOptions": [],
+            "manualOptions": [],
+            "target": "GENERATED BY DEFAULT AS IDENTITY"
+          },
+          "targetName": "line_id"
+        },
+        {
+          "name": "REQUEST_ID",
+          "line": 140,
+          "nullable": false,
+          "findings": [
+            {
+              "code": "SCH021",
+              "disposition": "ASSISTED",
+              "message": "Foreign-key column type aligned to the referenced key type.",
+              "object": "APX_DEMO_REQUEST_LINES.REQUEST_ID",
+              "line": 140,
+              "detail": "bigint via APX_DEMO_REQUEST_LINES_FK1"
+            }
+          ],
+          "omitted": [],
+          "sourceType": "number",
+          "targetType": "bigint",
+          "typeFamily": "integer",
+          "targetName": "request_id"
+        },
+        {
+          "name": "ITEM_ID",
+          "line": 141,
+          "nullable": false,
+          "findings": [
+            {
+              "code": "SCH021",
+              "disposition": "ASSISTED",
+              "message": "Foreign-key column type aligned to the referenced key type.",
+              "object": "APX_DEMO_REQUEST_LINES.ITEM_ID",
+              "line": 141,
+              "detail": "bigint via APX_DEMO_REQUEST_LINES_FK2"
+            }
+          ],
+          "omitted": [],
+          "sourceType": "number",
+          "targetType": "bigint",
+          "typeFamily": "integer",
+          "targetName": "item_id"
+        },
+        {
+          "name": "QTY",
+          "line": 142,
+          "nullable": false,
+          "findings": [
+            {
+              "code": "SCH002",
+              "disposition": "ASSISTED",
+              "message": "Unconstrained NUMBER mapped to numeric; verify range/scale against data.",
+              "object": "APX_DEMO_REQUEST_LINES.QTY",
+              "line": 142,
+              "detail": "number"
+            }
+          ],
+          "omitted": [],
+          "sourceType": "number",
+          "targetType": "numeric",
+          "typeFamily": "numeric",
+          "targetName": "qty"
+        },
+        {
+          "name": "UNIT_PRICE",
+          "line": 143,
+          "nullable": false,
+          "findings": [
+            {
+              "code": "SCH002",
+              "disposition": "ASSISTED",
+              "message": "Unconstrained NUMBER mapped to numeric; verify range/scale against data.",
+              "object": "APX_DEMO_REQUEST_LINES.UNIT_PRICE",
+              "line": 143,
+              "detail": "number"
+            }
+          ],
+          "omitted": [],
+          "sourceType": "number",
+          "targetType": "numeric",
+          "typeFamily": "numeric",
+          "default": {
+            "source": "0",
+            "onNull": false,
+            "target": "0"
+          },
+          "targetName": "unit_price"
+        },
+        {
+          "name": "LINE_AMOUNT",
+          "line": 144,
+          "nullable": true,
+          "findings": [
+            {
+              "code": "SCH002",
+              "disposition": "ASSISTED",
+              "message": "Unconstrained NUMBER mapped to numeric; verify range/scale against data.",
+              "object": "APX_DEMO_REQUEST_LINES.LINE_AMOUNT",
+              "line": 144,
+              "detail": "number"
+            },
+            {
+              "code": "SCH009",
+              "disposition": "ASSISTED",
+              "message": "Oracle VIRTUAL column mapped to GENERATED ALWAYS AS (...) STORED: value is computed on write and stored; loaders must not supply it.",
+              "object": "APX_DEMO_REQUEST_LINES.LINE_AMOUNT",
+              "line": 144,
+              "detail": "qty * unit_price"
+            }
+          ],
+          "omitted": [],
+          "sourceType": "number",
+          "targetType": "numeric",
+          "typeFamily": "numeric",
+          "generated": {
+            "source": "qty * unit_price",
+            "virtual": true,
+            "explicitVirtual": true,
+            "target": "qty * unit_price",
+            "references": [
+              "QTY",
+              "UNIT_PRICE"
+            ]
+          },
+          "targetName": "line_amount"
+        },
+        {
+          "name": "CREATED_BY",
+          "line": 145,
+          "nullable": true,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (255)",
+          "targetType": "varchar(255)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "created_by"
+        },
+        {
+          "name": "CREATED_ON",
+          "line": 146,
+          "nullable": true,
+          "findings": [
+            {
+              "code": "SCH003",
+              "disposition": "ASSISTED",
+              "message": "Oracle DATE mapped to timestamp(0) without time zone (DATE stores time-of-day); confirm timezone policy.",
+              "object": "APX_DEMO_REQUEST_LINES.CREATED_ON",
+              "line": 146,
+              "detail": "date"
+            }
+          ],
+          "omitted": [],
+          "sourceType": "date",
+          "targetType": "timestamp(0) without time zone",
+          "typeFamily": "timestamp",
+          "targetName": "created_on"
+        },
+        {
+          "name": "UPDATED_BY",
+          "line": 147,
+          "nullable": true,
+          "findings": [],
+          "omitted": [],
+          "sourceType": "varchar2 (255)",
+          "targetType": "varchar(255)",
+          "typeFamily": "text",
+          "character": true,
+          "targetName": "updated_by"
+        },
+        {
+          "name": "UPDATED_ON",
+          "line": 148,
+          "nullable": true,
+          "findings": [
+            {
+              "code": "SCH003",
+              "disposition": "ASSISTED",
+              "message": "Oracle DATE mapped to timestamp(0) without time zone (DATE stores time-of-day); confirm timezone policy.",
+              "object": "APX_DEMO_REQUEST_LINES.UPDATED_ON",
+              "line": 148,
+              "detail": "date"
+            }
+          ],
+          "omitted": [],
+          "sourceType": "date",
+          "targetType": "timestamp(0) without time zone",
+          "typeFamily": "timestamp",
+          "targetName": "updated_on"
+        }
+      ],
+      "constraints": [
+        {
+          "name": "APX_DEMO_REQUEST_LINES_PK",
+          "line": 149,
+          "origin": "CREATE TABLE",
+          "enabled": true,
+          "validated": true,
+          "kind": "PRIMARY KEY",
+          "columns": [
+            "LINE_ID"
+          ],
+          "findings": [],
+          "targetName": "apx_demo_request_lines_pk",
+          "emit": true
+        },
+        {
+          "name": "APX_DEMO_REQUEST_LINES_CK1",
+          "line": 150,
+          "origin": "CREATE TABLE",
+          "enabled": true,
+          "validated": true,
+          "kind": "CHECK",
+          "expression": "qty >= 0",
+          "columns": [
+            "QTY"
+          ],
+          "findings": [],
+          "targetName": "apx_demo_request_lines_ck1",
+          "emit": true,
+          "targetExpression": "qty >= 0"
+        },
+        {
+          "name": "APX_DEMO_REQUEST_LINES_CK2",
+          "line": 151,
+          "origin": "CREATE TABLE",
+          "enabled": true,
+          "validated": true,
+          "kind": "CHECK",
+          "expression": "unit_price >= 0",
+          "columns": [
+            "UNIT_PRICE"
+          ],
+          "findings": [],
+          "targetName": "apx_demo_request_lines_ck2",
+          "emit": true,
+          "targetExpression": "unit_price >= 0"
+        },
+        {
+          "name": "APX_DEMO_REQUEST_LINES_FK1",
+          "line": 157,
+          "origin": "ALTER TABLE",
+          "enabled": true,
+          "validated": true,
+          "columns": [
+            "REQUEST_ID"
+          ],
+          "kind": "FOREIGN KEY",
+          "targetOwner": null,
+          "target": "APX_DEMO_REQUESTS",
+          "targetColumns": [
+            "REQUEST_ID"
+          ],
+          "onDelete": "CASCADE",
+          "findings": [
+            {
+              "code": "SCH031",
+              "disposition": "ASSISTED",
+              "message": "Constraint state (DEFERRABLE/INITIALLY) preserved; confirm transaction semantics.",
+              "object": "APX_DEMO_REQUEST_LINES",
+              "line": 157,
+              "detail": "APX_DEMO_REQUEST_LINES_FK1 ON DELETE CASCADE; verify child trigger behavior"
+            }
+          ],
+          "targetName": "apx_demo_request_lines_fk1",
+          "emit": true
+        },
+        {
+          "name": "APX_DEMO_REQUEST_LINES_FK2",
+          "line": 159,
+          "origin": "ALTER TABLE",
+          "enabled": true,
+          "validated": true,
+          "columns": [
+            "ITEM_ID"
+          ],
+          "kind": "FOREIGN KEY",
+          "targetOwner": null,
+          "target": "APX_DEMO_ITEMS",
+          "targetColumns": [
+            "ITEM_ID"
+          ],
+          "findings": [],
+          "targetName": "apx_demo_request_lines_fk2",
+          "emit": true
+        }
+      ],
+      "findings": [
+        {
+          "code": "SCH004",
+          "disposition": "ASSISTED",
+          "message": "Character columns: Oracle stores '' as NULL and VARCHAR2 length semantics depend on BYTE/CHAR/NLS_LENGTH_SEMANTICS.",
+          "object": "APX_DEMO_REQUEST_LINES",
+          "line": 138,
+          "detail": "created_by, updated_by"
+        }
+      ],
+      "comments": {},
+      "targetName": "apx_demo_request_lines",
+      "blockedReasons": [],
+      "emit": true,
+      "omitted": []
+    }
+  ],
+  "indexes": [
+    {
+      "kind": "INDEX",
+      "name": "APX_DEMO_APPROVALS_N1",
+      "owner": null,
+      "line": 76,
+      "unique": false,
+      "bitmap": false,
+      "elements": [
+        {
+          "column": "DOC_TYPE",
+          "order": ""
+        },
+        {
+          "column": "DOC_ID",
+          "order": ""
+        }
+      ],
+      "findings": [],
+      "table": "APX_DEMO_APPROVALS",
+      "targetName": "apx_demo_approvals_n1",
+      "emit": true,
+      "targetElements": [
+        "doc_type",
+        "doc_id"
+      ]
+    },
+    {
+      "kind": "INDEX",
+      "name": "APX_DEMO_REQUESTS_N1",
+      "owner": null,
+      "line": 156,
+      "unique": false,
+      "bitmap": false,
+      "elements": [
+        {
+          "column": "DEPARTMENT_ID",
+          "order": ""
+        }
+      ],
+      "findings": [],
+      "table": "APX_DEMO_REQUESTS",
+      "targetName": "apx_demo_requests_n1",
+      "emit": true,
+      "targetElements": [
+        "department_id"
+      ]
+    },
+    {
+      "kind": "INDEX",
+      "name": "APX_DEMO_REQUEST_LINES_N1",
+      "owner": null,
+      "line": 158,
+      "unique": false,
+      "bitmap": false,
+      "elements": [
+        {
+          "column": "REQUEST_ID",
+          "order": ""
+        }
+      ],
+      "findings": [],
+      "table": "APX_DEMO_REQUEST_LINES",
+      "targetName": "apx_demo_request_lines_n1",
+      "emit": true,
+      "targetElements": [
+        "request_id"
+      ]
+    },
+    {
+      "kind": "INDEX",
+      "name": "APX_DEMO_REQUEST_LINES_N2",
+      "owner": null,
+      "line": 160,
+      "unique": false,
+      "bitmap": false,
+      "elements": [
+        {
+          "column": "ITEM_ID",
+          "order": ""
+        }
+      ],
+      "findings": [],
+      "table": "APX_DEMO_REQUEST_LINES",
+      "targetName": "apx_demo_request_lines_n2",
+      "emit": true,
+      "targetElements": [
+        "item_id"
+      ]
+    }
+  ],
+  "views": [
+    {
+      "kind": "VIEW",
+      "name": "APX_DEMO_APPROVALS_V",
+      "owner": null,
+      "line": 859,
+      "force": true,
+      "columns": null,
+      "source": "select a.approval_id\n      ,a.doc_type\n      ,d.doc_name\n      ,a.doc_id\n      ,a.doc_no\n      ,a.approval_level\n      ,a.approver_role\n      ,a.amount\n      ,a.requested_by\n      ,a.requested_on\n      ,a.status\n      ,a.acted_by\n      ,a.acted_on\n      ,a.note\n      ,apx_demo_approval_pkg.can_act_yn(a.approval_id) can_act_yn\n  from apx_demo_approvals a\n  join apx_demo_doc_types d on d.doc_type = a.doc_type",
+      "withOption": null,
+      "candidateSql": "select a.approval_id\n      ,a.doc_type\n      ,d.doc_name\n      ,a.doc_id\n      ,a.doc_no\n      ,a.approval_level\n      ,a.approver_role\n      ,a.amount\n      ,a.requested_by\n      ,a.requested_on\n      ,a.status\n      ,a.acted_by\n      ,a.acted_on\n      ,a.note\n      ,apx_demo_approval_pkg.can_act_yn(a.approval_id) can_act_yn\n  from apx_demo_approvals a\n  join apx_demo_doc_types d on d.doc_type = a.doc_type",
+      "dependencies": [
+        "APX_DEMO_APPROVALS",
+        "APX_DEMO_DOC_TYPES"
+      ],
+      "plsqlCalls": [
+        "APX_DEMO_APPROVAL_PKG.CAN_ACT_YN"
+      ],
+      "unresolved": [],
+      "outputColumns": [
+        "APPROVAL_ID",
+        "DOC_TYPE",
+        "DOC_NAME",
+        "DOC_ID",
+        "DOC_NO",
+        "APPROVAL_LEVEL",
+        "APPROVER_ROLE",
+        "AMOUNT",
+        "REQUESTED_BY",
+        "REQUESTED_ON",
+        "STATUS",
+        "ACTED_BY",
+        "ACTED_ON",
+        "NOTE",
+        "CAN_ACT_YN"
+      ],
+      "findings": [
+        {
+          "code": "VIW001",
+          "disposition": "ASSISTED",
+          "message": "FORCE removed; PostgreSQL requires dependencies first, so views are emitted in dependency order.",
+          "object": "APX_DEMO_APPROVALS_V",
+          "line": 859
+        },
+        {
+          "code": "EXP009",
+          "disposition": "MANUAL",
+          "message": "PL/SQL package/function call has no PostgreSQL target yet; requires a target function or service-side redesign.",
+          "object": "APX_DEMO_APPROVALS_V",
+          "line": 859,
+          "detail": "APX_DEMO_APPROVAL_PKG.CAN_ACT_YN"
+        },
+        {
+          "code": "VIW007",
+          "disposition": "ASSISTED",
+          "message": "Output column list derived lexically from the select list; verified against PostgreSQL catalog in integration tests.",
+          "object": "APX_DEMO_APPROVALS_V",
+          "line": 859
+        }
+      ],
+      "ownDisposition": "MANUAL",
+      "blockedBy": [],
+      "emit": false,
+      "dependencyOrder": 1,
+      "design": "Implement APX_DEMO_APPROVAL_PKG.CAN_ACT_YN as reviewed PostgreSQL SQL function(s) in WP9.4, or move the predicate into the NestJS read service; then emit this view from the candidate SQL."
+    },
+    {
+      "kind": "VIEW",
+      "name": "APX_DEMO_USER_ROLES_V",
+      "owner": null,
+      "line": 878,
+      "force": true,
+      "columns": null,
+      "source": "select ur.user_role_id\n      ,ur.username\n      ,ur.role_code\n      ,r.role_name\n      ,ur.created_by\n      ,ur.created_on\n  from apx_demo_user_roles ur\n  join apx_demo_roles r on r.role_code = ur.role_code",
+      "withOption": null,
+      "candidateSql": "select ur.user_role_id\n      ,ur.username\n      ,ur.role_code\n      ,r.role_name\n      ,ur.created_by\n      ,ur.created_on\n  from apx_demo_user_roles ur\n  join apx_demo_roles r on r.role_code = ur.role_code",
+      "dependencies": [
+        "APX_DEMO_ROLES",
+        "APX_DEMO_USER_ROLES"
+      ],
+      "plsqlCalls": [],
+      "unresolved": [],
+      "outputColumns": [
+        "USER_ROLE_ID",
+        "USERNAME",
+        "ROLE_CODE",
+        "ROLE_NAME",
+        "CREATED_BY",
+        "CREATED_ON"
+      ],
+      "findings": [
+        {
+          "code": "VIW001",
+          "disposition": "ASSISTED",
+          "message": "FORCE removed; PostgreSQL requires dependencies first, so views are emitted in dependency order.",
+          "object": "APX_DEMO_USER_ROLES_V",
+          "line": 878
+        },
+        {
+          "code": "VIW007",
+          "disposition": "ASSISTED",
+          "message": "Output column list derived lexically from the select list; verified against PostgreSQL catalog in integration tests.",
+          "object": "APX_DEMO_USER_ROLES_V",
+          "line": 878
+        }
+      ],
+      "ownDisposition": "ASSISTED",
+      "blockedBy": [],
+      "emit": true,
+      "dependencyOrder": 2,
+      "design": "Emit as an ordinary PostgreSQL view (dependency-ordered); review listed findings."
+    },
+    {
+      "kind": "VIEW",
+      "name": "APX_DEMO_DEPARTMENTS_V",
+      "owner": null,
+      "line": 888,
+      "force": true,
+      "columns": null,
+      "source": "select t.department_id\n      ,t.dept_code\n      ,t.dept_name\n      ,t.active_yn\n      ,t.created_by\n      ,t.created_on\n      ,t.updated_by\n      ,t.updated_on\n  from apx_demo_departments t",
+      "withOption": null,
+      "candidateSql": "select t.department_id\n      ,t.dept_code\n      ,t.dept_name\n      ,t.active_yn\n      ,t.created_by\n      ,t.created_on\n      ,t.updated_by\n      ,t.updated_on\n  from apx_demo_departments t",
+      "dependencies": [
+        "APX_DEMO_DEPARTMENTS"
+      ],
+      "plsqlCalls": [],
+      "unresolved": [],
+      "outputColumns": [
+        "DEPARTMENT_ID",
+        "DEPT_CODE",
+        "DEPT_NAME",
+        "ACTIVE_YN",
+        "CREATED_BY",
+        "CREATED_ON",
+        "UPDATED_BY",
+        "UPDATED_ON"
+      ],
+      "findings": [
+        {
+          "code": "VIW001",
+          "disposition": "ASSISTED",
+          "message": "FORCE removed; PostgreSQL requires dependencies first, so views are emitted in dependency order.",
+          "object": "APX_DEMO_DEPARTMENTS_V",
+          "line": 888
+        },
+        {
+          "code": "VIW007",
+          "disposition": "ASSISTED",
+          "message": "Output column list derived lexically from the select list; verified against PostgreSQL catalog in integration tests.",
+          "object": "APX_DEMO_DEPARTMENTS_V",
+          "line": 888
+        }
+      ],
+      "ownDisposition": "ASSISTED",
+      "blockedBy": [],
+      "emit": true,
+      "dependencyOrder": 3,
+      "design": "Emit as an ordinary PostgreSQL view (dependency-ordered); review listed findings."
+    },
+    {
+      "kind": "VIEW",
+      "name": "APX_DEMO_ITEMS_V",
+      "owner": null,
+      "line": 899,
+      "force": true,
+      "columns": null,
+      "source": "select t.item_id\n      ,t.item_code\n      ,t.item_name\n      ,t.category\n      ,t.uom\n      ,t.std_price\n      ,t.active_yn\n      ,t.created_by\n      ,t.created_on\n      ,t.updated_by\n      ,t.updated_on\n  from apx_demo_items t",
+      "withOption": null,
+      "candidateSql": "select t.item_id\n      ,t.item_code\n      ,t.item_name\n      ,t.category\n      ,t.uom\n      ,t.std_price\n      ,t.active_yn\n      ,t.created_by\n      ,t.created_on\n      ,t.updated_by\n      ,t.updated_on\n  from apx_demo_items t",
+      "dependencies": [
+        "APX_DEMO_ITEMS"
+      ],
+      "plsqlCalls": [],
+      "unresolved": [],
+      "outputColumns": [
+        "ITEM_ID",
+        "ITEM_CODE",
+        "ITEM_NAME",
+        "CATEGORY",
+        "UOM",
+        "STD_PRICE",
+        "ACTIVE_YN",
+        "CREATED_BY",
+        "CREATED_ON",
+        "UPDATED_BY",
+        "UPDATED_ON"
+      ],
+      "findings": [
+        {
+          "code": "VIW001",
+          "disposition": "ASSISTED",
+          "message": "FORCE removed; PostgreSQL requires dependencies first, so views are emitted in dependency order.",
+          "object": "APX_DEMO_ITEMS_V",
+          "line": 899
+        },
+        {
+          "code": "VIW007",
+          "disposition": "ASSISTED",
+          "message": "Output column list derived lexically from the select list; verified against PostgreSQL catalog in integration tests.",
+          "object": "APX_DEMO_ITEMS_V",
+          "line": 899
+        }
+      ],
+      "ownDisposition": "ASSISTED",
+      "blockedBy": [],
+      "emit": true,
+      "dependencyOrder": 4,
+      "design": "Emit as an ordinary PostgreSQL view (dependency-ordered); review listed findings."
+    },
+    {
+      "kind": "VIEW",
+      "name": "APX_DEMO_REQUESTS_V",
+      "owner": null,
+      "line": 913,
+      "force": true,
+      "columns": null,
+      "source": "select t.request_id\n      ,t.request_no\n      ,t.department_id\n      ,(select dept_code || ' - ' || dept_name from apx_demo_departments r where r.department_id = t.department_id) department_id_dsp\n      ,t.request_date\n      ,t.need_date\n      ,t.purpose\n      ,t.notes\n      ,t.status\n      ,t.created_by\n      ,t.created_on\n      ,t.updated_by\n      ,t.updated_on\n  from apx_demo_requests t",
+      "withOption": null,
+      "candidateSql": "select t.request_id\n      ,t.request_no\n      ,t.department_id\n      ,(select dept_code || ' - ' || dept_name from apx_demo_departments r where r.department_id = t.department_id) department_id_dsp\n      ,t.request_date\n      ,t.need_date\n      ,t.purpose\n      ,t.notes\n      ,t.status\n      ,t.created_by\n      ,t.created_on\n      ,t.updated_by\n      ,t.updated_on\n  from apx_demo_requests t",
+      "dependencies": [
+        "APX_DEMO_DEPARTMENTS",
+        "APX_DEMO_REQUESTS"
+      ],
+      "plsqlCalls": [],
+      "unresolved": [],
+      "outputColumns": [
+        "REQUEST_ID",
+        "REQUEST_NO",
+        "DEPARTMENT_ID",
+        "DEPARTMENT_ID_DSP",
+        "REQUEST_DATE",
+        "NEED_DATE",
+        "PURPOSE",
+        "NOTES",
+        "STATUS",
+        "CREATED_BY",
+        "CREATED_ON",
+        "UPDATED_BY",
+        "UPDATED_ON"
+      ],
+      "findings": [
+        {
+          "code": "VIW001",
+          "disposition": "ASSISTED",
+          "message": "FORCE removed; PostgreSQL requires dependencies first, so views are emitted in dependency order.",
+          "object": "APX_DEMO_REQUESTS_V",
+          "line": 913
+        },
+        {
+          "code": "EXP005",
+          "disposition": "ASSISTED",
+          "message": "|| concatenation: Oracle treats NULL as '' but PostgreSQL returns NULL; wrap operands in COALESCE where NULLs are possible.",
+          "object": "APX_DEMO_REQUESTS_V",
+          "line": 913
+        },
+        {
+          "code": "VIW007",
+          "disposition": "ASSISTED",
+          "message": "Output column list derived lexically from the select list; verified against PostgreSQL catalog in integration tests.",
+          "object": "APX_DEMO_REQUESTS_V",
+          "line": 913
+        }
+      ],
+      "ownDisposition": "ASSISTED",
+      "blockedBy": [],
+      "emit": true,
+      "dependencyOrder": 5,
+      "design": "Emit as an ordinary PostgreSQL view (dependency-ordered); review listed findings."
+    },
+    {
+      "kind": "VIEW",
+      "name": "APX_DEMO_REQUEST_LINES_V",
+      "owner": null,
+      "line": 929,
+      "force": true,
+      "columns": null,
+      "source": "select t.line_id\n      ,t.request_id\n      ,(select request_no || ' - ' || purpose from apx_demo_requests r where r.request_id = t.request_id) request_id_dsp\n      ,t.item_id\n      ,(select item_code || ' - ' || item_name || ' (' || uom || ')' from apx_demo_items r where r.item_id = t.item_id) item_id_dsp\n      ,t.qty\n      ,t.unit_price\n      ,t.line_amount\n      ,t.created_by\n      ,t.created_on\n      ,t.updated_by\n      ,t.updated_on\n  from apx_demo_request_lines t",
+      "withOption": null,
+      "candidateSql": "select t.line_id\n      ,t.request_id\n      ,(select request_no || ' - ' || purpose from apx_demo_requests r where r.request_id = t.request_id) request_id_dsp\n      ,t.item_id\n      ,(select item_code || ' - ' || item_name || ' (' || uom || ')' from apx_demo_items r where r.item_id = t.item_id) item_id_dsp\n      ,t.qty\n      ,t.unit_price\n      ,t.line_amount\n      ,t.created_by\n      ,t.created_on\n      ,t.updated_by\n      ,t.updated_on\n  from apx_demo_request_lines t",
+      "dependencies": [
+        "APX_DEMO_ITEMS",
+        "APX_DEMO_REQUESTS",
+        "APX_DEMO_REQUEST_LINES"
+      ],
+      "plsqlCalls": [],
+      "unresolved": [],
+      "outputColumns": [
+        "LINE_ID",
+        "REQUEST_ID",
+        "REQUEST_ID_DSP",
+        "ITEM_ID",
+        "ITEM_ID_DSP",
+        "QTY",
+        "UNIT_PRICE",
+        "LINE_AMOUNT",
+        "CREATED_BY",
+        "CREATED_ON",
+        "UPDATED_BY",
+        "UPDATED_ON"
+      ],
+      "findings": [
+        {
+          "code": "VIW001",
+          "disposition": "ASSISTED",
+          "message": "FORCE removed; PostgreSQL requires dependencies first, so views are emitted in dependency order.",
+          "object": "APX_DEMO_REQUEST_LINES_V",
+          "line": 929
+        },
+        {
+          "code": "EXP005",
+          "disposition": "ASSISTED",
+          "message": "|| concatenation: Oracle treats NULL as '' but PostgreSQL returns NULL; wrap operands in COALESCE where NULLs are possible.",
+          "object": "APX_DEMO_REQUEST_LINES_V",
+          "line": 929
+        },
+        {
+          "code": "VIW007",
+          "disposition": "ASSISTED",
+          "message": "Output column list derived lexically from the select list; verified against PostgreSQL catalog in integration tests.",
+          "object": "APX_DEMO_REQUEST_LINES_V",
+          "line": 929
+        }
+      ],
+      "ownDisposition": "ASSISTED",
+      "blockedBy": [],
+      "emit": true,
+      "dependencyOrder": 6,
+      "design": "Emit as an ordinary PostgreSQL view (dependency-ordered); review listed findings."
+    },
+    {
+      "kind": "VIEW",
+      "name": "APX_DEMO_DASH_C1_S1_V",
+      "owner": null,
+      "line": 950,
+      "force": true,
+      "columns": null,
+      "source": "select status label, count(*) value from apx_demo_requests group by status",
+      "withOption": null,
+      "candidateSql": "select status label, count(*) value from apx_demo_requests group by status",
+      "dependencies": [
+        "APX_DEMO_REQUESTS"
+      ],
+      "plsqlCalls": [],
+      "unresolved": [],
+      "outputColumns": [
+        "LABEL",
+        "VALUE"
+      ],
+      "findings": [
+        {
+          "code": "VIW001",
+          "disposition": "ASSISTED",
+          "message": "FORCE removed; PostgreSQL requires dependencies first, so views are emitted in dependency order.",
+          "object": "APX_DEMO_DASH_C1_S1_V",
+          "line": 950
+        },
+        {
+          "code": "VIW007",
+          "disposition": "ASSISTED",
+          "message": "Output column list derived lexically from the select list; verified against PostgreSQL catalog in integration tests.",
+          "object": "APX_DEMO_DASH_C1_S1_V",
+          "line": 950
+        }
+      ],
+      "ownDisposition": "ASSISTED",
+      "blockedBy": [],
+      "emit": true,
+      "dependencyOrder": 7,
+      "design": "Emit as an ordinary PostgreSQL view (dependency-ordered); review listed findings."
+    },
+    {
+      "kind": "VIEW",
+      "name": "APX_DEMO_REQUEST_SUMMARY_V",
+      "owner": null,
+      "line": 1019,
+      "force": true,
+      "columns": null,
+      "source": "select r.request_id\n      ,r.request_no\n      ,d.dept_name\n      ,r.request_date\n      ,r.purpose\n      ,(select count(*) from apx_demo_request_lines l where l.request_id = r.request_id) line_count\n      ,(select nvl(sum(l.line_amount), 0) from apx_demo_request_lines l where l.request_id = r.request_id) total_amount\n      ,r.status\n  from apx_demo_requests r\n  join apx_demo_departments d on d.department_id = r.department_id",
+      "withOption": null,
+      "candidateSql": "select r.request_id\n      ,r.request_no\n      ,d.dept_name\n      ,r.request_date\n      ,r.purpose\n      ,(select count(*) from apx_demo_request_lines l where l.request_id = r.request_id) line_count\n      ,(select COALESCE(sum(l.line_amount), 0) from apx_demo_request_lines l where l.request_id = r.request_id) total_amount\n      ,r.status\n  from apx_demo_requests r\n  join apx_demo_departments d on d.department_id = r.department_id",
+      "dependencies": [
+        "APX_DEMO_DEPARTMENTS",
+        "APX_DEMO_REQUESTS",
+        "APX_DEMO_REQUEST_LINES"
+      ],
+      "plsqlCalls": [],
+      "unresolved": [],
+      "outputColumns": [
+        "REQUEST_ID",
+        "REQUEST_NO",
+        "DEPT_NAME",
+        "REQUEST_DATE",
+        "PURPOSE",
+        "LINE_COUNT",
+        "TOTAL_AMOUNT",
+        "STATUS"
+      ],
+      "findings": [
+        {
+          "code": "VIW001",
+          "disposition": "ASSISTED",
+          "message": "FORCE removed; PostgreSQL requires dependencies first, so views are emitted in dependency order.",
+          "object": "APX_DEMO_REQUEST_SUMMARY_V",
+          "line": 1019
+        },
+        {
+          "code": "EXP001",
+          "disposition": "ASSISTED",
+          "message": "NVL rewritten to COALESCE; verify empty-string and type-coercion semantics.",
+          "object": "APX_DEMO_REQUEST_SUMMARY_V",
+          "line": 1019
+        },
+        {
+          "code": "VIW007",
+          "disposition": "ASSISTED",
+          "message": "Output column list derived lexically from the select list; verified against PostgreSQL catalog in integration tests.",
+          "object": "APX_DEMO_REQUEST_SUMMARY_V",
+          "line": 1019
+        }
+      ],
+      "ownDisposition": "ASSISTED",
+      "blockedBy": [],
+      "emit": true,
+      "dependencyOrder": 8,
+      "design": "Emit as an ordinary PostgreSQL view (dependency-ordered); review listed findings."
+    },
+    {
+      "kind": "VIEW",
+      "name": "APX_DEMO_DASH_KPI_V",
+      "owner": null,
+      "line": 944,
+      "force": true,
+      "columns": null,
+      "source": "select (select count(*) from apx_demo_approvals_v where status = 'PENDING' and can_act_yn = 'Y') kpi_1\n      ,(select count(*) from apx_demo_requests where status = 'DRAFT') kpi_2\n      ,(select count(*) from apx_demo_requests where status = 'SUBMITTED') kpi_3\n  from dual",
+      "withOption": null,
+      "candidateSql": "select (select count(*) from apx_demo_approvals_v where status = 'PENDING' and can_act_yn = 'Y') kpi_1\n      ,(select count(*) from apx_demo_requests where status = 'DRAFT') kpi_2\n      ,(select count(*) from apx_demo_requests where status = 'SUBMITTED') kpi_3",
+      "dependencies": [
+        "APX_DEMO_APPROVALS_V",
+        "APX_DEMO_REQUESTS"
+      ],
+      "plsqlCalls": [],
+      "unresolved": [],
+      "outputColumns": [
+        "KPI_1",
+        "KPI_2",
+        "KPI_3"
+      ],
+      "findings": [
+        {
+          "code": "VIW001",
+          "disposition": "ASSISTED",
+          "message": "FORCE removed; PostgreSQL requires dependencies first, so views are emitted in dependency order.",
+          "object": "APX_DEMO_DASH_KPI_V",
+          "line": 944
+        },
+        {
+          "code": "EXP004",
+          "disposition": "ASSISTED",
+          "message": "FROM DUAL removed (PostgreSQL SELECT without FROM).",
+          "object": "APX_DEMO_DASH_KPI_V",
+          "line": 944
+        },
+        {
+          "code": "VIW007",
+          "disposition": "ASSISTED",
+          "message": "Output column list derived lexically from the select list; verified against PostgreSQL catalog in integration tests.",
+          "object": "APX_DEMO_DASH_KPI_V",
+          "line": 944
+        },
+        {
+          "code": "VIW005",
+          "disposition": "MANUAL",
+          "message": "View depends on an object that is blocked or not emitted; view is not emitted.",
+          "object": "APX_DEMO_DASH_KPI_V",
+          "line": 944,
+          "detail": "APX_DEMO_APPROVALS_V"
+        }
+      ],
+      "ownDisposition": "ASSISTED",
+      "blockedBy": [
+        "APX_DEMO_APPROVALS_V"
+      ],
+      "emit": false,
+      "dependencyOrder": 9,
+      "design": "Emit after blocking dependencies are converted: APX_DEMO_APPROVALS_V."
+    },
+    {
+      "kind": "VIEW",
+      "name": "APX_DEMO_DASH_C2_S1_V",
+      "owner": null,
+      "line": 953,
+      "force": true,
+      "columns": null,
+      "source": "select dept_name label, sum(total_amount) value from apx_demo_request_summary_v group by dept_name",
+      "withOption": null,
+      "candidateSql": "select dept_name label, sum(total_amount) value from apx_demo_request_summary_v group by dept_name",
+      "dependencies": [
+        "APX_DEMO_REQUEST_SUMMARY_V"
+      ],
+      "plsqlCalls": [],
+      "unresolved": [],
+      "outputColumns": [
+        "LABEL",
+        "VALUE"
+      ],
+      "findings": [
+        {
+          "code": "VIW001",
+          "disposition": "ASSISTED",
+          "message": "FORCE removed; PostgreSQL requires dependencies first, so views are emitted in dependency order.",
+          "object": "APX_DEMO_DASH_C2_S1_V",
+          "line": 953
+        },
+        {
+          "code": "VIW007",
+          "disposition": "ASSISTED",
+          "message": "Output column list derived lexically from the select list; verified against PostgreSQL catalog in integration tests.",
+          "object": "APX_DEMO_DASH_C2_S1_V",
+          "line": 953
+        }
+      ],
+      "ownDisposition": "ASSISTED",
+      "blockedBy": [],
+      "emit": true,
+      "dependencyOrder": 10,
+      "design": "Emit as an ordinary PostgreSQL view (dependency-ordered); review listed findings."
+    }
+  ],
+  "triggers": [
+    {
+      "kind": "TRIGGER",
+      "name": "APX_DEMO_USER_ROLES_TRG",
+      "owner": null,
+      "line": 735,
+      "table": "APX_DEMO_USER_ROLES",
+      "timing": "BEFORE",
+      "events": [
+        {
+          "event": "INSERT"
+        },
+        {
+          "event": "UPDATE"
+        }
+      ],
+      "forEachRow": true,
+      "when": null,
+      "columnsWritten": {
+        "CREATED_BY": [
+          {
+            "expression": "apx_demo_sec_pkg.app_user",
+            "classification": "audit-principal",
+            "branch": "INSERTING"
+          }
+        ],
+        "CREATED_ON": [
+          {
+            "expression": "sysdate",
+            "classification": "audit-clock",
+            "branch": "INSERTING"
+          }
+        ],
+        "ROLE_CODE": [
+          {
+            "expression": "upper(:new.role_code)",
+            "classification": "normalization",
+            "branch": "always"
+          }
+        ],
+        "UPDATED_BY": [
+          {
+            "expression": "apx_demo_sec_pkg.app_user",
+            "classification": "audit-principal",
+            "branch": "always"
+          }
+        ],
+        "UPDATED_ON": [
+          {
+            "expression": "sysdate",
+            "classification": "audit-clock",
+            "branch": "always"
+          }
+        ],
+        "USERNAME": [
+          {
+            "expression": "upper(:new.username)",
+            "classification": "normalization",
+            "branch": "always"
+          }
+        ]
+      },
+      "columnsRead": [],
+      "errors": [],
+      "calls": [],
+      "tablesRead": [],
+      "tablesWritten": [],
+      "mutatingTableHandler": false,
+      "usesBypassState": false,
+      "behaviors": [
+        "audit-clock",
+        "audit-principal",
+        "normalization"
+      ],
+      "findings": [
+        {
+          "code": "TRG001",
+          "disposition": "MANUAL",
+          "message": "Row trigger business logic must be re-implemented as explicit target behavior (service write path or reviewed PostgreSQL trigger).",
+          "object": "APX_DEMO_USER_ROLES_TRG",
+          "line": 735
+        }
+      ],
+      "targetDesign": [
+        "Audit stamps: set in the NestJS repository write path from the authenticated principal and one clock policy (or a narrow reviewed BEFORE trigger reading a trusted session setting).",
+        "Normalization: apply in request DTO/service before persistence; keep the stored form identical (e.g. upper-case codes)."
+      ]
+    },
+    {
+      "kind": "TRIGGER",
+      "name": "APX_DEMO_DEPARTMENTS_TRG",
+      "owner": null,
+      "line": 750,
+      "table": "APX_DEMO_DEPARTMENTS",
+      "timing": "BEFORE",
+      "events": [
+        {
+          "event": "INSERT"
+        },
+        {
+          "event": "UPDATE"
+        }
+      ],
+      "forEachRow": true,
+      "when": null,
+      "columnsWritten": {
+        "CREATED_BY": [
+          {
+            "expression": "apx_demo_sec_pkg.app_user",
+            "classification": "audit-principal",
+            "branch": "INSERTING"
+          }
+        ],
+        "CREATED_ON": [
+          {
+            "expression": "sysdate",
+            "classification": "audit-clock",
+            "branch": "INSERTING"
+          }
+        ],
+        "DEPT_CODE": [
+          {
+            "expression": "upper(:new.dept_code)",
+            "classification": "normalization",
+            "branch": "always"
+          }
+        ],
+        "UPDATED_BY": [
+          {
+            "expression": "apx_demo_sec_pkg.app_user",
+            "classification": "audit-principal",
+            "branch": "always"
+          }
+        ],
+        "UPDATED_ON": [
+          {
+            "expression": "sysdate",
+            "classification": "audit-clock",
+            "branch": "always"
+          }
+        ]
+      },
+      "columnsRead": [],
+      "errors": [],
+      "calls": [],
+      "tablesRead": [],
+      "tablesWritten": [],
+      "mutatingTableHandler": false,
+      "usesBypassState": false,
+      "behaviors": [
+        "audit-clock",
+        "audit-principal",
+        "normalization"
+      ],
+      "findings": [
+        {
+          "code": "TRG001",
+          "disposition": "MANUAL",
+          "message": "Row trigger business logic must be re-implemented as explicit target behavior (service write path or reviewed PostgreSQL trigger).",
+          "object": "APX_DEMO_DEPARTMENTS_TRG",
+          "line": 750
+        }
+      ],
+      "targetDesign": [
+        "Audit stamps: set in the NestJS repository write path from the authenticated principal and one clock policy (or a narrow reviewed BEFORE trigger reading a trusted session setting).",
+        "Normalization: apply in request DTO/service before persistence; keep the stored form identical (e.g. upper-case codes)."
+      ]
+    },
+    {
+      "kind": "TRIGGER",
+      "name": "APX_DEMO_ITEMS_TRG",
+      "owner": null,
+      "line": 764,
+      "table": "APX_DEMO_ITEMS",
+      "timing": "BEFORE",
+      "events": [
+        {
+          "event": "INSERT"
+        },
+        {
+          "event": "UPDATE"
+        }
+      ],
+      "forEachRow": true,
+      "when": null,
+      "columnsWritten": {
+        "CREATED_BY": [
+          {
+            "expression": "apx_demo_sec_pkg.app_user",
+            "classification": "audit-principal",
+            "branch": "INSERTING"
+          }
+        ],
+        "CREATED_ON": [
+          {
+            "expression": "sysdate",
+            "classification": "audit-clock",
+            "branch": "INSERTING"
+          }
+        ],
+        "ITEM_CODE": [
+          {
+            "expression": "upper(:new.item_code)",
+            "classification": "normalization",
+            "branch": "always"
+          }
+        ],
+        "UOM": [
+          {
+            "expression": "upper(:new.uom)",
+            "classification": "normalization",
+            "branch": "always"
+          }
+        ],
+        "UPDATED_BY": [
+          {
+            "expression": "apx_demo_sec_pkg.app_user",
+            "classification": "audit-principal",
+            "branch": "always"
+          }
+        ],
+        "UPDATED_ON": [
+          {
+            "expression": "sysdate",
+            "classification": "audit-clock",
+            "branch": "always"
+          }
+        ]
+      },
+      "columnsRead": [],
+      "errors": [],
+      "calls": [],
+      "tablesRead": [],
+      "tablesWritten": [],
+      "mutatingTableHandler": false,
+      "usesBypassState": false,
+      "behaviors": [
+        "audit-clock",
+        "audit-principal",
+        "normalization"
+      ],
+      "findings": [
+        {
+          "code": "TRG001",
+          "disposition": "MANUAL",
+          "message": "Row trigger business logic must be re-implemented as explicit target behavior (service write path or reviewed PostgreSQL trigger).",
+          "object": "APX_DEMO_ITEMS_TRG",
+          "line": 764
+        }
+      ],
+      "targetDesign": [
+        "Audit stamps: set in the NestJS repository write path from the authenticated principal and one clock policy (or a narrow reviewed BEFORE trigger reading a trusted session setting).",
+        "Normalization: apply in request DTO/service before persistence; keep the stored form identical (e.g. upper-case codes)."
+      ]
+    },
+    {
+      "kind": "TRIGGER",
+      "name": "APX_DEMO_REQUESTS_TRG",
+      "owner": null,
+      "line": 779,
+      "table": "APX_DEMO_REQUESTS",
+      "timing": "BEFORE",
+      "events": [
+        {
+          "event": "INSERT"
+        },
+        {
+          "event": "UPDATE"
+        }
+      ],
+      "forEachRow": true,
+      "when": null,
+      "columnsWritten": {
+        "CREATED_BY": [
+          {
+            "expression": "apx_demo_sec_pkg.app_user",
+            "classification": "audit-principal",
+            "branch": "INSERTING"
+          }
+        ],
+        "CREATED_ON": [
+          {
+            "expression": "sysdate",
+            "classification": "audit-clock",
+            "branch": "INSERTING"
+          }
+        ],
+        "DEPARTMENT_ID": [
+          {
+            "expression": ":old.department_id",
+            "classification": "field-lock",
+            "branch": "NOT INSERTING"
+          }
+        ],
+        "NEED_DATE": [
+          {
+            "expression": ":old.need_date",
+            "classification": "field-lock",
+            "branch": "NOT INSERTING"
+          }
+        ],
+        "PURPOSE": [
+          {
+            "expression": ":old.purpose",
+            "classification": "field-lock",
+            "branch": "NOT INSERTING"
+          }
+        ],
+        "REQUEST_NO": [
+          {
+            "expression": "apx_demo_doc_pkg.next_no('REQ')",
+            "classification": "derived-by-call",
+            "branch": "INSERTING"
+          }
+        ],
+        "STATUS": [
+          {
+            "expression": "'DRAFT'",
+            "classification": "forced-literal",
+            "branch": "INSERTING"
+          }
+        ],
+        "UPDATED_BY": [
+          {
+            "expression": "apx_demo_sec_pkg.app_user",
+            "classification": "audit-principal",
+            "branch": "always"
+          }
+        ],
+        "UPDATED_ON": [
+          {
+            "expression": "sysdate",
+            "classification": "audit-clock",
+            "branch": "always"
+          }
+        ]
+      },
+      "columnsRead": [
+        "NEW.REQUEST_NO",
+        "NEW.STATUS",
+        "OLD.REQUEST_NO",
+        "OLD.STATUS"
+      ],
+      "errors": [
+        {
+          "code": -20110,
+          "message": "Permintaan Barang "
+        },
+        {
+          "code": -20111,
+          "message": "Permintaan Barang "
+        },
+        {
+          "code": -20112,
+          "message": "Perubahan status "
+        }
+      ],
+      "calls": [
+        "APX_DEMO_APPROVAL_PKG.BYPASS"
+      ],
+      "tablesRead": [],
+      "tablesWritten": [],
+      "mutatingTableHandler": false,
+      "usesBypassState": true,
+      "behaviors": [
+        "audit-clock",
+        "audit-principal",
+        "derived-by-call",
+        "field-lock",
+        "forced-literal",
+        "guard"
+      ],
+      "findings": [
+        {
+          "code": "TRG001",
+          "disposition": "MANUAL",
+          "message": "Row trigger business logic must be re-implemented as explicit target behavior (service write path or reviewed PostgreSQL trigger).",
+          "object": "APX_DEMO_REQUESTS_TRG",
+          "line": 779
+        },
+        {
+          "code": "TRG003",
+          "disposition": "MANUAL",
+          "message": "Trigger reads package state/bypass flag; pooled-connection semantics must be redesigned.",
+          "object": "APX_DEMO_REQUESTS_TRG",
+          "line": 779
+        }
+      ],
+      "targetDesign": [
+        "Audit stamps: set in the NestJS repository write path from the authenticated principal and one clock policy (or a narrow reviewed BEFORE trigger reading a trusted session setting).",
+        "Derived values (e.g. document number): compute in the domain service inside the same transaction as the insert.",
+        "State/field guards: implement as an explicit state machine and immutable-field rules in the domain service; preserve error codes -20110, -20111, -20112 in the API error contract.",
+        "Bypass flag: replace package global state with an explicit internal service path; never expose a client-controlled bypass."
+      ]
+    },
+    {
+      "kind": "TRIGGER",
+      "name": "APX_DEMO_REQUEST_LINES_TRG",
+      "owner": null,
+      "line": 818,
+      "table": "APX_DEMO_REQUEST_LINES",
+      "timing": "BEFORE",
+      "events": [
+        {
+          "event": "INSERT"
+        },
+        {
+          "event": "UPDATE"
+        },
+        {
+          "event": "DELETE"
+        }
+      ],
+      "forEachRow": true,
+      "when": null,
+      "columnsWritten": {
+        "CREATED_BY": [
+          {
+            "expression": "apx_demo_sec_pkg.app_user",
+            "classification": "audit-principal",
+            "branch": "INSERTING"
+          }
+        ],
+        "CREATED_ON": [
+          {
+            "expression": "sysdate",
+            "classification": "audit-clock",
+            "branch": "INSERTING"
+          }
+        ],
+        "UPDATED_BY": [
+          {
+            "expression": "apx_demo_sec_pkg.app_user",
+            "classification": "audit-principal",
+            "branch": "always"
+          }
+        ],
+        "UPDATED_ON": [
+          {
+            "expression": "sysdate",
+            "classification": "audit-clock",
+            "branch": "always"
+          }
+        ]
+      },
+      "columnsRead": [
+        "NEW.REQUEST_ID",
+        "OLD.REQUEST_ID"
+      ],
+      "errors": [
+        {
+          "code": -20121,
+          "message": "Baris Permintaan tidak dapat diubah karena Permintaan Barang berstatus "
+        }
+      ],
+      "calls": [
+        "APX_DEMO_APPROVAL_PKG.BYPASS"
+      ],
+      "tablesRead": [
+        "APX_DEMO_REQUESTS"
+      ],
+      "tablesWritten": [],
+      "mutatingTableHandler": true,
+      "usesBypassState": true,
+      "behaviors": [
+        "audit-clock",
+        "audit-principal",
+        "cross-table-read",
+        "guard"
+      ],
+      "findings": [
+        {
+          "code": "TRG001",
+          "disposition": "MANUAL",
+          "message": "Row trigger business logic must be re-implemented as explicit target behavior (service write path or reviewed PostgreSQL trigger).",
+          "object": "APX_DEMO_REQUEST_LINES_TRG",
+          "line": 818
+        },
+        {
+          "code": "TRG002",
+          "disposition": "MANUAL",
+          "message": "Trigger handles ORA-04091 (mutating table); Oracle-specific pattern must be redesigned.",
+          "object": "APX_DEMO_REQUEST_LINES_TRG",
+          "line": 818
+        },
+        {
+          "code": "TRG003",
+          "disposition": "MANUAL",
+          "message": "Trigger reads package state/bypass flag; pooled-connection semantics must be redesigned.",
+          "object": "APX_DEMO_REQUEST_LINES_TRG",
+          "line": 818
+        }
+      ],
+      "targetDesign": [
+        "Audit stamps: set in the NestJS repository write path from the authenticated principal and one clock policy (or a narrow reviewed BEFORE trigger reading a trusted session setting).",
+        "State/field guards: implement as an explicit state machine and immutable-field rules in the domain service; preserve error codes -20121 in the API error contract.",
+        "Parent-state guard: lock the parent row (SELECT ... FOR UPDATE) in the service transaction before modifying children.",
+        "ORA-04091 cascade handling: define explicit delete semantics; PostgreSQL has no mutating-table error.",
+        "Bypass flag: replace package global state with an explicit internal service path; never expose a client-controlled bypass."
+      ]
+    }
+  ],
+  "plsqlUnits": [
+    {
+      "kind": "PACKAGE",
+      "name": "APX_DEMO_SEC_PKG",
+      "line": 171,
+      "lexicalStatus": "REVIEW_REQUIRED",
+      "lexicalDiagnostics": {},
+      "members": [
+        "APP_USER",
+        "BOOTSTRAP_MODE",
+        "HAS_ANY_ROLE",
+        "HAS_ROLE",
+        "HAS_ROLE_YN",
+        "PACKAGE_VERSION",
+        "SET_TEST_USER"
+      ],
+      "tablesReferenced": [],
+      "viewsReferenced": [],
+      "unitsReferenced": [],
+      "findings": [
+        {
+          "code": "PLS001",
+          "disposition": "MANUAL",
+          "message": "PL/SQL unit is business logic; re-implemented as NestJS services in WP9.4.",
+          "object": "APX_DEMO_SEC_PKG",
+          "line": 171
+        }
+      ]
+    },
+    {
+      "kind": "PACKAGE BODY",
+      "name": "APX_DEMO_SEC_PKG",
+      "line": 231,
+      "lexicalStatus": "MANUAL",
+      "lexicalDiagnostics": {
+        "PLW009": 2
+      },
+      "members": [],
+      "tablesReferenced": [
+        "APX_DEMO_USER_ROLES"
+      ],
+      "viewsReferenced": [],
+      "unitsReferenced": [],
+      "findings": [
+        {
+          "code": "PLS001",
+          "disposition": "MANUAL",
+          "message": "PL/SQL unit is business logic; re-implemented as NestJS services in WP9.4.",
+          "object": "APX_DEMO_SEC_PKG",
+          "line": 231
+        }
+      ]
+    },
+    {
+      "kind": "PACKAGE",
+      "name": "APX_DEMO_DOC_PKG",
+      "line": 318,
+      "lexicalStatus": "MANUAL",
+      "lexicalDiagnostics": {
+        "PLW003": 1
+      },
+      "members": [
+        "NEXT_NO",
+        "PACKAGE_VERSION"
+      ],
+      "tablesReferenced": [],
+      "viewsReferenced": [],
+      "unitsReferenced": [],
+      "findings": [
+        {
+          "code": "PLS001",
+          "disposition": "MANUAL",
+          "message": "PL/SQL unit is business logic; re-implemented as NestJS services in WP9.4.",
+          "object": "APX_DEMO_DOC_PKG",
+          "line": 318
+        }
+      ]
+    },
+    {
+      "kind": "PACKAGE BODY",
+      "name": "APX_DEMO_DOC_PKG",
+      "line": 338,
+      "lexicalStatus": "MANUAL",
+      "lexicalDiagnostics": {
+        "PLW001": 1,
+        "PLW003": 2,
+        "PLW009": 3
+      },
+      "members": [],
+      "tablesReferenced": [
+        "APX_DEMO_DOC_SEQ",
+        "APX_DEMO_DOC_TYPES"
+      ],
+      "viewsReferenced": [],
+      "unitsReferenced": [],
+      "findings": [
+        {
+          "code": "PLS001",
+          "disposition": "MANUAL",
+          "message": "PL/SQL unit is business logic; re-implemented as NestJS services in WP9.4.",
+          "object": "APX_DEMO_DOC_PKG",
+          "line": 338
+        }
+      ]
+    },
+    {
+      "kind": "PACKAGE",
+      "name": "APX_DEMO_APPROVAL_PKG",
+      "line": 383,
+      "lexicalStatus": "REVIEW_REQUIRED",
+      "lexicalDiagnostics": {},
+      "members": [
+        "APPROVE",
+        "BYPASS",
+        "CAN_ACT_YN",
+        "DOC_AMOUNT",
+        "PACKAGE_VERSION",
+        "REJECT",
+        "SET_BYPASS",
+        "SUBMIT"
+      ],
+      "tablesReferenced": [],
+      "viewsReferenced": [],
+      "unitsReferenced": [],
+      "findings": [
+        {
+          "code": "PLS001",
+          "disposition": "MANUAL",
+          "message": "PL/SQL unit is business logic; re-implemented as NestJS services in WP9.4.",
+          "object": "APX_DEMO_APPROVAL_PKG",
+          "line": 383
+        }
+      ]
+    },
+    {
+      "kind": "PACKAGE BODY",
+      "name": "APX_DEMO_APPROVAL_PKG",
+      "line": 457,
+      "lexicalStatus": "UNSUPPORTED",
+      "lexicalDiagnostics": {
+        "PLW001": 2,
+        "PLW003": 3,
+        "PLW007": 10,
+        "PLW008": 4,
+        "PLW009": 12,
+        "PLW012": 1
+      },
+      "members": [],
+      "tablesReferenced": [
+        "APX_DEMO_APPROVALS",
+        "APX_DEMO_DOC_TYPES"
+      ],
+      "viewsReferenced": [],
+      "unitsReferenced": [
+        "APX_DEMO_SEC_PKG"
+      ],
+      "findings": [
+        {
+          "code": "PLS001",
+          "disposition": "MANUAL",
+          "message": "PL/SQL unit is business logic; re-implemented as NestJS services in WP9.4.",
+          "object": "APX_DEMO_APPROVAL_PKG",
+          "line": 457
+        }
+      ]
+    },
+    {
+      "kind": "PACKAGE",
+      "name": "APX_DEMO_REQUEST_PKG",
+      "line": 964,
+      "lexicalStatus": "REVIEW_REQUIRED",
+      "lexicalDiagnostics": {},
+      "members": [
+        "CHECK_SUBMIT",
+        "PACKAGE_VERSION"
+      ],
+      "tablesReferenced": [],
+      "viewsReferenced": [],
+      "unitsReferenced": [],
+      "findings": [
+        {
+          "code": "PLS001",
+          "disposition": "MANUAL",
+          "message": "PL/SQL unit is business logic; re-implemented as NestJS services in WP9.4.",
+          "object": "APX_DEMO_REQUEST_PKG",
+          "line": 964
+        }
+      ]
+    },
+    {
+      "kind": "PACKAGE BODY",
+      "name": "APX_DEMO_REQUEST_PKG",
+      "line": 983,
+      "lexicalStatus": "REVIEW_REQUIRED",
+      "lexicalDiagnostics": {},
+      "members": [],
+      "tablesReferenced": [
+        "APX_DEMO_REQUEST_LINES"
+      ],
+      "viewsReferenced": [],
+      "unitsReferenced": [],
+      "findings": [
+        {
+          "code": "PLS001",
+          "disposition": "MANUAL",
+          "message": "PL/SQL unit is business logic; re-implemented as NestJS services in WP9.4.",
+          "object": "APX_DEMO_REQUEST_PKG",
+          "line": 983
+        }
+      ]
+    }
+  ],
+  "dataStatements": [
+    {
+      "kind": "DML",
+      "line": 1040,
+      "target": "APX_DEMO_ROLES",
+      "verb": "MERGE",
+      "findings": [
+        {
+          "code": "DAT001",
+          "disposition": "MANUAL",
+          "message": "Configuration/seed DML is data, not schema; migrated and reconciled in WP9.6.",
+          "object": "DML",
+          "line": 1040
+        }
+      ]
+    },
+    {
+      "kind": "DML",
+      "line": 1046,
+      "target": "APX_DEMO_ROLES",
+      "verb": "MERGE",
+      "findings": [
+        {
+          "code": "DAT001",
+          "disposition": "MANUAL",
+          "message": "Configuration/seed DML is data, not schema; migrated and reconciled in WP9.6.",
+          "object": "DML",
+          "line": 1046
+        }
+      ]
+    },
+    {
+      "kind": "DML",
+      "line": 1052,
+      "target": "APX_DEMO_ROLES",
+      "verb": "MERGE",
+      "findings": [
+        {
+          "code": "DAT001",
+          "disposition": "MANUAL",
+          "message": "Configuration/seed DML is data, not schema; migrated and reconciled in WP9.6.",
+          "object": "DML",
+          "line": 1052
+        }
+      ]
+    },
+    {
+      "kind": "DML",
+      "line": 1058,
+      "target": "APX_DEMO_ROLES",
+      "verb": "MERGE",
+      "findings": [
+        {
+          "code": "DAT001",
+          "disposition": "MANUAL",
+          "message": "Configuration/seed DML is data, not schema; migrated and reconciled in WP9.6.",
+          "object": "DML",
+          "line": 1058
+        }
+      ]
+    },
+    {
+      "kind": "DML",
+      "line": 1064,
+      "target": "APX_DEMO_ROLES",
+      "verb": "MERGE",
+      "findings": [
+        {
+          "code": "DAT001",
+          "disposition": "MANUAL",
+          "message": "Configuration/seed DML is data, not schema; migrated and reconciled in WP9.6.",
+          "object": "DML",
+          "line": 1064
+        }
+      ]
+    },
+    {
+      "kind": "DML",
+      "line": 1070,
+      "target": "APX_DEMO_DOC_TYPES",
+      "verb": "MERGE",
+      "findings": [
+        {
+          "code": "DAT001",
+          "disposition": "MANUAL",
+          "message": "Configuration/seed DML is data, not schema; migrated and reconciled in WP9.6.",
+          "object": "DML",
+          "line": 1070
+        }
+      ]
+    },
+    {
+      "kind": "DML",
+      "line": 1086,
+      "target": "APX_DEMO_DEPARTMENTS",
+      "verb": "INSERT",
+      "findings": [
+        {
+          "code": "DAT001",
+          "disposition": "MANUAL",
+          "message": "Configuration/seed DML is data, not schema; migrated and reconciled in WP9.6.",
+          "object": "DML",
+          "line": 1086
+        }
+      ]
+    },
+    {
+      "kind": "DML",
+      "line": 1087,
+      "target": "APX_DEMO_DEPARTMENTS",
+      "verb": "INSERT",
+      "findings": [
+        {
+          "code": "DAT001",
+          "disposition": "MANUAL",
+          "message": "Configuration/seed DML is data, not schema; migrated and reconciled in WP9.6.",
+          "object": "DML",
+          "line": 1087
+        }
+      ]
+    },
+    {
+      "kind": "DML",
+      "line": 1088,
+      "target": "APX_DEMO_DEPARTMENTS",
+      "verb": "INSERT",
+      "findings": [
+        {
+          "code": "DAT001",
+          "disposition": "MANUAL",
+          "message": "Configuration/seed DML is data, not schema; migrated and reconciled in WP9.6.",
+          "object": "DML",
+          "line": 1088
+        }
+      ]
+    },
+    {
+      "kind": "DML",
+      "line": 1090,
+      "target": "APX_DEMO_ITEMS",
+      "verb": "INSERT",
+      "findings": [
+        {
+          "code": "DAT001",
+          "disposition": "MANUAL",
+          "message": "Configuration/seed DML is data, not schema; migrated and reconciled in WP9.6.",
+          "object": "DML",
+          "line": 1090
+        }
+      ]
+    },
+    {
+      "kind": "DML",
+      "line": 1091,
+      "target": "APX_DEMO_ITEMS",
+      "verb": "INSERT",
+      "findings": [
+        {
+          "code": "DAT001",
+          "disposition": "MANUAL",
+          "message": "Configuration/seed DML is data, not schema; migrated and reconciled in WP9.6.",
+          "object": "DML",
+          "line": 1091
+        }
+      ]
+    },
+    {
+      "kind": "DML",
+      "line": 1092,
+      "target": "APX_DEMO_ITEMS",
+      "verb": "INSERT",
+      "findings": [
+        {
+          "code": "DAT001",
+          "disposition": "MANUAL",
+          "message": "Configuration/seed DML is data, not schema; migrated and reconciled in WP9.6.",
+          "object": "DML",
+          "line": 1092
+        }
+      ]
+    },
+    {
+      "kind": "DML",
+      "line": 1093,
+      "target": "APX_DEMO_ITEMS",
+      "verb": "INSERT",
+      "findings": [
+        {
+          "code": "DAT001",
+          "disposition": "MANUAL",
+          "message": "Configuration/seed DML is data, not schema; migrated and reconciled in WP9.6.",
+          "object": "DML",
+          "line": 1093
+        }
+      ]
+    },
+    {
+      "kind": "DML",
+      "line": 1094,
+      "target": "APX_DEMO_ITEMS",
+      "verb": "INSERT",
+      "findings": [
+        {
+          "code": "DAT001",
+          "disposition": "MANUAL",
+          "message": "Configuration/seed DML is data, not schema; migrated and reconciled in WP9.6.",
+          "object": "DML",
+          "line": 1094
+        }
+      ]
+    },
+    {
+      "kind": "ANONYMOUS_BLOCK",
+      "line": 1096,
+      "target": "L_ITEM",
+      "verb": "DECLARE",
+      "findings": [
+        {
+          "code": "DAT001",
+          "disposition": "MANUAL",
+          "message": "Configuration/seed DML is data, not schema; migrated and reconciled in WP9.6.",
+          "object": "ANONYMOUS_BLOCK",
+          "line": 1096
+        }
+      ]
+    }
+  ],
+  "otherStatements": [],
+  "statements": [
+    {
+      "index": 1,
+      "kind": "TABLE",
+      "line": 12,
+      "object": "TABLE APX_DEMO_ROLES"
+    },
+    {
+      "index": 2,
+      "kind": "TABLE",
+      "line": 19,
+      "object": "TABLE APX_DEMO_USER_ROLES"
+    },
+    {
+      "index": 3,
+      "kind": "TABLE",
+      "line": 33,
+      "object": "TABLE APX_DEMO_DOC_TYPES"
+    },
+    {
+      "index": 4,
+      "kind": "TABLE",
+      "line": 51,
+      "object": "TABLE APX_DEMO_DOC_SEQ"
+    },
+    {
+      "index": 5,
+      "kind": "TABLE",
+      "line": 58,
+      "object": "TABLE APX_DEMO_APPROVALS"
+    },
+    {
+      "index": 6,
+      "kind": "INDEX",
+      "line": 76,
+      "object": "INDEX APX_DEMO_APPROVALS_N1"
+    },
+    {
+      "index": 7,
+      "kind": "TABLE",
+      "line": 87,
+      "object": "TABLE APX_DEMO_DEPARTMENTS"
+    },
+    {
+      "index": 8,
+      "kind": "TABLE",
+      "line": 101,
+      "object": "TABLE APX_DEMO_ITEMS"
+    },
+    {
+      "index": 9,
+      "kind": "TABLE",
+      "line": 120,
+      "object": "TABLE APX_DEMO_REQUESTS"
+    },
+    {
+      "index": 10,
+      "kind": "TABLE",
+      "line": 138,
+      "object": "TABLE APX_DEMO_REQUEST_LINES"
+    },
+    {
+      "index": 11,
+      "kind": "ALTER_TABLE",
+      "line": 155,
+      "object": "ALTER TABLE APX_DEMO_REQUESTS"
+    },
+    {
+      "index": 12,
+      "kind": "INDEX",
+      "line": 156,
+      "object": "INDEX APX_DEMO_REQUESTS_N1"
+    },
+    {
+      "index": 13,
+      "kind": "ALTER_TABLE",
+      "line": 157,
+      "object": "ALTER TABLE APX_DEMO_REQUEST_LINES"
+    },
+    {
+      "index": 14,
+      "kind": "INDEX",
+      "line": 158,
+      "object": "INDEX APX_DEMO_REQUEST_LINES_N1"
+    },
+    {
+      "index": 15,
+      "kind": "ALTER_TABLE",
+      "line": 159,
+      "object": "ALTER TABLE APX_DEMO_REQUEST_LINES"
+    },
+    {
+      "index": 16,
+      "kind": "INDEX",
+      "line": 160,
+      "object": "INDEX APX_DEMO_REQUEST_LINES_N2"
+    },
+    {
+      "index": 17,
+      "kind": "PACKAGE",
+      "line": 171,
+      "object": "PACKAGE APX_DEMO_SEC_PKG"
+    },
+    {
+      "index": 18,
+      "kind": "PACKAGE_BODY",
+      "line": 231,
+      "object": "PACKAGE BODY APX_DEMO_SEC_PKG"
+    },
+    {
+      "index": 19,
+      "kind": "PACKAGE",
+      "line": 318,
+      "object": "PACKAGE APX_DEMO_DOC_PKG"
+    },
+    {
+      "index": 20,
+      "kind": "PACKAGE_BODY",
+      "line": 338,
+      "object": "PACKAGE BODY APX_DEMO_DOC_PKG"
+    },
+    {
+      "index": 21,
+      "kind": "PACKAGE",
+      "line": 383,
+      "object": "PACKAGE APX_DEMO_APPROVAL_PKG"
+    },
+    {
+      "index": 22,
+      "kind": "PACKAGE_BODY",
+      "line": 457,
+      "object": "PACKAGE BODY APX_DEMO_APPROVAL_PKG"
+    },
+    {
+      "index": 23,
+      "kind": "TRIGGER",
+      "line": 735,
+      "object": "TRIGGER"
+    },
+    {
+      "index": 24,
+      "kind": "TRIGGER",
+      "line": 750,
+      "object": "TRIGGER"
+    },
+    {
+      "index": 25,
+      "kind": "TRIGGER",
+      "line": 764,
+      "object": "TRIGGER"
+    },
+    {
+      "index": 26,
+      "kind": "TRIGGER",
+      "line": 779,
+      "object": "TRIGGER"
+    },
+    {
+      "index": 27,
+      "kind": "TRIGGER",
+      "line": 818,
+      "object": "TRIGGER"
+    },
+    {
+      "index": 28,
+      "kind": "VIEW",
+      "line": 859,
+      "object": "VIEW APX_DEMO_APPROVALS_V"
+    },
+    {
+      "index": 29,
+      "kind": "VIEW",
+      "line": 878,
+      "object": "VIEW APX_DEMO_USER_ROLES_V"
+    },
+    {
+      "index": 30,
+      "kind": "VIEW",
+      "line": 888,
+      "object": "VIEW APX_DEMO_DEPARTMENTS_V"
+    },
+    {
+      "index": 31,
+      "kind": "VIEW",
+      "line": 899,
+      "object": "VIEW APX_DEMO_ITEMS_V"
+    },
+    {
+      "index": 32,
+      "kind": "VIEW",
+      "line": 913,
+      "object": "VIEW APX_DEMO_REQUESTS_V"
+    },
+    {
+      "index": 33,
+      "kind": "VIEW",
+      "line": 929,
+      "object": "VIEW APX_DEMO_REQUEST_LINES_V"
+    },
+    {
+      "index": 34,
+      "kind": "VIEW",
+      "line": 944,
+      "object": "VIEW APX_DEMO_DASH_KPI_V"
+    },
+    {
+      "index": 35,
+      "kind": "VIEW",
+      "line": 950,
+      "object": "VIEW APX_DEMO_DASH_C1_S1_V"
+    },
+    {
+      "index": 36,
+      "kind": "VIEW",
+      "line": 953,
+      "object": "VIEW APX_DEMO_DASH_C2_S1_V"
+    },
+    {
+      "index": 37,
+      "kind": "PACKAGE",
+      "line": 964,
+      "object": "PACKAGE APX_DEMO_REQUEST_PKG"
+    },
+    {
+      "index": 38,
+      "kind": "PACKAGE_BODY",
+      "line": 983,
+      "object": "PACKAGE BODY APX_DEMO_REQUEST_PKG"
+    },
+    {
+      "index": 39,
+      "kind": "VIEW",
+      "line": 1019,
+      "object": "VIEW APX_DEMO_REQUEST_SUMMARY_V"
+    },
+    {
+      "index": 40,
+      "kind": "DML",
+      "line": 1040,
+      "object": "DATA"
+    },
+    {
+      "index": 41,
+      "kind": "DML",
+      "line": 1046,
+      "object": "DATA"
+    },
+    {
+      "index": 42,
+      "kind": "DML",
+      "line": 1052,
+      "object": "DATA"
+    },
+    {
+      "index": 43,
+      "kind": "DML",
+      "line": 1058,
+      "object": "DATA"
+    },
+    {
+      "index": 44,
+      "kind": "DML",
+      "line": 1064,
+      "object": "DATA"
+    },
+    {
+      "index": 45,
+      "kind": "DML",
+      "line": 1070,
+      "object": "DATA"
+    },
+    {
+      "index": 46,
+      "kind": "TCL",
+      "line": 1076,
+      "object": "NONE",
+      "disposition": "AUTOMATIC",
+      "code": "STM001"
+    },
+    {
+      "index": 47,
+      "kind": "DML",
+      "line": 1086,
+      "object": "DATA"
+    },
+    {
+      "index": 48,
+      "kind": "DML",
+      "line": 1087,
+      "object": "DATA"
+    },
+    {
+      "index": 49,
+      "kind": "DML",
+      "line": 1088,
+      "object": "DATA"
+    },
+    {
+      "index": 50,
+      "kind": "DML",
+      "line": 1090,
+      "object": "DATA"
+    },
+    {
+      "index": 51,
+      "kind": "DML",
+      "line": 1091,
+      "object": "DATA"
+    },
+    {
+      "index": 52,
+      "kind": "DML",
+      "line": 1092,
+      "object": "DATA"
+    },
+    {
+      "index": 53,
+      "kind": "DML",
+      "line": 1093,
+      "object": "DATA"
+    },
+    {
+      "index": 54,
+      "kind": "DML",
+      "line": 1094,
+      "object": "DATA"
+    },
+    {
+      "index": 55,
+      "kind": "ANONYMOUS_BLOCK",
+      "line": 1096,
+      "object": "DATA"
+    },
+    {
+      "index": 56,
+      "kind": "TCL",
+      "line": 1139,
+      "object": "NONE",
+      "disposition": "AUTOMATIC",
+      "code": "STM001"
+    }
+  ],
+  "loadPlan": {
+    "apx_demo_roles": {
+      "columns": [
+        "role_code",
+        "role_name",
+        "description"
+      ],
+      "excludedGenerated": [],
+      "identity": {}
+    },
+    "apx_demo_user_roles": {
+      "columns": [
+        "user_role_id",
+        "username",
+        "role_code",
+        "created_by",
+        "created_on",
+        "updated_by",
+        "updated_on"
+      ],
+      "excludedGenerated": [],
+      "identity": {
+        "user_role_id": "explicit values accepted"
+      }
+    },
+    "apx_demo_doc_types": {
+      "columns": [
+        "doc_type",
+        "doc_name",
+        "prefix",
+        "table_name",
+        "pk_column",
+        "number_column",
+        "status_column",
+        "amount_expr",
+        "validate_proc",
+        "approver1_role",
+        "approver2_role",
+        "level2_limit"
+      ],
+      "excludedGenerated": [],
+      "identity": {}
+    },
+    "apx_demo_doc_seq": {
+      "columns": [
+        "doc_type",
+        "period",
+        "last_no"
+      ],
+      "excludedGenerated": [],
+      "identity": {}
+    },
+    "apx_demo_approvals": {
+      "columns": [
+        "approval_id",
+        "doc_type",
+        "doc_id",
+        "doc_no",
+        "approval_level",
+        "approver_role",
+        "amount",
+        "requested_by",
+        "requested_on",
+        "status",
+        "acted_by",
+        "acted_on",
+        "note"
+      ],
+      "excludedGenerated": [],
+      "identity": {
+        "approval_id": "explicit values accepted"
+      }
+    },
+    "apx_demo_departments": {
+      "columns": [
+        "department_id",
+        "dept_code",
+        "dept_name",
+        "active_yn",
+        "created_by",
+        "created_on",
+        "updated_by",
+        "updated_on"
+      ],
+      "excludedGenerated": [],
+      "identity": {
+        "department_id": "explicit values accepted"
+      }
+    },
+    "apx_demo_items": {
+      "columns": [
+        "item_id",
+        "item_code",
+        "item_name",
+        "category",
+        "uom",
+        "std_price",
+        "active_yn",
+        "created_by",
+        "created_on",
+        "updated_by",
+        "updated_on"
+      ],
+      "excludedGenerated": [],
+      "identity": {
+        "item_id": "explicit values accepted"
+      }
+    },
+    "apx_demo_requests": {
+      "columns": [
+        "request_id",
+        "request_no",
+        "department_id",
+        "request_date",
+        "need_date",
+        "purpose",
+        "notes",
+        "status",
+        "created_by",
+        "created_on",
+        "updated_by",
+        "updated_on"
+      ],
+      "excludedGenerated": [],
+      "identity": {
+        "request_id": "explicit values accepted"
+      }
+    },
+    "apx_demo_request_lines": {
+      "columns": [
+        "line_id",
+        "request_id",
+        "item_id",
+        "qty",
+        "unit_price",
+        "created_by",
+        "created_on",
+        "updated_by",
+        "updated_on"
+      ],
+      "excludedGenerated": [
+        "line_amount"
+      ],
+      "identity": {
+        "line_id": "explicit values accepted"
+      }
+    }
+  },
+  "expectedCatalog": {
+    "tables": {
+      "apx_demo_roles": {
+        "columns": [
+          {
+            "name": "role_code",
+            "type": "character varying(30)",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "role_name",
+            "type": "character varying(100)",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "description",
+            "type": "character varying(400)",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          }
+        ],
+        "constraints": [
+          {
+            "name": "apx_demo_roles_pk",
+            "type": "p"
+          }
+        ]
+      },
+      "apx_demo_user_roles": {
+        "columns": [
+          {
+            "name": "user_role_id",
+            "type": "bigint",
+            "nullable": false,
+            "identity": "d",
+            "generated": ""
+          },
+          {
+            "name": "username",
+            "type": "character varying(255)",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "role_code",
+            "type": "character varying(30)",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "created_by",
+            "type": "character varying(255)",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "created_on",
+            "type": "timestamp(0) without time zone",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "updated_by",
+            "type": "character varying(255)",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "updated_on",
+            "type": "timestamp(0) without time zone",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          }
+        ],
+        "constraints": [
+          {
+            "name": "apx_demo_user_roles_fk1",
+            "type": "f"
+          },
+          {
+            "name": "apx_demo_user_roles_pk",
+            "type": "p"
+          },
+          {
+            "name": "apx_demo_user_roles_u1",
+            "type": "u"
+          }
+        ]
+      },
+      "apx_demo_doc_types": {
+        "columns": [
+          {
+            "name": "doc_type",
+            "type": "character varying(10)",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "doc_name",
+            "type": "character varying(100)",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "prefix",
+            "type": "character varying(10)",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "table_name",
+            "type": "character varying(128)",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "pk_column",
+            "type": "character varying(128)",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "number_column",
+            "type": "character varying(128)",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "status_column",
+            "type": "character varying(128)",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "amount_expr",
+            "type": "character varying(4000)",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "validate_proc",
+            "type": "character varying(261)",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "approver1_role",
+            "type": "character varying(30)",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "approver2_role",
+            "type": "character varying(30)",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "level2_limit",
+            "type": "numeric",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          }
+        ],
+        "constraints": [
+          {
+            "name": "apx_demo_doc_types_fk1",
+            "type": "f"
+          },
+          {
+            "name": "apx_demo_doc_types_fk2",
+            "type": "f"
+          },
+          {
+            "name": "apx_demo_doc_types_pk",
+            "type": "p"
+          }
+        ]
+      },
+      "apx_demo_doc_seq": {
+        "columns": [
+          {
+            "name": "doc_type",
+            "type": "character varying(10)",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "period",
+            "type": "character varying(4)",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "last_no",
+            "type": "numeric",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          }
+        ],
+        "constraints": [
+          {
+            "name": "apx_demo_doc_seq_pk",
+            "type": "p"
+          }
+        ]
+      },
+      "apx_demo_approvals": {
+        "columns": [
+          {
+            "name": "approval_id",
+            "type": "bigint",
+            "nullable": false,
+            "identity": "d",
+            "generated": ""
+          },
+          {
+            "name": "doc_type",
+            "type": "character varying(10)",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "doc_id",
+            "type": "numeric",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "doc_no",
+            "type": "character varying(30)",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "approval_level",
+            "type": "numeric",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "approver_role",
+            "type": "character varying(30)",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "amount",
+            "type": "numeric",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "requested_by",
+            "type": "character varying(255)",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "requested_on",
+            "type": "timestamp(0) without time zone",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "status",
+            "type": "character varying(20)",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "acted_by",
+            "type": "character varying(255)",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "acted_on",
+            "type": "timestamp(0) without time zone",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "note",
+            "type": "character varying(1000)",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          }
+        ],
+        "constraints": [
+          {
+            "name": "apx_demo_approvals_ck1",
+            "type": "c"
+          },
+          {
+            "name": "apx_demo_approvals_fk1",
+            "type": "f"
+          },
+          {
+            "name": "apx_demo_approvals_pk",
+            "type": "p"
+          }
+        ]
+      },
+      "apx_demo_departments": {
+        "columns": [
+          {
+            "name": "department_id",
+            "type": "bigint",
+            "nullable": false,
+            "identity": "d",
+            "generated": ""
+          },
+          {
+            "name": "dept_code",
+            "type": "character varying(20)",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "dept_name",
+            "type": "character varying(100)",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "active_yn",
+            "type": "character varying(1)",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "created_by",
+            "type": "character varying(255)",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "created_on",
+            "type": "timestamp(0) without time zone",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "updated_by",
+            "type": "character varying(255)",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "updated_on",
+            "type": "timestamp(0) without time zone",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          }
+        ],
+        "constraints": [
+          {
+            "name": "apx_demo_departments_ck1",
+            "type": "c"
+          },
+          {
+            "name": "apx_demo_departments_pk",
+            "type": "p"
+          },
+          {
+            "name": "apx_demo_departments_u1",
+            "type": "u"
+          }
+        ]
+      },
+      "apx_demo_items": {
+        "columns": [
+          {
+            "name": "item_id",
+            "type": "bigint",
+            "nullable": false,
+            "identity": "d",
+            "generated": ""
+          },
+          {
+            "name": "item_code",
+            "type": "character varying(30)",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "item_name",
+            "type": "character varying(200)",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "category",
+            "type": "character varying(20)",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "uom",
+            "type": "character varying(10)",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "std_price",
+            "type": "numeric",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "active_yn",
+            "type": "character varying(1)",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "created_by",
+            "type": "character varying(255)",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "created_on",
+            "type": "timestamp(0) without time zone",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "updated_by",
+            "type": "character varying(255)",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "updated_on",
+            "type": "timestamp(0) without time zone",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          }
+        ],
+        "constraints": [
+          {
+            "name": "apx_demo_items_ck1",
+            "type": "c"
+          },
+          {
+            "name": "apx_demo_items_ck2",
+            "type": "c"
+          },
+          {
+            "name": "apx_demo_items_ck3",
+            "type": "c"
+          },
+          {
+            "name": "apx_demo_items_pk",
+            "type": "p"
+          },
+          {
+            "name": "apx_demo_items_u1",
+            "type": "u"
+          }
+        ]
+      },
+      "apx_demo_requests": {
+        "columns": [
+          {
+            "name": "request_id",
+            "type": "bigint",
+            "nullable": false,
+            "identity": "d",
+            "generated": ""
+          },
+          {
+            "name": "request_no",
+            "type": "character varying(30)",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "department_id",
+            "type": "bigint",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "request_date",
+            "type": "timestamp(0) without time zone",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "need_date",
+            "type": "timestamp(0) without time zone",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "purpose",
+            "type": "character varying(300)",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "notes",
+            "type": "character varying(1000)",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "status",
+            "type": "character varying(20)",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "created_by",
+            "type": "character varying(255)",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "created_on",
+            "type": "timestamp(0) without time zone",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "updated_by",
+            "type": "character varying(255)",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "updated_on",
+            "type": "timestamp(0) without time zone",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          }
+        ],
+        "constraints": [
+          {
+            "name": "apx_demo_requests_ck1",
+            "type": "c"
+          },
+          {
+            "name": "apx_demo_requests_fk1",
+            "type": "f"
+          },
+          {
+            "name": "apx_demo_requests_pk",
+            "type": "p"
+          },
+          {
+            "name": "apx_demo_requests_u1",
+            "type": "u"
+          }
+        ]
+      },
+      "apx_demo_request_lines": {
+        "columns": [
+          {
+            "name": "line_id",
+            "type": "bigint",
+            "nullable": false,
+            "identity": "d",
+            "generated": ""
+          },
+          {
+            "name": "request_id",
+            "type": "bigint",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "item_id",
+            "type": "bigint",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "qty",
+            "type": "numeric",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "unit_price",
+            "type": "numeric",
+            "nullable": false,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "line_amount",
+            "type": "numeric",
+            "nullable": true,
+            "identity": "",
+            "generated": "s"
+          },
+          {
+            "name": "created_by",
+            "type": "character varying(255)",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "created_on",
+            "type": "timestamp(0) without time zone",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "updated_by",
+            "type": "character varying(255)",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          },
+          {
+            "name": "updated_on",
+            "type": "timestamp(0) without time zone",
+            "nullable": true,
+            "identity": "",
+            "generated": ""
+          }
+        ],
+        "constraints": [
+          {
+            "name": "apx_demo_request_lines_ck1",
+            "type": "c"
+          },
+          {
+            "name": "apx_demo_request_lines_ck2",
+            "type": "c"
+          },
+          {
+            "name": "apx_demo_request_lines_fk1",
+            "type": "f"
+          },
+          {
+            "name": "apx_demo_request_lines_fk2",
+            "type": "f"
+          },
+          {
+            "name": "apx_demo_request_lines_pk",
+            "type": "p"
+          }
+        ]
+      }
+    },
+    "indexes": {
+      "apx_demo_approvals_n1": {
+        "table": "apx_demo_approvals",
+        "unique": false
+      },
+      "apx_demo_requests_n1": {
+        "table": "apx_demo_requests",
+        "unique": false
+      },
+      "apx_demo_request_lines_n1": {
+        "table": "apx_demo_request_lines",
+        "unique": false
+      },
+      "apx_demo_request_lines_n2": {
+        "table": "apx_demo_request_lines",
+        "unique": false
+      }
+    },
+    "views": {
+      "apx_demo_user_roles_v": [
+        "user_role_id",
+        "username",
+        "role_code",
+        "role_name",
+        "created_by",
+        "created_on"
+      ],
+      "apx_demo_departments_v": [
+        "department_id",
+        "dept_code",
+        "dept_name",
+        "active_yn",
+        "created_by",
+        "created_on",
+        "updated_by",
+        "updated_on"
+      ],
+      "apx_demo_items_v": [
+        "item_id",
+        "item_code",
+        "item_name",
+        "category",
+        "uom",
+        "std_price",
+        "active_yn",
+        "created_by",
+        "created_on",
+        "updated_by",
+        "updated_on"
+      ],
+      "apx_demo_requests_v": [
+        "request_id",
+        "request_no",
+        "department_id",
+        "department_id_dsp",
+        "request_date",
+        "need_date",
+        "purpose",
+        "notes",
+        "status",
+        "created_by",
+        "created_on",
+        "updated_by",
+        "updated_on"
+      ],
+      "apx_demo_request_lines_v": [
+        "line_id",
+        "request_id",
+        "request_id_dsp",
+        "item_id",
+        "item_id_dsp",
+        "qty",
+        "unit_price",
+        "line_amount",
+        "created_by",
+        "created_on",
+        "updated_by",
+        "updated_on"
+      ],
+      "apx_demo_dash_c1_s1_v": [
+        "label",
+        "value"
+      ],
+      "apx_demo_dash_c2_s1_v": [
+        "label",
+        "value"
+      ],
+      "apx_demo_request_summary_v": [
+        "request_id",
+        "request_no",
+        "dept_name",
+        "request_date",
+        "purpose",
+        "line_count",
+        "total_amount",
+        "status"
+      ]
+    },
+    "sequences": []
+  },
+  "apexReferences": [
+    {
+      "kind": "SQL",
+      "source": "page 100 create_jet_chart_series Permintaan [p_data_source]",
+      "object": "APX_DEMO_DASH_C1_S1_V",
+      "columns": [
+        "LABEL",
+        "VALUE"
+      ],
+      "resolvedAs": "VIEW"
+    },
+    {
+      "kind": "SQL",
+      "source": "page 100 create_jet_chart_series Total [p_data_source]",
+      "object": "APX_DEMO_DASH_C2_S1_V",
+      "columns": [
+        "LABEL",
+        "VALUE"
+      ],
+      "resolvedAs": "VIEW"
+    },
+    {
+      "kind": "SQL",
+      "source": "page 100 create_page_plug Ringkasan [p_plug_source]",
+      "object": "APX_DEMO_DASH_KPI_V",
+      "columns": [
+        "SEQ",
+        "ICON",
+        "LABEL",
+        "METRIC_VALUE"
+      ],
+      "resolvedAs": "VIEW (not emitted)"
+    },
+    {
+      "kind": "SQL",
+      "source": "page 190 create_page_plug Approval Inbox [p_plug_source]",
+      "object": "APX_DEMO_APPROVALS_V",
+      "columns": [
+        "APPROVAL_ID",
+        "DOC_NAME",
+        "DOC_NO",
+        "APPROVAL_LEVEL",
+        "APPROVER_ROLE",
+        "AMOUNT",
+        "REQUESTED_BY",
+        "REQUESTED_ON",
+        "STATUS",
+        "CAN_ACT_YN",
+        "ACTED_BY",
+        "ACTED_ON",
+        "NOTE"
+      ],
+      "resolvedAs": "VIEW (not emitted)"
+    },
+    {
+      "kind": "FORM_TABLE",
+      "source": "page 191 region Approval",
+      "object": "APX_DEMO_APPROVALS_V",
+      "columns": [
+        "AMOUNT",
+        "APPROVAL_ID",
+        "APPROVAL_LEVEL",
+        "APPROVER_ROLE",
+        "CAN_ACT_YN",
+        "DOC_NAME",
+        "DOC_NO",
+        "REQUESTED_BY",
+        "STATUS"
+      ],
+      "resolvedAs": "VIEW (not emitted)"
+    },
+    {
+      "kind": "PLSQL_CALL",
+      "source": "page 191 create_page_process CALL_APPROVE [p_process_sql_clob]",
+      "object": "APX_DEMO_APPROVAL_PKG",
+      "member": "APPROVE",
+      "resolvedAs": "PACKAGE MEMBER"
+    },
+    {
+      "kind": "PLSQL_CALL",
+      "source": "page 191 create_page_process CALL_REJECT [p_process_sql_clob]",
+      "object": "APX_DEMO_APPROVAL_PKG",
+      "member": "REJECT",
+      "resolvedAs": "PACKAGE MEMBER"
+    },
+    {
+      "kind": "SQL",
+      "source": "page 200 create_page_plug Departments [p_plug_source]",
+      "object": "APX_DEMO_DEPARTMENTS_V",
+      "columns": [
+        "DEPARTMENT_ID",
+        "DEPT_CODE",
+        "DEPT_NAME",
+        "ACTIVE_YN",
+        "UPDATED_BY",
+        "UPDATED_ON"
+      ],
+      "resolvedAs": "VIEW"
+    },
+    {
+      "kind": "FORM_TABLE",
+      "source": "page 201 region Department",
+      "object": "APX_DEMO_DEPARTMENTS",
+      "columns": [
+        "ACTIVE_YN",
+        "DEPARTMENT_ID",
+        "DEPT_CODE",
+        "DEPT_NAME"
+      ],
+      "resolvedAs": "TABLE"
+    },
+    {
+      "kind": "SQL",
+      "source": "page 210 create_page_plug Hasil Items [p_plug_source]",
+      "object": "APX_DEMO_ITEMS_V",
+      "columns": [
+        "ITEM_ID",
+        "ITEM_CODE",
+        "ITEM_NAME",
+        "CATEGORY",
+        "UOM",
+        "STD_PRICE",
+        "ACTIVE_YN",
+        "UPDATED_BY",
+        "UPDATED_ON"
+      ],
+      "resolvedAs": "VIEW"
+    },
+    {
+      "kind": "FORM_TABLE",
+      "source": "page 211 region Item",
+      "object": "APX_DEMO_ITEMS",
+      "columns": [
+        "ACTIVE_YN",
+        "CATEGORY",
+        "ITEM_CODE",
+        "ITEM_ID",
+        "ITEM_NAME",
+        "STD_PRICE",
+        "UOM"
+      ],
+      "resolvedAs": "TABLE"
+    },
+    {
+      "kind": "SQL",
+      "source": "page 300 create_report_region Hasil Permintaan Barang [p_source]",
+      "object": "APX_DEMO_REQUESTS_V",
+      "columns": [
+        "REQUEST_ID",
+        "REQUEST_NO",
+        "DEPARTMENT_ID_DSP",
+        "REQUEST_DATE",
+        "NEED_DATE",
+        "PURPOSE",
+        "STATUS",
+        "UPDATED_BY",
+        "UPDATED_ON"
+      ],
+      "resolvedAs": "VIEW"
+    },
+    {
+      "kind": "FORM_TABLE",
+      "source": "page 301 region Permintaan Barang",
+      "object": "APX_DEMO_REQUESTS",
+      "columns": [
+        "DEPARTMENT_ID",
+        "NEED_DATE",
+        "NOTES",
+        "PURPOSE",
+        "REQUEST_DATE",
+        "REQUEST_ID",
+        "REQUEST_NO",
+        "STATUS"
+      ],
+      "resolvedAs": "TABLE"
+    },
+    {
+      "kind": "PLSQL_CALL",
+      "source": "page 301 create_page_process CALL_SUBMIT_REQUESTS [p_process_sql_clob]",
+      "object": "APX_DEMO_APPROVAL_PKG",
+      "member": "SUBMIT",
+      "resolvedAs": "PACKAGE MEMBER"
+    },
+    {
+      "kind": "SQL",
+      "source": "page 302 create_report_region Baris Permintaan [p_source]",
+      "object": "APX_DEMO_REQUEST_LINES_V",
+      "columns": [
+        "LINE_ID",
+        "ITEM_ID_DSP",
+        "QTY",
+        "UNIT_PRICE",
+        "LINE_AMOUNT"
+      ],
+      "resolvedAs": "VIEW"
+    },
+    {
+      "kind": "SQL",
+      "source": "page 302 create_report_region Permintaan Barang [p_source]",
+      "object": "APX_DEMO_REQUESTS_V",
+      "columns": [
+        "REQUEST_ID",
+        "REQUEST_NO",
+        "DEPARTMENT_ID_DSP",
+        "REQUEST_DATE",
+        "NEED_DATE",
+        "PURPOSE",
+        "STATUS"
+      ],
+      "resolvedAs": "VIEW"
+    },
+    {
+      "kind": "SQL",
+      "source": "page 302 create_report_region Daftar Permintaan Barang [p_source]",
+      "object": "APX_DEMO_REQUESTS_V",
+      "columns": [
+        "REQUEST_ID",
+        "REQUEST_NO",
+        "DEPARTMENT_ID_DSP",
+        "STATUS"
+      ],
+      "resolvedAs": "VIEW"
+    },
+    {
+      "kind": "SQL",
+      "source": "page 310 create_page_plug Baris Permintaan [p_plug_source]",
+      "object": "APX_DEMO_REQUEST_LINES_V",
+      "columns": [
+        "LINE_ID",
+        "REQUEST_ID_DSP",
+        "ITEM_ID_DSP",
+        "QTY",
+        "UNIT_PRICE",
+        "LINE_AMOUNT",
+        "UPDATED_BY",
+        "UPDATED_ON"
+      ],
+      "resolvedAs": "VIEW"
+    },
+    {
+      "kind": "FORM_TABLE",
+      "source": "page 311 region Baris Permintaan",
+      "object": "APX_DEMO_REQUEST_LINES",
+      "columns": [
+        "ITEM_ID",
+        "LINE_AMOUNT",
+        "LINE_ID",
+        "QTY",
+        "REQUEST_ID",
+        "UNIT_PRICE"
+      ],
+      "resolvedAs": "TABLE"
+    },
+    {
+      "kind": "SQL",
+      "source": "page 400 create_page_plug Rekap Permintaan [p_plug_source]",
+      "object": "APX_DEMO_REQUEST_SUMMARY_V",
+      "columns": [
+        "REQUEST_NO",
+        "DEPT_NAME",
+        "REQUEST_DATE",
+        "PURPOSE",
+        "LINE_COUNT",
+        "TOTAL_AMOUNT",
+        "STATUS"
+      ],
+      "resolvedAs": "VIEW"
+    },
+    {
+      "kind": "SQL",
+      "source": "page 500 create_page_plug Users & Roles [p_plug_source]",
+      "object": "APX_DEMO_USER_ROLES_V",
+      "columns": [
+        "USER_ROLE_ID",
+        "USERNAME",
+        "ROLE_CODE",
+        "ROLE_NAME",
+        "CREATED_BY",
+        "CREATED_ON"
+      ],
+      "resolvedAs": "VIEW"
+    },
+    {
+      "kind": "FORM_TABLE",
+      "source": "page 501 region User Role",
+      "object": "APX_DEMO_USER_ROLES",
+      "columns": [
+        "ROLE_CODE",
+        "USERNAME",
+        "USER_ROLE_ID"
+      ],
+      "resolvedAs": "TABLE"
+    },
+    {
+      "kind": "SQL",
+      "source": "page 510 create_page_plug Document Types & Approval [p_plug_source]",
+      "object": "APX_DEMO_DOC_TYPES",
+      "columns": [
+        "DOC_TYPE",
+        "DOC_NAME",
+        "PREFIX",
+        "APPROVER1_ROLE",
+        "APPROVER2_ROLE",
+        "LEVEL2_LIMIT"
+      ],
+      "resolvedAs": "TABLE"
+    },
+    {
+      "kind": "FORM_TABLE",
+      "source": "page 511 region Document Type",
+      "object": "APX_DEMO_DOC_TYPES",
+      "columns": [
+        "APPROVER1_ROLE",
+        "APPROVER2_ROLE",
+        "DOC_NAME",
+        "DOC_TYPE",
+        "LEVEL2_LIMIT",
+        "PREFIX"
+      ],
+      "resolvedAs": "TABLE"
+    },
+    {
+      "kind": "PLSQL_CALL",
+      "source": "shared_components/security/authorizations/admin_rights.sql create_security_scheme ADMIN_RIGHTS [p_attributes]",
+      "object": "APX_DEMO_SEC_PKG",
+      "member": "HAS_ROLE",
+      "resolvedAs": "PACKAGE MEMBER"
+    },
+    {
+      "kind": "PLSQL_CALL",
+      "source": "shared_components/security/authorizations/app_users.sql create_security_scheme APP_USERS [p_attributes]",
+      "object": "APX_DEMO_SEC_PKG",
+      "member": "HAS_ANY_ROLE",
+      "resolvedAs": "PACKAGE MEMBER"
+    },
+    {
+      "kind": "PLSQL_CALL",
+      "source": "shared_components/security/authorizations/master_data.sql create_security_scheme MASTER_DATA [p_attributes]",
+      "object": "APX_DEMO_SEC_PKG",
+      "member": "HAS_ROLE",
+      "resolvedAs": "PACKAGE MEMBER"
+    },
+    {
+      "kind": "PLSQL_CALL",
+      "source": "shared_components/security/authorizations/requester.sql create_security_scheme REQUESTER [p_attributes]",
+      "object": "APX_DEMO_SEC_PKG",
+      "member": "HAS_ROLE",
+      "resolvedAs": "PACKAGE MEMBER"
+    },
+    {
+      "kind": "PLSQL_CALL",
+      "source": "shared_components/security/authorizations/warehouse.sql create_security_scheme WAREHOUSE [p_attributes]",
+      "object": "APX_DEMO_SEC_PKG",
+      "member": "HAS_ROLE",
+      "resolvedAs": "PACKAGE MEMBER"
+    },
+    {
+      "kind": "SQL",
+      "source": "shared_components/user_interface/lovs/apx_demo_departments.sql create_list_of_values APX_DEMO_DEPARTMENTS [p_lov_query]",
+      "object": "APX_DEMO_DEPARTMENTS",
+      "columns": [],
+      "resolvedAs": "TABLE"
+    },
+    {
+      "kind": "SQL",
+      "source": "shared_components/user_interface/lovs/apx_demo_items.sql create_list_of_values APX_DEMO_ITEMS [p_lov_query]",
+      "object": "APX_DEMO_ITEMS",
+      "columns": [],
+      "resolvedAs": "TABLE"
+    },
+    {
+      "kind": "SQL",
+      "source": "shared_components/user_interface/lovs/apx_demo_request_lines.sql create_list_of_values APX_DEMO_REQUEST_LINES [p_lov_query]",
+      "object": "APX_DEMO_REQUEST_LINES",
+      "columns": [],
+      "resolvedAs": "TABLE"
+    },
+    {
+      "kind": "SQL",
+      "source": "shared_components/user_interface/lovs/apx_demo_requests.sql create_list_of_values APX_DEMO_REQUESTS [p_lov_query]",
+      "object": "APX_DEMO_REQUESTS",
+      "columns": [],
+      "resolvedAs": "TABLE"
+    },
+    {
+      "kind": "SQL",
+      "source": "shared_components/user_interface/lovs/demo_roles.sql create_list_of_values DEMO_ROLES [p_lov_query]",
+      "object": "APX_DEMO_ROLES",
+      "columns": [],
+      "resolvedAs": "TABLE"
+    }
+  ],
+  "sql": "-- APEX2NEXT WP9.3 PostgreSQL schema migration (generated DRAFT; review required)\n-- Source: install.sql sha256:7c71e9c56b76d5fe893d2f357e692b9e7c458adc37791784379842ec1712d66d\n-- Converter: schema-plan 0.3.0; rules sha256 2210687c65d791ec\n-- Deterministic output: change conversion rules/decisions and regenerate; do not hand-edit.\n-- Not executed by the generator. Not approved for shared environments.\n\nBEGIN;\n\nCREATE SCHEMA IF NOT EXISTS app;\nSET LOCAL search_path TO app;\n\n-- Tables\nCREATE TABLE app.apx_demo_roles (\n    role_code varchar(30) NOT NULL,\n    role_name varchar(100) NOT NULL,\n    description varchar(400),\n    CONSTRAINT apx_demo_roles_pk PRIMARY KEY (role_code)\n);\nCREATE TABLE app.apx_demo_user_roles (\n    user_role_id bigint GENERATED BY DEFAULT AS IDENTITY,\n    username varchar(255) NOT NULL,\n    role_code varchar(30) NOT NULL,\n    created_by varchar(255),\n    created_on timestamp(0) without time zone,\n    updated_by varchar(255),\n    updated_on timestamp(0) without time zone,\n    CONSTRAINT apx_demo_user_roles_pk PRIMARY KEY (user_role_id),\n    CONSTRAINT apx_demo_user_roles_u1 UNIQUE (username, role_code)\n);\nCREATE TABLE app.apx_demo_doc_types (\n    doc_type varchar(10) NOT NULL,\n    doc_name varchar(100) NOT NULL,\n    prefix varchar(10) NOT NULL,\n    table_name varchar(128) NOT NULL,\n    pk_column varchar(128) NOT NULL,\n    number_column varchar(128) NOT NULL,\n    status_column varchar(128) DEFAULT 'STATUS' NOT NULL,\n    amount_expr varchar(4000),\n    validate_proc varchar(261),\n    approver1_role varchar(30),\n    approver2_role varchar(30),\n    level2_limit numeric DEFAULT 0 NOT NULL,\n    CONSTRAINT apx_demo_doc_types_pk PRIMARY KEY (doc_type)\n);\nCREATE TABLE app.apx_demo_doc_seq (\n    doc_type varchar(10) NOT NULL,\n    period varchar(4) NOT NULL,\n    last_no numeric DEFAULT 0 NOT NULL,\n    CONSTRAINT apx_demo_doc_seq_pk PRIMARY KEY (doc_type, period)\n);\nCREATE TABLE app.apx_demo_approvals (\n    approval_id bigint GENERATED BY DEFAULT AS IDENTITY,\n    doc_type varchar(10) NOT NULL,\n    doc_id numeric NOT NULL,\n    doc_no varchar(30),\n    approval_level numeric DEFAULT 1 NOT NULL,\n    approver_role varchar(30) NOT NULL,\n    amount numeric,\n    requested_by varchar(255) NOT NULL,\n    requested_on timestamp(0) without time zone DEFAULT LOCALTIMESTAMP(0) NOT NULL,\n    status varchar(20) DEFAULT 'PENDING' NOT NULL,\n    acted_by varchar(255),\n    acted_on timestamp(0) without time zone,\n    note varchar(1000),\n    CONSTRAINT apx_demo_approvals_pk PRIMARY KEY (approval_id),\n    CONSTRAINT apx_demo_approvals_ck1 CHECK (status in ('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'))\n);\nCREATE TABLE app.apx_demo_departments (\n    department_id bigint GENERATED BY DEFAULT AS IDENTITY,\n    dept_code varchar(20) NOT NULL,\n    dept_name varchar(100) NOT NULL,\n    active_yn varchar(1) DEFAULT 'Y',\n    created_by varchar(255),\n    created_on timestamp(0) without time zone,\n    updated_by varchar(255),\n    updated_on timestamp(0) without time zone,\n    CONSTRAINT apx_demo_departments_pk PRIMARY KEY (department_id),\n    CONSTRAINT apx_demo_departments_u1 UNIQUE (dept_code),\n    CONSTRAINT apx_demo_departments_ck1 CHECK (active_yn in ('Y', 'N'))\n);\nCREATE TABLE app.apx_demo_items (\n    item_id bigint GENERATED BY DEFAULT AS IDENTITY,\n    item_code varchar(30) NOT NULL,\n    item_name varchar(200) NOT NULL,\n    category varchar(20) NOT NULL,\n    uom varchar(10) NOT NULL,\n    std_price numeric DEFAULT 0 NOT NULL,\n    active_yn varchar(1) DEFAULT 'Y',\n    created_by varchar(255),\n    created_on timestamp(0) without time zone,\n    updated_by varchar(255),\n    updated_on timestamp(0) without time zone,\n    CONSTRAINT apx_demo_items_pk PRIMARY KEY (item_id),\n    CONSTRAINT apx_demo_items_u1 UNIQUE (item_code),\n    CONSTRAINT apx_demo_items_ck1 CHECK (category in ('ATK', 'IT', 'CONSUMABLE')),\n    CONSTRAINT apx_demo_items_ck2 CHECK (std_price >= 0),\n    CONSTRAINT apx_demo_items_ck3 CHECK (active_yn in ('Y', 'N'))\n);\nCREATE TABLE app.apx_demo_requests (\n    request_id bigint GENERATED BY DEFAULT AS IDENTITY,\n    request_no varchar(30),\n    department_id bigint NOT NULL,\n    request_date timestamp(0) without time zone DEFAULT CAST(CURRENT_DATE AS timestamp(0)) NOT NULL,\n    need_date timestamp(0) without time zone,\n    purpose varchar(300) NOT NULL,\n    notes varchar(1000),\n    status varchar(20) DEFAULT 'DRAFT' NOT NULL,\n    created_by varchar(255),\n    created_on timestamp(0) without time zone,\n    updated_by varchar(255),\n    updated_on timestamp(0) without time zone,\n    CONSTRAINT apx_demo_requests_pk PRIMARY KEY (request_id),\n    CONSTRAINT apx_demo_requests_u1 UNIQUE (request_no),\n    CONSTRAINT apx_demo_requests_ck1 CHECK (status in ('DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED', 'CANCELLED', 'FULFILLED', 'CLOSED'))\n);\nCREATE TABLE app.apx_demo_request_lines (\n    line_id bigint GENERATED BY DEFAULT AS IDENTITY,\n    request_id bigint NOT NULL,\n    item_id bigint NOT NULL,\n    qty numeric NOT NULL,\n    unit_price numeric DEFAULT 0 NOT NULL,\n    line_amount numeric GENERATED ALWAYS AS (qty * unit_price) STORED,\n    created_by varchar(255),\n    created_on timestamp(0) without time zone,\n    updated_by varchar(255),\n    updated_on timestamp(0) without time zone,\n    CONSTRAINT apx_demo_request_lines_pk PRIMARY KEY (line_id),\n    CONSTRAINT apx_demo_request_lines_ck1 CHECK (qty >= 0),\n    CONSTRAINT apx_demo_request_lines_ck2 CHECK (unit_price >= 0)\n);\n\n-- Foreign keys and NOT VALID constraints\nALTER TABLE app.apx_demo_user_roles ADD CONSTRAINT apx_demo_user_roles_fk1 FOREIGN KEY (role_code) REFERENCES app.apx_demo_roles (role_code);\nALTER TABLE app.apx_demo_doc_types ADD CONSTRAINT apx_demo_doc_types_fk1 FOREIGN KEY (approver1_role) REFERENCES app.apx_demo_roles (role_code);\nALTER TABLE app.apx_demo_doc_types ADD CONSTRAINT apx_demo_doc_types_fk2 FOREIGN KEY (approver2_role) REFERENCES app.apx_demo_roles (role_code);\nALTER TABLE app.apx_demo_approvals ADD CONSTRAINT apx_demo_approvals_fk1 FOREIGN KEY (doc_type) REFERENCES app.apx_demo_doc_types (doc_type);\nALTER TABLE app.apx_demo_requests ADD CONSTRAINT apx_demo_requests_fk1 FOREIGN KEY (department_id) REFERENCES app.apx_demo_departments (department_id);\nALTER TABLE app.apx_demo_request_lines ADD CONSTRAINT apx_demo_request_lines_fk1 FOREIGN KEY (request_id) REFERENCES app.apx_demo_requests (request_id) ON DELETE CASCADE;\nALTER TABLE app.apx_demo_request_lines ADD CONSTRAINT apx_demo_request_lines_fk2 FOREIGN KEY (item_id) REFERENCES app.apx_demo_items (item_id);\n\n-- Indexes\nCREATE INDEX apx_demo_approvals_n1 ON app.apx_demo_approvals (doc_type, doc_id);\nCREATE INDEX apx_demo_requests_n1 ON app.apx_demo_requests (department_id);\nCREATE INDEX apx_demo_request_lines_n1 ON app.apx_demo_request_lines (request_id);\nCREATE INDEX apx_demo_request_lines_n2 ON app.apx_demo_request_lines (item_id);\n\n-- Views (dependency order)\nCREATE VIEW app.apx_demo_user_roles_v AS\nselect ur.user_role_id\n      ,ur.username\n      ,ur.role_code\n      ,r.role_name\n      ,ur.created_by\n      ,ur.created_on\n  from apx_demo_user_roles ur\n  join apx_demo_roles r on r.role_code = ur.role_code;\nCREATE VIEW app.apx_demo_departments_v AS\nselect t.department_id\n      ,t.dept_code\n      ,t.dept_name\n      ,t.active_yn\n      ,t.created_by\n      ,t.created_on\n      ,t.updated_by\n      ,t.updated_on\n  from apx_demo_departments t;\nCREATE VIEW app.apx_demo_items_v AS\nselect t.item_id\n      ,t.item_code\n      ,t.item_name\n      ,t.category\n      ,t.uom\n      ,t.std_price\n      ,t.active_yn\n      ,t.created_by\n      ,t.created_on\n      ,t.updated_by\n      ,t.updated_on\n  from apx_demo_items t;\nCREATE VIEW app.apx_demo_requests_v AS\nselect t.request_id\n      ,t.request_no\n      ,t.department_id\n      ,(select dept_code || ' - ' || dept_name from apx_demo_departments r where r.department_id = t.department_id) department_id_dsp\n      ,t.request_date\n      ,t.need_date\n      ,t.purpose\n      ,t.notes\n      ,t.status\n      ,t.created_by\n      ,t.created_on\n      ,t.updated_by\n      ,t.updated_on\n  from apx_demo_requests t;\nCREATE VIEW app.apx_demo_request_lines_v AS\nselect t.line_id\n      ,t.request_id\n      ,(select request_no || ' - ' || purpose from apx_demo_requests r where r.request_id = t.request_id) request_id_dsp\n      ,t.item_id\n      ,(select item_code || ' - ' || item_name || ' (' || uom || ')' from apx_demo_items r where r.item_id = t.item_id) item_id_dsp\n      ,t.qty\n      ,t.unit_price\n      ,t.line_amount\n      ,t.created_by\n      ,t.created_on\n      ,t.updated_by\n      ,t.updated_on\n  from apx_demo_request_lines t;\nCREATE VIEW app.apx_demo_dash_c1_s1_v AS\nselect status label, count(*) value from apx_demo_requests group by status;\nCREATE VIEW app.apx_demo_request_summary_v AS\nselect r.request_id\n      ,r.request_no\n      ,d.dept_name\n      ,r.request_date\n      ,r.purpose\n      ,(select count(*) from apx_demo_request_lines l where l.request_id = r.request_id) line_count\n      ,(select COALESCE(sum(l.line_amount), 0) from apx_demo_request_lines l where l.request_id = r.request_id) total_amount\n      ,r.status\n  from apx_demo_requests r\n  join apx_demo_departments d on d.department_id = r.department_id;\nCREATE VIEW app.apx_demo_dash_c2_s1_v AS\nselect dept_name label, sum(total_amount) value from apx_demo_request_summary_v group by dept_name;\n\n-- Not emitted (disposition in schema plan report):\n--   VIEW apx_demo_approvals_v: MANUAL (EXP009, VIW001, VIW007)\n--   VIEW apx_demo_dash_kpi_v: MANUAL (APX_DEMO_APPROVALS_V)\n\nCOMMIT;\n",
+  "postLoadSql": "-- APEX2NEXT WP9.3 post-load identity/sequence alignment (run after data load, before writes)\nBEGIN;\nSELECT setval(pg_get_serial_sequence('app.apx_demo_user_roles', 'user_role_id'), GREATEST(COALESCE((SELECT max(user_role_id) FROM app.apx_demo_user_roles), 0) + 1, 1), false);\nSELECT setval(pg_get_serial_sequence('app.apx_demo_approvals', 'approval_id'), GREATEST(COALESCE((SELECT max(approval_id) FROM app.apx_demo_approvals), 0) + 1, 1), false);\nSELECT setval(pg_get_serial_sequence('app.apx_demo_departments', 'department_id'), GREATEST(COALESCE((SELECT max(department_id) FROM app.apx_demo_departments), 0) + 1, 1), false);\nSELECT setval(pg_get_serial_sequence('app.apx_demo_items', 'item_id'), GREATEST(COALESCE((SELECT max(item_id) FROM app.apx_demo_items), 0) + 1, 1), false);\nSELECT setval(pg_get_serial_sequence('app.apx_demo_requests', 'request_id'), GREATEST(COALESCE((SELECT max(request_id) FROM app.apx_demo_requests), 0) + 1, 1), false);\nSELECT setval(pg_get_serial_sequence('app.apx_demo_request_lines', 'line_id'), GREATEST(COALESCE((SELECT max(line_id) FROM app.apx_demo_request_lines), 0) + 1, 1), false);\nCOMMIT;\n",
+  "limitations": [
+    "Static conversion of a source script; it does not prove the objects are installed, valid, or granted in Oracle. Oracle dictionary reconciliation is a separate WP9.3 step.",
+    "Business logic in triggers and PL/SQL packages is inventoried, not converted (WP9.4).",
+    "Seed/configuration DML is inventoried, not migrated (WP9.6).",
+    "Views calling PL/SQL functions are not emitted until target functions/services exist.",
+    "Generated SQL is a reviewed draft; it is not approved for any shared environment."
+  ]
+}

@@ -2,6 +2,19 @@
 
 Static Oracle metadata inventory and conservative PostgreSQL conversion. All tools are offline: they do not connect to Oracle or PostgreSQL and never execute source or generated SQL.
 
+## WP9.3 — schema plan (Oracle install script → PostgreSQL schema draft)
+
+`schema_plan` supersedes the WP8.1 `ddl_conversion` subset for application schemas; WP8.1 is unchanged as baseline evidence. It covers identity (incl. `ON NULL` and DBMS_METADATA options), virtual → stored generated columns, CHECK/PK/UNIQUE/FK (inline, out-of-line, `ALTER TABLE`, states), indexes, sequences, comments and views (dependency ordered). It also produces a trigger/PL/SQL behavior inventory, twelve dependency checks, an expected catalog and a load plan. See [the design](../../docs/architecture/wp9.3-schema-conversion-engine.md).
+
+\`\`\`bash
+PYTHONPATH=workers/schema-analyzer/src:workers/extraction-worker/src \
+  python -m apex2next_schema_analyzer.schema_plan install.sql --apex-export f170134/application \
+  --output build/schema-plan.json --sql-output build/0001_schema.sql --post-load-output build/post-load.sql
+python -m apex2next_schema_analyzer.schema_report build/schema-plan.json --output build/report.md
+\`\`\`
+
+Exit code 1 means at least one DEP check failed. Generated SQL is a draft for disposable PostgreSQL environments only. Integration tests: `APEX2NEXT_TEST_DATABASE_URL=<disposable db> python -m pytest -m postgres`.
+
 ## WP8.5 — PL/SQL conversion workbench
 
 This is a bounded lexical analysis and rule-registry baseline, not a complete PL/SQL parser or transpiler.

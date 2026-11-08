@@ -6,6 +6,7 @@
 - [TDD](architecture/tdd.md)
 - [Extractor and Schema Analyzer POC](architecture/extractor-analyzer-poc.md)
 - [Normalized Application IR v1 — Detailed Technical Design](architecture/normalized-ir-v1.md)
+- [WP9.3 Oracle → PostgreSQL Schema Conversion Engine](architecture/wp9.3-schema-conversion-engine.md)
 
 ## Data
 - [Framework ERD](data/erd.md)
@@ -13,6 +14,8 @@
 
 ## Migration
 - [Oracle/APEX conversion rules](migration/migration-rules.md)
+- [WP9 real application pilot](migration/wp9-real-application-pilot.md)
+- [WP9.3 Source validation & PostgreSQL target schema (170134)](migration/wp9.3-source-validation-schema-f170134.md)
 
 ## Decisions
 - [ADR index](adr/README.md)
