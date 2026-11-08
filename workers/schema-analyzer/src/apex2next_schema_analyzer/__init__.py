@@ -7,10 +7,12 @@ from .inventory import analyze_ddl
 from .metadata_manifest import build_manifest, reconcile_manifest
 from .pilot_qualification import assess_pilot
 from .plsql_workbench import RULE_REGISTRY_VERSION, analyze_plsql, rule_registry
+from .schema_plan import build_schema_plan
+from .schema_plan import rule_registry as schema_rule_registry
 
 __all__ = [
     "ChunkCheckpointStore", "CONVERTER_VERSION", "RULE_REGISTRY_VERSION",
     "assess_cutover_readiness", "analyze_ddl", "analyze_plsql", "build_chunk_manifest", "assess_pilot", "build_manifest",
-    "convert_oracle_ddl", "load_manifest", "reconcile_manifest",
-    "reconcile_snapshots", "rule_registry", "run_migration",
+    "build_schema_plan", "convert_oracle_ddl", "load_manifest", "reconcile_manifest",
+    "reconcile_snapshots", "rule_registry", "run_migration", "schema_rule_registry",
 ]
