@@ -59,6 +59,43 @@ jobs:
       - name: Pytest
         run: python -m pytest
 
+  schema-postgres:
+    name: WP9.3 schema migrations on PostgreSQL 16
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: apex2next_schema_test
+          POSTGRES_USER: apex2next
+          POSTGRES_PASSWORD: apex2next
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U apex2next -d apex2next_schema_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      APEX2NEXT_TEST_DATABASE_URL: postgresql://apex2next:apex2next@localhost:5432/apex2next_schema_test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install test dependencies
+        run: python -m pip install --upgrade pip pytest jsonschema "psycopg[binary]>=3.2,<4"
+
+      - name: Run PostgreSQL integration tests (no skips allowed)
+        run: |
+          python -m pytest -m postgres -rs -q | tee pytest-postgres.log
+          if grep -q "SKIPPED" pytest-postgres.log; then echo "PostgreSQL tests were skipped" >&2; exit 1; fi
+          grep -Eq "[1-9][0-9]* passed" pytest-postgres.log
+
   target-generation:
     name: Generated target workspace build
     runs-on: ubuntu-latest
