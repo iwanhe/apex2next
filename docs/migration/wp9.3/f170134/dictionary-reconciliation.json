@@ -1,0 +1,237 @@
+{
+  "format": "apex2next.dictionary-reconciliation.v1",
+  "reconcilerVersion": "0.1.0",
+  "plan": {
+    "source": {
+      "name": "install.sql",
+      "sha256": "sha256:7c71e9c56b76d5fe893d2f357e692b9e7c458adc37791784379842ec1712d66d",
+      "bytes": 38098
+    },
+    "converterVersion": "0.3.0"
+  },
+  "dictionary": {
+    "name": "report.csv",
+    "sha256": "3c5ab3742164354af769d53da8068204395ee26abae6ca4175b9ee63d3b12c06",
+    "snapshot": {
+      "schema": "WKSP_KCSI",
+      "timestamp": "2026-11-08T14:30:45.228+00:00",
+      "dbVersion": "23.26.2.0.0",
+      "dbName": "AEXTPDB",
+      "container": "AEXTPDB",
+      "schemaObjectCount": 951
+    },
+    "consistency": "Single-session query; no SCN (not granted). Rows are not guaranteed to be one point in time.",
+    "inScopeObjects": 49,
+    "schemaObjectCounts": {
+      "FUNCTION": {
+        "total": 3,
+        "inScope": 0,
+        "notValid": 2
+      },
+      "INDEX": {
+        "total": 424,
+        "inScope": 17,
+        "notValid": 0
+      },
+      "JOB": {
+        "total": 2,
+        "inScope": 0,
+        "notValid": 0
+      },
+      "LOB": {
+        "total": 56,
+        "inScope": 0,
+        "notValid": 0
+      },
+      "PACKAGE": {
+        "total": 23,
+        "inScope": 4,
+        "notValid": 0
+      },
+      "PACKAGE BODY": {
+        "total": 21,
+        "inScope": 4,
+        "notValid": 8
+      },
+      "PROCEDURE": {
+        "total": 3,
+        "inScope": 0,
+        "notValid": 0
+      },
+      "SEQUENCE": {
+        "total": 81,
+        "inScope": 0,
+        "notValid": 0
+      },
+      "TABLE": {
+        "total": 194,
+        "inScope": 9,
+        "notValid": 0
+      },
+      "TRIGGER": {
+        "total": 120,
+        "inScope": 5,
+        "notValid": 5
+      },
+      "VIEW": {
+        "total": 24,
+        "inScope": 10,
+        "notValid": 1
+      }
+    },
+    "notValidOutsideScope": {
+      "FUNCTION": 2,
+      "PACKAGE BODY": 8,
+      "TRIGGER": 5,
+      "VIEW": 1
+    }
+  },
+  "summary": {
+    "checks": {
+      "REC-001": "PASS",
+      "REC-002": "PASS",
+      "REC-003": "PASS",
+      "REC-004": "PASS",
+      "REC-005": "PASS",
+      "REC-006": "PASS",
+      "REC-007": "FAIL",
+      "REC-008": "PASS",
+      "REC-009": "FAIL",
+      "REC-010": "PASS",
+      "REC-011": "FAIL"
+    },
+    "reconciled": false,
+    "drift": 2
+  },
+  "checks": [
+    {
+      "id": "REC-001",
+      "title": "Every script object is installed, VALID, and no unexplained in-scope object exists",
+      "status": "PASS",
+      "failures": [],
+      "notes": [
+        "49 in-scope dictionary objects; 49 expected from script"
+      ]
+    },
+    {
+      "id": "REC-002",
+      "title": "Table columns match (order, datatype, length semantics, nullability, defaults, virtual expression)",
+      "status": "PASS",
+      "failures": [],
+      "notes": [
+        "length semantics BYTE (database default)"
+      ]
+    },
+    {
+      "id": "REC-003",
+      "title": "Identity columns match (BY DEFAULT ON NULL, START WITH, INCREMENT BY)",
+      "status": "PASS",
+      "failures": [],
+      "notes": [
+        "CACHE 20, MAXVALUE 9999999999999999999999999999 (Oracle defaults; PostgreSQL uses CACHE 1, bigint max)",
+        "6 identity column(s)"
+      ]
+    },
+    {
+      "id": "REC-004",
+      "title": "Named constraints match (type, columns, condition, references, delete rule, state); system-named constraints are NOT NULL declared in the script",
+      "status": "PASS",
+      "failures": [],
+      "notes": [
+        "28 named, 43 system-named NOT NULL"
+      ]
+    },
+    {
+      "id": "REC-005",
+      "title": "Indexes match (table, columns, uniqueness, VALID)",
+      "status": "PASS",
+      "failures": [],
+      "notes": [
+        "17 dictionary indexes incl. constraint-backing indexes"
+      ]
+    },
+    {
+      "id": "REC-006",
+      "title": "Triggers match (table, timing, events) and are ENABLED",
+      "status": "PASS",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "id": "REC-007",
+      "title": "View output columns match the script definitions",
+      "status": "FAIL",
+      "failures": [
+        "APX_DEMO_DASH_KPI_V: script columns ['KPI_1', 'KPI_2', 'KPI_3'] vs dictionary ['SEQ', 'ICON', 'LABEL', 'METRIC_VALUE']"
+      ],
+      "notes": []
+    },
+    {
+      "id": "REC-008",
+      "title": "Installed PL/SQL and trigger source size equals the script text (USER_SOURCE fingerprint)",
+      "status": "PASS",
+      "failures": [],
+      "notes": [
+        "PACKAGE APX_DEMO_SEC_PKG: 58 lines / 1588 chars identical",
+        "PACKAGE BODY APX_DEMO_SEC_PKG: 85 lines / 2096 chars identical",
+        "PACKAGE APX_DEMO_DOC_PKG: 18 lines / 508 chars identical",
+        "PACKAGE BODY APX_DEMO_DOC_PKG: 43 lines / 1264 chars identical",
+        "PACKAGE APX_DEMO_APPROVAL_PKG: 72 lines / 1826 chars identical",
+        "PACKAGE BODY APX_DEMO_APPROVAL_PKG: 267 lines / 7820 chars identical",
+        "TRIGGER APX_DEMO_USER_ROLES_TRG: 13 lines / 387 chars identical",
+        "TRIGGER APX_DEMO_DEPARTMENTS_TRG: 12 lines / 346 chars identical",
+        "TRIGGER APX_DEMO_ITEMS_TRG: 13 lines / 366 chars identical",
+        "TRIGGER APX_DEMO_REQUESTS_TRG: 37 lines / 1554 chars identical",
+        "TRIGGER APX_DEMO_REQUEST_LINES_TRG: 30 lines / 986 chars identical",
+        "PACKAGE APX_DEMO_REQUEST_PKG: 17 lines / 479 chars identical",
+        "PACKAGE BODY APX_DEMO_REQUEST_PKG: 26 lines / 611 chars identical"
+      ]
+    },
+    {
+      "id": "REC-009",
+      "title": "Installed static dependencies are all derived from the script",
+      "status": "FAIL",
+      "failures": [
+        "APX_DEMO_DASH_KPI_V -> APX_DEMO_APPROVAL_PKG: installed dependency not derived from script"
+      ],
+      "notes": [
+        "45 in-scope static edges; external: PUBLIC.DBMS_ASSERT, PUBLIC.DUAL, SYS.DBMS_STANDARD, SYS.STANDARD"
+      ]
+    },
+    {
+      "id": "REC-010",
+      "title": "No compile errors; grants recorded",
+      "status": "PASS",
+      "failures": [],
+      "notes": [
+        "0 object grant(s) on in-scope objects"
+      ]
+    },
+    {
+      "id": "REC-011",
+      "title": "No in-scope object was changed after the install window",
+      "status": "FAIL",
+      "failures": [
+        "VIEW APX_DEMO_DASH_C2_S1_V last DDL 2026-11-02T08:41:52 (same columns; recompilation or text change not verifiable without DDL)",
+        "VIEW APX_DEMO_DASH_KPI_V last DDL 2026-11-04T06:18:44 (definition differs from script)"
+      ],
+      "notes": [
+        "install window 2026-11-02T00:22:01 .. 2026-11-02T00:22:03"
+      ]
+    }
+  ],
+  "drift": [
+    {
+      "object": "VIEW APX_DEMO_DASH_KPI_V",
+      "kind": "definition",
+      "detail": "columns ['KPI_1', 'KPI_2', 'KPI_3'] in script, ['SEQ', 'ICON', 'LABEL', 'METRIC_VALUE'] installed",
+      "lastDdl": "2026-11-04T06:18:44"
+    },
+    {
+      "object": "VIEW APX_DEMO_DASH_C2_S1_V",
+      "kind": "post-install DDL",
+      "detail": "LAST_DDL_TIME after install window; columns match script",
+      "lastDdl": "2026-11-02T08:41:52"
+    }
+  ]
+}

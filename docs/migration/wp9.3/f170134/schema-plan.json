@@ -3853,9 +3853,14 @@
           }
         ]
       },
-      "columnsRead": [],
+      "columnsRead": [
+        "NEW.ROLE_CODE",
+        "NEW.USERNAME"
+      ],
       "errors": [],
-      "calls": [],
+      "calls": [
+        "APX_DEMO_SEC_PKG.APP_USER"
+      ],
       "tablesRead": [],
       "tablesWritten": [],
       "mutatingTableHandler": false,
@@ -3933,9 +3938,13 @@
           }
         ]
       },
-      "columnsRead": [],
+      "columnsRead": [
+        "NEW.DEPT_CODE"
+      ],
       "errors": [],
-      "calls": [],
+      "calls": [
+        "APX_DEMO_SEC_PKG.APP_USER"
+      ],
       "tablesRead": [],
       "tablesWritten": [],
       "mutatingTableHandler": false,
@@ -4020,9 +4029,14 @@
           }
         ]
       },
-      "columnsRead": [],
+      "columnsRead": [
+        "NEW.ITEM_CODE",
+        "NEW.UOM"
+      ],
       "errors": [],
-      "calls": [],
+      "calls": [
+        "APX_DEMO_SEC_PKG.APP_USER"
+      ],
       "tablesRead": [],
       "tablesWritten": [],
       "mutatingTableHandler": false,
@@ -4131,6 +4145,9 @@
       "columnsRead": [
         "NEW.REQUEST_NO",
         "NEW.STATUS",
+        "OLD.DEPARTMENT_ID",
+        "OLD.NEED_DATE",
+        "OLD.PURPOSE",
         "OLD.REQUEST_NO",
         "OLD.STATUS"
       ],
@@ -4149,7 +4166,9 @@
         }
       ],
       "calls": [
-        "APX_DEMO_APPROVAL_PKG.BYPASS"
+        "APX_DEMO_APPROVAL_PKG.BYPASS",
+        "APX_DEMO_DOC_PKG.NEXT_NO",
+        "APX_DEMO_SEC_PKG.APP_USER"
       ],
       "tablesRead": [],
       "tablesWritten": [],
@@ -4247,7 +4266,8 @@
         }
       ],
       "calls": [
-        "APX_DEMO_APPROVAL_PKG.BYPASS"
+        "APX_DEMO_APPROVAL_PKG.BYPASS",
+        "APX_DEMO_SEC_PKG.APP_USER"
       ],
       "tablesRead": [
         "APX_DEMO_REQUESTS"

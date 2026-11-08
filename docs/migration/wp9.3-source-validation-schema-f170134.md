@@ -1,6 +1,6 @@
 # WP9.3 — Oracle Source Validation & PostgreSQL Target Schema: Demo Permintaan Barang (170134)
 
-**Status:** WP9.3 **offline part complete**. Oracle Dictionary reconciliation (WP9.3b) is **not done** and is the next step. Nothing in this document proves that the objects are installed, valid, or granted in Oracle.
+**Status:** WP9.3 offline part complete. WP9.3b dictionary reconciliation was run on 2026-11-08 (§9): the installed schema matches `install.sql` except for **one view drift** (`APX_DEMO_DASH_KPI_V`). That drift must be resolved before the conversion source is final.
 **Date:** 2026-11-08
 **Engine:** schema-plan 0.3.0 ([design](../architecture/wp9.3-schema-conversion-engine.md))
 
@@ -84,12 +84,40 @@ The five triggers are inventoried in [report §6](wp9.3/f170134/schema-conversio
 
 DEP-006 confirms that every `:NEW`/`:OLD` column exists and that no trigger writes the generated column. DEP-007 confirms that every called package member is declared in its spec. All triggers are MANUAL. None is emitted to PostgreSQL.
 
-## 8. Next: WP9.3b Oracle Dictionary reconciliation
+## 8. WP9.3b inputs
 
-Required evidence, read-only, from the parsing schema (`WKSP_KCSI` per the export header; to be confirmed):
-1. The `workers/schema-analyzer/sql/dictionary_inventory.sql` and `ddl_export.sql` outputs (DBMS_METADATA), with the DB version, APEX version and snapshot SCN.
-2. `ALL_OBJECTS` status (VALID/INVALID), `ALL_DEPENDENCIES`, grants and synonyms for the 36 objects.
-3. A diff between the dictionary DDL and `install.sql`. The engine already parses DBMS_METADATA style (quoted names, storage, `USING INDEX`, identity options, NOVALIDATE); see the synthetic regression fixture.
-4. Resolution of SRC-001 and of page 00302 (still missing from APEXLang).
+The parsing schema is `WKSP_KCSI` on oracleapex.com (Oracle AI Database 26ai 23.26.2, APEX 26.2.1). SQL*Net/SQLcl is not available there, so the evidence was exported with the read-only `workers/schema-analyzer/sql/dictionary_inventory_apex_workshop.sql` from SQL Workshop. SCN is not granted, so the export is a single-session query and not a consistent point-in-time snapshot.
 
-Only after that diff will any of the WP9.3 artifacts be treated as reconciled.
+## 9. WP9.3b result — Oracle Dictionary reconciliation
+
+Generated report: [dictionary-reconciliation.md](wp9.3/f170134/dictionary-reconciliation.md) (`report.csv` `sha256:3c5ab374…3b12c06`, snapshot 2026-11-08T14:30:45Z, 49 in-scope objects out of 951 in the shared schema).
+
+| Check | Result |
+|---|---|
+| REC-001 objects installed and VALID | PASS: all 49 (9 tables, 10 views, 17 indexes, 5 triggers, 4 specs, 4 bodies); no unexplained `APX_DEMO_` object |
+| REC-002 columns | PASS: order, types, nullability, defaults and the virtual expression match. VARCHAR2 length semantics are **BYTE** (database default), which answers part of decision 5 |
+| REC-003 identity | PASS: 6 × BY DEFAULT ON NULL, START 1, INCREMENT 1 (Oracle CACHE 20) |
+| REC-004 constraints | PASS: 28 named (PK/UK/FK/CHECK, incl. ON DELETE CASCADE); 43 system-named are NOT NULL declared in the script |
+| REC-005 indexes / REC-006 triggers | PASS: 17 indexes; 5 triggers ENABLED, BEFORE EACH ROW, events as scripted |
+| REC-008 source fingerprint | PASS: all 13 PL/SQL and trigger units have the same line and character counts in `USER_SOURCE` as in the script |
+| REC-010 errors / grants | PASS: no compile errors; no object grants |
+| REC-007 / REC-009 / REC-011 | **FAIL: one drift** (below) |
+
+**Drift D-001 (resolves SRC-001).** `APX_DEMO_DASH_KPI_V` was redefined on 2026-11-04 06:18:44, after the 2026-11-02 install. The installed view exposes `SEQ, ICON, LABEL, METRIC_VALUE`, which is exactly what page 100 queries, and depends directly on `APX_DEMO_APPROVAL_PKG`. So the page is correct and `install.sql` is stale for this view. The installed view text is required to convert it.
+
+**D-002 (low risk).** `APX_DEMO_DASH_C2_S1_V` has LAST_DDL_TIME 2026-11-02 08:41:52, but its columns match the script. This is consistent with the automatic recompilation of a FORCE view that was created before `APX_DEMO_REQUEST_SUMMARY_V` existed. The view text confirms it.
+
+The reconciliation also exposed an engine defect, now fixed: package calls on the right-hand side of trigger assignments were not recorded. The trigger inventory now lists every `APX_DEMO_SEC_PKG.APP_USER`, `APX_DEMO_DOC_PKG.NEXT_NO` and `APX_DEMO_APPROVAL_PKG.BYPASS` call, and DEP-007 validates them.
+
+Schema hygiene outside scope: the shared schema has non-VALID objects belonging to other applications (8 package bodies, 5 triggers, 2 functions, 1 view). None is referenced by 170134.
+
+### To close WP9.3b
+
+Run this in SQL Workshop (read-only) and supply the output:
+
+```sql
+select view_name, text_length, text_vc from user_views
+ where view_name in ('APX_DEMO_DASH_KPI_V', 'APX_DEMO_DASH_C2_S1_V');
+```
+
+Then: correct the conversion source with the installed KPI view text (recorded as an explicit dictionary override, not a hand edit), regenerate the plan, design the KPI view for WP9.4 (it calls `APX_DEMO_APPROVAL_PKG`), and re-run the reconciliation until it is clean.

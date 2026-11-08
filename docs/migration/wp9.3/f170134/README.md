@@ -18,7 +18,12 @@ python -m apex2next_schema_analyzer.schema_plan /path/to/install.sql --source-na
 python -m apex2next_schema_analyzer.schema_report $D/schema-plan.json --output $D/schema-conversion-report.md \
   --title "WP9.3 — Schema Conversion Report: Demo Permintaan Barang (170134)"
 
+# WP9.3b dictionary reconciliation (CSV from sql/dictionary_inventory_apex_workshop.sql, not committed)
+python -m apex2next_schema_analyzer.dictionary_reconciliation $D/schema-plan.json /path/to/install.sql /path/to/report.csv \
+  --output $D/dictionary-reconciliation.json --markdown-output $D/dictionary-reconciliation.md \
+  --title "WP9.3b — Oracle Dictionary Reconciliation: Demo Permintaan Barang (170134)"   # exit 1 while drift exists
+
 # prove byte-identical regeneration and run PostgreSQL integration tests (disposable DB only)
-APEX2NEXT_F170134_INSTALL_SQL=/path/to/install.sql APEX2NEXT_F170134_EXPORT_DIR=/path/to/f170134/application \
-APEX2NEXT_TEST_DATABASE_URL=postgresql://user@host/disposable_db python -m pytest tests/test_wp93_*.py
+APEX2NEXT_F170134_INSTALL_SQL=/path/to/install.sql APEX2NEXT_F170134_DICTIONARY_CSV=/path/to/report.csv APEX2NEXT_F170134_EXPORT_DIR=/path/to/f170134/application \
+APEX2NEXT_TEST_DATABASE_URL=postgresql://user@host/disposable_db python -m pytest tests/test_wp93*.py
 ```

@@ -207,7 +207,7 @@
 ### apx_demo_user_roles_trg — BEFORE INSERT OR UPDATE ON apx_demo_user_roles FOR EACH ROW
 
 - Behaviors: audit-clock, audit-principal, normalization
-- Calls: —; tables read: —
+- Calls: apx_demo_sec_pkg.app_user; tables read: —
 - Columns written:
   - `created_by` ← `apx_demo_sec_pkg.app_user` (audit-principal; INSERTING)
   - `created_on` ← `sysdate` (audit-clock; INSERTING)
@@ -222,7 +222,7 @@
 ### apx_demo_departments_trg — BEFORE INSERT OR UPDATE ON apx_demo_departments FOR EACH ROW
 
 - Behaviors: audit-clock, audit-principal, normalization
-- Calls: —; tables read: —
+- Calls: apx_demo_sec_pkg.app_user; tables read: —
 - Columns written:
   - `created_by` ← `apx_demo_sec_pkg.app_user` (audit-principal; INSERTING)
   - `created_on` ← `sysdate` (audit-clock; INSERTING)
@@ -236,7 +236,7 @@
 ### apx_demo_items_trg — BEFORE INSERT OR UPDATE ON apx_demo_items FOR EACH ROW
 
 - Behaviors: audit-clock, audit-principal, normalization
-- Calls: —; tables read: —
+- Calls: apx_demo_sec_pkg.app_user; tables read: —
 - Columns written:
   - `created_by` ← `apx_demo_sec_pkg.app_user` (audit-principal; INSERTING)
   - `created_on` ← `sysdate` (audit-clock; INSERTING)
@@ -251,7 +251,7 @@
 ### apx_demo_requests_trg — BEFORE INSERT OR UPDATE ON apx_demo_requests FOR EACH ROW
 
 - Behaviors: audit-clock, audit-principal, derived-by-call, field-lock, forced-literal, guard
-- Calls: apx_demo_approval_pkg.bypass; tables read: —
+- Calls: apx_demo_approval_pkg.bypass, apx_demo_doc_pkg.next_no, apx_demo_sec_pkg.app_user; tables read: —
 - Errors raised: -20110 Permintaan Barang; -20111 Permintaan Barang; -20112 Perubahan status
 - Oracle-specific: package bypass state
 - Columns written:
@@ -273,7 +273,7 @@
 ### apx_demo_request_lines_trg — BEFORE INSERT OR UPDATE OR DELETE ON apx_demo_request_lines FOR EACH ROW
 
 - Behaviors: audit-clock, audit-principal, cross-table-read, guard
-- Calls: apx_demo_approval_pkg.bypass; tables read: apx_demo_requests
+- Calls: apx_demo_approval_pkg.bypass, apx_demo_sec_pkg.app_user; tables read: apx_demo_requests
 - Errors raised: -20121 Baris Permintaan tidak dapat diubah karena Permintaan Barang berstatus
 - Oracle-specific: ORA-04091 handler, package bypass state
 - Columns written:

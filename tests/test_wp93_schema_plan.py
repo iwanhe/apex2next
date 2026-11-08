@@ -287,3 +287,11 @@ def test_apex_references_validate_tables_columns_and_package_members():
     assert any("T.MISSING not found" in f for f in failures)
     assert any("P_PKG.NOPE not declared" in f for f in failures)
     assert not any("T_V" in f for f in failures)
+
+
+def test_trigger_calls_on_assignment_right_hand_side_are_recorded():
+    plan = _plan("create table t (id number(9) primary key, u varchar2(30));\n"
+                 "create or replace package p as function who return varchar2; end p;\n/\n"
+                 "create or replace trigger t_trg before insert on t for each row\n"
+                 "begin :new.u := p.who; end;\n/\n")
+    assert plan["triggers"][0]["calls"] == ["P.WHO"]

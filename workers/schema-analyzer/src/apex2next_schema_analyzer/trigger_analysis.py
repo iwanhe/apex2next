@@ -123,7 +123,7 @@ def parse_trigger(stmt: Statement, *, known_tables: set[str], known_packages: se
                     "classification": _classify_assignment(col, rhs, known_packages),
                     "branch": " / ".join(b for b in branch_stack if b) or "always",
                 })
-                i = j
+                i += 4  # keep scanning the right-hand side for calls and :NEW/:OLD reads
                 continue
             reads.add(f"{t.upper[1:]}.{col}")
             i += 3
