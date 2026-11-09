@@ -22,7 +22,7 @@ def test_synthetic_export_inventory():
     inv = inventory_from_export_dir(SYNTH)
     assert inv["format"] == INVENTORY_FORMAT
     assert inv["application"] == {
-        "name": "Synthetic App", "alias": "SYN", "dateFormat": "DD-MON-YYYY", "timestampFormat": None,
+        "name": "Synthetic App", "alias": "SYN", "logoText": None, "dateFormat": "DD-MON-YYYY", "timestampFormat": None,
         "version": "Release 1.0", "language": "en", "securityScheme": "APP_USERS", "authentication": "Oracle APEX Accounts",
     }
     assert [a["name"] for a in inv["authorizations"]] == ["ADMIN_RIGHTS", "APP_USERS"]
