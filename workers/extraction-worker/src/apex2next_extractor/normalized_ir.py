@@ -354,6 +354,30 @@ def _reference_type_rule(property_path: str) -> tuple[list[str], str | None]:
     return REFERENCE_TARGET_TYPE_RULES.get(property_path, ([], None))
 
 
+def _infer_apexlang_property_path(raw_body: str, offset: int) -> str | None:
+    """Conservatively recover a property path from explicit APEXLang block syntax."""
+    prefix = _mask_non_code(raw_body[:offset])
+    property_match = re.search(
+        r"([A-Za-z_][A-Za-z0-9_]*)\s*:\s*[^{}\n]*$",
+        prefix,
+    )
+    if not property_match:
+        return None
+    property_name = property_match.group(1)
+    stack: list[str] = []
+    for match in re.finditer(
+        r"([A-Za-z_][A-Za-z0-9_]*)\s*:?\s*\{|}",
+        prefix,
+    ):
+        if match.group(0).endswith("{"):
+            stack.append(match.group(1))
+        elif stack:
+            stack.pop()
+    path = [part for part in stack if part]
+    path.append(property_name)
+    return ".".join(path)
+
+
 def _collect_apexlang_property_references(
     properties: list[ApexLangProperty],
     object_id: str,
@@ -658,36 +682,71 @@ def adapt_apexlang_directory(source_dir: str | Path) -> dict[str, Any]:
             })
         if object_type != "APPLICATION":
             stack.append((indent, object_id))
-        if ast_node and use_ast_properties:
-            references.extend(
-                _collect_apexlang_property_references(
-                    ast_node.properties,
-                    object_id,
-                    app_id,
-                    file_name,
-                    artifact_hash,
-                )
+        ast_reference_records = (
+            _collect_apexlang_property_references(
+                ast_node.properties,
+                object_id,
+                app_id,
+                file_name,
+                artifact_hash,
             )
-        else:
-            for reference_value in sorted(
-                set(REFERENCE_RE.findall(_mask_non_code(raw_body or "")))
+            if ast_node
+            else []
+        )
+        references.extend(ast_reference_records)
+        ast_reference_counts: dict[str, int] = {}
+        for reference_record in ast_reference_records:
+            value = reference_record["referenceValue"]
+            ast_reference_counts[value] = ast_reference_counts.get(value, 0) + 1
+
+        raw_body_masked = _mask_non_code(raw_body or "")
+        raw_reference_counts: dict[str, int] = {}
+        for match in REFERENCE_RE.finditer(raw_body_masked):
+            reference_value = match.group(1)
+            raw_reference_counts[reference_value] = (
+                raw_reference_counts.get(reference_value, 0) + 1
+            )
+            if raw_reference_counts[reference_value] <= ast_reference_counts.get(
+                reference_value, 0
             ):
-                reference_id = "ref:" + sha256_text(
-                    f"{object_id}|DECLARATION_BODY|{reference_value}|{line or 0}"
-                )[:24]
-                references.append({
-                    "id": reference_id,
-                    "sourceObjectId": object_id,
-                    "referenceType": "APEXLANG_AT_REFERENCE",
-                    "referenceValue": reference_value,
-                    "targetObjectId": None,
-                    "resolutionStatus": "PENDING",
-                    "scope": app_id,
-                    "sourceLocator": locator,
-                    "candidateObjectIds": [],
-                    "referenceContext": "APEXLANG_DECLARATION_BODY",
-                    "expectedTargetTypes": [],
-                })
+                continue
+
+            property_path = _infer_apexlang_property_path(
+                raw_body or "",
+                match.start(),
+            )
+            expected_types, rule_id = (
+                _reference_type_rule(property_path)
+                if property_path
+                else ([], None)
+            )
+            reference_context = (
+                "APEXLANG_PROPERTY"
+                if property_path
+                else "APEXLANG_DECLARATION_BODY"
+            )
+            identity_source = (
+                f"{object_id}|{property_path or 'DECLARATION_BODY'}|"
+                f"{reference_value}|{match.start()}"
+            )
+            reference_record = {
+                "id": "ref:" + sha256_text(identity_source)[:24],
+                "sourceObjectId": object_id,
+                "referenceType": "APEXLANG_AT_REFERENCE",
+                "referenceValue": reference_value,
+                "targetObjectId": None,
+                "resolutionStatus": "PENDING",
+                "scope": app_id,
+                "sourceLocator": locator,
+                "candidateObjectIds": [],
+                "referenceContext": reference_context,
+                "expectedTargetTypes": expected_types,
+            }
+            if property_path:
+                reference_record["sourcePropertyPath"] = property_path
+            if rule_id:
+                reference_record["contextRuleId"] = rule_id
+            references.append(reference_record)
 
     for ast_key, ast_node in sorted(ast_by_declaration.items()):
         if ast_key not in ast_matched_keys:
