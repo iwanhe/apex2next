@@ -279,6 +279,7 @@ The milestone establishes a normalized structural model and deterministic refere
 ### IRV1-12 — Typed reference context and identity/relationship hardening
 
 - [x] Add optional referenceContext, sourcePropertyPath, expectedTargetTypes, and contextRuleId to the shared v1 reference schema.
+- [x] Bump adapterVersion to 0.2.0 for the updated adapter/fingerprint contract and assert it in cross-format tests.
 - [x] Extract APEXLang references from typed property AST nodes and preserve property path and property-level provenance.
 - [x] Add only the documented security.authorizationScheme / authorizationScheme → AUTHORIZATION context rules.
 - [x] Filter exact source-native-ID candidates by explicit expected target types before unique-candidate resolution.
