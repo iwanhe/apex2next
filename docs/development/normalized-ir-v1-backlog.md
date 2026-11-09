@@ -17,7 +17,7 @@ Deliver in small, testable work packages. The JSON Schema is the cross-language 
 | IRV1-07 | Relationships and dependency graph | Typed graph edges, cycle detection, explicit/inferred distinction | IRV1-06 | P1 | APEXLang containment and explicit SQL Export p_page_id edges; richer component relationships and real-source validation pending |
 | IRV1-08 | Diagnostics catalog | Stable diagnostic codes, severity, details, suggestions | IRV1-02, 06 | P1 | Source/schema, REF001–REF004, and REL001–REL002 diagnostics implemented; catalog expansion pending |
 | IRV1-09 | Regression and acceptance suite | Cross-format fixtures, determinism, preservation, resolver, safety tests | IRV1-04..08 | P1 | Synthetic coverage for typed/dangling/ambiguous references, explicit page containment, idempotence, preservation, and fingerprint stability; real corpus pending |
-| IRV1-10 | Documentation and PR evidence | Usage examples, coverage matrix, limitations, CI evidence | IRV1-09 | P1 | Updated for context-aware resolution and fingerprint/relationship semantics; current CI evidence pending final run |\n| IRV1-11 | Expression classification and cross-format mapping | Conservative language classifier, shared APEXLang/export property mapping, confidence/rule metadata, regression fixtures | IRV1-04, 05 | P1 | Initial lexical classifier + explicit canonical aliases + schema/tests implemented; grammar-backed coverage pending |
+| IRV1-10 | Documentation and PR evidence | Usage examples, coverage matrix, limitations, CI evidence | IRV1-09 | P1 | Updated for context-aware resolution and fingerprint/relationship semantics; CI verified on PR head 6fdde26 |\n| IRV1-11 | Expression classification and cross-format mapping | Conservative language classifier, shared APEXLang/export property mapping, confidence/rule metadata, regression fixtures | IRV1-04, 05 | P1 | Initial lexical classifier + explicit canonical aliases + schema/tests implemented; grammar-backed coverage pending |
 
 ## Detailed tasks and acceptance evidence
 
@@ -290,4 +290,6 @@ The milestone establishes a normalized structural model and deterministic refere
 - [ ] Validate identity stability, resolver coverage, and relationship accuracy against a sanitized real application export.
 
 Qualification boundary: these changes improve deterministic normalization and conservative resolution for explicitly supported contexts. They do not establish complete APEX reference semantics or full application dependency coverage.
+
+**CI evidence (2026-11-09):** [PR workflow run 42552717671](https://github.com/iwanhe/apex2next/actions/runs/42552717671) passed on commit `6fdde26d08083ae1d41fd1197e8d1379b23f44d1`. Python worker checks: Ruff passed; 218 passed, 3 skipped. Node workspace baseline, PostgreSQL 16 schema integration, generated Next.js/NestJS build/migration/idempotency/tests/typecheck, and ANTLR grammar validation all passed.
 
