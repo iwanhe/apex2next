@@ -209,3 +209,24 @@ def test_migrate_reports_a_constraint_violation_without_partial_load(conn):
     assert report["committed"] is False and report["checks"] == {"LOD-002": "FAIL"}
     assert "apx_demo_items_ck1" in report["problems"][-1]["message"]
     assert conn.execute("SELECT count(*) FROM app.apx_demo_roles").fetchone()[0] == 0
+
+
+@pg
+@pytest.mark.postgres
+def test_compare_state_matches_by_natural_keys(conn):
+    from apex2next_schema_analyzer.snapshot_migration import compare_state, compare_views_after, load_snapshot
+    with conn.transaction():
+        load_snapshot(conn, parse_snapshot(build_csv(views={v: {} for v in VIEW_KEYS})), PLAN)
+    views = _oracle_like_views(conn)
+    # The "later" source snapshot has other surrogate keys and clock values for the same business rows.
+    tables = json.loads(json.dumps(TABLES))
+    tables["APX_DEMO_APPROVALS"] = {"5": {**tables["APX_DEMO_APPROVALS"]["81"], "APPROVAL_ID": 5, "REQUESTED_ON": "2026-11-09T08:00:00"}}
+    views["APX_DEMO_APPROVALS_V"] = {"5": {**views["APX_DEMO_APPROVALS_V"]["81"], "APPROVAL_ID": 5}}
+    later = parse_snapshot(build_csv(tables, views))
+    state = compare_state(conn, later)
+    assert all(not t["differences"] for t in state.values()), state
+    assert all(not v["differences"] for v in compare_views_after(conn, later)["views"].values())
+    conn.execute("UPDATE app.apx_demo_requests SET status = 'APPROVED' WHERE request_no = 'REQ-2026-0002'")
+    state = compare_state(conn, later)
+    assert state["apx_demo_requests"]["differences"] == {
+        "REQ-2026-0002": [{"column": "status", "source": "DRAFT", "target": "APPROVED"}]}

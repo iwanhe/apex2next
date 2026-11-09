@@ -451,3 +451,43 @@ def compare_state(conn, snap: Snapshot, schema: str = "app") -> dict[str, Any]:
                     diffs[k] = d
         result[t] = {"source": len(s), "target": len(g), "differences": diffs}
     return result
+
+
+def compare_views_after(conn, snap: Snapshot, schema: str = "app") -> dict[str, Any]:
+    """View parity after a journey: same principal as the snapshot, clock columns excluded.
+
+    Views keyed by a surrogate key that two independent executions assign differently (approvals) are matched
+    by (doc_no, approval_level, order of approval_id) instead.
+    """
+    principal = snap.session.get("pkg_app_user") or ""
+    out: dict[str, Any] = {"principal": principal, "views": {}}
+    with conn.transaction():
+        conn.execute("SELECT set_config('app.username', %s, true)", (principal,))
+        for v, key in VIEW_KEYS.items():
+            target_rows = _fetch(conn, f"SELECT * FROM {schema}.{_ident(v.lower())}")
+            source_rows = list(snap.views.get(v, {}).values())
+            if v == "APX_DEMO_APPROVALS_V":
+                def keyed(rows):
+                    res, seen = {}, {}
+                    for r in sorted(rows, key=lambda x: int(norm(x["approval_id"]))):
+                        k = (r["doc_no"], norm(r["approval_level"]))
+                        seen[k] = seen.get(k, 0) + 1
+                        res[f"{k[0]}|{k[1]}|{seen[k]}"] = r
+                    return res
+                src, tgt = keyed(source_rows), keyed(target_rows)
+            else:
+                src = {_key_text(r[key]): r for r in source_rows}
+                tgt = {_key_text(r[key]): r for r in target_rows}
+            diffs = {}
+            for k in sorted(set(src) | set(tgt)):
+                if k not in tgt:
+                    diffs[k] = [{"issue": "only in source"}]
+                elif k not in src:
+                    diffs[k] = [{"issue": "only in target"}]
+                else:
+                    strip = lambda r: {c: x for c, x in r.items() if c not in VOLATILE}  # noqa: E731
+                    d = compare_row(strip(src[k]), strip(tgt[k]))
+                    if d:
+                        diffs[k] = d
+            out["views"][v.lower()] = {"source": len(src), "target": len(tgt), "differences": diffs}
+    return out

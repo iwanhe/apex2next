@@ -24,7 +24,9 @@ REPO = ROOT.parents[1]
 sys.path.insert(0, str(REPO / "workers" / "schema-analyzer" / "src"))
 sys.path.insert(0, str(ROOT / "e2e"))
 
-from apex2next_schema_analyzer.snapshot_migration import compare_state, migrate, parse_snapshot  # noqa: E402
+from apex2next_schema_analyzer.snapshot_migration import (  # noqa: E402
+    compare_state, compare_views_after, migrate, parse_snapshot,
+)
 from conftest import DEV_PASSWORD, _free_port, _wait  # noqa: E402
 from playwright.sync_api import Page, sync_playwright  # noqa: E402
 
@@ -193,16 +195,24 @@ def main() -> int:
         for proc in (web, api):
             proc.terminate()
         time.sleep(0.5)
+    s1 = parse_snapshot(args.s1.read_text(encoding="utf-8"))
+    if s1.problems:
+        print(json.dumps(s1.problems), file=sys.stderr)
+        return 2
     with psycopg.connect(db) as conn:
-        state = compare_state(conn, parse_snapshot(args.s1.read_text(encoding="utf-8")))
+        state = compare_state(conn, s1)
+        views = compare_views_after(conn, s1)
     apex = json.loads(args.apex_observations.read_text(encoding="utf-8"))
     messages = []
     for step in rec.steps:
         expected = next((s for s in apex["steps"] if s["step"] == step["step"]), None)
         messages.append({"step": step["step"], "url": step["url"], "target": step["messages"], "apex": expected and expected["messages"],
                          "equal": bool(expected) and sorted(expected["messages"]) == sorted(step["messages"])})
-    state_diffs = sum(len(t["differences"]) for t in state.values())
-    report = {"journey": "J-01", "load": load["checks"], "state": state, "messages": messages,
+    state_diffs = sum(len(t["differences"]) for t in state.values()) + sum(
+        len(v["differences"]) for v in views["views"].values())
+    report = {"journey": "J-01", "s0": {"name": args.s0.name, "sha256": parse_snapshot(args.s0.read_text(encoding="utf-8")).sha256},
+              "s1": {"name": args.s1.name, "sha256": s1.sha256, "session": s1.session},
+              "load": load["checks"], "state": state, "views": views, "messages": messages,
               "result": "PASS" if state_diffs == 0 and all(m["equal"] for m in messages) else "FAIL"}
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2, ensure_ascii=False, default=str) + "\n", encoding="utf-8")

@@ -1,6 +1,6 @@
 # WP9.5 — Pages & Features: Demo Permintaan Barang (170134)
 
-**Status:** Implemented on branch `feat/foundation-and-architecture-docs`. All 19 pages of the APEX SQL export (page 0 and pages 100–9999) are mapped to Next.js routes and NestJS endpoints. The work is verified on PostgreSQL 16 with API integration tests and Chromium end-to-end journeys. Behavior has **not** been compared with a running APEX instance yet (WP9.6/9.7). The deviation DEV-06, the UI differences D-UI-01…04, the assumptions A-01…A-03 and the gaps G-01…G-03 need owner review.
+**Status:** Implemented on branch `feat/foundation-and-architecture-docs`. All 19 pages of the APEX SQL export (page 0 and pages 100–9999) are mapped to Next.js routes and NestJS endpoints. The work is verified on PostgreSQL 16 with API integration tests and Chromium end-to-end journeys. WP9.6 compared one journey with the running APEX application (identical data and messages, see [WP9.6](wp9.6-data-parity-f170134.md)); broader parity is WP9.7. The deviation DEV-06, the UI differences D-UI-01…04, the assumptions A-01…A-03 and the gaps G-01…G-03 need owner review.
 
 ## 1. Source of truth (D-003)
 
@@ -72,7 +72,7 @@ The production identity provider is decided in WP9-009. Until then only `AUTH_MO
 | Area | Behavior |
 |---|---|
 | Authorization | APP_USERS for every page, then the page scheme. The navigation entries "Administration" etc. are filtered by their scheme. Messages are verbatim. |
-| Item validations | Value required (`#LABEL# must have some value.`), number (`#LABEL# must be Numeric.`) and date (`#LABEL# does not match format DD-MON-YYYY.`) are reported together, inline per item, with the "n errors have occurred" notification. Read-only items are not validated. |
+| Item validations | Value required (`#LABEL# must have some value.`), number (`#LABEL# must be a number greater than or equal to 0.` for the `min_value 0` items, otherwise `#LABEL# must be Numeric.`) and date (`#LABEL# does not match format DD-MON-YYYY.`) are reported together, inline per item, with the "n errors have occurred" notification. Read-only items are not validated. |
 | Page validation | `NEED_DATE_AFTER_REQUEST_DATE` on SAVE/CREATE/SUBMIT, using the database value of read-only items. |
 | Text items | `trim_spaces=BOTH`. An empty value is NULL. |
 | Read-only items | P301 DEPARTMENT_ID/NEED_DATE/PURPOSE (not DRAFT/REJECTED) and STATUS (not APPROVED/FULFILLED/CLOSED) are not submitted and keep their database value. REQUEST_NO and LINE_AMOUNT are query-only. |
@@ -101,8 +101,8 @@ The production identity provider is decided in WP9-009. Until then only `AUTH_MO
 | ID | Assumption to confirm against the running source (WP9.7) |
 |---|---|
 | A-01 | IR rows per page = 50 (the export stores no value; this is the IR runtime default). |
-| A-02 | The APEX built-in texts above (required/numeric/date messages, lost update, "Invalid Login Credentials", delete confirm, "n errors have occurred") are those of APEX 26.2 in language `en`. |
-| A-03 | `P9999_REMEMBER` is shown only when `apex_authentication.persistent_cookies_enabled`; the target uses `LOGIN_REMEMBER_USERNAME=true` (default off). |
+| A-02 | The APEX built-in texts above are those of APEX 26.2 in language `en`. **WP9.6 confirmed** "Invalid Login Credentials", the delete confirm, "n error(s) has/have occurred", "Row created/updated/deleted." and the number range message; the required, date and lost-update texts are not observed yet. |
+| A-03 | **Resolved in WP9.6:** oracleapex.com shows `P9999_REMEMBER`; set `LOGIN_REMEMBER_USERNAME=true` for parity (default off). |
 
 | ID | Gap (not implemented) |
 |---|---|
