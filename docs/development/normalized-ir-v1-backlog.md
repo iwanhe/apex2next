@@ -10,14 +10,14 @@ Deliver in small, testable work packages. The JSON Schema is the cross-language 
 |---|---|---|---|---|---|
 | IRV1-01 | Contract and taxonomy | JSON Schema, canonical object taxonomy, version policy, valid/invalid fixtures | — | P0 | Initial contract in place |
 | IRV1-02 | Core types and validators | Generated TS types, Python schema validation, contract test harness | IRV1-01 | P0 | Python validator in place; TS types/tests pending |
-| IRV1-03 | Identity and provenance | Canonical identity builder, fingerprinting, source locator model | IRV1-01 | P0 | Initial implementation + regression tests |
+| IRV1-03 | Identity and provenance | Canonical identity builder, fingerprinting, source locator model | IRV1-01 | P0 | Stable SHA-256 identity and canonical, location-independent fingerprint; real-source key qualification pending |
 | IRV1-04 | APEXLang adapter | Inventory-to-IR mapping, raw property preservation, provenance | IRV1-02, 03 | P0 | AST typed-property integration with parity-guarded legacy fallback implemented; real-project corpus pending |
-| IRV1-05 | APEX SQL Export adapter | Export-call-to-IR mapping, raw argument preservation, provenance | IRV1-02, 03 | P0 | Initial implementation + fixture tests |
-| IRV1-06 | Reference resolver | Scope-aware candidate index, typed resolver, resolution diagnostics | IRV1-04, 05 | P1 | Initial exact-ID resolver + tests; broader type/context rules pending |
-| IRV1-07 | Relationships and dependency graph | Typed graph edges, cycle detection, explicit/inferred distinction | IRV1-06 | P1 | Partial structural containment only |
-| IRV1-08 | Diagnostics catalog | Stable diagnostic codes, severity, details, suggestions | IRV1-02, 06 | P1 | Initial source/schema diagnostics; resolver codes pending |
-| IRV1-09 | Regression and acceptance suite | Cross-format fixtures, determinism, preservation, resolver, safety tests | IRV1-04..08 | P1 | Partial; resolver and broad safety coverage pending |
-| IRV1-10 | Documentation and PR evidence | Usage examples, coverage matrix, limitations, CI evidence | IRV1-09 | P1 | In progress |\n| IRV1-11 | Expression classification and cross-format mapping | Conservative language classifier, shared APEXLang/export property mapping, confidence/rule metadata, regression fixtures | IRV1-04, 05 | P1 | Initial lexical classifier + explicit canonical aliases + schema/tests implemented; grammar-backed coverage pending |
+| IRV1-05 | APEX SQL Export adapter | Export-call-to-IR mapping, raw argument preservation, provenance | IRV1-02, 03 | P0 | Raw args/provenance plus explicit p_page_id containment and unresolved-parent diagnostics; real export corpus pending |
+| IRV1-06 | Reference resolver | Scope-aware candidate index, typed resolver, resolution diagnostics | IRV1-04, 05 | P1 | Exact scoped resolver with explicit expected-target-type filters and APEXLang property-context metadata; additional context rules pending |
+| IRV1-07 | Relationships and dependency graph | Typed graph edges, cycle detection, explicit/inferred distinction | IRV1-06 | P1 | APEXLang containment and explicit SQL Export p_page_id edges; richer component relationships and real-source validation pending |
+| IRV1-08 | Diagnostics catalog | Stable diagnostic codes, severity, details, suggestions | IRV1-02, 06 | P1 | Source/schema, REF001–REF004, and REL001–REL002 diagnostics implemented; catalog expansion pending |
+| IRV1-09 | Regression and acceptance suite | Cross-format fixtures, determinism, preservation, resolver, safety tests | IRV1-04..08 | P1 | Synthetic coverage for typed/dangling/ambiguous references, explicit page containment, idempotence, preservation, and fingerprint stability; real corpus pending |
+| IRV1-10 | Documentation and PR evidence | Usage examples, coverage matrix, limitations, CI evidence | IRV1-09 | P1 | Updated for context-aware resolution and fingerprint/relationship semantics; current CI evidence pending final run |\n| IRV1-11 | Expression classification and cross-format mapping | Conservative language classifier, shared APEXLang/export property mapping, confidence/rule metadata, regression fixtures | IRV1-04, 05 | P1 | Initial lexical classifier + explicit canonical aliases + schema/tests implemented; grammar-backed coverage pending |
 
 ## Detailed tasks and acceptance evidence
 
@@ -275,3 +275,19 @@ The milestone establishes a normalized structural model and deterministic refere
 
 
 **WP7 final CI evidence:** Run 42359828215 passed on final branch HEAD `bcec64cb97effb9bf7bb6176036b10bd8b3a7a35`. Ruff passed; pytest 75 passed; ANTLR grammar validation passed; Node workspace baseline passed; generated target project installation, Next.js/NestJS build, generated scaffold tests, and TypeScript typecheck all passed.
+
+### IRV1-12 — Typed reference context and identity/relationship hardening
+
+- [x] Add optional referenceContext, sourcePropertyPath, expectedTargetTypes, and contextRuleId to the shared v1 reference schema.
+- [x] Extract APEXLang references from typed property AST nodes and preserve property path and property-level provenance.
+- [x] Add only the documented security.authorizationScheme / authorizationScheme → AUTHORIZATION context rules.
+- [x] Filter exact source-native-ID candidates by explicit expected target types before unique-candidate resolution.
+- [x] Preserve ambiguity when no type constraint exists or multiple same-type candidates remain; never guess.
+- [x] Make the content fingerprint independent of source locators, artifact hashes, source-property aliases, and parser-only formatting metadata while retaining normalized raw expressions and duplicate values.
+- [x] Create SQL Export CONTAINS relationships only from a unique explicit p_page_id match; emit REL001/REL002 otherwise.
+- [x] Add regression tests for typed reference resolution, immutability/idempotence, explicit SQL Export containment, unresolved page parents, and location-independent fingerprints.
+- [ ] Add further target-type context rules only from documented APEX metadata semantics and representative sanitized fixtures.
+- [ ] Validate identity stability, resolver coverage, and relationship accuracy against a sanitized real application export.
+
+Qualification boundary: these changes improve deterministic normalization and conservative resolution for explicitly supported contexts. They do not establish complete APEX reference semantics or full application dependency coverage.
+
