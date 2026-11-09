@@ -14,7 +14,7 @@ from .apex_export import extract_export
 from .apexlang import _mask_non_code, extract_apexlang
 from .apexlang_ast import AST_PARSER_VERSION, ApexLangDeclaration, ApexLangProperty, parse_apexlang_ast
 
-ADAPTER_VERSION = "0.1.0"
+ADAPTER_VERSION = "0.2.0"
 IR_VERSION = "1.0.0"
 
 
