@@ -34,6 +34,7 @@ EXPRESSION_RULES: dict[str, tuple[str, str]] = {
     "EXP018": ("ASSISTED", "Division: PostgreSQL integer/integer truncates; verify operand types."),
     "EXP019": ("ASSISTED", "TRUNC(SYSDATE) rewritten to CAST(CURRENT_DATE AS timestamp(0)); confirm timezone policy."),
     "EXP020": ("MANUAL", "Unresolved object reference after FROM/JOIN."),
+    "EXP021": ("ASSISTED", "PL/SQL call mapped to a reviewed PostgreSQL function supplied by a hand-written migration; object is emitted in the deferred migration."),
 }
 
 SQL_KEYWORDS = frozenset("""
@@ -96,6 +97,7 @@ class ExpressionResult:
     unresolved_refs: set[str] = field(default_factory=set)
     functions: set[str] = field(default_factory=set)
     plsql_calls: set[str] = field(default_factory=set)
+    mapped_calls: set[str] = field(default_factory=set)
     has_subquery: bool = False
 
     @property
@@ -119,7 +121,8 @@ def _finding(code: str, detail: str | None = None) -> dict:
 
 
 def convert_expression(tokens: list[Token], *, known_objects: frozenset[str] | set[str] = frozenset(),
-                       source_schemas: frozenset[str] | set[str] = frozenset()) -> ExpressionResult:
+                       source_schemas: frozenset[str] | set[str] = frozenset(),
+                       function_mappings: dict[str, str] | None = None) -> ExpressionResult:
     """Rewrite an Oracle expression/query token list to PostgreSQL text.
 
     ``tokens`` must include whitespace/comment tokens so layout is preserved.
@@ -130,6 +133,18 @@ def convert_expression(tokens: list[Token], *, known_objects: frozenset[str] | s
     sig = [i for i, t in enumerate(tokens) if t.significant]
     result = ExpressionResult(sql="")
     seen: set[tuple[str, str]] = set()
+    mappings = {k.upper(): v for k, v in (function_mappings or {}).items()}
+
+    def mapped(key: str, first: int, last: int) -> bool:
+        target = mappings.get(key)
+        if target is None:
+            return False
+        out[sig[first]] = target
+        for idx in range(sig[first] + 1, sig[last] + 1):
+            out[idx] = ""
+        result.mapped_calls.add(key)
+        add("EXP021", f"{key} -> {target}")
+        return True
 
     def add(code: str, detail: str | None = None) -> None:
         key = (code, detail or "")
@@ -199,11 +214,17 @@ def convert_expression(tokens: list[Token], *, known_objects: frozenset[str] | s
             second = identifier_name(tok(k + 2))
             third_dot = is_op(k + 3, ".") and tok(k + 4) is not None and tok(k + 4).kind in {"IDENT", "QIDENT"}
             if third_dot and is_op(k + 5, "("):
+                if upper in source_schemas and mapped(f"{second}.{identifier_name(tok(k + 4))}".upper(), k, k + 4):
+                    k += 5
+                    continue
                 result.plsql_calls.add(f"{second}.{identifier_name(tok(k + 4))}")
                 add("EXP009", f"{name}.{second}.{identifier_name(tok(k + 4))}")
                 k += 5
                 continue
             if is_op(k + 3, "("):
+                if upper not in source_schemas and mapped(f"{name}.{second}".upper(), k, k + 2):
+                    k += 3
+                    continue
                 if upper in source_schemas:
                     result.plsql_calls.add(second)
                 else:

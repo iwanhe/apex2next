@@ -96,6 +96,54 @@ jobs:
           if grep -q "SKIPPED" pytest-postgres.log; then echo "PostgreSQL tests were skipped" >&2; exit 1; fi
           grep -Eq "[1-9][0-9]* passed" pytest-postgres.log
 
+  pilot-f170134-api:
+    name: WP9.4 pilot business services on PostgreSQL 16
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: f170134_pilot
+          POSTGRES_USER: apex2next
+          POSTGRES_PASSWORD: apex2next
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U apex2next -d f170134_pilot"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://apex2next:apex2next@localhost:5432/f170134_pilot
+    defaults:
+      run:
+        working-directory: examples/f170134-target
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.0.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install pilot workspace dependencies (locked)
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Build, migrate and test business rules (no skips allowed)
+        run: |
+          pnpm test 2>&1 | tee pilot-test.log
+          if grep -Eq "^# skipped [1-9]" pilot-test.log; then echo "Integration tests were skipped" >&2; exit 1; fi
+          grep -Eq "^# fail 0" pilot-test.log
+
   target-generation:
     name: Generated target workspace build
     runs-on: ubuntu-latest

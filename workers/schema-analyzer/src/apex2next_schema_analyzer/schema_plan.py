@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -121,11 +122,15 @@ def _generated_name(table: str, kind: str, n: int, columns: list[str]) -> str:
 
 def build_schema_plan(source: str, *, source_name: str = "install.sql", target_schema: str = "app",
                       apex_references: list[dict[str, Any]] | None = None,
-                      overrides: dict[str, Any] | None = None) -> dict[str, Any]:
+                      overrides: dict[str, Any] | None = None,
+                      function_mappings: dict[str, Any] | None = None,
+                      transaction_wrapper: bool = True) -> dict[str, Any]:
     if not target_schema.isidentifier() or target_schema.lower() != target_schema or len(target_schema) > 63:
         raise ValueError("target_schema must be a lower-case PostgreSQL identifier.")
     source_hash = "sha256:" + hashlib.sha256(source.encode("utf-8")).hexdigest()
     original_source = source
+    mapping_records = _validate_function_mappings(function_mappings)
+    mapping = {m["source"]: m["target"] for m in mapping_records}
     source, override_records = apply_overrides(source, overrides)
     statements = split_script(source)
 
@@ -482,7 +487,7 @@ def build_schema_plan(source: str, *, source_name: str = "install.sql", target_s
     # ---------------------------------------------------------------- views
     known_relations = set(tables) | set(views)
     for v in views.values():
-        convert_view(v, known_objects=known_relations, source_schemas=owners)
+        convert_view(v, known_objects=known_relations, source_schemas=owners, function_mappings=mapping)
     view_cycle: list[str] = []
     order: list[str] = []
     pending = {name: set(d for d in v["dependencies"] if d in views) for name, v in views.items()}
@@ -511,6 +516,8 @@ def build_schema_plan(source: str, *, source_name: str = "install.sql", target_s
             view_dep_failures.append(f"{name}: unresolved {', '.join(v['unresolved'])}")
         v["blockedBy"] = blocked_by
         v["emit"] = v["ownDisposition"] in {"AUTOMATIC", "ASSISTED"} and not blocked_by and name not in view_cycle
+        v["phase"] = "deferred" if v["emit"] and (v["mappedCalls"] or any(
+            views[d].get("phase") == "deferred" for d in v["dependencies"] if d in views)) else "schema"
         if blocked_by:
             v["findings"].append(finding("VIW005", obj=name, line=v["line"], detail=", ".join(blocked_by),
                                          disposition="MANUAL", message=VIEW_RULES["VIW005"][1]))
@@ -714,7 +721,9 @@ def build_schema_plan(source: str, *, source_name: str = "install.sql", target_s
             if f"{o['type']} {o['name']}" == rec["object"]:
                 o["definitionSource"] = "dictionary override"
     sql = _emit_sql(tables, indexes, views, order, comments, sequences, target_schema,
-                    source_name, source_hash, objects, override_records)
+                    source_name, source_hash, objects, override_records, transaction_wrapper)
+    deferred_sql = _emit_deferred_sql(views, order, target_schema, source_name, source_hash,
+                                      mapping_records, transaction_wrapper)
     post_load = _emit_post_load(tables, sequences, target_schema)
     expected_catalog = _expected_catalog(tables, indexes, views, sequences)
     load_plan = {t["targetName"]: {
@@ -762,6 +771,9 @@ def build_schema_plan(source: str, *, source_name: str = "install.sql", target_s
         "expectedCatalog": expected_catalog,
         "apexReferences": apex_references,
         "sql": sql,
+        "deferredSql": deferred_sql,
+        "functionMappings": mapping_records,
+        "transactionWrapper": transaction_wrapper,
         "postLoadSql": post_load,
         "limitations": [
             "Static conversion of a source script; it does not prove the objects are installed, valid, or granted in Oracle. Oracle dictionary reconciliation is a separate WP9.3 step.",
@@ -798,8 +810,46 @@ def _constraint_state(con: dict[str, Any]) -> str:
     return out
 
 
+def _validate_function_mappings(spec: dict[str, Any] | None) -> list[dict[str, Any]]:
+    if not spec:
+        return []
+    if spec.get("format") != "apex2next.function-mappings.v1":
+        raise ValueError("function mappings must use format apex2next.function-mappings.v1")
+    out = []
+    for m in spec["mappings"]:
+        source = m["source"].upper()
+        if not re.fullmatch(r"[A-Z][A-Z0-9_$#]*\.[A-Z][A-Z0-9_$#]*", source):
+            raise ValueError(f"mapping source {m['source']!r} must be PACKAGE.MEMBER")
+        if not re.fullmatch(r"[a-z_][a-z0-9_]*\.[a-z_][a-z0-9_]*", m["target"]):
+            raise ValueError(f"mapping target {m['target']!r} must be a lower-case schema.function")
+        out.append({"source": source, "target": m["target"], "providedBy": m.get("providedBy"),
+                    "signature": m.get("signature"), "semantics": m.get("semantics")})
+    return sorted(out, key=lambda x: x["source"])
+
+
+def _emit_deferred_sql(views, order, schema, source_name, source_hash, mapping_records,
+                       transaction_wrapper) -> str:
+    deferred = [views[n] for n in order if views[n]["emit"] and views[n].get("phase") == "deferred"]
+    if not deferred:
+        return ""
+    s = pg_ident(schema)
+    out = ["-- APEX2NEXT deferred view migration (generated DRAFT; review required)",
+           f"-- Source: {source_name} {source_hash}",
+           "-- Requires the reviewed target functions below to exist before this migration runs:",
+           *[f"--   {m['source'].lower()} -> {m['target']}  (provided by {m['providedBy']})" for m in mapping_records],
+           ""]
+    if transaction_wrapper:
+        out.append("BEGIN;")
+    out.append(f"SET LOCAL search_path TO {s};")
+    out += [""] + [view_sql(v, schema) for v in deferred]
+    if transaction_wrapper:
+        out += ["", "COMMIT;"]
+    out.append("")
+    return "\n".join(out)
+
+
 def _emit_sql(tables, indexes, views, order, comments, sequences, schema, source_name, source_hash,
-              objects, override_records=()) -> str:
+              objects, override_records=(), transaction_wrapper=True) -> str:
     s = pg_ident(schema)
     out = [
         "-- APEX2NEXT WP9.3 PostgreSQL schema migration (generated DRAFT; review required)",
@@ -808,9 +858,9 @@ def _emit_sql(tables, indexes, views, order, comments, sequences, schema, source
         *[f"-- Dictionary override: {r['object'].lower()} ({r['action']}, {r['overrideSha256'][:19]}…)" for r in override_records],
         "-- Deterministic output: change conversion rules/decisions and regenerate; do not hand-edit.",
         "-- Not executed by the generator. Not approved for shared environments.",
+        *([] if transaction_wrapper else ["-- Runner format: no transaction-control statements; the migration runner wraps this file in one transaction."]),
         "",
-        "BEGIN;",
-        "",
+        *(["BEGIN;", ""] if transaction_wrapper else []),
         f"CREATE SCHEMA IF NOT EXISTS {s};",
         f"SET LOCAL search_path TO {s};",
     ]
@@ -863,7 +913,7 @@ def _emit_sql(tables, indexes, views, order, comments, sequences, schema, source
         unique = "UNIQUE " if ix["unique"] else ""
         out.append(f"CREATE {unique}INDEX {pg_ident(ix['targetName'])} ON {s}.{pg_ident(ix['table'])} "
                    f"(" + ", ".join(ix["targetElements"]) + ");")
-    emitted_views = [views[n] for n in order if views[n]["emit"]]
+    emitted_views = [views[n] for n in order if views[n]["emit"] and views[n].get("phase") != "deferred"]
     if emitted_views:
         out += ["", "-- Views (dependency order)"]
     for v in emitted_views:
@@ -883,7 +933,7 @@ def _emit_sql(tables, indexes, views, order, comments, sequences, schema, source
         for o in not_emitted:
             reason = ", ".join(o.get("blockedBy", [])) or ", ".join(o["findingCodes"])
             out.append(f"--   {o['type']} {o['name'].lower()}: {o['disposition']} ({reason})")
-    out += ["", "COMMIT;", ""]
+    out += ["", "COMMIT;", ""] if transaction_wrapper else [""]
     return "\n".join(out)
 
 
@@ -927,7 +977,9 @@ def _expected_catalog(tables, indexes, views, sequences) -> dict[str, Any]:
             cat["indexes"][ix["targetName"]] = {"table": target_name(ix["table"]), "unique": ix["unique"]}
     for v in views.values():
         if v["emit"]:
-            cat["views"][target_name(v["name"])] = [c.lower() for c in v["outputColumns"]] if v["outputColumns"] else None
+            key = "deferredViews" if v.get("phase") == "deferred" else "views"
+            cat.setdefault(key, {})[target_name(v["name"])] = (
+                [c.lower() for c in v["outputColumns"]] if v["outputColumns"] else None)
     cat["sequences"] = sorted(target_name(s["name"]) for s in sequences.values() if not s.get("blocked"))
     return cat
 
@@ -958,6 +1010,10 @@ def main() -> int:
     parser.add_argument("--apex-export", type=Path,
                         help="Unpacked APEX SQL export directory (requires apex2next_extractor on PYTHONPATH)")
     parser.add_argument("--overrides", type=Path, help="Dictionary overrides JSON (apex2next.dictionary-overrides.v1)")
+    parser.add_argument("--function-mappings", type=Path, help="Reviewed PL/SQL -> PostgreSQL function mappings JSON")
+    parser.add_argument("--deferred-sql-output", type=Path, help="Generated deferred view migration SQL")
+    parser.add_argument("--runner-format", action="store_true",
+                        help="Omit BEGIN/COMMIT (the migration runner wraps each file in a transaction)")
     parser.add_argument("--source-name", default=None)
     parser.add_argument("--target-schema", default="app")
     args = parser.parse_args()
@@ -967,11 +1023,16 @@ def main() -> int:
     plan = build_schema_plan(args.source.read_text(encoding="utf-8"),
                              source_name=args.source_name or args.source.name,
                              target_schema=args.target_schema, apex_references=refs,
-                             overrides=load_overrides(args.overrides) if args.overrides else None)
+                             overrides=load_overrides(args.overrides) if args.overrides else None,
+                             function_mappings=(json.loads(args.function_mappings.read_text(encoding="utf-8"))
+                                                if args.function_mappings else None),
+                             transaction_wrapper=not args.runner_format)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(plan, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     if args.sql_output:
         args.sql_output.write_text(plan["sql"], encoding="utf-8")
+    if args.deferred_sql_output:
+        args.deferred_sql_output.write_text(plan["deferredSql"], encoding="utf-8")
     if args.post_load_output:
         args.post_load_output.write_text(plan["postLoadSql"], encoding="utf-8")
     return 0 if plan["summary"]["validationPassed"] else 1

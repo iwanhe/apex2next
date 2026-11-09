@@ -24,6 +24,10 @@ Recorded in [WP9.3 source validation & target schema](wp9.3-source-validation-sc
 
 WP9-004 advances to "reviewed target DDL draft". WP9.3b dictionary reconciliation (2026-11-08) confirms that all 49 installed objects are VALID and that tables, constraints, indexes, identity, triggers and PL/SQL source match the script. The one view drift (`APX_DEMO_DASH_KPI_V`, redefined after install, which explains SRC-001) is captured from `USER_VIEWS` as a recorded dictionary override. After the override, all 12 REC checks and all 12 DEP checks pass. WP9-004 is ready for owner review of the type/semantics decisions. Page 00302 is still unresolved. Triggers and packages are inventoried for WP9.4 and are not converted.
 
+## WP9.4 — business logic migration
+
+Recorded in [WP9.4 business logic](wp9.4-business-logic-f170134.md); the target is [`examples/f170134-target`](../../examples/f170134-target/README.md). All 4 packages and 5 triggers are re-implemented as NestJS business services, covering approval (two levels, segregation of duties), gapless document numbering, the APEX authorization schemes, and audit/normalization. Each use case runs in one transaction, with the authenticated principal published per transaction to PostgreSQL in place of `APP_USER`. `CAN_ACT_YN` became a reviewed SQL function, so all 10 source views now exist in PostgreSQL. Every rule keeps its Oracle error code and message. 38 tests run on PostgreSQL 16, including concurrency, in CI. Five deliberate deviations (DEV-01 bootstrap fail-open removed, DEV-02 locking, DEV-03 line re-parenting, DEV-04 numbering overflow, DEV-05 no execution of configured SQL) and five findings await owner sign-off. Parity against Oracle/APEX runs is WP9.6.
+
 ## Pilot selection
 
 Select one bounded but representative application with a named business/application owner, 3–5 critical journeys, at least two roles, privileged and negative authorization paths, representative pages/items/regions/validations/dynamic actions/processes/LOVs/reports/APIs/PLSQL/database objects, and relevant integrations/jobs. Avoid a trivial read-only application. Use non-production and synthetic or approved anonymized data.

@@ -92,10 +92,10 @@ def parse_view(stmt: Statement) -> dict[str, Any]:
 
 
 def convert_view(view: dict[str, Any], *, known_objects: set[str],
-                 source_schemas: set[str]) -> dict[str, Any]:
+                 source_schemas: set[str], function_mappings: dict[str, str] | None = None) -> dict[str, Any]:
     name, line = view["name"], view["line"]
     result = convert_expression(view["bodyTokens"], known_objects=frozenset(known_objects),
-                                source_schemas=frozenset(source_schemas))
+                                source_schemas=frozenset(source_schemas), function_mappings=function_mappings)
     findings: list[dict[str, Any]] = []
     if view["force"]:
         findings.append(_view_finding("VIW001", name, line))
@@ -115,6 +115,7 @@ def convert_view(view: dict[str, Any], *, known_objects: set[str],
         "candidateSql": result.sql.strip(),
         "dependencies": sorted(result.object_refs - {name}),
         "plsqlCalls": sorted(result.plsql_calls),
+        "mappedCalls": sorted(result.mapped_calls),
         "unresolved": sorted(result.unresolved_refs),
         "outputColumns": output_columns,
         "findings": findings,
@@ -133,6 +134,10 @@ def view_sql(view: dict[str, Any], target_schema: str) -> str:
 
 
 def view_design(view: dict[str, Any]) -> str:
+    if view.get("phase") == "deferred":
+        via = ", ".join(view["mappedCalls"]) if view["mappedCalls"] else "a deferred dependency"
+        return ("Emitted in the deferred migration after the reviewed target functions exist "
+                f"({via}).")
     if view["plsqlCalls"]:
         return ("Implement " + ", ".join(view["plsqlCalls"]) + " as reviewed PostgreSQL SQL "
                 "function(s) in WP9.4, or move the predicate into the NestJS read service; "

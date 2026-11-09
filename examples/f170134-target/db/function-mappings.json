@@ -1,0 +1,12 @@
+{
+  "format": "apex2next.function-mappings.v1",
+  "mappings": [
+    {
+      "source": "APX_DEMO_APPROVAL_PKG.CAN_ACT_YN",
+      "target": "app.can_act_yn",
+      "providedBy": "0002_wp94_business_functions.sql",
+      "signature": "app.can_act_yn(p_approval_id bigint) RETURNS text",
+      "semantics": "BR-APR-08: 'Y' when the approval is PENDING, was not requested by the current principal (app.username, set per transaction by the API) and the principal has the approver role or ADMIN; otherwise 'N' (fail-closed without a principal). No bootstrap mode (DEV-01)."
+    }
+  ]
+}

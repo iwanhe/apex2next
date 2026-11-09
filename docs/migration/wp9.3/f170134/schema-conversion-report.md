@@ -4,7 +4,7 @@
 > regenerate after changing rules or decisions.
 
 - **Source:** `install.sql` — 38,098 bytes, `sha256:7c71e9c56b76d5fe893d2f357e692b9e7c458adc37791784379842ec1712d66d`
-- **Converter:** schema-plan 0.3.0, rule registry `sha256:2210687c65d791eca77a444df486a2d58d3536aeb943b1ec86d9fec3f3e901b0`
+- **Converter:** schema-plan 0.3.0, rule registry `sha256:5b4234f86417ddcf2d292f379b316334a8cde40206b99dec8c8753fc394d3614`
 - **Target schema:** `app`
 - **Statements accounted:** 56
 - **Tables emitted:** 9/9 · **Views emitted:** 8/10 · **Indexes emitted:** 4/4

@@ -1,0 +1,13 @@
+{
+  "name": "apex2next-pilot-f170134-target",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.0.0",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "build": "pnpm -r build",
+    "db:migrate": "pnpm --filter @f170134/api db:migrate",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck"
+  }
+}
