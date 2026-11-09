@@ -1,0 +1,261 @@
+{
+  "journey": "J-02",
+  "s0": {
+    "name": "snapshot-s1.csv",
+    "sha256": "8ee82921b06e83918b8e459db6fd6f243a4e621c02cca1579f256cf6d6e21352"
+  },
+  "s1": {
+    "name": "snapshot-s2.csv",
+    "sha256": "eb1a21493a7e09efb69bcc23e4d89508006325d40f6f3cd1e2ae1a38e9c4f674",
+    "session": {
+      "db_user": "APEX_PUBLIC_USER",
+      "apex_app_user": "IWAN.HERDIAN@KCSI-ID.COM",
+      "pkg_app_user": "IWAN.HERDIAN@KCSI-ID.COM",
+      "sysdate": "2026-11-09T10:47:36",
+      "systimestamp": "2026-11-09T10:47:36.156160+00:00",
+      "dbtimezone": "-05:00",
+      "sessiontimezone": "+00:00",
+      "nls_date_format": "DS",
+      "nls_numeric_chars": ".,",
+      "nls_sort": "BINARY",
+      "nls_language": "AMERICAN",
+      "db_charset": "AL32UTF8"
+    }
+  },
+  "load": {
+    "SNP-001": "PASS",
+    "SNP-002": "PASS",
+    "SNP-003": "PASS",
+    "LOD-001": "PASS",
+    "LOD-002": "PASS",
+    "IDN-001": "PASS",
+    "TBL-001": "PASS",
+    "VIW-001": "PASS"
+  },
+  "state": {
+    "apx_demo_roles": {
+      "source": 5,
+      "target": 5,
+      "differences": {}
+    },
+    "apx_demo_user_roles": {
+      "source": 7,
+      "target": 7,
+      "differences": {}
+    },
+    "apx_demo_doc_types": {
+      "source": 1,
+      "target": 1,
+      "differences": {}
+    },
+    "apx_demo_doc_seq": {
+      "source": 1,
+      "target": 1,
+      "differences": {}
+    },
+    "apx_demo_departments": {
+      "source": 3,
+      "target": 3,
+      "differences": {}
+    },
+    "apx_demo_items": {
+      "source": 5,
+      "target": 5,
+      "differences": {}
+    },
+    "apx_demo_requests": {
+      "source": 3,
+      "target": 3,
+      "differences": {}
+    },
+    "apx_demo_approvals": {
+      "source": 2,
+      "target": 2,
+      "differences": {}
+    },
+    "apx_demo_request_lines": {
+      "source": 6,
+      "target": 6,
+      "differences": {}
+    }
+  },
+  "views": {
+    "principal": "IWAN.HERDIAN@KCSI-ID.COM",
+    "views": {
+      "apx_demo_user_roles_v": {
+        "source": 7,
+        "target": 7,
+        "differences": {}
+      },
+      "apx_demo_departments_v": {
+        "source": 3,
+        "target": 3,
+        "differences": {}
+      },
+      "apx_demo_items_v": {
+        "source": 5,
+        "target": 5,
+        "differences": {}
+      },
+      "apx_demo_requests_v": {
+        "source": 3,
+        "target": 3,
+        "differences": {}
+      },
+      "apx_demo_request_lines_v": {
+        "source": 6,
+        "target": 6,
+        "differences": {}
+      },
+      "apx_demo_request_summary_v": {
+        "source": 3,
+        "target": 3,
+        "differences": {}
+      },
+      "apx_demo_approvals_v": {
+        "source": 2,
+        "target": 2,
+        "differences": {}
+      },
+      "apx_demo_dash_c1_s1_v": {
+        "source": 2,
+        "target": 2,
+        "differences": {}
+      },
+      "apx_demo_dash_c2_s1_v": {
+        "source": 2,
+        "target": 2,
+        "differences": {}
+      },
+      "apx_demo_dash_kpi_v": {
+        "source": 3,
+        "target": 3,
+        "differences": {}
+      }
+    }
+  },
+  "messages": [
+    {
+      "step": "J2A dept create",
+      "url": "departments?msg=DML%3ACREATED",
+      "target": [
+        "Row created."
+      ],
+      "apex": [
+        "Row created."
+      ],
+      "equal": true
+    },
+    {
+      "step": "J2A dept duplicate",
+      "url": "departments/new",
+      "target": [
+        "1 error has occurred",
+        "ORA-00001: unique constraint (WKSP_KCSI.APX_DEMO_DEPARTMENTS_U1) violated on table WKSP_KCSI.APX_DEMO_DEPARTMENTS columns (DEPT_CODE)"
+      ],
+      "apex": [
+        "1 error has occurred",
+        "ORA-00001: unique constraint (WKSP_KCSI.APX_DEMO_DEPARTMENTS_U1) violated on table WKSP_KCSI.APX_DEMO_DEPARTMENTS columns (DEPT_CODE)"
+      ],
+      "equal": true
+    },
+    {
+      "step": "J2A item price -5",
+      "url": "items/new",
+      "target": [
+        "1 error has occurred",
+        "Harga Standar must be a number greater than or equal to 0."
+      ],
+      "apex": [
+        "1 error has occurred",
+        "Harga Standar must be a number greater than or equal to 0."
+      ],
+      "equal": true
+    },
+    {
+      "step": "J2A item create",
+      "url": "items?msg=DML%3ACREATED",
+      "target": [
+        "Row created."
+      ],
+      "apex": [
+        "Row created."
+      ],
+      "equal": true
+    },
+    {
+      "step": "J2A item update",
+      "url": "items?msg=DML%3AUPDATED",
+      "target": [
+        "Row updated."
+      ],
+      "apex": [
+        "Row updated."
+      ],
+      "equal": true
+    },
+    {
+      "step": "J2A item delete",
+      "url": "items?msg=DML%3ADELETED",
+      "target": [
+        "Row deleted."
+      ],
+      "apex": [
+        "Row deleted."
+      ],
+      "equal": true
+    },
+    {
+      "step": "J2A dept delete",
+      "url": "departments?msg=DML%3ADELETED",
+      "target": [
+        "Row deleted."
+      ],
+      "apex": [
+        "Row deleted."
+      ],
+      "equal": true
+    },
+    {
+      "step": "J2B user role default",
+      "url": "admin/users/new",
+      "target": [
+        "P501_USERNAME=DEMO_ADMIN"
+      ],
+      "apex": [
+        "P501_USERNAME=DEMO_ADMIN"
+      ],
+      "equal": true
+    },
+    {
+      "step": "J2B user role create",
+      "url": "admin/users?msg=DML%3ACREATED",
+      "target": [
+        "Row created."
+      ],
+      "apex": [
+        "Row created."
+      ],
+      "equal": true
+    },
+    {
+      "step": "J2B user role delete",
+      "url": "admin/users?msg=DML%3ADELETED",
+      "target": [
+        "Row deleted."
+      ],
+      "apex": [
+        "Row deleted."
+      ],
+      "equal": true
+    },
+    {
+      "step": "J2B doc type unchanged",
+      "url": "admin/document-types",
+      "target": [],
+      "apex": [],
+      "equal": true
+    }
+  ],
+  "result": "PASS"
+}
