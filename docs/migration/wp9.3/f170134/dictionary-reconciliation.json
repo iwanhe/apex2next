@@ -9,6 +9,17 @@
     },
     "converterVersion": "0.3.0"
   },
+  "overrides": [
+    {
+      "object": "VIEW APX_DEMO_DASH_KPI_V",
+      "reason": "D-001: view redefined after install (2026-11-04); install.sql is stale. Installed text matches APEX page 100 (resolves SRC-001).",
+      "lastDdl": "2026-11-04T06:18:44",
+      "overrideSha256": "sha256:ce3b07eafd1ee1347e5f8b64e4952fe26eb9d59cd195b2f9bfa5e69319b2762b",
+      "action": "replaced",
+      "line": 944,
+      "originalSha256": "sha256:a78029465fbae230b1f102d67e27949ec17b963510260e7c41bcfbfd20980153"
+    }
+  ],
   "dictionary": {
     "name": "report.csv",
     "sha256": "3c5ab3742164354af769d53da8068204395ee26abae6ca4175b9ee63d3b12c06",
@@ -19,6 +30,14 @@
       "dbName": "AEXTPDB",
       "container": "AEXTPDB",
       "schemaObjectCount": 951
+    },
+    "viewTexts": {
+      "name": "report_1.csv",
+      "sha256": "45e57dece6e0449151b536ad7f3082d2e4de7e0d9c0ca73b2d67f60bde579b6c",
+      "views": [
+        "APX_DEMO_DASH_C2_S1_V",
+        "APX_DEMO_DASH_KPI_V"
+      ]
     },
     "consistency": "Single-session query; no SCN (not granted). Rows are not guaranteed to be one point in time.",
     "inScopeObjects": 49,
@@ -94,14 +113,16 @@
       "REC-004": "PASS",
       "REC-005": "PASS",
       "REC-006": "PASS",
-      "REC-007": "FAIL",
+      "REC-007": "PASS",
       "REC-008": "PASS",
-      "REC-009": "FAIL",
+      "REC-009": "PASS",
       "REC-010": "PASS",
-      "REC-011": "FAIL"
+      "REC-011": "PASS",
+      "REC-012": "PASS"
     },
-    "reconciled": false,
-    "drift": 2
+    "reconciled": true,
+    "drift": 0,
+    "resolved": 2
   },
   "checks": [
     {
@@ -160,10 +181,8 @@
     {
       "id": "REC-007",
       "title": "View output columns match the script definitions",
-      "status": "FAIL",
-      "failures": [
-        "APX_DEMO_DASH_KPI_V: script columns ['KPI_1', 'KPI_2', 'KPI_3'] vs dictionary ['SEQ', 'ICON', 'LABEL', 'METRIC_VALUE']"
-      ],
+      "status": "PASS",
+      "failures": [],
       "notes": []
     },
     {
@@ -190,12 +209,11 @@
     {
       "id": "REC-009",
       "title": "Installed static dependencies are all derived from the script",
-      "status": "FAIL",
-      "failures": [
-        "APX_DEMO_DASH_KPI_V -> APX_DEMO_APPROVAL_PKG: installed dependency not derived from script"
-      ],
+      "status": "PASS",
+      "failures": [],
       "notes": [
-        "45 in-scope static edges; external: PUBLIC.DBMS_ASSERT, PUBLIC.DUAL, SYS.DBMS_STANDARD, SYS.STANDARD"
+        "45 in-scope static edges; external: PUBLIC.DBMS_ASSERT, PUBLIC.DUAL, SYS.DBMS_STANDARD, SYS.STANDARD",
+        "explained transitively through script dependencies: APX_DEMO_DASH_KPI_V -> APX_DEMO_APPROVAL_PKG"
       ]
     },
     {
@@ -209,29 +227,39 @@
     },
     {
       "id": "REC-011",
-      "title": "No in-scope object was changed after the install window",
-      "status": "FAIL",
-      "failures": [
-        "VIEW APX_DEMO_DASH_C2_S1_V last DDL 2026-11-02T08:41:52 (same columns; recompilation or text change not verifiable without DDL)",
-        "VIEW APX_DEMO_DASH_KPI_V last DDL 2026-11-04T06:18:44 (definition differs from script)"
-      ],
+      "title": "Every in-scope object changed after the install window is verified or overridden",
+      "status": "PASS",
+      "failures": [],
       "notes": [
-        "install window 2026-11-02T00:22:01 .. 2026-11-02T00:22:03"
+        "install window 2026-11-02T00:22:01 .. 2026-11-02T00:22:03",
+        "VIEW APX_DEMO_DASH_C2_S1_V last DDL 2026-11-02T08:41:52: text identical to script (recompilation)",
+        "VIEW APX_DEMO_DASH_KPI_V last DDL 2026-11-04T06:18:44: redefined after install; captured by dictionary override"
+      ]
+    },
+    {
+      "id": "REC-012",
+      "title": "Installed view text equals the definition used by the plan",
+      "status": "PASS",
+      "failures": [],
+      "notes": [
+        "APX_DEMO_DASH_C2_S1_V: installed text identical to script",
+        "APX_DEMO_DASH_KPI_V: installed text identical to dictionary override"
       ]
     }
   ],
-  "drift": [
-    {
-      "object": "VIEW APX_DEMO_DASH_KPI_V",
-      "kind": "definition",
-      "detail": "columns ['KPI_1', 'KPI_2', 'KPI_3'] in script, ['SEQ', 'ICON', 'LABEL', 'METRIC_VALUE'] installed",
-      "lastDdl": "2026-11-04T06:18:44"
-    },
+  "drift": [],
+  "resolutions": [
     {
       "object": "VIEW APX_DEMO_DASH_C2_S1_V",
-      "kind": "post-install DDL",
-      "detail": "LAST_DDL_TIME after install window; columns match script",
+      "resolution": "recompilation; text verified identical",
+      "detail": "LAST_DDL_TIME after install window, installed text equals script",
       "lastDdl": "2026-11-02T08:41:52"
+    },
+    {
+      "object": "VIEW APX_DEMO_DASH_KPI_V",
+      "resolution": "dictionary override",
+      "detail": "D-001: view redefined after install (2026-11-04); install.sql is stale. Installed text matches APEX page 100 (resolves SRC-001).",
+      "lastDdl": "2026-11-04T06:18:44"
     }
   ]
 }

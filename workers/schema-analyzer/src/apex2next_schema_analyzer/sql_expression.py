@@ -246,8 +246,8 @@ def convert_expression(tokens: list[Token], *, known_objects: frozenset[str] | s
             follow = tok(k + 2)
             if follow is None or (follow.kind == "OP" and follow.text in {")", ";"}) or (
                     follow.kind == "IDENT" and follow.upper in FROM_TERMINATORS):
-                blank(k)
-                blank(k + 1)
+                for idx in range(sig[k], sig[k + 1] + 1):
+                    out[idx] = ""
                 # drop the whitespace directly before FROM to keep output tidy
                 before = sig[k] - 1
                 if before >= 0 and tokens[before].kind == "WS":

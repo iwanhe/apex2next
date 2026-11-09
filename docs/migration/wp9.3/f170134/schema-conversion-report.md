@@ -8,7 +8,7 @@
 - **Target schema:** `app`
 - **Statements accounted:** 56
 - **Tables emitted:** 9/9 · **Views emitted:** 8/10 · **Indexes emitted:** 4/4
-- **Dependency validation passed:** NO — see failures below
+- **Dependency validation passed:** yes
 
 ## 1. Disposition summary
 
@@ -43,7 +43,7 @@
 | DEP-009 | PASS | Identifiers fit 63 bytes and do not collide after case folding | — |
 | DEP-010 | PASS | Independent WP8 inventory parser agrees on object counts | — |
 | DEP-011 | PASS | Every source statement is accounted for with a disposition | ALTER_TABLE: 3; ANONYMOUS_BLOCK: 1; DML: 14; INDEX: 4; PACKAGE: 4; PACKAGE_BODY: 4; TABLE: 9; TCL: 2; TRIGGER: 5; VIEW: 10 |
-| DEP-012 | FAIL | APEX consumer object/column/package references resolve against the source schema | page 100 create_page_plug Ringkasan [p_plug_source]: APX_DEMO_DASH_KPI_V.SEQ not found; page 100 create_page_plug Ringkasan [p_plug_source]: APX_DEMO_DASH_KPI_V.ICON not found; page 100 create_page_plug Ringkasan [p_plug_source]: APX_DEMO_DASH_KPI_V.LABEL not found; page 100 create_page_plug Ringkasan [p_plug_source]: APX_DEMO_DASH_KPI_V.METRIC_VALUE not found |
+| DEP-012 | PASS | APEX consumer object/column/package references resolve against the source schema | 34 reference(s) checked; consumer depends on not-emitted object: APX_DEMO_APPROVALS_V (VIEW (not emitted)); consumer depends on not-emitted object: APX_DEMO_DASH_KPI_V (VIEW (not emitted)) |
 
 ## 3. Tables and columns
 
@@ -305,21 +305,21 @@
 
 | Line | Statement | Target | Disposition |
 |---|---|---|---|
-| 1040 | MERGE | apx_demo_roles | MANUAL (DAT001) |
-| 1046 | MERGE | apx_demo_roles | MANUAL (DAT001) |
-| 1052 | MERGE | apx_demo_roles | MANUAL (DAT001) |
-| 1058 | MERGE | apx_demo_roles | MANUAL (DAT001) |
-| 1064 | MERGE | apx_demo_roles | MANUAL (DAT001) |
-| 1070 | MERGE | apx_demo_doc_types | MANUAL (DAT001) |
-| 1086 | INSERT | apx_demo_departments | MANUAL (DAT001) |
-| 1087 | INSERT | apx_demo_departments | MANUAL (DAT001) |
-| 1088 | INSERT | apx_demo_departments | MANUAL (DAT001) |
-| 1090 | INSERT | apx_demo_items | MANUAL (DAT001) |
-| 1091 | INSERT | apx_demo_items | MANUAL (DAT001) |
-| 1092 | INSERT | apx_demo_items | MANUAL (DAT001) |
-| 1093 | INSERT | apx_demo_items | MANUAL (DAT001) |
-| 1094 | INSERT | apx_demo_items | MANUAL (DAT001) |
-| 1096 | DECLARE | l_item | MANUAL (DAT001) |
+| 1053 | MERGE | apx_demo_roles | MANUAL (DAT001) |
+| 1059 | MERGE | apx_demo_roles | MANUAL (DAT001) |
+| 1065 | MERGE | apx_demo_roles | MANUAL (DAT001) |
+| 1071 | MERGE | apx_demo_roles | MANUAL (DAT001) |
+| 1077 | MERGE | apx_demo_roles | MANUAL (DAT001) |
+| 1083 | MERGE | apx_demo_doc_types | MANUAL (DAT001) |
+| 1099 | INSERT | apx_demo_departments | MANUAL (DAT001) |
+| 1100 | INSERT | apx_demo_departments | MANUAL (DAT001) |
+| 1101 | INSERT | apx_demo_departments | MANUAL (DAT001) |
+| 1103 | INSERT | apx_demo_items | MANUAL (DAT001) |
+| 1104 | INSERT | apx_demo_items | MANUAL (DAT001) |
+| 1105 | INSERT | apx_demo_items | MANUAL (DAT001) |
+| 1106 | INSERT | apx_demo_items | MANUAL (DAT001) |
+| 1107 | INSERT | apx_demo_items | MANUAL (DAT001) |
+| 1109 | DECLARE | l_item | MANUAL (DAT001) |
 
 ## 9. APEX consumer references
 

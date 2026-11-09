@@ -14,6 +14,7 @@ import pytest
 
 from apex2next_schema_analyzer.schema_plan import build_schema_plan, references_from_export_dir, rule_registry
 from apex2next_schema_analyzer.schema_report import render_report
+from apex2next_schema_analyzer.source_overrides import load_overrides
 
 ROOT = Path(__file__).resolve().parents[1]
 D = ROOT / "docs" / "migration" / "wp9.3" / "f170134"
@@ -50,14 +51,15 @@ def test_wp93_acceptance_counts(plan):
     assert every_view_designed and len(plan["views"]) == 10
 
 
-def test_dependency_validation_only_fails_on_recorded_source_finding(plan):
-    status = {c["id"]: c["status"] for c in plan["checks"]}
-    assert all(v == "PASS" for k, v in status.items() if k != "DEP-012"), status
-    dep12 = next(c for c in plan["checks"] if c["id"] == "DEP-012")
-    # SRC-001: page 100 KPI region selects columns that APX_DEMO_DASH_KPI_V in install.sql does not define.
-    assert sorted(dep12["failures"]) == sorted(
-        f"page 100 create_page_plug Ringkasan [p_plug_source]: APX_DEMO_DASH_KPI_V.{c} not found"
-        for c in ("SEQ", "ICON", "LABEL", "METRIC_VALUE"))
+def test_dependency_validation_passes_with_dictionary_override(plan):
+    assert all(c["status"] == "PASS" for c in plan["checks"]), [c for c in plan["checks"] if c["failures"]]
+    # D-001/SRC-001: the installed KPI view (USER_VIEWS) replaces the stale install.sql definition.
+    assert [o["object"] for o in plan["overrides"]] == ["VIEW APX_DEMO_DASH_KPI_V"]
+    assert plan["overrides"][0]["action"] == "replaced"
+    kpi = next(v for v in plan["views"] if v["name"] == "APX_DEMO_DASH_KPI_V")
+    assert kpi["outputColumns"] == ["SEQ", "ICON", "LABEL", "METRIC_VALUE"]
+    assert json.loads((D / "dictionary-overrides.json").read_text(encoding="utf-8"))["evidence"][0]["sha256"] == \
+        "45e57dece6e0449151b536ad7f3082d2e4de7e0d9c0ca73b2d67f60bde579b6c"
 
 
 def test_not_emitted_views_are_the_plsql_dependent_ones(plan):
@@ -74,5 +76,7 @@ def test_regeneration_from_source_is_byte_identical(plan):
     refs = None
     if os.environ.get("APEX2NEXT_F170134_EXPORT_DIR"):
         refs = references_from_export_dir(Path(os.environ["APEX2NEXT_F170134_EXPORT_DIR"]))
-    regenerated = json.loads(json.dumps(build_schema_plan(source, source_name="install.sql", apex_references=refs)))
+    regenerated = json.loads(json.dumps(build_schema_plan(
+        source, source_name="install.sql", apex_references=refs,
+        overrides=load_overrides(D / "dictionary-overrides.json"))))
     assert regenerated == plan

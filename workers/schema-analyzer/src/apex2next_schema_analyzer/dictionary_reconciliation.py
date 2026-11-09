@@ -19,6 +19,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
+from .source_overrides import apply_overrides, load_overrides
 from .sql_tokens import split_script
 
 RECONCILIATION_FORMAT = "apex2next.dictionary-reconciliation.v1"
@@ -100,6 +101,14 @@ def parse_workshop_csv(text: str) -> dict[str, Any]:
     return d
 
 
+def parse_view_texts(text: str) -> dict[str, dict[str, Any]]:
+    """Parse a USER_VIEWS export with VIEW_NAME, TEXT_LENGTH, TEXT_VC."""
+    rows = list(csv.DictReader(io.StringIO(text)))
+    if not rows or not {"VIEW_NAME", "TEXT_LENGTH", "TEXT_VC"} <= set(rows[0]):
+        raise ValueError("Input is not a USER_VIEWS (VIEW_NAME, TEXT_LENGTH, TEXT_VC) export.")
+    return {r["VIEW_NAME"].upper(): {"length": int(r["TEXT_LENGTH"]), "text": r["TEXT_VC"]} for r in rows}
+
+
 def _source_type(src: str | None) -> tuple[str, str]:
     m = re.match(r"\s*([A-Za-z_][A-Za-z0-9_ ]*?)\s*(?:\((.*)\))?\s*$", src or "")
     return (m.group(1).upper(), (m.group(2) or "").strip()) if m else ("", "")
@@ -126,9 +135,16 @@ def _type_matches(plan_col: dict[str, Any], dc: dict[str, Any]) -> tuple[bool, s
 
 
 def reconcile(plan: dict[str, Any], dictionary: dict[str, Any], source: str, *,
-              dictionary_name: str = "report.csv", dictionary_sha256: str | None = None) -> dict[str, Any]:
+              dictionary_name: str = "report.csv", dictionary_sha256: str | None = None,
+              view_texts: dict[str, dict[str, Any]] | None = None, view_texts_name: str | None = None,
+              view_texts_sha256: str | None = None, overrides: dict[str, Any] | None = None) -> dict[str, Any]:
     checks: list[dict[str, Any]] = []
     drift: list[dict[str, Any]] = []
+    resolutions: list[dict[str, Any]] = []
+    source, _ = apply_overrides(source, overrides)
+    overridden = {r["object"]: r for r in plan.get("overrides", [])}
+    if overrides is not None and {f"{o['object'].upper()} {o['name'].upper()}" for o in overrides["overrides"]} != set(overridden):
+        raise ValueError("Overrides file does not match the overrides recorded in the plan.")
 
     def check(cid: str, title: str, failures: list[str], notes: list[str] | None = None) -> None:
         checks.append({"id": cid, "title": title, "status": "FAIL" if failures else "PASS",
@@ -353,10 +369,29 @@ def reconcile(plan: dict[str, Any], dictionary: dict[str, Any], source: str, *,
             dict_edges.add((src, ref_name))
         else:
             external.add(dep["ref"])
-    dep_failures = sorted(f"{a} -> {b}: installed dependency not derived from script" for a, b in dict_edges - plan_edges)
+    graph: dict[str, set[str]] = defaultdict(set)
+    for a, b in plan_edges:
+        graph[a.split(":")[-1]].add(b)
+
+    def reachable(a: str, b: str) -> bool:
+        seen, stack = set(), [a.split(":")[-1]]
+        while stack:
+            n = stack.pop()
+            for m in graph.get(n, ()):
+                if m == b:
+                    return True
+                if m not in seen:
+                    seen.add(m)
+                    stack.append(m)
+        return False
+
+    transitive = sorted(f"{a} -> {b}" for a, b in dict_edges - plan_edges if reachable(a, b))
+    dep_failures = sorted(f"{a} -> {b}: installed dependency not derived from script"
+                          for a, b in dict_edges - plan_edges if not reachable(a, b))
     lexical_only = sorted(f"{a} -> {b}" for a, b in plan_edges - dict_edges)
     check("REC-009", "Installed static dependencies are all derived from the script",
           dep_failures, notes=[f"{len(dict_edges)} in-scope static edges; external: {', '.join(sorted(external))}"]
+          + [f"explained transitively through script dependencies: {x}" for x in transitive]
           + [f"script-only (dynamic SQL, %TYPE, or lexical over-approximation): {x}" for x in lexical_only])
 
     # ---------------------------------------------------------------- REC-010 errors and grants
@@ -365,23 +400,56 @@ def reconcile(plan: dict[str, Any], dictionary: dict[str, Any], source: str, *,
           notes=[f"{len(dictionary['grants'])} object grant(s) on in-scope objects"]
           + [f"{g['type']} {g['name']} -> {g['grantee']}: {g['privilege']}" for g in dictionary["grants"]])
 
+    # ---------------------------------------------------------------- REC-012 view text
+    text_identical: set[str] = set()
+    if view_texts is not None:
+        text_failures = []
+        text_notes = []
+        for name, vt in sorted(view_texts.items()):
+            if vt["length"] != len(vt["text"]):
+                text_failures.append(f"{name}: TEXT_LENGTH {vt['length']} but exported {len(vt['text'])} chars (truncated)")
+                continue
+            v = views.get(name)
+            if v is None:
+                text_failures.append(f"{name}: not a view in the plan")
+            elif _norm(v["source"]) == _norm(vt["text"]):
+                text_identical.add(f"VIEW {name}")
+                text_notes.append(f"{name}: installed text identical to "
+                                  + ("dictionary override" if f"VIEW {name}" in overridden else "script"))
+            else:
+                text_failures.append(f"{name}: installed text differs from the plan definition")
+                drift.append({"object": f"VIEW {name}", "kind": "definition", "detail": "installed view text differs",
+                              "lastDdl": objects.get(("VIEW", name), {}).get("lastDdl")})
+        check("REC-012", "Installed view text equals the definition used by the plan", text_failures, notes=text_notes)
+
     # ---------------------------------------------------------------- REC-011 change timeline
     created = [datetime.fromisoformat(o["created"]) for o in objects.values() if o["created"]]
     window_end = max(created) + timedelta(minutes=1) if created else None
     late = []
+    late_notes = []
     for o in sorted(objects.values(), key=lambda x: x["name"]):
-        if window_end and o["lastDdl"] and datetime.fromisoformat(o["lastDdl"]) > window_end:
-            changed_definition = any(d["object"] == f"{o['type']} {o['name']}" for d in drift)
-            late.append(f"{o['type']} {o['name']} last DDL {o['lastDdl']}"
-                        + (" (definition differs from script)" if changed_definition
-                           else " (same columns; recompilation or text change not verifiable without DDL)"))
-            if not changed_definition:
-                drift.append({"object": f"{o['type']} {o['name']}", "kind": "post-install DDL",
-                              "detail": "LAST_DDL_TIME after install window; columns match script",
-                              "lastDdl": o["lastDdl"]})
-    check("REC-011", "No in-scope object was changed after the install window",
+        if not (window_end and o["lastDdl"] and datetime.fromisoformat(o["lastDdl"]) > window_end):
+            continue
+        key = f"{o['type']} {o['name']}"
+        if key in overridden and key in text_identical:
+            late_notes.append(f"{key} last DDL {o['lastDdl']}: redefined after install; captured by dictionary override")
+            resolutions.append({"object": key, "resolution": "dictionary override",
+                                "detail": overridden[key].get("reason"), "lastDdl": o["lastDdl"]})
+        elif key in text_identical:
+            late_notes.append(f"{key} last DDL {o['lastDdl']}: text identical to script (recompilation)")
+            resolutions.append({"object": key, "resolution": "recompilation; text verified identical",
+                                "detail": "LAST_DDL_TIME after install window, installed text equals script", "lastDdl": o["lastDdl"]})
+        else:
+            changed = any(d["object"] == key for d in drift)
+            late.append(f"{key} last DDL {o['lastDdl']}" + (" (definition differs from plan)" if changed
+                        else " (columns match; supply USER_VIEWS/USER_SOURCE text to verify)"))
+            if not changed:
+                drift.append({"object": key, "kind": "post-install DDL",
+                              "detail": "LAST_DDL_TIME after install window; text not verified", "lastDdl": o["lastDdl"]})
+    check("REC-011", "Every in-scope object changed after the install window is verified or overridden",
           late, notes=[f"install window {min(created).isoformat() if created else '?'} .. "
-                       f"{max(created).isoformat() if created else '?'}"])
+                       f"{max(created).isoformat() if created else '?'}"] + late_notes)
+    checks.sort(key=lambda c: c["id"])
 
     snapshot = dictionary["snapshot"]
     outside_invalid = {k: v["notValid"] for k, v in dictionary["objectCounts"].items() if v["notValid"]}
@@ -389,16 +457,20 @@ def reconcile(plan: dict[str, Any], dictionary: dict[str, Any], source: str, *,
         "format": RECONCILIATION_FORMAT,
         "reconcilerVersion": RECONCILER_VERSION,
         "plan": {"source": plan["source"], "converterVersion": plan["converterVersion"]},
+        "overrides": plan.get("overrides", []),
         "dictionary": {"name": dictionary_name, "sha256": dictionary_sha256, "snapshot": snapshot,
+                       "viewTexts": ({"name": view_texts_name, "sha256": view_texts_sha256, "views": sorted(view_texts)}
+                                     if view_texts is not None else None),
                        "consistency": "Single-session query; no SCN (not granted). Rows are not guaranteed to be one point in time.",
                        "inScopeObjects": len(objects),
                        "schemaObjectCounts": dictionary["objectCounts"],
                        "notValidOutsideScope": outside_invalid},
         "summary": {"checks": {c["id"]: c["status"] for c in checks},
                     "reconciled": all(c["status"] == "PASS" for c in checks),
-                    "drift": len(drift)},
+                    "drift": len(drift), "resolved": len(resolutions)},
         "checks": checks,
         "drift": drift,
+        "resolutions": resolutions,
     }
 
 
@@ -410,13 +482,18 @@ def render_markdown(rec: dict[str, Any], *, title: str) -> str:
            f"- **Snapshot:** schema `{snap['schema']}`, {snap['timestamp']}, Oracle {snap['dbVersion']} "
            f"({snap['dbName']}), {snap['schemaObjectCount']} objects in schema, {rec['dictionary']['inScopeObjects']} in scope",
            f"- **Consistency:** {rec['dictionary']['consistency']}",
-           f"- **Reconciled:** {'yes' if rec['summary']['reconciled'] else 'NO — see failures'}; drift items: {rec['summary']['drift']}",
+           *([f"- **View text evidence:** `{rec['dictionary']['viewTexts']['name']}` `sha256:{rec['dictionary']['viewTexts']['sha256']}`"]
+             if rec["dictionary"].get("viewTexts") else []),
+           *[f"- **Dictionary override:** {o['object']} ({o['action']}; {o['reason']})" for o in rec.get("overrides", [])],
+           f"- **Reconciled:** {'yes' if rec['summary']['reconciled'] else 'NO — see failures'}; open drift: {rec['summary']['drift']}; resolved: {rec['summary']['resolved']}",
            "", "## Checks", "", "| Check | Status | Title | Failures / notes |", "|---|---|---|---|"]
     for c in rec["checks"]:
         detail = "; ".join(c["failures"]) if c["failures"] else "; ".join(c["notes"][:6])
         out.append(f"| {c['id']} | {c['status']} | {c['title']} | {detail.replace('|', '/') or '—'} |")
-    out += ["", "## Drift", ""]
+    out += ["", "## Open drift", ""]
     out += [f"- **{d['object']}** ({d['kind']}, last DDL {d['lastDdl']}): {d['detail']}" for d in rec["drift"]] or ["- none"]
+    out += ["", "## Resolved", ""]
+    out += [f"- **{r['object']}** (last DDL {r['lastDdl']}): {r['resolution']} — {r['detail']}" for r in rec["resolutions"]] or ["- none"]
     if rec["dictionary"]["notValidOutsideScope"]:
         out += ["", "## Schema hygiene outside scope", "",
                 "The schema is shared with other applications. Objects that are not VALID outside the `APX_DEMO_` prefix:", ""]
@@ -432,12 +509,19 @@ def main() -> int:
     parser.add_argument("dictionary", type=Path, help="CSV from dictionary_inventory_apex_workshop.sql")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--markdown-output", type=Path)
+    parser.add_argument("--view-texts", type=Path, help="USER_VIEWS export (VIEW_NAME, TEXT_LENGTH, TEXT_VC)")
+    parser.add_argument("--overrides", type=Path, help="dictionary overrides used to build the plan")
     parser.add_argument("--title", default="WP9.3b Oracle Dictionary Reconciliation")
     args = parser.parse_args()
     raw = args.dictionary.read_bytes()
+    vraw = args.view_texts.read_bytes() if args.view_texts else None
     rec = reconcile(json.loads(args.plan.read_text(encoding="utf-8")), parse_workshop_csv(raw.decode("utf-8")),
                     args.source.read_text(encoding="utf-8"), dictionary_name=args.dictionary.name,
-                    dictionary_sha256=hashlib.sha256(raw).hexdigest())
+                    dictionary_sha256=hashlib.sha256(raw).hexdigest(),
+                    view_texts=parse_view_texts(vraw.decode("utf-8")) if vraw is not None else None,
+                    view_texts_name=args.view_texts.name if args.view_texts else None,
+                    view_texts_sha256=hashlib.sha256(vraw).hexdigest() if vraw is not None else None,
+                    overrides=load_overrides(args.overrides) if args.overrides else None)
     args.output.write_text(json.dumps(rec, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     if args.markdown_output:
         args.markdown_output.write_text(render_markdown(rec, title=args.title), encoding="utf-8")

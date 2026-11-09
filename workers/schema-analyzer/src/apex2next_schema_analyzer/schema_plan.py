@@ -42,6 +42,7 @@ from .sql_expression import (
     convert_expression,
     pg_ident,
 )
+from .source_overrides import apply_overrides, load_overrides
 from .sql_tokens import Statement, identifier_name, significant, split_script
 from .trigger_analysis import TRIGGER_RULES, parse_trigger
 from .view_conversion import VIEW_RULES, convert_view, parse_view, view_design, view_sql
@@ -119,11 +120,14 @@ def _generated_name(table: str, kind: str, n: int, columns: list[str]) -> str:
 
 
 def build_schema_plan(source: str, *, source_name: str = "install.sql", target_schema: str = "app",
-                      apex_references: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+                      apex_references: list[dict[str, Any]] | None = None,
+                      overrides: dict[str, Any] | None = None) -> dict[str, Any]:
     if not target_schema.isidentifier() or target_schema.lower() != target_schema or len(target_schema) > 63:
         raise ValueError("target_schema must be a lower-case PostgreSQL identifier.")
-    statements = split_script(source)
     source_hash = "sha256:" + hashlib.sha256(source.encode("utf-8")).hexdigest()
+    original_source = source
+    source, override_records = apply_overrides(source, overrides)
+    statements = split_script(source)
 
     tables: dict[str, dict[str, Any]] = {}
     alters: list[dict[str, Any]] = []
@@ -705,8 +709,12 @@ def build_schema_plan(source: str, *, source_name: str = "install.sql", target_s
         checks.append({"id": "DEP-012", "title": "APEX consumer object/column references resolve against the source schema",
                        "status": "NOT_RUN", "failures": [], "notes": ["No APEX export supplied."]})
 
+    for rec in override_records:
+        for o in objects:
+            if f"{o['type']} {o['name']}" == rec["object"]:
+                o["definitionSource"] = "dictionary override"
     sql = _emit_sql(tables, indexes, views, order, comments, sequences, target_schema,
-                    source_name, source_hash, objects)
+                    source_name, source_hash, objects, override_records)
     post_load = _emit_post_load(tables, sequences, target_schema)
     expected_catalog = _expected_catalog(tables, indexes, views, sequences)
     load_plan = {t["targetName"]: {
@@ -732,7 +740,12 @@ def build_schema_plan(source: str, *, source_name: str = "install.sql", target_s
         "format": PLAN_FORMAT,
         "converterVersion": SCHEMA_CONVERTER_VERSION,
         "ruleRegistrySha256": rule_registry()["sha256"],
-        "source": {"name": source_name, "sha256": source_hash, "bytes": len(source.encode("utf-8"))},
+        "source": {"name": source_name, "sha256": source_hash, "bytes": len(original_source.encode("utf-8"))},
+        "effectiveSource": {"sha256": "sha256:" + hashlib.sha256(source.encode("utf-8")).hexdigest(),
+                            "bytes": len(source.encode("utf-8")),
+                            "note": "Line numbers refer to the effective source (script with dictionary overrides applied)."},
+        "overrides": override_records,
+        "overrideEvidence": (overrides or {}).get("evidence", []),
         "targetSchema": target_schema,
         "summary": summary,
         "checks": checks,
@@ -786,12 +799,13 @@ def _constraint_state(con: dict[str, Any]) -> str:
 
 
 def _emit_sql(tables, indexes, views, order, comments, sequences, schema, source_name, source_hash,
-              objects) -> str:
+              objects, override_records=()) -> str:
     s = pg_ident(schema)
     out = [
         "-- APEX2NEXT WP9.3 PostgreSQL schema migration (generated DRAFT; review required)",
         f"-- Source: {source_name} {source_hash}",
         f"-- Converter: schema-plan {SCHEMA_CONVERTER_VERSION}; rules sha256 {rule_registry()['sha256'][:16]}",
+        *[f"-- Dictionary override: {r['object'].lower()} ({r['action']}, {r['overrideSha256'][:19]}…)" for r in override_records],
         "-- Deterministic output: change conversion rules/decisions and regenerate; do not hand-edit.",
         "-- Not executed by the generator. Not approved for shared environments.",
         "",
@@ -943,6 +957,7 @@ def main() -> int:
     parser.add_argument("--apex-references", type=Path, help="JSON list of APEX consumer references")
     parser.add_argument("--apex-export", type=Path,
                         help="Unpacked APEX SQL export directory (requires apex2next_extractor on PYTHONPATH)")
+    parser.add_argument("--overrides", type=Path, help="Dictionary overrides JSON (apex2next.dictionary-overrides.v1)")
     parser.add_argument("--source-name", default=None)
     parser.add_argument("--target-schema", default="app")
     args = parser.parse_args()
@@ -951,7 +966,8 @@ def main() -> int:
         refs = (refs or []) + references_from_export_dir(args.apex_export)
     plan = build_schema_plan(args.source.read_text(encoding="utf-8"),
                              source_name=args.source_name or args.source.name,
-                             target_schema=args.target_schema, apex_references=refs)
+                             target_schema=args.target_schema, apex_references=refs,
+                             overrides=load_overrides(args.overrides) if args.overrides else None)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(plan, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     if args.sql_output:

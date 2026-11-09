@@ -1,6 +1,6 @@
 # WP9.3 — Oracle Source Validation & PostgreSQL Target Schema: Demo Permintaan Barang (170134)
 
-**Status:** WP9.3 offline part complete. WP9.3b dictionary reconciliation was run on 2026-11-08 (§9): the installed schema matches `install.sql` except for **one view drift** (`APX_DEMO_DASH_KPI_V`). That drift must be resolved before the conversion source is final.
+**Status:** WP9.3 and WP9.3b are **complete**. The installed Oracle schema is reconciled with the conversion source: 12/12 REC checks and 12/12 DEP checks pass. The one drift (`APX_DEMO_DASH_KPI_V`) is captured by an evidence-backed dictionary override (§9).
 **Date:** 2026-11-08
 **Engine:** schema-plan 0.3.0 ([design](../architecture/wp9.3-schema-conversion-engine.md))
 
@@ -29,7 +29,7 @@ All three hashes equal the WP9.2 baseline. Neither archive contains DDL: support
 | Criterion | Result | Evidence |
 |---|---|---|
 | All 9 tables have a PostgreSQL DDL draft | **MET** — 9/9 emitted | Migration applies on PostgreSQL 16.15; catalog equals plan |
-| All 10 views have a conversion design | **MET** — 8 emitted, 2 designed but held back | `views[].design` in plan; §5 |
+| All 10 views have a conversion design | **MET** — 8 emitted, 2 designed but held back (dash_kpi_v from the installed definition) | `views[].design` in plan; §5 |
 | PK, FK, UNIQUE, CHECK, index, identity mapped | **MET** — 9 PK, 7 FK (incl. 3 ALTER TABLE), 4 UNIQUE, 8/8 CHECK, 4/4 indexes, 6 identity, 1 virtual column | Report §4 |
 | Every object has AUTOMATIC/ASSISTED/MANUAL/UNSUPPORTED | **MET** — 86 objects: 31 AUTOMATIC, 25 ASSISTED, 30 MANUAL, 0 UNSUPPORTED; 56/56 statements accounted (DEP-011) | `objects[]` |
 | Migration tests and dependency validation | **MET** — 12 DEP checks; PostgreSQL 16 integration tests (catalog equality, behavior, atomic re-apply, determinism, post-load) | `tests/test_wp93_*.py`, CI job `schema-postgres` |
@@ -57,12 +57,12 @@ Verified on PostgreSQL 16 (`tests/test_wp93_postgres.py`):
 | 2–6 | user_roles_v, departments_v, items_v, requests_v, request_lines_v | ASSISTED | yes | FORCE removed. The display concatenations (`||`) need NULL review (EXP005). |
 | 7 | dash_c1_s1_v | ASSISTED | yes | Group by status |
 | 8 | request_summary_v | ASSISTED | yes | `NVL(SUM(..),0)` → `COALESCE`; verified 0 for requests without lines |
-| 9 | dash_kpi_v | MANUAL | no | Blocked by approvals_v; `FROM DUAL` removed. **See SRC-001.** |
+| 9 | dash_kpi_v | MANUAL | no | Installed definition (dictionary override D-001): 3-row UNION ALL KPI; `FROM DUAL` removed. Blocked by approvals_v (WP9.4) |
 | 10 | dash_c2_s1_v | ASSISTED | yes | Emitted *after* request_summary_v, although the source defines it before (FORCE) |
 
 ## 6. Findings that need a decision (owner sign-off)
 
-1. **SRC-001: page 100 KPI region does not match the view in `install.sql`.** The region selects `seq, icon, label, metric_value` from `APX_DEMO_DASH_KPI_V`, but the view defined in `install.sql` exposes `kpi_1, kpi_2, kpi_3`. Either the installed view differs from the script, or the page is broken. Resolve this through the Oracle Dictionary (WP9.3b) before redesigning the dashboard. This is the only DEP-012 failure.
+1. **SRC-001: resolved by WP9.3b.** Page 100 selects `seq, icon, label, metric_value`. The *installed* `APX_DEMO_DASH_KPI_V` provides exactly those columns; `install.sql` was stale. The plan now uses the installed definition (§9), and DEP-012 passes.
 2. **SCH005: identity `ON NULL`.** In PostgreSQL, an explicit `NULL` ID fails instead of generating a value. NestJS writers must omit identity columns. Confirmed by test.
 3. **SCH003: `DATE` → `timestamp(0) without time zone`, `SYSDATE` → `LOCALTIMESTAMP(0)`.** Confirm the single clock/timezone policy (Asia/Jakarta server time vs UTC instants). The engineering standard prefers `timestamptz` for instants (`requested_on`, `acted_on`, audit `*_on`).
 4. **SCH002: unconstrained `NUMBER` → `numeric`** (amounts, qty, `level2_limit`, `doc_id`, `last_no`). Confirm the precision/scale with data profiling, or keep `numeric`.
@@ -103,21 +103,15 @@ Generated report: [dictionary-reconciliation.md](wp9.3/f170134/dictionary-reconc
 | REC-010 errors / grants | PASS: no compile errors; no object grants |
 | REC-007 / REC-009 / REC-011 | **FAIL: one drift** (below) |
 
-**Drift D-001 (resolves SRC-001).** `APX_DEMO_DASH_KPI_V` was redefined on 2026-11-04 06:18:44, after the 2026-11-02 install. The installed view exposes `SEQ, ICON, LABEL, METRIC_VALUE`, which is exactly what page 100 queries, and depends directly on `APX_DEMO_APPROVAL_PKG`. So the page is correct and `install.sql` is stale for this view. The installed view text is required to convert it.
+**Drift D-001 (resolved, resolves SRC-001).** `APX_DEMO_DASH_KPI_V` was redefined on 2026-11-04 06:18:44, after the 2026-11-02 install. Its installed text (`USER_VIEWS.TEXT_VC`, 560 chars, `report_1.csv` `sha256:45e57dec…579b6c`) is a three-row `UNION ALL` from `DUAL` exposing `SEQ, ICON, LABEL, METRIC_VALUE`, exactly what page 100 queries. Its dependency on `APX_DEMO_APPROVAL_PKG` is transitive, through `APX_DEMO_APPROVALS_V.CAN_ACT_YN`. The installed text is recorded in [dictionary-overrides.json](wp9.3/f170134/dictionary-overrides.json). That file contains the evidence hashes, the reason and LAST_DDL_TIME, and it replaces the stale statement in the *effective* source. `install.sql` itself is not edited. The plan records the original and override hashes.
 
-**D-002 (low risk).** `APX_DEMO_DASH_C2_S1_V` has LAST_DDL_TIME 2026-11-02 08:41:52, but its columns match the script. This is consistent with the automatic recompilation of a FORCE view that was created before `APX_DEMO_REQUEST_SUMMARY_V` existed. The view text confirms it.
+**D-002 (resolved).** `APX_DEMO_DASH_C2_S1_V` text is identical to `install.sql` (98 chars). Its late LAST_DDL_TIME is the automatic recompilation of a FORCE view that was created before its dependency existed.
 
-The reconciliation also exposed an engine defect, now fixed: package calls on the right-hand side of trigger assignments were not recorded. The trigger inventory now lists every `APX_DEMO_SEC_PKG.APP_USER`, `APX_DEMO_DOC_PKG.NEXT_NO` and `APX_DEMO_APPROVAL_PKG.BYPASS` call, and DEP-007 validates them.
+### Result after the override
 
-Schema hygiene outside scope: the shared schema has non-VALID objects belonging to other applications (8 package bodies, 5 triggers, 2 functions, 1 view). None is referenced by 170134.
+- REC-001…REC-012: **all PASS**. Open drift: 0. Resolved: 2 (D-001 override, D-002 text verified).
+- DEP-001…DEP-012: **all PASS** (DEP-012 includes the page 100 KPI columns).
+- `APX_DEMO_DASH_KPI_V` is still not emitted. It reads `APX_DEMO_APPROVALS_V.can_act_yn`, which calls `APX_DEMO_APPROVAL_PKG.CAN_ACT_YN`, so its target design is part of WP9.4. Its candidate PostgreSQL SQL (FROM DUAL removed) is in the plan.
+- The generated migration DDL is unchanged by the override, except for one header line that records it. The PostgreSQL 16 integration tests pass.
 
-### To close WP9.3b
-
-Run this in SQL Workshop (read-only) and supply the output:
-
-```sql
-select view_name, text_length, text_vc from user_views
- where view_name in ('APX_DEMO_DASH_KPI_V', 'APX_DEMO_DASH_C2_S1_V');
-```
-
-Then: correct the conversion source with the installed KPI view text (recorded as an explicit dictionary override, not a hand edit), regenerate the plan, design the KPI view for WP9.4 (it calls `APX_DEMO_APPROVAL_PKG`), and re-run the reconciliation until it is clean.
+WP9-004 (target DDL) is ready for owner review of the decisions in §6. Next is **WP9.4**: business logic, including `CAN_ACT_YN` for the two held views.

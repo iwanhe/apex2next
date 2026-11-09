@@ -7,6 +7,34 @@
     "sha256": "sha256:7c71e9c56b76d5fe893d2f357e692b9e7c458adc37791784379842ec1712d66d",
     "bytes": 38098
   },
+  "effectiveSource": {
+    "sha256": "sha256:16c5aa68cf723b400389cfbfd21acdaf9b76c66abfe2572be5ab0bb8d6756672",
+    "bytes": 38386,
+    "note": "Line numbers refer to the effective source (script with dictionary overrides applied)."
+  },
+  "overrides": [
+    {
+      "object": "VIEW APX_DEMO_DASH_KPI_V",
+      "reason": "D-001: view redefined after install (2026-11-04); install.sql is stale. Installed text matches APEX page 100 (resolves SRC-001).",
+      "lastDdl": "2026-11-04T06:18:44",
+      "overrideSha256": "sha256:ce3b07eafd1ee1347e5f8b64e4952fe26eb9d59cd195b2f9bfa5e69319b2762b",
+      "action": "replaced",
+      "line": 944,
+      "originalSha256": "sha256:a78029465fbae230b1f102d67e27949ec17b963510260e7c41bcfbfd20980153"
+    }
+  ],
+  "overrideEvidence": [
+    {
+      "name": "report_1.csv",
+      "sha256": "45e57dece6e0449151b536ad7f3082d2e4de7e0d9c0ca73b2d67f60bde579b6c",
+      "query": "select view_name, text_length, text_vc from user_views where view_name in (...)"
+    },
+    {
+      "name": "report.csv",
+      "sha256": "3c5ab3742164354af769d53da8068204395ee26abae6ca4175b9ee63d3b12c06",
+      "query": "sql/dictionary_inventory_apex_workshop.sql"
+    }
+  ],
   "targetSchema": "app",
   "summary": {
     "statements": 56,
@@ -70,7 +98,7 @@
       "source": 4,
       "emitted": 4
     },
-    "validationPassed": false
+    "validationPassed": true
   },
   "checks": [
     {
@@ -175,13 +203,8 @@
     {
       "id": "DEP-012",
       "title": "APEX consumer object/column/package references resolve against the source schema",
-      "status": "FAIL",
-      "failures": [
-        "page 100 create_page_plug Ringkasan [p_plug_source]: APX_DEMO_DASH_KPI_V.SEQ not found",
-        "page 100 create_page_plug Ringkasan [p_plug_source]: APX_DEMO_DASH_KPI_V.ICON not found",
-        "page 100 create_page_plug Ringkasan [p_plug_source]: APX_DEMO_DASH_KPI_V.LABEL not found",
-        "page 100 create_page_plug Ringkasan [p_plug_source]: APX_DEMO_DASH_KPI_V.METRIC_VALUE not found"
-      ],
+      "status": "PASS",
+      "failures": [],
       "notes": [
         "34 reference(s) checked",
         "consumer depends on not-emitted object: APX_DEMO_APPROVALS_V (VIEW (not emitted))",
@@ -766,12 +789,13 @@
       "blockedBy": [
         "APX_DEMO_APPROVALS_V"
       ],
-      "dependencyOrder": 9
+      "dependencyOrder": 9,
+      "definitionSource": "dictionary override"
     },
     {
       "type": "VIEW",
       "name": "APX_DEMO_DASH_C1_S1_V",
-      "line": 950,
+      "line": 963,
       "disposition": "ASSISTED",
       "emitted": true,
       "findingCodes": [
@@ -783,7 +807,7 @@
     {
       "type": "VIEW",
       "name": "APX_DEMO_DASH_C2_S1_V",
-      "line": 953,
+      "line": 966,
       "disposition": "ASSISTED",
       "emitted": true,
       "findingCodes": [
@@ -795,7 +819,7 @@
     {
       "type": "VIEW",
       "name": "APX_DEMO_REQUEST_SUMMARY_V",
-      "line": 1019,
+      "line": 1032,
       "disposition": "ASSISTED",
       "emitted": true,
       "findingCodes": [
@@ -926,7 +950,7 @@
     {
       "type": "PACKAGE",
       "name": "APX_DEMO_REQUEST_PKG",
-      "line": 964,
+      "line": 977,
       "disposition": "MANUAL",
       "emitted": false,
       "findingCodes": [
@@ -936,7 +960,7 @@
     {
       "type": "PACKAGE BODY",
       "name": "APX_DEMO_REQUEST_PKG",
-      "line": 983,
+      "line": 996,
       "disposition": "MANUAL",
       "emitted": false,
       "findingCodes": [
@@ -946,7 +970,7 @@
     {
       "type": "DATA",
       "name": "MERGE APX_DEMO_ROLES",
-      "line": 1040,
+      "line": 1053,
       "disposition": "MANUAL",
       "emitted": false,
       "findingCodes": [
@@ -956,7 +980,7 @@
     {
       "type": "DATA",
       "name": "MERGE APX_DEMO_ROLES",
-      "line": 1046,
+      "line": 1059,
       "disposition": "MANUAL",
       "emitted": false,
       "findingCodes": [
@@ -966,7 +990,7 @@
     {
       "type": "DATA",
       "name": "MERGE APX_DEMO_ROLES",
-      "line": 1052,
+      "line": 1065,
       "disposition": "MANUAL",
       "emitted": false,
       "findingCodes": [
@@ -976,7 +1000,7 @@
     {
       "type": "DATA",
       "name": "MERGE APX_DEMO_ROLES",
-      "line": 1058,
+      "line": 1071,
       "disposition": "MANUAL",
       "emitted": false,
       "findingCodes": [
@@ -986,7 +1010,7 @@
     {
       "type": "DATA",
       "name": "MERGE APX_DEMO_ROLES",
-      "line": 1064,
+      "line": 1077,
       "disposition": "MANUAL",
       "emitted": false,
       "findingCodes": [
@@ -996,7 +1020,7 @@
     {
       "type": "DATA",
       "name": "MERGE APX_DEMO_DOC_TYPES",
-      "line": 1070,
+      "line": 1083,
       "disposition": "MANUAL",
       "emitted": false,
       "findingCodes": [
@@ -1006,7 +1030,7 @@
     {
       "type": "DATA",
       "name": "INSERT APX_DEMO_DEPARTMENTS",
-      "line": 1086,
+      "line": 1099,
       "disposition": "MANUAL",
       "emitted": false,
       "findingCodes": [
@@ -1016,7 +1040,7 @@
     {
       "type": "DATA",
       "name": "INSERT APX_DEMO_DEPARTMENTS",
-      "line": 1087,
+      "line": 1100,
       "disposition": "MANUAL",
       "emitted": false,
       "findingCodes": [
@@ -1026,7 +1050,7 @@
     {
       "type": "DATA",
       "name": "INSERT APX_DEMO_DEPARTMENTS",
-      "line": 1088,
+      "line": 1101,
       "disposition": "MANUAL",
       "emitted": false,
       "findingCodes": [
@@ -1036,7 +1060,7 @@
     {
       "type": "DATA",
       "name": "INSERT APX_DEMO_ITEMS",
-      "line": 1090,
+      "line": 1103,
       "disposition": "MANUAL",
       "emitted": false,
       "findingCodes": [
@@ -1046,7 +1070,7 @@
     {
       "type": "DATA",
       "name": "INSERT APX_DEMO_ITEMS",
-      "line": 1091,
+      "line": 1104,
       "disposition": "MANUAL",
       "emitted": false,
       "findingCodes": [
@@ -1056,7 +1080,7 @@
     {
       "type": "DATA",
       "name": "INSERT APX_DEMO_ITEMS",
-      "line": 1092,
+      "line": 1105,
       "disposition": "MANUAL",
       "emitted": false,
       "findingCodes": [
@@ -1066,7 +1090,7 @@
     {
       "type": "DATA",
       "name": "INSERT APX_DEMO_ITEMS",
-      "line": 1093,
+      "line": 1106,
       "disposition": "MANUAL",
       "emitted": false,
       "findingCodes": [
@@ -1076,7 +1100,7 @@
     {
       "type": "DATA",
       "name": "INSERT APX_DEMO_ITEMS",
-      "line": 1094,
+      "line": 1107,
       "disposition": "MANUAL",
       "emitted": false,
       "findingCodes": [
@@ -1086,7 +1110,7 @@
     {
       "type": "DATA",
       "name": "DECLARE L_ITEM",
-      "line": 1096,
+      "line": 1109,
       "disposition": "MANUAL",
       "emitted": false,
       "findingCodes": [
@@ -3596,7 +3620,7 @@
       "kind": "VIEW",
       "name": "APX_DEMO_DASH_C1_S1_V",
       "owner": null,
-      "line": 950,
+      "line": 963,
       "force": true,
       "columns": null,
       "source": "select status label, count(*) value from apx_demo_requests group by status",
@@ -3617,14 +3641,14 @@
           "disposition": "ASSISTED",
           "message": "FORCE removed; PostgreSQL requires dependencies first, so views are emitted in dependency order.",
           "object": "APX_DEMO_DASH_C1_S1_V",
-          "line": 950
+          "line": 963
         },
         {
           "code": "VIW007",
           "disposition": "ASSISTED",
           "message": "Output column list derived lexically from the select list; verified against PostgreSQL catalog in integration tests.",
           "object": "APX_DEMO_DASH_C1_S1_V",
-          "line": 950
+          "line": 963
         }
       ],
       "ownDisposition": "ASSISTED",
@@ -3637,7 +3661,7 @@
       "kind": "VIEW",
       "name": "APX_DEMO_REQUEST_SUMMARY_V",
       "owner": null,
-      "line": 1019,
+      "line": 1032,
       "force": true,
       "columns": null,
       "source": "select r.request_id\n      ,r.request_no\n      ,d.dept_name\n      ,r.request_date\n      ,r.purpose\n      ,(select count(*) from apx_demo_request_lines l where l.request_id = r.request_id) line_count\n      ,(select nvl(sum(l.line_amount), 0) from apx_demo_request_lines l where l.request_id = r.request_id) total_amount\n      ,r.status\n  from apx_demo_requests r\n  join apx_demo_departments d on d.department_id = r.department_id",
@@ -3666,21 +3690,21 @@
           "disposition": "ASSISTED",
           "message": "FORCE removed; PostgreSQL requires dependencies first, so views are emitted in dependency order.",
           "object": "APX_DEMO_REQUEST_SUMMARY_V",
-          "line": 1019
+          "line": 1032
         },
         {
           "code": "EXP001",
           "disposition": "ASSISTED",
           "message": "NVL rewritten to COALESCE; verify empty-string and type-coercion semantics.",
           "object": "APX_DEMO_REQUEST_SUMMARY_V",
-          "line": 1019
+          "line": 1032
         },
         {
           "code": "VIW007",
           "disposition": "ASSISTED",
           "message": "Output column list derived lexically from the select list; verified against PostgreSQL catalog in integration tests.",
           "object": "APX_DEMO_REQUEST_SUMMARY_V",
-          "line": 1019
+          "line": 1032
         }
       ],
       "ownDisposition": "ASSISTED",
@@ -3696,9 +3720,9 @@
       "line": 944,
       "force": true,
       "columns": null,
-      "source": "select (select count(*) from apx_demo_approvals_v where status = 'PENDING' and can_act_yn = 'Y') kpi_1\n      ,(select count(*) from apx_demo_requests where status = 'DRAFT') kpi_2\n      ,(select count(*) from apx_demo_requests where status = 'SUBMITTED') kpi_3\n  from dual",
+      "source": "select 1 seq\n      ,'fa-check-square-o' icon\n      ,'Approval Menunggu Anda' label\n      ,(select count(*) from apx_demo_approvals_v where status = 'PENDING' and can_act_yn = 'Y') metric_value\n  from dual\nunion all\nselect 2 seq\n      ,'fa-file-o' icon\n      ,'Permintaan Draft' label\n      ,(select count(*) from apx_demo_requests where status = 'DRAFT') metric_value\n  from dual\nunion all\nselect 3 seq\n      ,'fa-clock-o' icon\n      ,'Menunggu Approval' label\n      ,(select count(*) from apx_demo_requests where status = 'SUBMITTED') metric_value\n  from dual",
       "withOption": null,
-      "candidateSql": "select (select count(*) from apx_demo_approvals_v where status = 'PENDING' and can_act_yn = 'Y') kpi_1\n      ,(select count(*) from apx_demo_requests where status = 'DRAFT') kpi_2\n      ,(select count(*) from apx_demo_requests where status = 'SUBMITTED') kpi_3",
+      "candidateSql": "select 1 seq\n      ,'fa-check-square-o' icon\n      ,'Approval Menunggu Anda' label\n      ,(select count(*) from apx_demo_approvals_v where status = 'PENDING' and can_act_yn = 'Y') metric_value\n\nunion all\nselect 2 seq\n      ,'fa-file-o' icon\n      ,'Permintaan Draft' label\n      ,(select count(*) from apx_demo_requests where status = 'DRAFT') metric_value\n\nunion all\nselect 3 seq\n      ,'fa-clock-o' icon\n      ,'Menunggu Approval' label\n      ,(select count(*) from apx_demo_requests where status = 'SUBMITTED') metric_value",
       "dependencies": [
         "APX_DEMO_APPROVALS_V",
         "APX_DEMO_REQUESTS"
@@ -3706,9 +3730,10 @@
       "plsqlCalls": [],
       "unresolved": [],
       "outputColumns": [
-        "KPI_1",
-        "KPI_2",
-        "KPI_3"
+        "SEQ",
+        "ICON",
+        "LABEL",
+        "METRIC_VALUE"
       ],
       "findings": [
         {
@@ -3753,7 +3778,7 @@
       "kind": "VIEW",
       "name": "APX_DEMO_DASH_C2_S1_V",
       "owner": null,
-      "line": 953,
+      "line": 966,
       "force": true,
       "columns": null,
       "source": "select dept_name label, sum(total_amount) value from apx_demo_request_summary_v group by dept_name",
@@ -3774,14 +3799,14 @@
           "disposition": "ASSISTED",
           "message": "FORCE removed; PostgreSQL requires dependencies first, so views are emitted in dependency order.",
           "object": "APX_DEMO_DASH_C2_S1_V",
-          "line": 953
+          "line": 966
         },
         {
           "code": "VIW007",
           "disposition": "ASSISTED",
           "message": "Output column list derived lexically from the select list; verified against PostgreSQL catalog in integration tests.",
           "object": "APX_DEMO_DASH_C2_S1_V",
-          "line": 953
+          "line": 966
         }
       ],
       "ownDisposition": "ASSISTED",
@@ -4482,7 +4507,7 @@
     {
       "kind": "PACKAGE",
       "name": "APX_DEMO_REQUEST_PKG",
-      "line": 964,
+      "line": 977,
       "lexicalStatus": "REVIEW_REQUIRED",
       "lexicalDiagnostics": {},
       "members": [
@@ -4498,14 +4523,14 @@
           "disposition": "MANUAL",
           "message": "PL/SQL unit is business logic; re-implemented as NestJS services in WP9.4.",
           "object": "APX_DEMO_REQUEST_PKG",
-          "line": 964
+          "line": 977
         }
       ]
     },
     {
       "kind": "PACKAGE BODY",
       "name": "APX_DEMO_REQUEST_PKG",
-      "line": 983,
+      "line": 996,
       "lexicalStatus": "REVIEW_REQUIRED",
       "lexicalDiagnostics": {},
       "members": [],
@@ -4520,7 +4545,7 @@
           "disposition": "MANUAL",
           "message": "PL/SQL unit is business logic; re-implemented as NestJS services in WP9.4.",
           "object": "APX_DEMO_REQUEST_PKG",
-          "line": 983
+          "line": 996
         }
       ]
     }
@@ -4528,7 +4553,7 @@
   "dataStatements": [
     {
       "kind": "DML",
-      "line": 1040,
+      "line": 1053,
       "target": "APX_DEMO_ROLES",
       "verb": "MERGE",
       "findings": [
@@ -4537,13 +4562,13 @@
           "disposition": "MANUAL",
           "message": "Configuration/seed DML is data, not schema; migrated and reconciled in WP9.6.",
           "object": "DML",
-          "line": 1040
+          "line": 1053
         }
       ]
     },
     {
       "kind": "DML",
-      "line": 1046,
+      "line": 1059,
       "target": "APX_DEMO_ROLES",
       "verb": "MERGE",
       "findings": [
@@ -4552,13 +4577,13 @@
           "disposition": "MANUAL",
           "message": "Configuration/seed DML is data, not schema; migrated and reconciled in WP9.6.",
           "object": "DML",
-          "line": 1046
+          "line": 1059
         }
       ]
     },
     {
       "kind": "DML",
-      "line": 1052,
+      "line": 1065,
       "target": "APX_DEMO_ROLES",
       "verb": "MERGE",
       "findings": [
@@ -4567,13 +4592,13 @@
           "disposition": "MANUAL",
           "message": "Configuration/seed DML is data, not schema; migrated and reconciled in WP9.6.",
           "object": "DML",
-          "line": 1052
+          "line": 1065
         }
       ]
     },
     {
       "kind": "DML",
-      "line": 1058,
+      "line": 1071,
       "target": "APX_DEMO_ROLES",
       "verb": "MERGE",
       "findings": [
@@ -4582,13 +4607,13 @@
           "disposition": "MANUAL",
           "message": "Configuration/seed DML is data, not schema; migrated and reconciled in WP9.6.",
           "object": "DML",
-          "line": 1058
+          "line": 1071
         }
       ]
     },
     {
       "kind": "DML",
-      "line": 1064,
+      "line": 1077,
       "target": "APX_DEMO_ROLES",
       "verb": "MERGE",
       "findings": [
@@ -4597,13 +4622,13 @@
           "disposition": "MANUAL",
           "message": "Configuration/seed DML is data, not schema; migrated and reconciled in WP9.6.",
           "object": "DML",
-          "line": 1064
+          "line": 1077
         }
       ]
     },
     {
       "kind": "DML",
-      "line": 1070,
+      "line": 1083,
       "target": "APX_DEMO_DOC_TYPES",
       "verb": "MERGE",
       "findings": [
@@ -4612,13 +4637,13 @@
           "disposition": "MANUAL",
           "message": "Configuration/seed DML is data, not schema; migrated and reconciled in WP9.6.",
           "object": "DML",
-          "line": 1070
+          "line": 1083
         }
       ]
     },
     {
       "kind": "DML",
-      "line": 1086,
+      "line": 1099,
       "target": "APX_DEMO_DEPARTMENTS",
       "verb": "INSERT",
       "findings": [
@@ -4627,13 +4652,13 @@
           "disposition": "MANUAL",
           "message": "Configuration/seed DML is data, not schema; migrated and reconciled in WP9.6.",
           "object": "DML",
-          "line": 1086
+          "line": 1099
         }
       ]
     },
     {
       "kind": "DML",
-      "line": 1087,
+      "line": 1100,
       "target": "APX_DEMO_DEPARTMENTS",
       "verb": "INSERT",
       "findings": [
@@ -4642,13 +4667,13 @@
           "disposition": "MANUAL",
           "message": "Configuration/seed DML is data, not schema; migrated and reconciled in WP9.6.",
           "object": "DML",
-          "line": 1087
+          "line": 1100
         }
       ]
     },
     {
       "kind": "DML",
-      "line": 1088,
+      "line": 1101,
       "target": "APX_DEMO_DEPARTMENTS",
       "verb": "INSERT",
       "findings": [
@@ -4657,13 +4682,13 @@
           "disposition": "MANUAL",
           "message": "Configuration/seed DML is data, not schema; migrated and reconciled in WP9.6.",
           "object": "DML",
-          "line": 1088
+          "line": 1101
         }
       ]
     },
     {
       "kind": "DML",
-      "line": 1090,
+      "line": 1103,
       "target": "APX_DEMO_ITEMS",
       "verb": "INSERT",
       "findings": [
@@ -4672,13 +4697,13 @@
           "disposition": "MANUAL",
           "message": "Configuration/seed DML is data, not schema; migrated and reconciled in WP9.6.",
           "object": "DML",
-          "line": 1090
+          "line": 1103
         }
       ]
     },
     {
       "kind": "DML",
-      "line": 1091,
+      "line": 1104,
       "target": "APX_DEMO_ITEMS",
       "verb": "INSERT",
       "findings": [
@@ -4687,13 +4712,13 @@
           "disposition": "MANUAL",
           "message": "Configuration/seed DML is data, not schema; migrated and reconciled in WP9.6.",
           "object": "DML",
-          "line": 1091
+          "line": 1104
         }
       ]
     },
     {
       "kind": "DML",
-      "line": 1092,
+      "line": 1105,
       "target": "APX_DEMO_ITEMS",
       "verb": "INSERT",
       "findings": [
@@ -4702,13 +4727,13 @@
           "disposition": "MANUAL",
           "message": "Configuration/seed DML is data, not schema; migrated and reconciled in WP9.6.",
           "object": "DML",
-          "line": 1092
+          "line": 1105
         }
       ]
     },
     {
       "kind": "DML",
-      "line": 1093,
+      "line": 1106,
       "target": "APX_DEMO_ITEMS",
       "verb": "INSERT",
       "findings": [
@@ -4717,13 +4742,13 @@
           "disposition": "MANUAL",
           "message": "Configuration/seed DML is data, not schema; migrated and reconciled in WP9.6.",
           "object": "DML",
-          "line": 1093
+          "line": 1106
         }
       ]
     },
     {
       "kind": "DML",
-      "line": 1094,
+      "line": 1107,
       "target": "APX_DEMO_ITEMS",
       "verb": "INSERT",
       "findings": [
@@ -4732,13 +4757,13 @@
           "disposition": "MANUAL",
           "message": "Configuration/seed DML is data, not schema; migrated and reconciled in WP9.6.",
           "object": "DML",
-          "line": 1094
+          "line": 1107
         }
       ]
     },
     {
       "kind": "ANONYMOUS_BLOCK",
-      "line": 1096,
+      "line": 1109,
       "target": "L_ITEM",
       "verb": "DECLARE",
       "findings": [
@@ -4747,7 +4772,7 @@
           "disposition": "MANUAL",
           "message": "Configuration/seed DML is data, not schema; migrated and reconciled in WP9.6.",
           "object": "ANONYMOUS_BLOCK",
-          "line": 1096
+          "line": 1109
         }
       ]
     }
@@ -4961,73 +4986,73 @@
     {
       "index": 35,
       "kind": "VIEW",
-      "line": 950,
+      "line": 963,
       "object": "VIEW APX_DEMO_DASH_C1_S1_V"
     },
     {
       "index": 36,
       "kind": "VIEW",
-      "line": 953,
+      "line": 966,
       "object": "VIEW APX_DEMO_DASH_C2_S1_V"
     },
     {
       "index": 37,
       "kind": "PACKAGE",
-      "line": 964,
+      "line": 977,
       "object": "PACKAGE APX_DEMO_REQUEST_PKG"
     },
     {
       "index": 38,
       "kind": "PACKAGE_BODY",
-      "line": 983,
+      "line": 996,
       "object": "PACKAGE BODY APX_DEMO_REQUEST_PKG"
     },
     {
       "index": 39,
       "kind": "VIEW",
-      "line": 1019,
+      "line": 1032,
       "object": "VIEW APX_DEMO_REQUEST_SUMMARY_V"
     },
     {
       "index": 40,
       "kind": "DML",
-      "line": 1040,
+      "line": 1053,
       "object": "DATA"
     },
     {
       "index": 41,
       "kind": "DML",
-      "line": 1046,
+      "line": 1059,
       "object": "DATA"
     },
     {
       "index": 42,
       "kind": "DML",
-      "line": 1052,
+      "line": 1065,
       "object": "DATA"
     },
     {
       "index": 43,
       "kind": "DML",
-      "line": 1058,
+      "line": 1071,
       "object": "DATA"
     },
     {
       "index": 44,
       "kind": "DML",
-      "line": 1064,
+      "line": 1077,
       "object": "DATA"
     },
     {
       "index": 45,
       "kind": "DML",
-      "line": 1070,
+      "line": 1083,
       "object": "DATA"
     },
     {
       "index": 46,
       "kind": "TCL",
-      "line": 1076,
+      "line": 1089,
       "object": "NONE",
       "disposition": "AUTOMATIC",
       "code": "STM001"
@@ -5035,61 +5060,61 @@
     {
       "index": 47,
       "kind": "DML",
-      "line": 1086,
+      "line": 1099,
       "object": "DATA"
     },
     {
       "index": 48,
       "kind": "DML",
-      "line": 1087,
+      "line": 1100,
       "object": "DATA"
     },
     {
       "index": 49,
       "kind": "DML",
-      "line": 1088,
+      "line": 1101,
       "object": "DATA"
     },
     {
       "index": 50,
       "kind": "DML",
-      "line": 1090,
+      "line": 1103,
       "object": "DATA"
     },
     {
       "index": 51,
       "kind": "DML",
-      "line": 1091,
+      "line": 1104,
       "object": "DATA"
     },
     {
       "index": 52,
       "kind": "DML",
-      "line": 1092,
+      "line": 1105,
       "object": "DATA"
     },
     {
       "index": 53,
       "kind": "DML",
-      "line": 1093,
+      "line": 1106,
       "object": "DATA"
     },
     {
       "index": 54,
       "kind": "DML",
-      "line": 1094,
+      "line": 1107,
       "object": "DATA"
     },
     {
       "index": 55,
       "kind": "ANONYMOUS_BLOCK",
-      "line": 1096,
+      "line": 1109,
       "object": "DATA"
     },
     {
       "index": 56,
       "kind": "TCL",
-      "line": 1139,
+      "line": 1152,
       "object": "NONE",
       "disposition": "AUTOMATIC",
       "code": "STM001"
@@ -6457,7 +6482,7 @@
       "resolvedAs": "TABLE"
     }
   ],
-  "sql": "-- APEX2NEXT WP9.3 PostgreSQL schema migration (generated DRAFT; review required)\n-- Source: install.sql sha256:7c71e9c56b76d5fe893d2f357e692b9e7c458adc37791784379842ec1712d66d\n-- Converter: schema-plan 0.3.0; rules sha256 2210687c65d791ec\n-- Deterministic output: change conversion rules/decisions and regenerate; do not hand-edit.\n-- Not executed by the generator. Not approved for shared environments.\n\nBEGIN;\n\nCREATE SCHEMA IF NOT EXISTS app;\nSET LOCAL search_path TO app;\n\n-- Tables\nCREATE TABLE app.apx_demo_roles (\n    role_code varchar(30) NOT NULL,\n    role_name varchar(100) NOT NULL,\n    description varchar(400),\n    CONSTRAINT apx_demo_roles_pk PRIMARY KEY (role_code)\n);\nCREATE TABLE app.apx_demo_user_roles (\n    user_role_id bigint GENERATED BY DEFAULT AS IDENTITY,\n    username varchar(255) NOT NULL,\n    role_code varchar(30) NOT NULL,\n    created_by varchar(255),\n    created_on timestamp(0) without time zone,\n    updated_by varchar(255),\n    updated_on timestamp(0) without time zone,\n    CONSTRAINT apx_demo_user_roles_pk PRIMARY KEY (user_role_id),\n    CONSTRAINT apx_demo_user_roles_u1 UNIQUE (username, role_code)\n);\nCREATE TABLE app.apx_demo_doc_types (\n    doc_type varchar(10) NOT NULL,\n    doc_name varchar(100) NOT NULL,\n    prefix varchar(10) NOT NULL,\n    table_name varchar(128) NOT NULL,\n    pk_column varchar(128) NOT NULL,\n    number_column varchar(128) NOT NULL,\n    status_column varchar(128) DEFAULT 'STATUS' NOT NULL,\n    amount_expr varchar(4000),\n    validate_proc varchar(261),\n    approver1_role varchar(30),\n    approver2_role varchar(30),\n    level2_limit numeric DEFAULT 0 NOT NULL,\n    CONSTRAINT apx_demo_doc_types_pk PRIMARY KEY (doc_type)\n);\nCREATE TABLE app.apx_demo_doc_seq (\n    doc_type varchar(10) NOT NULL,\n    period varchar(4) NOT NULL,\n    last_no numeric DEFAULT 0 NOT NULL,\n    CONSTRAINT apx_demo_doc_seq_pk PRIMARY KEY (doc_type, period)\n);\nCREATE TABLE app.apx_demo_approvals (\n    approval_id bigint GENERATED BY DEFAULT AS IDENTITY,\n    doc_type varchar(10) NOT NULL,\n    doc_id numeric NOT NULL,\n    doc_no varchar(30),\n    approval_level numeric DEFAULT 1 NOT NULL,\n    approver_role varchar(30) NOT NULL,\n    amount numeric,\n    requested_by varchar(255) NOT NULL,\n    requested_on timestamp(0) without time zone DEFAULT LOCALTIMESTAMP(0) NOT NULL,\n    status varchar(20) DEFAULT 'PENDING' NOT NULL,\n    acted_by varchar(255),\n    acted_on timestamp(0) without time zone,\n    note varchar(1000),\n    CONSTRAINT apx_demo_approvals_pk PRIMARY KEY (approval_id),\n    CONSTRAINT apx_demo_approvals_ck1 CHECK (status in ('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'))\n);\nCREATE TABLE app.apx_demo_departments (\n    department_id bigint GENERATED BY DEFAULT AS IDENTITY,\n    dept_code varchar(20) NOT NULL,\n    dept_name varchar(100) NOT NULL,\n    active_yn varchar(1) DEFAULT 'Y',\n    created_by varchar(255),\n    created_on timestamp(0) without time zone,\n    updated_by varchar(255),\n    updated_on timestamp(0) without time zone,\n    CONSTRAINT apx_demo_departments_pk PRIMARY KEY (department_id),\n    CONSTRAINT apx_demo_departments_u1 UNIQUE (dept_code),\n    CONSTRAINT apx_demo_departments_ck1 CHECK (active_yn in ('Y', 'N'))\n);\nCREATE TABLE app.apx_demo_items (\n    item_id bigint GENERATED BY DEFAULT AS IDENTITY,\n    item_code varchar(30) NOT NULL,\n    item_name varchar(200) NOT NULL,\n    category varchar(20) NOT NULL,\n    uom varchar(10) NOT NULL,\n    std_price numeric DEFAULT 0 NOT NULL,\n    active_yn varchar(1) DEFAULT 'Y',\n    created_by varchar(255),\n    created_on timestamp(0) without time zone,\n    updated_by varchar(255),\n    updated_on timestamp(0) without time zone,\n    CONSTRAINT apx_demo_items_pk PRIMARY KEY (item_id),\n    CONSTRAINT apx_demo_items_u1 UNIQUE (item_code),\n    CONSTRAINT apx_demo_items_ck1 CHECK (category in ('ATK', 'IT', 'CONSUMABLE')),\n    CONSTRAINT apx_demo_items_ck2 CHECK (std_price >= 0),\n    CONSTRAINT apx_demo_items_ck3 CHECK (active_yn in ('Y', 'N'))\n);\nCREATE TABLE app.apx_demo_requests (\n    request_id bigint GENERATED BY DEFAULT AS IDENTITY,\n    request_no varchar(30),\n    department_id bigint NOT NULL,\n    request_date timestamp(0) without time zone DEFAULT CAST(CURRENT_DATE AS timestamp(0)) NOT NULL,\n    need_date timestamp(0) without time zone,\n    purpose varchar(300) NOT NULL,\n    notes varchar(1000),\n    status varchar(20) DEFAULT 'DRAFT' NOT NULL,\n    created_by varchar(255),\n    created_on timestamp(0) without time zone,\n    updated_by varchar(255),\n    updated_on timestamp(0) without time zone,\n    CONSTRAINT apx_demo_requests_pk PRIMARY KEY (request_id),\n    CONSTRAINT apx_demo_requests_u1 UNIQUE (request_no),\n    CONSTRAINT apx_demo_requests_ck1 CHECK (status in ('DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED', 'CANCELLED', 'FULFILLED', 'CLOSED'))\n);\nCREATE TABLE app.apx_demo_request_lines (\n    line_id bigint GENERATED BY DEFAULT AS IDENTITY,\n    request_id bigint NOT NULL,\n    item_id bigint NOT NULL,\n    qty numeric NOT NULL,\n    unit_price numeric DEFAULT 0 NOT NULL,\n    line_amount numeric GENERATED ALWAYS AS (qty * unit_price) STORED,\n    created_by varchar(255),\n    created_on timestamp(0) without time zone,\n    updated_by varchar(255),\n    updated_on timestamp(0) without time zone,\n    CONSTRAINT apx_demo_request_lines_pk PRIMARY KEY (line_id),\n    CONSTRAINT apx_demo_request_lines_ck1 CHECK (qty >= 0),\n    CONSTRAINT apx_demo_request_lines_ck2 CHECK (unit_price >= 0)\n);\n\n-- Foreign keys and NOT VALID constraints\nALTER TABLE app.apx_demo_user_roles ADD CONSTRAINT apx_demo_user_roles_fk1 FOREIGN KEY (role_code) REFERENCES app.apx_demo_roles (role_code);\nALTER TABLE app.apx_demo_doc_types ADD CONSTRAINT apx_demo_doc_types_fk1 FOREIGN KEY (approver1_role) REFERENCES app.apx_demo_roles (role_code);\nALTER TABLE app.apx_demo_doc_types ADD CONSTRAINT apx_demo_doc_types_fk2 FOREIGN KEY (approver2_role) REFERENCES app.apx_demo_roles (role_code);\nALTER TABLE app.apx_demo_approvals ADD CONSTRAINT apx_demo_approvals_fk1 FOREIGN KEY (doc_type) REFERENCES app.apx_demo_doc_types (doc_type);\nALTER TABLE app.apx_demo_requests ADD CONSTRAINT apx_demo_requests_fk1 FOREIGN KEY (department_id) REFERENCES app.apx_demo_departments (department_id);\nALTER TABLE app.apx_demo_request_lines ADD CONSTRAINT apx_demo_request_lines_fk1 FOREIGN KEY (request_id) REFERENCES app.apx_demo_requests (request_id) ON DELETE CASCADE;\nALTER TABLE app.apx_demo_request_lines ADD CONSTRAINT apx_demo_request_lines_fk2 FOREIGN KEY (item_id) REFERENCES app.apx_demo_items (item_id);\n\n-- Indexes\nCREATE INDEX apx_demo_approvals_n1 ON app.apx_demo_approvals (doc_type, doc_id);\nCREATE INDEX apx_demo_requests_n1 ON app.apx_demo_requests (department_id);\nCREATE INDEX apx_demo_request_lines_n1 ON app.apx_demo_request_lines (request_id);\nCREATE INDEX apx_demo_request_lines_n2 ON app.apx_demo_request_lines (item_id);\n\n-- Views (dependency order)\nCREATE VIEW app.apx_demo_user_roles_v AS\nselect ur.user_role_id\n      ,ur.username\n      ,ur.role_code\n      ,r.role_name\n      ,ur.created_by\n      ,ur.created_on\n  from apx_demo_user_roles ur\n  join apx_demo_roles r on r.role_code = ur.role_code;\nCREATE VIEW app.apx_demo_departments_v AS\nselect t.department_id\n      ,t.dept_code\n      ,t.dept_name\n      ,t.active_yn\n      ,t.created_by\n      ,t.created_on\n      ,t.updated_by\n      ,t.updated_on\n  from apx_demo_departments t;\nCREATE VIEW app.apx_demo_items_v AS\nselect t.item_id\n      ,t.item_code\n      ,t.item_name\n      ,t.category\n      ,t.uom\n      ,t.std_price\n      ,t.active_yn\n      ,t.created_by\n      ,t.created_on\n      ,t.updated_by\n      ,t.updated_on\n  from apx_demo_items t;\nCREATE VIEW app.apx_demo_requests_v AS\nselect t.request_id\n      ,t.request_no\n      ,t.department_id\n      ,(select dept_code || ' - ' || dept_name from apx_demo_departments r where r.department_id = t.department_id) department_id_dsp\n      ,t.request_date\n      ,t.need_date\n      ,t.purpose\n      ,t.notes\n      ,t.status\n      ,t.created_by\n      ,t.created_on\n      ,t.updated_by\n      ,t.updated_on\n  from apx_demo_requests t;\nCREATE VIEW app.apx_demo_request_lines_v AS\nselect t.line_id\n      ,t.request_id\n      ,(select request_no || ' - ' || purpose from apx_demo_requests r where r.request_id = t.request_id) request_id_dsp\n      ,t.item_id\n      ,(select item_code || ' - ' || item_name || ' (' || uom || ')' from apx_demo_items r where r.item_id = t.item_id) item_id_dsp\n      ,t.qty\n      ,t.unit_price\n      ,t.line_amount\n      ,t.created_by\n      ,t.created_on\n      ,t.updated_by\n      ,t.updated_on\n  from apx_demo_request_lines t;\nCREATE VIEW app.apx_demo_dash_c1_s1_v AS\nselect status label, count(*) value from apx_demo_requests group by status;\nCREATE VIEW app.apx_demo_request_summary_v AS\nselect r.request_id\n      ,r.request_no\n      ,d.dept_name\n      ,r.request_date\n      ,r.purpose\n      ,(select count(*) from apx_demo_request_lines l where l.request_id = r.request_id) line_count\n      ,(select COALESCE(sum(l.line_amount), 0) from apx_demo_request_lines l where l.request_id = r.request_id) total_amount\n      ,r.status\n  from apx_demo_requests r\n  join apx_demo_departments d on d.department_id = r.department_id;\nCREATE VIEW app.apx_demo_dash_c2_s1_v AS\nselect dept_name label, sum(total_amount) value from apx_demo_request_summary_v group by dept_name;\n\n-- Not emitted (disposition in schema plan report):\n--   VIEW apx_demo_approvals_v: MANUAL (EXP009, VIW001, VIW007)\n--   VIEW apx_demo_dash_kpi_v: MANUAL (APX_DEMO_APPROVALS_V)\n\nCOMMIT;\n",
+  "sql": "-- APEX2NEXT WP9.3 PostgreSQL schema migration (generated DRAFT; review required)\n-- Source: install.sql sha256:7c71e9c56b76d5fe893d2f357e692b9e7c458adc37791784379842ec1712d66d\n-- Converter: schema-plan 0.3.0; rules sha256 2210687c65d791ec\n-- Dictionary override: view apx_demo_dash_kpi_v (replaced, sha256:ce3b07eafd1e…)\n-- Deterministic output: change conversion rules/decisions and regenerate; do not hand-edit.\n-- Not executed by the generator. Not approved for shared environments.\n\nBEGIN;\n\nCREATE SCHEMA IF NOT EXISTS app;\nSET LOCAL search_path TO app;\n\n-- Tables\nCREATE TABLE app.apx_demo_roles (\n    role_code varchar(30) NOT NULL,\n    role_name varchar(100) NOT NULL,\n    description varchar(400),\n    CONSTRAINT apx_demo_roles_pk PRIMARY KEY (role_code)\n);\nCREATE TABLE app.apx_demo_user_roles (\n    user_role_id bigint GENERATED BY DEFAULT AS IDENTITY,\n    username varchar(255) NOT NULL,\n    role_code varchar(30) NOT NULL,\n    created_by varchar(255),\n    created_on timestamp(0) without time zone,\n    updated_by varchar(255),\n    updated_on timestamp(0) without time zone,\n    CONSTRAINT apx_demo_user_roles_pk PRIMARY KEY (user_role_id),\n    CONSTRAINT apx_demo_user_roles_u1 UNIQUE (username, role_code)\n);\nCREATE TABLE app.apx_demo_doc_types (\n    doc_type varchar(10) NOT NULL,\n    doc_name varchar(100) NOT NULL,\n    prefix varchar(10) NOT NULL,\n    table_name varchar(128) NOT NULL,\n    pk_column varchar(128) NOT NULL,\n    number_column varchar(128) NOT NULL,\n    status_column varchar(128) DEFAULT 'STATUS' NOT NULL,\n    amount_expr varchar(4000),\n    validate_proc varchar(261),\n    approver1_role varchar(30),\n    approver2_role varchar(30),\n    level2_limit numeric DEFAULT 0 NOT NULL,\n    CONSTRAINT apx_demo_doc_types_pk PRIMARY KEY (doc_type)\n);\nCREATE TABLE app.apx_demo_doc_seq (\n    doc_type varchar(10) NOT NULL,\n    period varchar(4) NOT NULL,\n    last_no numeric DEFAULT 0 NOT NULL,\n    CONSTRAINT apx_demo_doc_seq_pk PRIMARY KEY (doc_type, period)\n);\nCREATE TABLE app.apx_demo_approvals (\n    approval_id bigint GENERATED BY DEFAULT AS IDENTITY,\n    doc_type varchar(10) NOT NULL,\n    doc_id numeric NOT NULL,\n    doc_no varchar(30),\n    approval_level numeric DEFAULT 1 NOT NULL,\n    approver_role varchar(30) NOT NULL,\n    amount numeric,\n    requested_by varchar(255) NOT NULL,\n    requested_on timestamp(0) without time zone DEFAULT LOCALTIMESTAMP(0) NOT NULL,\n    status varchar(20) DEFAULT 'PENDING' NOT NULL,\n    acted_by varchar(255),\n    acted_on timestamp(0) without time zone,\n    note varchar(1000),\n    CONSTRAINT apx_demo_approvals_pk PRIMARY KEY (approval_id),\n    CONSTRAINT apx_demo_approvals_ck1 CHECK (status in ('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'))\n);\nCREATE TABLE app.apx_demo_departments (\n    department_id bigint GENERATED BY DEFAULT AS IDENTITY,\n    dept_code varchar(20) NOT NULL,\n    dept_name varchar(100) NOT NULL,\n    active_yn varchar(1) DEFAULT 'Y',\n    created_by varchar(255),\n    created_on timestamp(0) without time zone,\n    updated_by varchar(255),\n    updated_on timestamp(0) without time zone,\n    CONSTRAINT apx_demo_departments_pk PRIMARY KEY (department_id),\n    CONSTRAINT apx_demo_departments_u1 UNIQUE (dept_code),\n    CONSTRAINT apx_demo_departments_ck1 CHECK (active_yn in ('Y', 'N'))\n);\nCREATE TABLE app.apx_demo_items (\n    item_id bigint GENERATED BY DEFAULT AS IDENTITY,\n    item_code varchar(30) NOT NULL,\n    item_name varchar(200) NOT NULL,\n    category varchar(20) NOT NULL,\n    uom varchar(10) NOT NULL,\n    std_price numeric DEFAULT 0 NOT NULL,\n    active_yn varchar(1) DEFAULT 'Y',\n    created_by varchar(255),\n    created_on timestamp(0) without time zone,\n    updated_by varchar(255),\n    updated_on timestamp(0) without time zone,\n    CONSTRAINT apx_demo_items_pk PRIMARY KEY (item_id),\n    CONSTRAINT apx_demo_items_u1 UNIQUE (item_code),\n    CONSTRAINT apx_demo_items_ck1 CHECK (category in ('ATK', 'IT', 'CONSUMABLE')),\n    CONSTRAINT apx_demo_items_ck2 CHECK (std_price >= 0),\n    CONSTRAINT apx_demo_items_ck3 CHECK (active_yn in ('Y', 'N'))\n);\nCREATE TABLE app.apx_demo_requests (\n    request_id bigint GENERATED BY DEFAULT AS IDENTITY,\n    request_no varchar(30),\n    department_id bigint NOT NULL,\n    request_date timestamp(0) without time zone DEFAULT CAST(CURRENT_DATE AS timestamp(0)) NOT NULL,\n    need_date timestamp(0) without time zone,\n    purpose varchar(300) NOT NULL,\n    notes varchar(1000),\n    status varchar(20) DEFAULT 'DRAFT' NOT NULL,\n    created_by varchar(255),\n    created_on timestamp(0) without time zone,\n    updated_by varchar(255),\n    updated_on timestamp(0) without time zone,\n    CONSTRAINT apx_demo_requests_pk PRIMARY KEY (request_id),\n    CONSTRAINT apx_demo_requests_u1 UNIQUE (request_no),\n    CONSTRAINT apx_demo_requests_ck1 CHECK (status in ('DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED', 'CANCELLED', 'FULFILLED', 'CLOSED'))\n);\nCREATE TABLE app.apx_demo_request_lines (\n    line_id bigint GENERATED BY DEFAULT AS IDENTITY,\n    request_id bigint NOT NULL,\n    item_id bigint NOT NULL,\n    qty numeric NOT NULL,\n    unit_price numeric DEFAULT 0 NOT NULL,\n    line_amount numeric GENERATED ALWAYS AS (qty * unit_price) STORED,\n    created_by varchar(255),\n    created_on timestamp(0) without time zone,\n    updated_by varchar(255),\n    updated_on timestamp(0) without time zone,\n    CONSTRAINT apx_demo_request_lines_pk PRIMARY KEY (line_id),\n    CONSTRAINT apx_demo_request_lines_ck1 CHECK (qty >= 0),\n    CONSTRAINT apx_demo_request_lines_ck2 CHECK (unit_price >= 0)\n);\n\n-- Foreign keys and NOT VALID constraints\nALTER TABLE app.apx_demo_user_roles ADD CONSTRAINT apx_demo_user_roles_fk1 FOREIGN KEY (role_code) REFERENCES app.apx_demo_roles (role_code);\nALTER TABLE app.apx_demo_doc_types ADD CONSTRAINT apx_demo_doc_types_fk1 FOREIGN KEY (approver1_role) REFERENCES app.apx_demo_roles (role_code);\nALTER TABLE app.apx_demo_doc_types ADD CONSTRAINT apx_demo_doc_types_fk2 FOREIGN KEY (approver2_role) REFERENCES app.apx_demo_roles (role_code);\nALTER TABLE app.apx_demo_approvals ADD CONSTRAINT apx_demo_approvals_fk1 FOREIGN KEY (doc_type) REFERENCES app.apx_demo_doc_types (doc_type);\nALTER TABLE app.apx_demo_requests ADD CONSTRAINT apx_demo_requests_fk1 FOREIGN KEY (department_id) REFERENCES app.apx_demo_departments (department_id);\nALTER TABLE app.apx_demo_request_lines ADD CONSTRAINT apx_demo_request_lines_fk1 FOREIGN KEY (request_id) REFERENCES app.apx_demo_requests (request_id) ON DELETE CASCADE;\nALTER TABLE app.apx_demo_request_lines ADD CONSTRAINT apx_demo_request_lines_fk2 FOREIGN KEY (item_id) REFERENCES app.apx_demo_items (item_id);\n\n-- Indexes\nCREATE INDEX apx_demo_approvals_n1 ON app.apx_demo_approvals (doc_type, doc_id);\nCREATE INDEX apx_demo_requests_n1 ON app.apx_demo_requests (department_id);\nCREATE INDEX apx_demo_request_lines_n1 ON app.apx_demo_request_lines (request_id);\nCREATE INDEX apx_demo_request_lines_n2 ON app.apx_demo_request_lines (item_id);\n\n-- Views (dependency order)\nCREATE VIEW app.apx_demo_user_roles_v AS\nselect ur.user_role_id\n      ,ur.username\n      ,ur.role_code\n      ,r.role_name\n      ,ur.created_by\n      ,ur.created_on\n  from apx_demo_user_roles ur\n  join apx_demo_roles r on r.role_code = ur.role_code;\nCREATE VIEW app.apx_demo_departments_v AS\nselect t.department_id\n      ,t.dept_code\n      ,t.dept_name\n      ,t.active_yn\n      ,t.created_by\n      ,t.created_on\n      ,t.updated_by\n      ,t.updated_on\n  from apx_demo_departments t;\nCREATE VIEW app.apx_demo_items_v AS\nselect t.item_id\n      ,t.item_code\n      ,t.item_name\n      ,t.category\n      ,t.uom\n      ,t.std_price\n      ,t.active_yn\n      ,t.created_by\n      ,t.created_on\n      ,t.updated_by\n      ,t.updated_on\n  from apx_demo_items t;\nCREATE VIEW app.apx_demo_requests_v AS\nselect t.request_id\n      ,t.request_no\n      ,t.department_id\n      ,(select dept_code || ' - ' || dept_name from apx_demo_departments r where r.department_id = t.department_id) department_id_dsp\n      ,t.request_date\n      ,t.need_date\n      ,t.purpose\n      ,t.notes\n      ,t.status\n      ,t.created_by\n      ,t.created_on\n      ,t.updated_by\n      ,t.updated_on\n  from apx_demo_requests t;\nCREATE VIEW app.apx_demo_request_lines_v AS\nselect t.line_id\n      ,t.request_id\n      ,(select request_no || ' - ' || purpose from apx_demo_requests r where r.request_id = t.request_id) request_id_dsp\n      ,t.item_id\n      ,(select item_code || ' - ' || item_name || ' (' || uom || ')' from apx_demo_items r where r.item_id = t.item_id) item_id_dsp\n      ,t.qty\n      ,t.unit_price\n      ,t.line_amount\n      ,t.created_by\n      ,t.created_on\n      ,t.updated_by\n      ,t.updated_on\n  from apx_demo_request_lines t;\nCREATE VIEW app.apx_demo_dash_c1_s1_v AS\nselect status label, count(*) value from apx_demo_requests group by status;\nCREATE VIEW app.apx_demo_request_summary_v AS\nselect r.request_id\n      ,r.request_no\n      ,d.dept_name\n      ,r.request_date\n      ,r.purpose\n      ,(select count(*) from apx_demo_request_lines l where l.request_id = r.request_id) line_count\n      ,(select COALESCE(sum(l.line_amount), 0) from apx_demo_request_lines l where l.request_id = r.request_id) total_amount\n      ,r.status\n  from apx_demo_requests r\n  join apx_demo_departments d on d.department_id = r.department_id;\nCREATE VIEW app.apx_demo_dash_c2_s1_v AS\nselect dept_name label, sum(total_amount) value from apx_demo_request_summary_v group by dept_name;\n\n-- Not emitted (disposition in schema plan report):\n--   VIEW apx_demo_approvals_v: MANUAL (EXP009, VIW001, VIW007)\n--   VIEW apx_demo_dash_kpi_v: MANUAL (APX_DEMO_APPROVALS_V)\n\nCOMMIT;\n",
   "postLoadSql": "-- APEX2NEXT WP9.3 post-load identity/sequence alignment (run after data load, before writes)\nBEGIN;\nSELECT setval(pg_get_serial_sequence('app.apx_demo_user_roles', 'user_role_id'), GREATEST(COALESCE((SELECT max(user_role_id) FROM app.apx_demo_user_roles), 0) + 1, 1), false);\nSELECT setval(pg_get_serial_sequence('app.apx_demo_approvals', 'approval_id'), GREATEST(COALESCE((SELECT max(approval_id) FROM app.apx_demo_approvals), 0) + 1, 1), false);\nSELECT setval(pg_get_serial_sequence('app.apx_demo_departments', 'department_id'), GREATEST(COALESCE((SELECT max(department_id) FROM app.apx_demo_departments), 0) + 1, 1), false);\nSELECT setval(pg_get_serial_sequence('app.apx_demo_items', 'item_id'), GREATEST(COALESCE((SELECT max(item_id) FROM app.apx_demo_items), 0) + 1, 1), false);\nSELECT setval(pg_get_serial_sequence('app.apx_demo_requests', 'request_id'), GREATEST(COALESCE((SELECT max(request_id) FROM app.apx_demo_requests), 0) + 1, 1), false);\nSELECT setval(pg_get_serial_sequence('app.apx_demo_request_lines', 'line_id'), GREATEST(COALESCE((SELECT max(line_id) FROM app.apx_demo_request_lines), 0) + 1, 1), false);\nCOMMIT;\n",
   "limitations": [
     "Static conversion of a source script; it does not prove the objects are installed, valid, or granted in Oracle. Oracle dictionary reconciliation is a separate WP9.3 step.",

@@ -6,7 +6,9 @@
 - **Dictionary evidence:** `report.csv` `sha256:3c5ab3742164354af769d53da8068204395ee26abae6ca4175b9ee63d3b12c06`
 - **Snapshot:** schema `WKSP_KCSI`, 2026-11-08T14:30:45.228+00:00, Oracle 23.26.2.0.0 (AEXTPDB), 951 objects in schema, 49 in scope
 - **Consistency:** Single-session query; no SCN (not granted). Rows are not guaranteed to be one point in time.
-- **Reconciled:** NO — see failures; drift items: 2
+- **View text evidence:** `report_1.csv` `sha256:45e57dece6e0449151b536ad7f3082d2e4de7e0d9c0ca73b2d67f60bde579b6c`
+- **Dictionary override:** VIEW APX_DEMO_DASH_KPI_V (replaced; D-001: view redefined after install (2026-11-04); install.sql is stale. Installed text matches APEX page 100 (resolves SRC-001).)
+- **Reconciled:** yes; open drift: 0; resolved: 2
 
 ## Checks
 
@@ -18,16 +20,21 @@
 | REC-004 | PASS | Named constraints match (type, columns, condition, references, delete rule, state); system-named constraints are NOT NULL declared in the script | 28 named, 43 system-named NOT NULL |
 | REC-005 | PASS | Indexes match (table, columns, uniqueness, VALID) | 17 dictionary indexes incl. constraint-backing indexes |
 | REC-006 | PASS | Triggers match (table, timing, events) and are ENABLED | — |
-| REC-007 | FAIL | View output columns match the script definitions | APX_DEMO_DASH_KPI_V: script columns ['KPI_1', 'KPI_2', 'KPI_3'] vs dictionary ['SEQ', 'ICON', 'LABEL', 'METRIC_VALUE'] |
+| REC-007 | PASS | View output columns match the script definitions | — |
 | REC-008 | PASS | Installed PL/SQL and trigger source size equals the script text (USER_SOURCE fingerprint) | PACKAGE APX_DEMO_SEC_PKG: 58 lines / 1588 chars identical; PACKAGE BODY APX_DEMO_SEC_PKG: 85 lines / 2096 chars identical; PACKAGE APX_DEMO_DOC_PKG: 18 lines / 508 chars identical; PACKAGE BODY APX_DEMO_DOC_PKG: 43 lines / 1264 chars identical; PACKAGE APX_DEMO_APPROVAL_PKG: 72 lines / 1826 chars identical; PACKAGE BODY APX_DEMO_APPROVAL_PKG: 267 lines / 7820 chars identical |
-| REC-009 | FAIL | Installed static dependencies are all derived from the script | APX_DEMO_DASH_KPI_V -> APX_DEMO_APPROVAL_PKG: installed dependency not derived from script |
+| REC-009 | PASS | Installed static dependencies are all derived from the script | 45 in-scope static edges; external: PUBLIC.DBMS_ASSERT, PUBLIC.DUAL, SYS.DBMS_STANDARD, SYS.STANDARD; explained transitively through script dependencies: APX_DEMO_DASH_KPI_V -> APX_DEMO_APPROVAL_PKG |
 | REC-010 | PASS | No compile errors; grants recorded | 0 object grant(s) on in-scope objects |
-| REC-011 | FAIL | No in-scope object was changed after the install window | VIEW APX_DEMO_DASH_C2_S1_V last DDL 2026-11-02T08:41:52 (same columns; recompilation or text change not verifiable without DDL); VIEW APX_DEMO_DASH_KPI_V last DDL 2026-11-04T06:18:44 (definition differs from script) |
+| REC-011 | PASS | Every in-scope object changed after the install window is verified or overridden | install window 2026-11-02T00:22:01 .. 2026-11-02T00:22:03; VIEW APX_DEMO_DASH_C2_S1_V last DDL 2026-11-02T08:41:52: text identical to script (recompilation); VIEW APX_DEMO_DASH_KPI_V last DDL 2026-11-04T06:18:44: redefined after install; captured by dictionary override |
+| REC-012 | PASS | Installed view text equals the definition used by the plan | APX_DEMO_DASH_C2_S1_V: installed text identical to script; APX_DEMO_DASH_KPI_V: installed text identical to dictionary override |
 
-## Drift
+## Open drift
 
-- **VIEW APX_DEMO_DASH_KPI_V** (definition, last DDL 2026-11-04T06:18:44): columns ['KPI_1', 'KPI_2', 'KPI_3'] in script, ['SEQ', 'ICON', 'LABEL', 'METRIC_VALUE'] installed
-- **VIEW APX_DEMO_DASH_C2_S1_V** (post-install DDL, last DDL 2026-11-02T08:41:52): LAST_DDL_TIME after install window; columns match script
+- none
+
+## Resolved
+
+- **VIEW APX_DEMO_DASH_C2_S1_V** (last DDL 2026-11-02T08:41:52): recompilation; text verified identical — LAST_DDL_TIME after install window, installed text equals script
+- **VIEW APX_DEMO_DASH_KPI_V** (last DDL 2026-11-04T06:18:44): dictionary override — D-001: view redefined after install (2026-11-04); install.sql is stale. Installed text matches APEX page 100 (resolves SRC-001).
 
 ## Schema hygiene outside scope
 
