@@ -108,6 +108,8 @@ Do not use content hash as the primary identity. Do not resolve name-only collis
 
 Initial adapter implementation (version 0.1.0) uses a deterministic SHA-256-derived identifier over source format, canonical object type, parent identity, and source-native identifier. Application roots have no parent. When no native identifier exists, the adapter falls back to parent-scoped name; if neither is available, it uses a source locator fallback and emits a low-confidence diagnostic. The digest is shortened for the public IR ID; collision detection remains a required resolver/validation hardening item.
 
+Adapter version 0.2.0 records the context-aware APEXLang reference extraction, explicit SQL Export page-containment mapping, and location-independent canonical content fingerprint described in the implementation update below.
+
 The content fingerprint is a separate SHA-256 over canonical JSON containing canonical type, source type, name, and normalized properties. It excludes source locators, artifact hashes, source-format property keys, and parser-format-only raw source formatting metadata; properties are keyed by their canonical property name while all duplicate canonical values are retained deterministically. It retains normalized raw expressions and semantic values, so meaningful expression/value changes alter the fingerprint while file moves and formatting-only changes do not. Artifact hashes are full SHA-256 values and are retained in object provenance and snapshot metadata.
 
 For cross-snapshot comparison, implementations must retain the source-native key and identity strategy used. UUID database primary keys may wrap canonical identities, but must not replace the deterministic identity contract.
@@ -309,3 +311,8 @@ This integration is structural, not semantic parity. The committed fixture corpu
 
 
 Duplicate property handling in WP4: the canonical IR `properties` object is a unique-key map and cannot itself represent repeated source keys. The adapter therefore retains every duplicate occurrence, in source order with occurrence number and full typed property payload, under `extensions.duplicateProperties`, and emits `IRAST004`. Nested OBJECT values also carry duplicate names and occurrence payloads in their own extensions. Consumers must inspect this extension and must not assume the unique-key map alone is a lossless representation when `IRAST004` is present.
+
+## 14. Implementation update — 2026-11-09
+
+The current adapter version is 0.2.0 and the reference resolver version is 0.2.0. APEXLang property references now retain property-context metadata and apply only the explicit authorizationScheme-to-AUTHORIZATION rule. The SQL Export adapter emits PAGE-to-component CONTAINS relationships only when an explicit p_page_id resolves to exactly one PAGE. The fingerprint canonicalizer excludes source locators and parser-only formatting metadata while retaining normalized raw expressions and duplicate values. These are conservative initial rules; additional context mappings and component relationships require representative sanitized fixtures. See the development backlog and PR CI evidence for the tested implementation.
+
