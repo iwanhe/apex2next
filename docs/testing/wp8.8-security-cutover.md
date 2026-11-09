@@ -15,6 +15,10 @@ Establish a fail-closed, evidence-driven gate for a migration rehearsal and a fu
 - Deterministic JSON report with per-control status, category summary, input SHA-256, and fail-closed authorization eligibility.
 - CLI exit codes: 0 READY, 3 BLOCKED, 2 invalid input/I/O.
 
+## CI verification
+
+The offline cutover-readiness assessor and its synthetic positive/negative tests are covered by the Python worker suite. PR workflow [42552717671](https://github.com/iwanhe/apex2next/actions/runs/42552717671) passed on commit `6fdde26d08083ae1d41fd1197e8d1379b23f44d1`: Ruff passed; Python suite reported 218 passed and 3 skipped; Node workspace, PostgreSQL 16 schema integration, generated target workspace build/migration/idempotency/tests/typecheck, and ANTLR grammar validation all passed. This verifies the offline implementation only; it is not evidence of a real security review, rehearsal, restore, rollback, or production approval.
+
 ## Run
 
 \`\`\`bash
