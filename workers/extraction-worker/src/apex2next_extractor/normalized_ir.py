@@ -1098,7 +1098,11 @@ def resolve_references(document: dict[str, Any]) -> dict[str, Any]:
                     "expectedTargetTypes": expected_types,
                 },
             ))
-        elif scope and scope not in object_by_id:
+        elif (
+            scope
+            and scope != application_id
+            and scope not in object_by_id
+        ):
             status = "INVALID"
             diagnostics.append(_diagnostic(
                 "REF004",
