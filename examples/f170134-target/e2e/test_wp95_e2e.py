@@ -166,7 +166,8 @@ def test_master_data_departments_and_items(app):
     wh.fill("#P201_DEPT_CODE", "ops")
     wh.fill("#P201_DEPT_NAME", "Duplicate")
     submit(wh, "CREATE")
-    expect(wh.locator(".alert-error li")).to_have_text("ORA-00001: unique constraint (APX_DEMO_DEPARTMENTS_U1) violated")
+    expect(wh.locator(".alert-error li")).to_have_text(
+        "ORA-00001: unique constraint (WKSP_KCSI.APX_DEMO_DEPARTMENTS_U1) violated on table WKSP_KCSI.APX_DEMO_DEPARTMENTS columns (DEPT_CODE)")
     wh.fill("#P201_DEPT_CODE", "qa")
     wh.fill("#P201_DEPT_NAME", "Quality")
     submit(wh, "CREATE")

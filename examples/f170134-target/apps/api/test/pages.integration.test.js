@@ -198,10 +198,10 @@ test('WP9.5 page layer over HTTP', { skip }, async (t) => {
     const row = await wh1.get(`/forms/department/${created.body.id}`);
     assert.equal(row.body.values.dept_code, 'QA');
     expectError(await wh1.post('/forms/department', { values: { dept_code: 'qa', dept_name: 'Dup', active_yn: 'Y' } }),
-      409, 'DB_UNIQUE_VIOLATION', 'ORA-00001: unique constraint (APX_DEMO_DEPARTMENTS_U1) violated');
+      409, 'DB_UNIQUE_VIOLATION', 'ORA-00001: unique constraint (WKSP_KCSI.APX_DEMO_DEPARTMENTS_U1) violated on table WKSP_KCSI.APX_DEMO_DEPARTMENTS columns (DEPT_CODE)');
     const ops = await wh1.get(`/forms/department/${dept}`);
     expectError(await wh1.del(`/forms/department/${dept}`, { checksum: ops.body.checksum }),
-      409, 'DB_FOREIGN_KEY_VIOLATION', 'ORA-02292: integrity constraint (APX_DEMO_REQUESTS_FK1) violated - child record found');
+      409, 'DB_FOREIGN_KEY_VIOLATION', 'ORA-02292: integrity constraint (WKSP_KCSI.APX_DEMO_REQUESTS_FK1) violated - child record found');
     const upd = await wh1.put(`/forms/department/${created.body.id}`, { checksum: row.body.checksum, values: { dept_code: 'qa', dept_name: 'Quality Assurance', active_yn: 'N' } });
     assert.equal(upd.status, 200, JSON.stringify(upd.body));
     assert.equal(upd.body.message, 'Row updated.');
@@ -221,7 +221,7 @@ test('WP9.5 page layer over HTTP', { skip }, async (t) => {
       { field: 'P211_STD_PRICE', message: 'Harga Standar must be a number greater than or equal to 0.' },
     ]);
     expectError(await wh1.post('/forms/item', { values: { item_code: 'x', item_name: 'X', category: 'FOOD', uom: 'pcs', std_price: '1', active_yn: 'Y' } }),
-      422, 'DB_CHECK_VIOLATION', 'ORA-02290: check constraint (APX_DEMO_ITEMS_CK1) violated');
+      422, 'DB_CHECK_VIOLATION', 'ORA-02290: check constraint (WKSP_KCSI.APX_DEMO_ITEMS_CK1) violated');
     expectError(await wh1.post('/forms/item', { values: { item_code: 'x', item_name: 'X', category: 'ATK', uom: 'pcs', std_price: '1', active_yn: 'Y', created_by: 'X' } }),
       422, 'INVALID_INPUT');
   });

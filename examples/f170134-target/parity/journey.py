@@ -1,4 +1,4 @@
-"""WP9.6 parity journey J-01, executed on the target exactly as it was executed on APEX (oracleapex.com).
+"""WP9.6 parity journeys (J-01, J-02), executed on the target exactly as they were executed on APEX (oracleapex.com).
 
 Usage (disposable database; schema "app" is dropped):
   DATABASE_URL=... python parity/journey.py --s0 snapshot-s0.csv --s1 snapshot-s1.csv \
@@ -82,7 +82,7 @@ def open_request(page: Page, base: str, request_no: str):
     page.wait_for_load_state("networkidle")
 
 
-def run_journey(browser, base: str, rec: Recorder) -> None:
+def run_j01(browser, base: str, rec: Recorder) -> None:
     req = login(browser, base, "demo_req")
     # J1 create with an invalid need date, then valid
     go(req, base, "/requests/new")
@@ -156,8 +156,75 @@ def run_journey(browser, base: str, rec: Recorder) -> None:
     rec.note("J8 fulfilled", mgr)
 
 
+def open_ir_row(page: Page, base: str, path: str, text: str):
+    go(page, base, path)
+    page.locator("tbody tr", has_text=text).first.get_by_role("link", name="Edit").click()
+    page.wait_for_load_state("networkidle")
+    page.locator("form[data-version]").first.wait_for()
+
+
+def run_j02(browser, base: str, rec: Recorder) -> None:
+    """J-02 master data (DEMO_WH) and administration (DEMO_ADMIN)."""
+    wh = login(browser, base, "demo_wh")
+    go(wh, base, "/departments/new")
+    wh.fill("#P201_DEPT_CODE", "wp96")
+    wh.fill("#P201_DEPT_NAME", "WP96 Dept")
+    submit(wh, "CREATE")
+    rec.note("J2A dept create", wh)
+    go(wh, base, "/departments/new")
+    wh.fill("#P201_DEPT_CODE", "ops")
+    wh.fill("#P201_DEPT_NAME", "Duplicate")
+    submit(wh, "CREATE")
+    rec.note("J2A dept duplicate", wh)
+    go(wh, base, "/items/new")
+    wh.select_option("#P211_CATEGORY", "ATK")
+    wh.fill("#P211_ITEM_CODE", "wp96-01")
+    wh.fill("#P211_ITEM_NAME", "WP96 Item")
+    wh.fill("#P211_UOM", "pcs")
+    wh.fill("#P211_STD_PRICE", "-5")
+    submit(wh, "CREATE")
+    rec.note("J2A item price -5", wh)
+    wh.fill("#P211_STD_PRICE", "1000")
+    submit(wh, "CREATE")
+    rec.note("J2A item create", wh)
+    go(wh, base, "/items")
+    wh.get_by_role("link", name="WP96-01").click()
+    wh.wait_for_url("**/items/*")
+    wh.locator("form[data-version]").first.wait_for()
+    wh.fill("#P211_STD_PRICE", "1500")
+    submit(wh, "SAVE")
+    rec.note("J2A item update", wh)
+    wh.get_by_role("link", name="WP96-01").click()
+    wh.wait_for_url("**/items/*")
+    wh.locator("form[data-version]").first.wait_for()
+    submit(wh, "DELETE", confirm=True)
+    rec.note("J2A item delete", wh)
+    open_ir_row(wh, base, "/departments", "WP96 Dept")
+    submit(wh, "DELETE", confirm=True)
+    rec.note("J2A dept delete", wh)
+
+    admin = login(browser, base, "demo_admin")
+    go(admin, base, "/admin/users/new")
+    rec.steps.append({"step": "J2B user role default", "messages": [f"P501_USERNAME={admin.input_value('#P501_USERNAME')}"],
+                      "url": admin.url.split("/", 3)[-1]})
+    admin.fill("#P501_USERNAME", "wp96.user")
+    admin.select_option("#P501_ROLE_CODE", "REQUESTER")
+    submit(admin, "CREATE")
+    rec.note("J2B user role create", admin)
+    open_ir_row(admin, base, "/admin/users", "WP96.USER")
+    submit(admin, "DELETE", confirm=True)
+    rec.note("J2B user role delete", admin)
+    open_ir_row(admin, base, "/admin/document-types", "REQ")
+    submit(admin, "SAVE")
+    rec.note("J2B doc type unchanged", admin)
+
+
+JOURNEYS = {"J-01": run_j01, "J-02": run_j02}
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
+    ap.add_argument("--journey", choices=sorted(JOURNEYS), default="J-01")
     ap.add_argument("--s0", type=Path, required=True)
     ap.add_argument("--s1", type=Path, required=True)
     ap.add_argument("--apex-observations", type=Path, required=True)
@@ -189,7 +256,7 @@ def main() -> int:
         _wait(f"http://127.0.0.1:{web_port}/login")
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True, channel=os.environ.get("E2E_BROWSER_CHANNEL") or None)
-            run_journey(browser, f"http://127.0.0.1:{web_port}", rec)
+            JOURNEYS[args.journey](browser, f"http://127.0.0.1:{web_port}", rec)
             browser.close()
     finally:
         for proc in (web, api):
@@ -210,7 +277,7 @@ def main() -> int:
                          "equal": bool(expected) and sorted(expected["messages"]) == sorted(step["messages"])})
     state_diffs = sum(len(t["differences"]) for t in state.values()) + sum(
         len(v["differences"]) for v in views["views"].values())
-    report = {"journey": "J-01", "s0": {"name": args.s0.name, "sha256": parse_snapshot(args.s0.read_text(encoding="utf-8")).sha256},
+    report = {"journey": args.journey, "s0": {"name": args.s0.name, "sha256": parse_snapshot(args.s0.read_text(encoding="utf-8")).sha256},
               "s1": {"name": args.s1.name, "sha256": s1.sha256, "session": s1.session},
               "load": load["checks"], "state": state, "views": views, "messages": messages,
               "result": "PASS" if state_diffs == 0 and all(m["equal"] for m in messages) else "FAIL"}
