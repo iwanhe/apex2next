@@ -28,24 +28,10 @@ async function resetDatabase() {
     { env: { ...process.env, DATABASE_URL }, stdio: 'pipe' });
 }
 
-/** Seed through direct DML (the reviewed data-migration path), mirroring 06_config_seed.sql. */
+/** Seed through direct DML (the reviewed data-migration path): db/seed/dev-seed.sql. */
+const SEED_SQL = require('node:fs').readFileSync(path.join(__dirname, '..', '..', '..', 'db', 'seed', 'dev-seed.sql'), 'utf8');
 async function seed(pool) {
-  await pool.query(`
-    INSERT INTO app.apx_demo_roles (role_code, role_name) VALUES
-      ('REQUESTER','Requester'), ('MANAGER','Department Manager'), ('DIRECTOR','Director'),
-      ('WAREHOUSE','Warehouse'), ('ADMIN','Administrator');
-    INSERT INTO app.apx_demo_doc_types (doc_type, doc_name, prefix, table_name, pk_column, number_column,
-      status_column, amount_expr, validate_proc, approver1_role, approver2_role, level2_limit)
-    VALUES ('REQ','Permintaan Barang','REQ','APX_DEMO_REQUESTS','REQUEST_ID','REQUEST_NO','STATUS',
-      '(select nvl(sum(l.line_amount), 0) from apx_demo_request_lines l where l.request_id = t.request_id)',
-      'apx_demo_request_pkg.check_submit','MANAGER','DIRECTOR',10000000);
-    INSERT INTO app.apx_demo_user_roles (username, role_code) VALUES
-      ('ADMIN1','ADMIN'), ('REQ1','REQUESTER'), ('REQ2','REQUESTER'), ('MGR1','MANAGER'), ('MGR1','REQUESTER'),
-      ('DIR1','DIRECTOR'), ('WH1','WAREHOUSE');
-    INSERT INTO app.apx_demo_departments (dept_code, dept_name) VALUES ('OPS','Operations'), ('IT','Information Technology');
-    INSERT INTO app.apx_demo_items (item_code, item_name, category, uom, std_price) VALUES
-      ('ATK-001','Kertas A4 80gsm','ATK','RIM',55000), ('IT-001','Laptop 14 inch','IT','UNIT',12500000);
-  `);
+  await pool.query(SEED_SQL);
 }
 
 async function setup({ seedData = true, clock } = {}) {
@@ -72,4 +58,44 @@ async function rejectsWith(assert, promise, code, oracleCode) {
   });
 }
 
-module.exports = { DATABASE_URL, skip, FIXED_NOW, USERS, setup, rejectsWith };
+const DEV_PASSWORD = 'dev-password-for-tests';
+const SESSION_SECRET = 'test-session-secret-0123456789abcdef';
+
+/**
+ * Starts the real Nest application (guards, filters, controllers) on an ephemeral port against a freshly
+ * migrated and seeded database. Returns an HTTP client that logs users in through /auth/login.
+ */
+async function startApi() {
+  const env = await setup();
+  Object.assign(process.env, { AUTH_MODE: 'dev', DEV_LOGIN_PASSWORD: DEV_PASSWORD, SESSION_SECRET });
+  const { NestFactory } = require('@nestjs/core');
+  const { AppModule } = require('../dist/app.module.js');
+  const nest = await NestFactory.create(AppModule, { logger: false });
+  await nest.listen(0, '127.0.0.1');
+  const base = await nest.getUrl();
+  const call = async (token, method, url, body) => {
+    const res = await fetch(base.replace('[::1]', '127.0.0.1') + url, {
+      method, headers: { ...(token ? { authorization: `Bearer ${token}` } : {}), ...(body ? { 'content-type': 'application/json' } : {}) },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    const text = await res.text();
+    return { status: res.status, body: text ? JSON.parse(text) : null };
+  };
+  const tokens = {};
+  const login = async (key) => {
+    const r = await call(null, 'POST', '/auth/login', { username: (USERS[key] ?? key).toLowerCase(), password: DEV_PASSWORD });
+    if (r.status !== 200) throw new Error(`login ${key}: ${JSON.stringify(r.body)}`);
+    return r.body.token;
+  };
+  const as = (key) => {
+    const go = async (method, url, body) => {
+      tokens[key] ??= await login(key);
+      return call(tokens[key], method, url, body);
+    };
+    return { get: (u) => go('GET', u), post: (u, b) => go('POST', u, b ?? {}), put: (u, b) => go('PUT', u, b), del: (u, b) => go('DELETE', u, b ?? {}) };
+  };
+  const close = async () => { await nest.close(); await env.pool.end(); };
+  return { ...env, base, call, as, close, SESSION_SECRET, DEV_PASSWORD };
+}
+
+module.exports = { DATABASE_URL, skip, FIXED_NOW, USERS, setup, rejectsWith, startApi };

@@ -1,0 +1,1341 @@
+{
+  "format": "apex2next.ui-coverage.v1",
+  "inventorySha256": "5e097a35de287a78cb6cd66bea575687a8966fde7ad625fe79c2068bf032e3ca",
+  "statuses": [
+    "IMPLEMENTED",
+    "ADAPTED",
+    "NOT_APPLICABLE",
+    "GAP"
+  ],
+  "pages": {
+    "0": {
+      "status": "NOT_APPLICABLE",
+      "note": "Global Page has no components."
+    },
+    "100": {
+      "status": "IMPLEMENTED",
+      "web": "apps/web/app/(app)/page.tsx",
+      "api": "/pages/100",
+      "scheme": "APP_USERS"
+    },
+    "190": {
+      "status": "IMPLEMENTED",
+      "web": "apps/web/app/(app)/approvals/page.tsx",
+      "api": "/regions/approvalInbox",
+      "scheme": "APP_USERS"
+    },
+    "191": {
+      "status": "ADAPTED",
+      "web": "apps/web/app/(app)/approvals/[id]/page.tsx",
+      "api": "/forms/approval/:id",
+      "scheme": "APP_USERS",
+      "note": "Modal page rendered as a routed dialog over the shell (D-UI-01)."
+    },
+    "200": {
+      "status": "IMPLEMENTED",
+      "web": "apps/web/app/(app)/departments/page.tsx",
+      "api": "/regions/departments",
+      "scheme": "APP_USERS"
+    },
+    "201": {
+      "status": "ADAPTED",
+      "web": "apps/web/app/(app)/departments/[id]/page.tsx",
+      "api": "/forms/department/:id",
+      "scheme": "MASTER_DATA",
+      "note": "Modal page rendered as a routed dialog over the shell (D-UI-01)."
+    },
+    "210": {
+      "status": "IMPLEMENTED",
+      "web": "apps/web/app/(app)/items/page.tsx",
+      "api": "/regions/items",
+      "scheme": "APP_USERS"
+    },
+    "211": {
+      "status": "ADAPTED",
+      "web": "apps/web/app/(app)/items/[id]/page.tsx",
+      "api": "/forms/item/:id",
+      "scheme": "MASTER_DATA",
+      "note": "Modal page rendered as a routed dialog over the shell (D-UI-01)."
+    },
+    "300": {
+      "status": "IMPLEMENTED",
+      "web": "apps/web/app/(app)/requests/page.tsx",
+      "api": "/regions/requests",
+      "scheme": "APP_USERS"
+    },
+    "301": {
+      "status": "ADAPTED",
+      "web": "apps/web/app/(app)/requests/[id]/page.tsx",
+      "api": "/forms/request/:id",
+      "scheme": "REQUESTER",
+      "note": "Modal page rendered as a routed dialog over the shell (D-UI-01)."
+    },
+    "302": {
+      "status": "IMPLEMENTED",
+      "web": "apps/web/app/(app)/requests/detail/page.tsx",
+      "api": "/pages/302",
+      "scheme": "APP_USERS"
+    },
+    "310": {
+      "status": "IMPLEMENTED",
+      "web": "apps/web/app/(app)/request-lines/page.tsx",
+      "api": "/regions/requestLines",
+      "scheme": "APP_USERS"
+    },
+    "311": {
+      "status": "ADAPTED",
+      "web": "apps/web/app/(app)/request-lines/[id]/page.tsx",
+      "api": "/forms/requestLine/:id",
+      "scheme": "REQUESTER",
+      "note": "Modal page rendered as a routed dialog over the shell (D-UI-01)."
+    },
+    "400": {
+      "status": "IMPLEMENTED",
+      "web": "apps/web/app/(app)/reports/requests/page.tsx",
+      "api": "/regions/requestSummary",
+      "scheme": "APP_USERS"
+    },
+    "500": {
+      "status": "IMPLEMENTED",
+      "web": "apps/web/app/(app)/admin/users/page.tsx",
+      "api": "/regions/userRoles",
+      "scheme": "ADMIN_RIGHTS"
+    },
+    "501": {
+      "status": "ADAPTED",
+      "web": "apps/web/app/(app)/admin/users/[id]/page.tsx",
+      "api": "/forms/userRole/:id",
+      "scheme": "ADMIN_RIGHTS",
+      "note": "Modal page rendered as a routed dialog over the shell (D-UI-01)."
+    },
+    "510": {
+      "status": "IMPLEMENTED",
+      "web": "apps/web/app/(app)/admin/document-types/page.tsx",
+      "api": "/regions/docTypes",
+      "scheme": "ADMIN_RIGHTS"
+    },
+    "511": {
+      "status": "ADAPTED",
+      "web": "apps/web/app/(app)/admin/document-types/[docType]/page.tsx",
+      "api": "/forms/docType/:id",
+      "scheme": "ADMIN_RIGHTS",
+      "note": "Modal page rendered as a routed dialog over the shell (D-UI-01)."
+    },
+    "9999": {
+      "status": "IMPLEMENTED",
+      "web": "apps/web/app/login/page.tsx",
+      "api": "/auth/login",
+      "scheme": null
+    }
+  },
+  "shared": {
+    "navigation": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/Shell.tsx",
+      "note": "Entries filtered by their authorization scheme."
+    },
+    "navigationBar": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/Shell.tsx + apps/web/app/logout/route.ts"
+    },
+    "breadcrumbs": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/PageHeader.tsx"
+    },
+    "authentication": {
+      "status": "ADAPTED",
+      "where": "apps/api/src/auth",
+      "note": "Oracle APEX Accounts -> AUTH_MODE=dev session tokens; production IdP is WP9-009."
+    },
+    "authorizations": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/business/security.service.ts + apps/api/src/pages/pages.service.ts (authorizePage)"
+    },
+    "lovs": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts (LOV_SOURCES) + apps/web/lib/forms.ts"
+    },
+    "applicationFormats": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/format.ts",
+      "note": "DD-MON-YYYY and TO_CHAR masks; NLS AMERICAN."
+    }
+  },
+  "components": {
+    "P100:CHART:Nilai per Department": {
+      "status": "ADAPTED",
+      "where": "apps/web/components/Charts.tsx",
+      "note": "Static SVG chart (D-UI-03)."
+    },
+    "P100:CHART:Permintaan per Status": {
+      "status": "ADAPTED",
+      "where": "apps/web/components/Charts.tsx",
+      "note": "Static SVG chart (D-UI-03)."
+    },
+    "P100:CHART_SERIES:Nilai per Department.Total": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P100:CHART_SERIES:Permintaan per Status.Permintaan": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P100:REGION:Home": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/app/(app)/page.tsx"
+    },
+    "P100:REGION:Nilai per Department": {
+      "status": "ADAPTED",
+      "where": "apps/web/components/Charts.tsx",
+      "note": "Static SVG instead of Oracle JET (no zoom/hover legend toggling) (D-UI-03)."
+    },
+    "P100:REGION:Permintaan per Status": {
+      "status": "ADAPTED",
+      "where": "apps/web/components/Charts.tsx",
+      "note": "Static SVG instead of Oracle JET (no zoom/hover legend toggling) (D-UI-03)."
+    },
+    "P100:REGION:Ringkasan": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/app/(app)/page.tsx"
+    },
+    "P100:REGION_COLUMN:Ringkasan.ICON": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P100:REGION_COLUMN:Ringkasan.LABEL": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P100:REGION_COLUMN:Ringkasan.METRIC_VALUE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P100:REGION_COLUMN:Ringkasan.SEQ": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P190:DYNAMIC_ACTION:ON_DIALOG_CLOSED_REFRESH_REPORT": {
+      "status": "ADAPTED",
+      "where": "apps/web/lib/form-actions.ts",
+      "note": "Refresh after dialog close: the parent page is re-rendered by the redirect (full page, not region-only)."
+    },
+    "P190:IR:Approval Inbox": {
+      "status": "ADAPTED",
+      "where": "apps/web/components/IrPage.tsx",
+      "note": "Downloads: CSV and HTML implemented; XLSX/PDF and email download are gap G-02."
+    },
+    "P190:IR_COLUMN:Approval Inbox.ACTED_BY": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P190:IR_COLUMN:Approval Inbox.ACTED_ON": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P190:IR_COLUMN:Approval Inbox.AMOUNT": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P190:IR_COLUMN:Approval Inbox.APPROVAL_ID": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P190:IR_COLUMN:Approval Inbox.APPROVAL_LEVEL": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P190:IR_COLUMN:Approval Inbox.APPROVER_ROLE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P190:IR_COLUMN:Approval Inbox.CAN_ACT_YN": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P190:IR_COLUMN:Approval Inbox.DOC_NAME": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P190:IR_COLUMN:Approval Inbox.DOC_NO": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P190:IR_COLUMN:Approval Inbox.NOTE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P190:IR_COLUMN:Approval Inbox.REQUESTED_BY": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P190:IR_COLUMN:Approval Inbox.REQUESTED_ON": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P190:IR_COLUMN:Approval Inbox.STATUS": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P190:IR_REPORT:Approval Inbox.190001": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P190:REGION:Approval Inbox": {
+      "status": "ADAPTED",
+      "where": "apps/web/components/IrPage.tsx",
+      "note": "IR: row search, column sort, pagination, detail link, CSV/HTML download. Actions-menu features are gap G-01."
+    },
+    "P190:REGION:Breadcrumb": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/PageHeader.tsx"
+    },
+    "P191:BUTTON:APPROVE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/pages.service.ts",
+      "note": "Condition evaluated on the server for rendering and enforced on submit (DEV-06)."
+    },
+    "P191:BUTTON:CANCEL": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/app/(app)/approvals/[id]/page.tsx"
+    },
+    "P191:BUTTON:REJECT": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/pages.service.ts",
+      "note": "Condition evaluated on the server for rendering and enforced on submit (DEV-06)."
+    },
+    "P191:DYNAMIC_ACTION:ON_CLICK_CANCEL_CLOSE_DIALOG": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/ApexForm.tsx",
+      "note": "Cancel/Close link back to the parent page."
+    },
+    "P191:ITEM:P191_AMOUNT": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P191:ITEM:P191_APPROVAL_ID": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P191:ITEM:P191_APPROVAL_LEVEL": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P191:ITEM:P191_APPROVER_ROLE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P191:ITEM:P191_CAN_ACT_YN": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P191:ITEM:P191_DOC_NAME": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P191:ITEM:P191_DOC_NO": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P191:ITEM:P191_NOTE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P191:ITEM:P191_REQUESTED_BY": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P191:ITEM:P191_STATUS": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P191:PROCESS:CALL_APPROVE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/pages.service.ts -> apps/api/src/business/approval.service.ts"
+    },
+    "P191:PROCESS:CALL_REJECT": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/pages.service.ts -> apps/api/src/business/approval.service.ts"
+    },
+    "P191:PROCESS:CLOSE_DIALOG": {
+      "status": "ADAPTED",
+      "where": "apps/web/lib/form-actions.ts",
+      "note": "Dialog closes by redirecting to the parent page, which re-renders (D-UI-01)."
+    },
+    "P191:PROCESS:INIT_APPROVAL_FORM": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/forms.ts (fetchForm) + pages.service.ts"
+    },
+    "P191:REGION:Approval": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/FormDialog.tsx + apps/api/src/pages/forms.ts"
+    },
+    "P191:REGION:Buttons": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/ApexForm.tsx",
+      "note": "Dialog button region: footer, CLOSE/DELETE left, NEXT right."
+    },
+    "P200:BUTTON:CREATE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/app/(app)/departments/page.tsx"
+    },
+    "P200:DYNAMIC_ACTION:ON_DIALOG_CLOSED_REFRESH_REPORT": {
+      "status": "ADAPTED",
+      "where": "apps/web/lib/form-actions.ts",
+      "note": "Refresh after dialog close: the parent page is re-rendered by the redirect (full page, not region-only)."
+    },
+    "P200:IR:Departments": {
+      "status": "ADAPTED",
+      "where": "apps/web/components/IrPage.tsx",
+      "note": "Downloads: CSV and HTML implemented; XLSX/PDF and email download are gap G-02."
+    },
+    "P200:IR_COLUMN:Departments.ACTIVE_YN": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P200:IR_COLUMN:Departments.DEPARTMENT_ID": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P200:IR_COLUMN:Departments.DEPT_CODE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P200:IR_COLUMN:Departments.DEPT_NAME": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P200:IR_COLUMN:Departments.UPDATED_BY": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P200:IR_COLUMN:Departments.UPDATED_ON": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P200:IR_REPORT:Departments.200001": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P200:REGION:Breadcrumb": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/PageHeader.tsx"
+    },
+    "P200:REGION:Departments": {
+      "status": "ADAPTED",
+      "where": "apps/web/components/IrPage.tsx",
+      "note": "IR: row search, column sort, pagination, detail link, CSV/HTML download. Actions-menu features are gap G-01."
+    },
+    "P201:BUTTON:CANCEL": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/app/(app)/departments/[id]/page.tsx"
+    },
+    "P201:BUTTON:CREATE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/pages.service.ts",
+      "note": "Condition evaluated on the server for rendering and enforced on submit (DEV-06)."
+    },
+    "P201:BUTTON:DELETE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/pages.service.ts",
+      "note": "Condition evaluated on the server for rendering and enforced on submit (DEV-06)."
+    },
+    "P201:BUTTON:SAVE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/pages.service.ts",
+      "note": "Condition evaluated on the server for rendering and enforced on submit (DEV-06)."
+    },
+    "P201:DYNAMIC_ACTION:ON_CLICK_CANCEL_CLOSE_DIALOG": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/ApexForm.tsx",
+      "note": "Cancel/Close link back to the parent page."
+    },
+    "P201:ITEM:P201_ACTIVE_YN": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P201:ITEM:P201_DEPARTMENT_ID": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P201:ITEM:P201_DEPT_CODE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P201:ITEM:P201_DEPT_NAME": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P201:PROCESS:CLOSE_DIALOG": {
+      "status": "ADAPTED",
+      "where": "apps/web/lib/form-actions.ts",
+      "note": "Dialog closes by redirecting to the parent page, which re-renders (D-UI-01)."
+    },
+    "P201:PROCESS:INIT_DEPARTMENTS_FORM": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/forms.ts (fetchForm) + pages.service.ts"
+    },
+    "P201:PROCESS:SAVE_DEPARTMENTS": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/pages.service.ts",
+      "note": "Lost-update check (VALUES) as checksum; DML through the WP9.4 services."
+    },
+    "P201:REGION:Buttons": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/ApexForm.tsx",
+      "note": "Dialog button region: footer, CLOSE/DELETE left, NEXT right."
+    },
+    "P201:REGION:Department": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/FormDialog.tsx + apps/api/src/pages/forms.ts"
+    },
+    "P210:BUTTON:CREATE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/app/(app)/items/page.tsx"
+    },
+    "P210:CARDS:Hasil Items": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/app/(app)/items/page.tsx"
+    },
+    "P210:CARD_ACTION:Hasil Items.TITLE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/app/(app)/items/page.tsx"
+    },
+    "P210:DYNAMIC_ACTION:ON_DIALOG_CLOSED_REFRESH_REPORT": {
+      "status": "ADAPTED",
+      "where": "apps/web/lib/form-actions.ts",
+      "note": "Refresh after dialog close: the parent page is re-rendered by the redirect (full page, not region-only)."
+    },
+    "P210:ITEM:P210_ACTIVE_YN": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/Facets.tsx + apps/api/src/pages/report.ts"
+    },
+    "P210:ITEM:P210_CATEGORY": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/Facets.tsx + apps/api/src/pages/report.ts"
+    },
+    "P210:ITEM:P210_SEARCH": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/Facets.tsx + apps/api/src/pages/report.ts"
+    },
+    "P210:REGION:Filter": {
+      "status": "ADAPTED",
+      "where": "apps/web/components/Facets.tsx",
+      "note": "Facet charts (show_charts) are gap G-03."
+    },
+    "P210:REGION:Hasil Items": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/app/(app)/items/page.tsx"
+    },
+    "P210:REGION:Items": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/app/(app)/items/page.tsx"
+    },
+    "P211:BUTTON:CANCEL": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/app/(app)/items/[id]/page.tsx"
+    },
+    "P211:BUTTON:CREATE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/pages.service.ts",
+      "note": "Condition evaluated on the server for rendering and enforced on submit (DEV-06)."
+    },
+    "P211:BUTTON:DELETE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/pages.service.ts",
+      "note": "Condition evaluated on the server for rendering and enforced on submit (DEV-06)."
+    },
+    "P211:BUTTON:SAVE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/pages.service.ts",
+      "note": "Condition evaluated on the server for rendering and enforced on submit (DEV-06)."
+    },
+    "P211:DYNAMIC_ACTION:ON_CLICK_CANCEL_CLOSE_DIALOG": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/ApexForm.tsx",
+      "note": "Cancel/Close link back to the parent page."
+    },
+    "P211:ITEM:P211_ACTIVE_YN": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P211:ITEM:P211_CATEGORY": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P211:ITEM:P211_ITEM_CODE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P211:ITEM:P211_ITEM_ID": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P211:ITEM:P211_ITEM_NAME": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P211:ITEM:P211_STD_PRICE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P211:ITEM:P211_UOM": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P211:PROCESS:CLOSE_DIALOG": {
+      "status": "ADAPTED",
+      "where": "apps/web/lib/form-actions.ts",
+      "note": "Dialog closes by redirecting to the parent page, which re-renders (D-UI-01)."
+    },
+    "P211:PROCESS:INIT_ITEMS_FORM": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/forms.ts (fetchForm) + pages.service.ts"
+    },
+    "P211:PROCESS:SAVE_ITEMS": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/pages.service.ts",
+      "note": "Lost-update check (VALUES) as checksum; DML through the WP9.4 services."
+    },
+    "P211:REGION:Buttons": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/ApexForm.tsx",
+      "note": "Dialog button region: footer, CLOSE/DELETE left, NEXT right."
+    },
+    "P211:REGION:Item": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/FormDialog.tsx + apps/api/src/pages/forms.ts"
+    },
+    "P300:BUTTON:CREATE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/app/(app)/requests/page.tsx"
+    },
+    "P300:DYNAMIC_ACTION:ON_DIALOG_CLOSED_REFRESH_REPORT": {
+      "status": "ADAPTED",
+      "where": "apps/web/lib/form-actions.ts",
+      "note": "Refresh after dialog close: the parent page is re-rendered by the redirect (full page, not region-only)."
+    },
+    "P300:ITEM:P300_DEPARTMENT_ID_DSP": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/Facets.tsx + apps/api/src/pages/report.ts"
+    },
+    "P300:ITEM:P300_SEARCH": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/Facets.tsx + apps/api/src/pages/report.ts"
+    },
+    "P300:ITEM:P300_STATUS": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/Facets.tsx + apps/api/src/pages/report.ts"
+    },
+    "P300:REGION:Filter": {
+      "status": "ADAPTED",
+      "where": "apps/web/components/Facets.tsx",
+      "note": "Facet charts (show_charts) are gap G-03."
+    },
+    "P300:REGION:Permintaan Barang": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/app/(app)/requests/page.tsx"
+    },
+    "P300:REPORT_COLUMN:Hasil Permintaan Barang.DEPARTMENT_ID_DSP": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P300:REPORT_COLUMN:Hasil Permintaan Barang.NEED_DATE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P300:REPORT_COLUMN:Hasil Permintaan Barang.PURPOSE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P300:REPORT_COLUMN:Hasil Permintaan Barang.REQUEST_DATE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P300:REPORT_COLUMN:Hasil Permintaan Barang.REQUEST_ID": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P300:REPORT_COLUMN:Hasil Permintaan Barang.REQUEST_NO": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P300:REPORT_COLUMN:Hasil Permintaan Barang.STATUS": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P300:REPORT_COLUMN:Hasil Permintaan Barang.UPDATED_BY": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P300:REPORT_COLUMN:Hasil Permintaan Barang.UPDATED_ON": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P300:REPORT_REGION:Hasil Permintaan Barang": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P301:BUTTON:CANCEL": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/app/(app)/requests/[id]/page.tsx"
+    },
+    "P301:BUTTON:CREATE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/pages.service.ts",
+      "note": "Condition evaluated on the server for rendering and enforced on submit (DEV-06)."
+    },
+    "P301:BUTTON:DELETE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/pages.service.ts",
+      "note": "Condition evaluated on the server for rendering and enforced on submit (DEV-06)."
+    },
+    "P301:BUTTON:SAVE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/pages.service.ts",
+      "note": "Condition evaluated on the server for rendering and enforced on submit (DEV-06)."
+    },
+    "P301:BUTTON:SUBMIT": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/pages.service.ts",
+      "note": "Condition evaluated on the server for rendering and enforced on submit (DEV-06)."
+    },
+    "P301:DYNAMIC_ACTION:ON_CLICK_CANCEL_CLOSE_DIALOG": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/ApexForm.tsx",
+      "note": "Cancel/Close link back to the parent page."
+    },
+    "P301:ITEM:P301_DEPARTMENT_ID": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts + apps/api/src/pages/pages.service.ts (requestReadOnly)"
+    },
+    "P301:ITEM:P301_NEED_DATE": {
+      "status": "ADAPTED",
+      "where": "apps/web/components/ApexForm.tsx + apps/api/src/pages/pages.service.ts (requestReadOnly)",
+      "note": "Native browser date input; value stored as date (D-UI-02)."
+    },
+    "P301:ITEM:P301_NOTES": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P301:ITEM:P301_PURPOSE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts + apps/api/src/pages/pages.service.ts (requestReadOnly)"
+    },
+    "P301:ITEM:P301_REQUEST_DATE": {
+      "status": "ADAPTED",
+      "where": "apps/web/components/ApexForm.tsx",
+      "note": "Native browser date input; value stored as date (D-UI-02)."
+    },
+    "P301:ITEM:P301_REQUEST_ID": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P301:ITEM:P301_REQUEST_NO": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P301:ITEM:P301_STATUS": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts + apps/api/src/pages/pages.service.ts (requestReadOnly)"
+    },
+    "P301:PROCESS:CALL_SUBMIT_REQUESTS": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/pages.service.ts -> apps/api/src/business/approval.service.ts"
+    },
+    "P301:PROCESS:CLOSE_DIALOG": {
+      "status": "ADAPTED",
+      "where": "apps/web/lib/form-actions.ts",
+      "note": "Dialog closes by redirecting to the parent page, which re-renders (D-UI-01)."
+    },
+    "P301:PROCESS:INIT_REQUESTS_FORM": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/forms.ts (fetchForm) + pages.service.ts"
+    },
+    "P301:PROCESS:SAVE_REQUESTS": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/pages.service.ts",
+      "note": "Lost-update check (VALUES) as checksum; DML through the WP9.4 services."
+    },
+    "P301:REGION:Buttons": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/ApexForm.tsx",
+      "note": "Dialog button region: footer, CLOSE/DELETE left, NEXT right."
+    },
+    "P301:REGION:Permintaan Barang": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/FormDialog.tsx + apps/api/src/pages/forms.ts"
+    },
+    "P301:VALIDATION:NEED_DATE_AFTER_REQUEST_DATE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/pages.service.ts (needDateValidation)"
+    },
+    "P302:BUTTON:CREATE_REQUEST_LINES": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/pages.service.ts",
+      "note": "Condition evaluated on the server for rendering and enforced on submit (DEV-06)."
+    },
+    "P302:BUTTON:EDIT_HEADER": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/app/(app)/requests/detail/page.tsx"
+    },
+    "P302:DYNAMIC_ACTION:ON_DIALOG_CLOSED_REFRESH_HEADER": {
+      "status": "ADAPTED",
+      "where": "apps/web/lib/form-actions.ts",
+      "note": "Refresh after dialog close: the parent page is re-rendered by the redirect (full page, not region-only)."
+    },
+    "P302:DYNAMIC_ACTION:ON_DIALOG_CLOSED_REFRESH_REQUEST_LINES": {
+      "status": "ADAPTED",
+      "where": "apps/web/lib/form-actions.ts",
+      "note": "Refresh after dialog close: the parent page is re-rendered by the redirect (full page, not region-only)."
+    },
+    "P302:DYNAMIC_ACTION:ON_DIALOG_CLOSED_REQUEST_LINES": {
+      "status": "ADAPTED",
+      "where": "apps/web/lib/form-actions.ts",
+      "note": "Refresh after dialog close: the parent page is re-rendered by the redirect (full page, not region-only)."
+    },
+    "P302:ITEM:P302_REQUEST_ID": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P302:REGION:Belum dipilih": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/app/(app)/requests/detail/page.tsx"
+    },
+    "P302:REGION:Breadcrumb": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/PageHeader.tsx"
+    },
+    "P302:REGION:Permintaan Barang": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/app/(app)/requests/detail/page.tsx"
+    },
+    "P302:REPORT_COLUMN:Baris Permintaan.ITEM_ID_DSP": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P302:REPORT_COLUMN:Baris Permintaan.LINE_AMOUNT": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P302:REPORT_COLUMN:Baris Permintaan.LINE_ID": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P302:REPORT_COLUMN:Baris Permintaan.QTY": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P302:REPORT_COLUMN:Baris Permintaan.UNIT_PRICE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P302:REPORT_COLUMN:Daftar Permintaan Barang.DEPARTMENT_ID_DSP": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P302:REPORT_COLUMN:Daftar Permintaan Barang.REQUEST_ID": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P302:REPORT_COLUMN:Daftar Permintaan Barang.REQUEST_NO": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P302:REPORT_COLUMN:Daftar Permintaan Barang.STATUS": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P302:REPORT_COLUMN:Permintaan Barang.DEPARTMENT_ID_DSP": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P302:REPORT_COLUMN:Permintaan Barang.NEED_DATE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P302:REPORT_COLUMN:Permintaan Barang.PURPOSE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P302:REPORT_COLUMN:Permintaan Barang.REQUEST_DATE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P302:REPORT_COLUMN:Permintaan Barang.REQUEST_ID": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P302:REPORT_COLUMN:Permintaan Barang.REQUEST_NO": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P302:REPORT_COLUMN:Permintaan Barang.STATUS": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P302:REPORT_REGION:Baris Permintaan": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P302:REPORT_REGION:Daftar Permintaan Barang": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P302:REPORT_REGION:Permintaan Barang": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P310:BUTTON:CREATE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/app/(app)/request-lines/page.tsx"
+    },
+    "P310:DYNAMIC_ACTION:ON_DIALOG_CLOSED_REFRESH_REPORT": {
+      "status": "ADAPTED",
+      "where": "apps/web/lib/form-actions.ts",
+      "note": "Refresh after dialog close: the parent page is re-rendered by the redirect (full page, not region-only)."
+    },
+    "P310:IR:Baris Permintaan": {
+      "status": "ADAPTED",
+      "where": "apps/web/components/IrPage.tsx",
+      "note": "Downloads: CSV and HTML implemented; XLSX/PDF and email download are gap G-02."
+    },
+    "P310:IR_COLUMN:Baris Permintaan.ITEM_ID_DSP": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P310:IR_COLUMN:Baris Permintaan.LINE_AMOUNT": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P310:IR_COLUMN:Baris Permintaan.LINE_ID": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P310:IR_COLUMN:Baris Permintaan.QTY": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P310:IR_COLUMN:Baris Permintaan.REQUEST_ID_DSP": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P310:IR_COLUMN:Baris Permintaan.UNIT_PRICE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P310:IR_COLUMN:Baris Permintaan.UPDATED_BY": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P310:IR_COLUMN:Baris Permintaan.UPDATED_ON": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P310:IR_REPORT:Baris Permintaan.310001": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P310:REGION:Baris Permintaan": {
+      "status": "ADAPTED",
+      "where": "apps/web/components/IrPage.tsx",
+      "note": "IR: row search, column sort, pagination, detail link, CSV/HTML download. Actions-menu features are gap G-01."
+    },
+    "P310:REGION:Breadcrumb": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/PageHeader.tsx"
+    },
+    "P311:BUTTON:CANCEL": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/app/(app)/request-lines/[id]/page.tsx"
+    },
+    "P311:BUTTON:CREATE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/pages.service.ts",
+      "note": "Condition evaluated on the server for rendering and enforced on submit (DEV-06)."
+    },
+    "P311:BUTTON:DELETE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/pages.service.ts",
+      "note": "Condition evaluated on the server for rendering and enforced on submit (DEV-06)."
+    },
+    "P311:BUTTON:SAVE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/pages.service.ts",
+      "note": "Condition evaluated on the server for rendering and enforced on submit (DEV-06)."
+    },
+    "P311:DYNAMIC_ACTION:ON_CLICK_CANCEL_CLOSE_DIALOG": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/ApexForm.tsx",
+      "note": "Cancel/Close link back to the parent page."
+    },
+    "P311:ITEM:P311_ITEM_ID": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P311:ITEM:P311_LINE_AMOUNT": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P311:ITEM:P311_LINE_ID": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P311:ITEM:P311_QTY": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P311:ITEM:P311_REQUEST_ID": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P311:ITEM:P311_UNIT_PRICE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P311:PROCESS:CLOSE_DIALOG": {
+      "status": "ADAPTED",
+      "where": "apps/web/lib/form-actions.ts",
+      "note": "Dialog closes by redirecting to the parent page, which re-renders (D-UI-01)."
+    },
+    "P311:PROCESS:INIT_REQUEST_LINES_FORM": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/forms.ts (fetchForm) + pages.service.ts"
+    },
+    "P311:PROCESS:SAVE_REQUEST_LINES": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/pages.service.ts",
+      "note": "Lost-update check (VALUES) as checksum; DML through the WP9.4 services."
+    },
+    "P311:REGION:Baris Permintaan": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/FormDialog.tsx + apps/api/src/pages/forms.ts"
+    },
+    "P311:REGION:Buttons": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/ApexForm.tsx",
+      "note": "Dialog button region: footer, CLOSE/DELETE left, NEXT right."
+    },
+    "P400:IR:Rekap Permintaan": {
+      "status": "ADAPTED",
+      "where": "apps/web/components/IrPage.tsx",
+      "note": "Downloads: CSV and HTML implemented; XLSX/PDF and email download are gap G-02."
+    },
+    "P400:IR_COLUMN:Rekap Permintaan.DEPT_NAME": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P400:IR_COLUMN:Rekap Permintaan.LINE_COUNT": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P400:IR_COLUMN:Rekap Permintaan.PURPOSE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P400:IR_COLUMN:Rekap Permintaan.REQUEST_DATE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P400:IR_COLUMN:Rekap Permintaan.REQUEST_NO": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P400:IR_COLUMN:Rekap Permintaan.STATUS": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P400:IR_COLUMN:Rekap Permintaan.TOTAL_AMOUNT": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P400:IR_REPORT:Rekap Permintaan.400001": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P400:REGION:Breadcrumb": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/PageHeader.tsx"
+    },
+    "P400:REGION:Rekap Permintaan": {
+      "status": "ADAPTED",
+      "where": "apps/web/components/IrPage.tsx",
+      "note": "IR: row search, column sort, pagination, detail link, CSV/HTML download. Actions-menu features are gap G-01."
+    },
+    "P500:BUTTON:CREATE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/app/(app)/admin/users/page.tsx"
+    },
+    "P500:DYNAMIC_ACTION:ON_DIALOG_CLOSED_REFRESH_REPORT": {
+      "status": "ADAPTED",
+      "where": "apps/web/lib/form-actions.ts",
+      "note": "Refresh after dialog close: the parent page is re-rendered by the redirect (full page, not region-only)."
+    },
+    "P500:IR:Users & Roles": {
+      "status": "ADAPTED",
+      "where": "apps/web/components/IrPage.tsx",
+      "note": "Downloads: CSV and HTML implemented; XLSX/PDF and email download are gap G-02."
+    },
+    "P500:IR_COLUMN:Users & Roles.CREATED_BY": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P500:IR_COLUMN:Users & Roles.CREATED_ON": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P500:IR_COLUMN:Users & Roles.ROLE_CODE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P500:IR_COLUMN:Users & Roles.ROLE_NAME": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P500:IR_COLUMN:Users & Roles.USERNAME": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P500:IR_COLUMN:Users & Roles.USER_ROLE_ID": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P500:IR_REPORT:Users & Roles.500001": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P500:REGION:Breadcrumb": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/PageHeader.tsx"
+    },
+    "P500:REGION:Users & Roles": {
+      "status": "ADAPTED",
+      "where": "apps/web/components/IrPage.tsx",
+      "note": "IR: row search, column sort, pagination, detail link, CSV/HTML download. Actions-menu features are gap G-01."
+    },
+    "P501:BUTTON:CANCEL": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/app/(app)/admin/users/[id]/page.tsx"
+    },
+    "P501:BUTTON:CREATE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/pages.service.ts",
+      "note": "Condition evaluated on the server for rendering and enforced on submit (DEV-06)."
+    },
+    "P501:BUTTON:DELETE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/pages.service.ts",
+      "note": "Condition evaluated on the server for rendering and enforced on submit (DEV-06)."
+    },
+    "P501:BUTTON:SAVE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/pages.service.ts",
+      "note": "Condition evaluated on the server for rendering and enforced on submit (DEV-06)."
+    },
+    "P501:DYNAMIC_ACTION:ON_CLICK_CANCEL_CLOSE_DIALOG": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/ApexForm.tsx",
+      "note": "Cancel/Close link back to the parent page."
+    },
+    "P501:ITEM:P501_ROLE_CODE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P501:ITEM:P501_USERNAME": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P501:ITEM:P501_USER_ROLE_ID": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P501:PROCESS:CLOSE_DIALOG": {
+      "status": "ADAPTED",
+      "where": "apps/web/lib/form-actions.ts",
+      "note": "Dialog closes by redirecting to the parent page, which re-renders (D-UI-01)."
+    },
+    "P501:PROCESS:INIT_USER_ROLE_FORM": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/forms.ts (fetchForm) + pages.service.ts"
+    },
+    "P501:PROCESS:SAVE_USER_ROLE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/pages.service.ts",
+      "note": "Lost-update check (VALUES) as checksum; DML through the WP9.4 services."
+    },
+    "P501:REGION:Buttons": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/ApexForm.tsx",
+      "note": "Dialog button region: footer, CLOSE/DELETE left, NEXT right."
+    },
+    "P501:REGION:User Role": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/FormDialog.tsx + apps/api/src/pages/forms.ts"
+    },
+    "P510:DYNAMIC_ACTION:ON_DIALOG_CLOSED_REFRESH_REPORT": {
+      "status": "ADAPTED",
+      "where": "apps/web/lib/form-actions.ts",
+      "note": "Refresh after dialog close: the parent page is re-rendered by the redirect (full page, not region-only)."
+    },
+    "P510:IR:Document Types & Approval": {
+      "status": "ADAPTED",
+      "where": "apps/web/components/IrPage.tsx",
+      "note": "Downloads: CSV and HTML implemented; XLSX/PDF and email download are gap G-02."
+    },
+    "P510:IR_COLUMN:Document Types & Approval.APPROVER1_ROLE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P510:IR_COLUMN:Document Types & Approval.APPROVER2_ROLE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P510:IR_COLUMN:Document Types & Approval.DOC_NAME": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P510:IR_COLUMN:Document Types & Approval.DOC_TYPE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P510:IR_COLUMN:Document Types & Approval.LEVEL2_LIMIT": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P510:IR_COLUMN:Document Types & Approval.PREFIX": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P510:IR_REPORT:Document Types & Approval.510001": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/report-definitions.ts"
+    },
+    "P510:REGION:Breadcrumb": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/PageHeader.tsx"
+    },
+    "P510:REGION:Document Types & Approval": {
+      "status": "ADAPTED",
+      "where": "apps/web/components/IrPage.tsx",
+      "note": "IR: row search, column sort, pagination, detail link, CSV/HTML download. Actions-menu features are gap G-01."
+    },
+    "P511:BUTTON:CANCEL": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/app/(app)/admin/document-types/[docType]/page.tsx"
+    },
+    "P511:BUTTON:SAVE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/pages.service.ts",
+      "note": "Condition evaluated on the server for rendering and enforced on submit (DEV-06)."
+    },
+    "P511:DYNAMIC_ACTION:ON_CLICK_CANCEL_CLOSE_DIALOG": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/ApexForm.tsx",
+      "note": "Cancel/Close link back to the parent page."
+    },
+    "P511:ITEM:P511_APPROVER1_ROLE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P511:ITEM:P511_APPROVER2_ROLE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P511:ITEM:P511_DOC_NAME": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P511:ITEM:P511_DOC_TYPE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P511:ITEM:P511_LEVEL2_LIMIT": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P511:ITEM:P511_PREFIX": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+    },
+    "P511:PROCESS:CLOSE_DIALOG": {
+      "status": "ADAPTED",
+      "where": "apps/web/lib/form-actions.ts",
+      "note": "Dialog closes by redirecting to the parent page, which re-renders (D-UI-01)."
+    },
+    "P511:PROCESS:INIT_DOCUMENT_TYPE_FORM": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/forms.ts (fetchForm) + pages.service.ts"
+    },
+    "P511:PROCESS:SAVE_DOCUMENT_TYPE": {
+      "status": "IMPLEMENTED",
+      "where": "apps/api/src/pages/pages.service.ts",
+      "note": "Lost-update check (VALUES) as checksum; DML through the WP9.4 services."
+    },
+    "P511:REGION:Buttons": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/ApexForm.tsx",
+      "note": "Dialog button region: footer, CLOSE/DELETE left, NEXT right."
+    },
+    "P511:REGION:Document Type": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/components/FormDialog.tsx + apps/api/src/pages/forms.ts"
+    },
+    "P9999:BUTTON:LOGIN": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/app/login/LoginForm.tsx"
+    },
+    "P9999:ITEM:P9999_PASSWORD": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/app/login/LoginForm.tsx"
+    },
+    "P9999:ITEM:P9999_REMEMBER": {
+      "status": "ADAPTED",
+      "where": "apps/web/app/login/LoginForm.tsx",
+      "note": "Shown when LOGIN_REMEMBER_USERNAME=true (APEX: persistent_cookies_enabled)."
+    },
+    "P9999:ITEM:P9999_USERNAME": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/app/login/LoginForm.tsx"
+    },
+    "P9999:PROCESS:Clear Page(s) Cache": {
+      "status": "NOT_APPLICABLE",
+      "where": "apps/web/app/login/actions.ts + apps/api/src/auth/auth.controller.ts",
+      "note": "The target keeps no server-side page session state."
+    },
+    "P9999:PROCESS:Get Username Cookie": {
+      "status": "ADAPTED",
+      "where": "apps/web/app/login/actions.ts + apps/api/src/auth/auth.controller.ts",
+      "note": "Username cookie only when P9999_REMEMBER is shown and checked."
+    },
+    "P9999:PROCESS:Login": {
+      "status": "ADAPTED",
+      "where": "apps/web/app/login/actions.ts + apps/api/src/auth/auth.controller.ts",
+      "note": "AUTH_MODE=dev until the identity provider is decided (WP9-009)."
+    },
+    "P9999:PROCESS:Set Username Cookie": {
+      "status": "ADAPTED",
+      "where": "apps/web/app/login/actions.ts + apps/api/src/auth/auth.controller.ts",
+      "note": "Username cookie only when P9999_REMEMBER is shown and checked."
+    },
+    "P9999:REGION:Login": {
+      "status": "IMPLEMENTED",
+      "where": "apps/web/app/login/page.tsx"
+    }
+  },
+  "gaps": [
+    {
+      "id": "G-01",
+      "title": "Interactive Report Actions menu",
+      "detail": "Column chooser, filters, highlight, control break, aggregate, compute, chart, group by, pivot, saved/private reports, subscriptions, flashback, reset. Search, single-column sort, pagination and download are implemented."
+    },
+    {
+      "id": "G-02",
+      "title": "IR download formats XLSX, PDF and email",
+      "detail": "p_download_formats CSV:HTML:XLSX:PDF with p_enable_mail_download=Y; CSV and HTML are implemented."
+    },
+    {
+      "id": "G-03",
+      "title": "Faceted search facet charts",
+      "detail": "p_fc_show_chart=Y offers a chart per facet; values and counts are implemented."
+    }
+  ]
+}

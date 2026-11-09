@@ -72,8 +72,8 @@ The first-of-period numbering race (MERGE then PK violation) is removed by `INSE
 ## 4. Findings (source behavior kept for parity; owner decision)
 
 - **F-01** Status `CANCELLED` is unreachable. BR-REQ-06 forbids DRAFT → CANCELLED, and no package sets it.
-- **F-02** `request_no` is not protected by any trigger and can be changed by an update. Whether the form allows that is a WP9.5 question.
-- **F-03** Requests can be deleted in any status, including APPROVED, and their lines cascade. Approval steps (no FK) remain as orphans.
+- **F-02** `request_no` is not protected by any trigger and can be changed by an update. WP9.5: page 301 shows it as a query-only item, so the UI cannot change it; the service-level behavior is unchanged.
+- **F-03** Requests can be deleted in any status, including APPROVED, and their lines cascade. Approval steps (no FK) remain as orphans. WP9.5: the page 301 DELETE button exists only for DRAFT, and the page layer enforces that (DEV-06).
 - **F-04** There is no row-level ownership: any REQUESTER/MANAGER can edit any request (page 301). This is input for WP9-009.
 - **F-05** Approval steps record `doc_no`/`amount` at creation; later edits after REJECTED do not update historical steps. Correct behavior, noted for reporting.
 
@@ -91,5 +91,5 @@ The first-of-period numbering race (MERGE then PK violation) is removed by `INSE
 ## 6. Not done yet
 
 - **Functional parity with Oracle (WP9.6).** The same scenarios must be executed against APEX/Oracle (oracleapex.com) and compared.
-- **HTTP controllers and pages (WP9.5)**, **identity provider/principal mapping and row-level security (WP9-009)**, and **seed/configuration data migration (WP9.6)**.
+- ~~HTTP controllers and pages (WP9.5)~~ done, see [WP9.5](wp9.5-ui-f170134.md). Still open: **identity provider/principal mapping and row-level security (WP9-009)** and **seed/configuration data migration (WP9.6)**.
 - **Owner decisions from WP9.3 §6** (types, timezone, empty strings) are still open; the services follow the draft schema.

@@ -6,4 +6,4 @@ The first pilot fixture should be a deliberately small CRUD application with a t
 
 ## Contents
 
-- [`f170134-target/`](f170134-target/README.md): WP9 pilot target for the owner-supplied demo application "Demo Permintaan Barang" (170134). It contains generated PostgreSQL migrations, reviewed business functions and hand-written NestJS business services. It contains no source export and no customer data. Test seed rows are the demo values from the application's own seed script.
+- [`f170134-target/`](f170134-target/README.md): WP9 pilot target for the owner-supplied demo application "Demo Permintaan Barang" (170134). It contains generated PostgreSQL migrations, reviewed business functions, hand-written NestJS business services and page layer, the Next.js web app, and a page inventory derived from the export (metadata only). It contains no source export and no customer data. Test seed rows are the demo values from the application's own seed script.

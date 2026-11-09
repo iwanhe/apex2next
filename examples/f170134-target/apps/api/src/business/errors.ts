@@ -22,7 +22,15 @@ export type BusinessErrorCode =
   | 'DOC_TYPE_CONFIG_DRIFT'
   | 'UNAUTHENTICATED'
   | 'FORBIDDEN'
-  | 'INVALID_INPUT';
+  | 'INVALID_INPUT'
+  | 'VALIDATION_FAILED'
+  | 'LOST_UPDATE'
+  | 'ACTION_NOT_AVAILABLE'
+  | 'DB_UNIQUE_VIOLATION'
+  | 'DB_FOREIGN_KEY_VIOLATION'
+  | 'DB_CHECK_VIOLATION'
+  | 'DB_NOT_NULL_VIOLATION'
+  | 'DB_VALUE_TOO_LARGE';
 
 const HTTP_STATUS: Record<BusinessErrorCode, number> = {
   UNKNOWN_DOC_TYPE: 422,
@@ -42,7 +50,21 @@ const HTTP_STATUS: Record<BusinessErrorCode, number> = {
   UNAUTHENTICATED: 401,
   FORBIDDEN: 403,
   INVALID_INPUT: 422,
+  VALIDATION_FAILED: 422,
+  LOST_UPDATE: 409,
+  ACTION_NOT_AVAILABLE: 409,
+  DB_UNIQUE_VIOLATION: 409,
+  DB_FOREIGN_KEY_VIOLATION: 409,
+  DB_CHECK_VIOLATION: 422,
+  DB_NOT_NULL_VIOLATION: 422,
+  DB_VALUE_TOO_LARGE: 422,
 };
+
+/** One APEX inline error, attached to a page item (field) or shown on the page (field null). */
+export interface FieldError {
+  readonly field: string | null;
+  readonly message: string;
+}
 
 export class BusinessRuleError extends Error {
   readonly httpStatus: number;
@@ -54,6 +76,8 @@ export class BusinessRuleError extends Error {
     readonly oracleCode: number | null,
     /** Business rule identifier in docs/migration/wp9.4-business-logic-f170134.md. */
     readonly rule: string,
+    /** Inline errors for VALIDATION_FAILED (APEX shows every failed validation at once). */
+    readonly fieldErrors: FieldError[] = [],
   ) {
     super(message);
     this.name = 'BusinessRuleError';
@@ -61,7 +85,10 @@ export class BusinessRuleError extends Error {
   }
 
   toJSON() {
-    return { code: this.code, oracleCode: this.oracleCode, rule: this.rule, message: this.message };
+    return {
+      code: this.code, oracleCode: this.oracleCode, rule: this.rule, message: this.message,
+      ...(this.fieldErrors.length ? { fieldErrors: this.fieldErrors } : {}),
+    };
   }
 }
 
@@ -111,4 +138,17 @@ export const errors = {
     new BusinessRuleError('UNAUTHENTICATED', 'Pengguna belum terautentikasi.', null, 'BR-SEC-01'),
   forbidden: (message: string) => new BusinessRuleError('FORBIDDEN', message, null, 'BR-SEC-05'),
   invalidInput: (message: string) => new BusinessRuleError('INVALID_INPUT', message, null, 'BR-GEN-01'),
+  /** WP9.5: APEX page validations (item required/number/date and page validations), all reported at once. */
+  validation: (fieldErrors: FieldError[]) =>
+    new BusinessRuleError('VALIDATION_FAILED', fieldErrors.map((e) => e.message).join('\n'), null, 'UI-VAL-01', fieldErrors),
+  /** WP9.5: APEX form region lost-update check (p_lost_update_check_type VALUES); APEX runtime message. */
+  lostUpdate: () =>
+    new BusinessRuleError('LOST_UPDATE',
+      'Current version of data in database has changed since user initiated update process.', null, 'UI-FRM-02'),
+  /** WP9.5 DEV-06: a page action whose button condition is false is refused on the server. */
+  actionNotAvailable: (action: string, reason: string) =>
+    new BusinessRuleError('ACTION_NOT_AVAILABLE', `Aksi ${action} tidak tersedia: ${reason}`, null, 'UI-BTN-01'),
+  database: (code: 'DB_UNIQUE_VIOLATION' | 'DB_FOREIGN_KEY_VIOLATION' | 'DB_CHECK_VIOLATION' | 'DB_NOT_NULL_VIOLATION'
+    | 'DB_VALUE_TOO_LARGE', message: string, oracleCode: number) =>
+    new BusinessRuleError(code, message, oracleCode, 'UI-DB-01'),
 };

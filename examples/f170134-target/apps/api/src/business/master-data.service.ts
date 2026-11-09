@@ -62,4 +62,11 @@ export class MasterDataService {
     if (r.rowCount === 0) throw errors.notFound(`${entity} ${id}`, 'BR-MD-01');
     return r.rows[0];
   }
+
+  /** Form DELETE (pages 201/211/501). The source has no delete triggers; FK violations surface as ORA-02292. */
+  async delete(tx: BusinessTx, entity: MasterDataEntity, id: number): Promise<void> {
+    const spec: EntitySpec = SPECS[entity];
+    const r = await tx.query(`DELETE FROM ${spec.table} WHERE ${spec.id} = $1`, [id]);
+    if (r.rowCount === 0) throw errors.notFound(`${entity} ${id}`, 'BR-MD-01');
+  }
 }

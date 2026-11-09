@@ -9,6 +9,13 @@ The worker provides two safe, static source-ingestion paths. Neither executes so
 
 The SQL-export parser scans a subset of APEX import API calls and preserves raw argument expressions and source locations. It is not a PL/SQL interpreter or a complete APEX metadata extractor.
 
+## 1a. APEX page inventory (WP9.5)
+
+    PYTHONPATH=workers/extraction-worker/src \
+      python -m apex2next_extractor.page_inventory path/to/unpacked/fxxx --output build/apex-page-inventory.json
+
+Builds the deterministic `apex2next.apex-page-inventory.v1` UI specification of an unpacked SQL export (split files): application formats, authorization schemes, LOVs with static values, navigation menu/bar, breadcrumbs and every page component with a stable key `P<page>:<KIND>:<name>` (regions, report regions, items, buttons, processes, validations, dynamic actions with their actions, IR/report/region columns, cards, charts). Nothing is executed; region and condition SQL/PLSQL is kept as text for review.
+
 ## 2. APEXLang source directory
 
     PYTHONPATH=workers/extraction-worker/src \

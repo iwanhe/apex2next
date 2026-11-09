@@ -1,0 +1,103 @@
+begin
+wwv_flow_imp_page.create_page(
+ p_id=>2
+,p_name=>'Things'
+,p_alias=>'THINGS'
+,p_step_title=>'Things'
+,p_page_mode=>'MODAL'
+,p_required_role=>wwv_flow_imp.id(21)
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(100)
+,p_plug_name=>'Thing'
+,p_query_type=>'TABLE'
+,p_query_table=>'THINGS'
+,p_plug_source_type=>'NATIVE_FORM'
+,p_edit_operations=>'i:u:d'
+,p_lost_update_check_type=>'VALUES'
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(101)
+,p_plug_name=>'Report'
+,p_query_type=>'SQL'
+,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select id, name',
+'  from things'))
+,p_plug_source_type=>'NATIVE_IR'
+);
+wwv_flow_imp_page.create_worksheet(
+ p_id=>wwv_flow_imp.id(102)
+,p_download_formats=>'CSV'
+);
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(103)
+,p_db_column_name=>'NAME'
+,p_display_order=>2
+,p_column_label=>'Name'
+,p_column_type=>'STRING'
+);
+wwv_flow_imp_page.create_worksheet_rpt(
+ p_id=>wwv_flow_imp.id(104)
+,p_report_alias=>'1'
+,p_report_columns=>'NAME'
+,p_sort_column_1=>'NAME'
+,p_sort_direction_1=>'ASC'
+);
+wwv_flow_imp_page.create_page_button(
+ p_id=>wwv_flow_imp.id(110)
+,p_button_sequence=>10
+,p_button_plug_id=>wwv_flow_imp.id(100)
+,p_button_name=>'SAVE'
+,p_button_action=>'SUBMIT'
+,p_button_image_alt=>'Apply Changes'
+,p_button_condition=>':P2_ID is not null'
+,p_button_condition_type=>'EXPRESSION'
+,p_database_action=>'UPDATE'
+);
+wwv_flow_imp_page.create_page_item(
+ p_id=>wwv_flow_imp.id(120)
+,p_name=>'P2_NAME'
+,p_item_sequence=>10
+,p_item_plug_id=>wwv_flow_imp.id(100)
+,p_prompt=>'Name'
+,p_source=>'NAME'
+,p_display_as=>'NATIVE_TEXT_FIELD'
+,p_is_required=>true
+,p_read_only_when=>':P2_ID is null'
+,p_read_only_when_type=>'EXPRESSION'
+);
+wwv_flow_imp_page.create_page_process(
+ p_id=>wwv_flow_imp.id(130)
+,p_process_sequence=>20
+,p_process_point=>'AFTER_SUBMIT'
+,p_process_type=>'NATIVE_PLSQL'
+,p_process_name=>'CALL_IT'
+,p_process_sql_clob=>'synth_pkg.do_it(:P2_ID);'
+,p_process_when_button_id=>wwv_flow_imp.id(110)
+,p_process_success_message=>'Done.'
+);
+wwv_flow_imp_page.create_page_validation(
+ p_id=>wwv_flow_imp.id(140)
+,p_validation_name=>'NAME_OK'
+,p_validation=>':P2_NAME <> ''x'''
+,p_validation_type=>'EXPRESSION'
+,p_error_message=>'No x.'
+);
+wwv_flow_imp_page.create_page_da_event(
+ p_id=>wwv_flow_imp.id(150)
+,p_name=>'REFRESH_AFTER_DIALOG'
+,p_event_sequence=>10
+,p_triggering_element_type=>'REGION'
+,p_triggering_region_id=>wwv_flow_imp.id(101)
+,p_bind_event_type=>'apexafterclosedialog'
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(151)
+,p_event_id=>wwv_flow_imp.id(150)
+,p_event_result=>'TRUE'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(101)
+);
+end;
+/

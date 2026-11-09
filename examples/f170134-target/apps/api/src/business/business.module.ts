@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PostgresDatabase } from '../database/postgres-database';
+import { PagesService } from '../pages/pages.service';
 import { ApprovalService } from './approval.service';
 import { BusinessDatabase, Clock, businessConfigFromEnv, systemClock } from './context';
 import { DocumentTypeRegistry } from './document-types';
@@ -24,7 +25,7 @@ import { SecurityService } from './security.service';
     MasterDataService,
     PermintaanBarangService,
   ],
-  exports: [PermintaanBarangService],
+  exports: [PermintaanBarangService, BusinessDatabase, SecurityService, RequestService, ApprovalService, MasterDataService],
 })
 export class BusinessModule {}
 
@@ -40,5 +41,6 @@ export function createBusinessServices(database: PostgresDatabase, options: { ti
   return {
     db, security, numbering, registry, approvals, requests, masterData,
     app: new PermintaanBarangService(db, security, requests, approvals, masterData),
+    pages: new PagesService(db, security, requests, approvals, masterData),
   };
 }

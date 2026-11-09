@@ -17,6 +17,7 @@
 - [WP9 real application pilot](migration/wp9-real-application-pilot.md)
 - [WP9.3 Source validation & PostgreSQL target schema (170134)](migration/wp9.3-source-validation-schema-f170134.md)
 - [WP9.4 Business logic migration (170134)](migration/wp9.4-business-logic-f170134.md)
+- [WP9.5 Pages & features (170134)](migration/wp9.5-ui-f170134.md)
 
 ## Decisions
 - [ADR index](adr/README.md)

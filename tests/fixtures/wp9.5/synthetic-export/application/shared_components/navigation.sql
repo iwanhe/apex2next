@@ -1,0 +1,42 @@
+begin
+wwv_flow_imp_shared.create_list(
+ p_id=>wwv_flow_imp.id(40)
+,p_name=>'Navigation Menu'
+);
+wwv_flow_imp_shared.create_list_item(
+ p_id=>wwv_flow_imp.id(41)
+,p_list_item_display_sequence=>10
+,p_list_item_link_text=>'Admin'
+,p_list_item_link_target=>'f?p=&APP_ID.:2:&SESSION.::&DEBUG.'
+,p_security_scheme=>wwv_flow_imp.id(21)
+);
+wwv_flow_imp_shared.create_list_item(
+ p_id=>wwv_flow_imp.id(42)
+,p_list_item_display_sequence=>20
+,p_list_item_link_text=>'Things'
+,p_list_item_link_target=>'f?p=&APP_ID.:2:&SESSION.::&DEBUG.'
+,p_parent_list_item_id=>wwv_flow_imp.id(41)
+);
+wwv_flow_imp_shared.create_list(
+ p_id=>wwv_flow_imp.id(43)
+,p_name=>'Navigation Bar'
+);
+wwv_flow_imp_shared.create_list_item(
+ p_id=>wwv_flow_imp.id(44)
+,p_list_item_display_sequence=>10
+,p_list_item_link_text=>'Sign Out'
+,p_list_item_link_target=>'&LOGOUT_URL.'
+);
+wwv_flow_imp_shared.create_menu_option(
+ p_id=>wwv_flow_imp.id(50)
+,p_short_name=>'Home'
+,p_page_id=>1
+);
+wwv_flow_imp_shared.create_menu_option(
+ p_id=>wwv_flow_imp.id(51)
+,p_parent_id=>wwv_flow_imp.id(50)
+,p_short_name=>'Things'
+,p_page_id=>2
+);
+end;
+/

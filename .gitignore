@@ -19,3 +19,5 @@ __pycache__/
 *.log
 .tmp/
 artifacts/
+*.tsbuildinfo
+examples/f170134-target/e2e/.logs/
