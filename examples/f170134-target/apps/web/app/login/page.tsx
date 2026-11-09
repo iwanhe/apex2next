@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
-import { APP, button, item, page } from '../../lib/spec';
+import { APP_TITLE, button, item, page } from '../../lib/spec';
 import { USERNAME_COOKIE } from '../../lib/session';
 import { LoginForm } from './LoginForm';
 
-export const metadata: Metadata = { title: String(page(9999).title).replace('&APP_TITLE.', APP.name ?? '') };
+export const metadata: Metadata = { title: String(page(9999).title).replace('&APP_TITLE.', APP_TITLE ?? '') };
 
 /**
  * Page 9999 Login. P9999_REMEMBER is displayed only when persistent cookies are enabled on the APEX instance
@@ -15,7 +15,7 @@ export default async function LoginPage() {
   return (
     <div className="login" data-apex-page="9999">
       <div className="panel">
-        <h1>{APP.name}</h1>
+        <h1>{APP_TITLE}</h1>
         <LoginForm
           initialUsername={remembered}
           showRemember={process.env.LOGIN_REMEMBER_USERNAME === 'true'}

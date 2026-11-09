@@ -1,0 +1,92 @@
+{
+  "journey": "J-01",
+  "source": "oracleapex.com, workspace KCSI, app 170134 (DEMO), APEX 26.2.1",
+  "executed": "2026-11-09 07:45-08:57 UTC by Claude in the built-in browser (users DEMO_REQ, DEMO_MGR signed in by the owner)",
+  "method": "APEX client API inside the dialog iframe (apex.item().setValue, button click, apex.confirm dialog); texts read from the DOM",
+  "steps": [
+    {
+      "step": "J1 create, need date before request date",
+      "messages": [
+        "1 error has occurred",
+        "Tanggal dibutuhkan tidak boleh sebelum tanggal permintaan."
+      ]
+    },
+    {
+      "step": "J1 create",
+      "messages": [
+        "Row created."
+      ]
+    },
+    {
+      "step": "J2 line ATK-001 - Kertas A4 80gsm (RIM) qty abc",
+      "messages": [
+        "1 error has occurred",
+        "Qty must be a number greater than or equal to 0."
+      ]
+    },
+    {
+      "step": "J2 line ATK-001 - Kertas A4 80gsm (RIM)",
+      "messages": [
+        "Row created."
+      ]
+    },
+    {
+      "step": "J2 line IT-002 - Mouse Wireless (UNIT)",
+      "messages": [
+        "Row created."
+      ]
+    },
+    {
+      "step": "J3 submit",
+      "messages": [
+        "Dokumen diajukan untuk approval."
+      ]
+    },
+    {
+      "step": "J4 delete draft",
+      "messages": [
+        "Row deleted."
+      ]
+    },
+    {
+      "step": "J5 reject without note",
+      "messages": [
+        "1 error has occurred",
+        "ORA-20108: Alasan penolakan wajib diisi."
+      ]
+    },
+    {
+      "step": "J5 reject",
+      "messages": [
+        "Dokumen ditolak."
+      ]
+    },
+    {
+      "step": "J6 resubmit",
+      "messages": [
+        "Row updated. Dokumen diajukan untuk approval."
+      ]
+    },
+    {
+      "step": "J7 approve",
+      "messages": [
+        "Dokumen disetujui."
+      ]
+    },
+    {
+      "step": "J8 fulfilled",
+      "messages": [
+        "Row updated."
+      ]
+    }
+  ],
+  "other_observations": [
+    "Login page title 'DEMO - Log In', heading 'DEMO' (p_logo_text); 'Remember username' shown (persistent cookies enabled); wrong password: 'Invalid Login Credentials'.",
+    "Confirm dialogs (apex.confirm): submit 'Ajukan dokumen ini untuk approval? Setelah diajukan dokumen terkunci.' [Cancel | Submit for Approval]; reject 'Tolak dokumen ini?' [Cancel | Reject]; delete 'Would you like to perform this delete action?' [Cancel | Delete]; Approve has no confirm.",
+    "New request REQ-2026-0003 got REQUEST_ID 21 (identity cache 20 after LAST_NUMBER 21) - the target alignment gives the same next value.",
+    "Page 300 report and facets are not refreshed after a dialog closes (no dynamic action); page 302 refreshes header and lines only (master list and the 'Tambah' button keep the old state).",
+    "Classic report pagination 'row(s) 1 - 2 of 2'; Interactive Report pagination '1 - 1'. No total row count on page 300.",
+    "Page 191 shows Nilai unformatted ('315000'); approval inbox ordered by APPROVAL_ID desc; IR values formatted (315,000).",
+    "P301 STATUS read-only shows the LOV display value ('Draft', 'Rejected'); editable when APPROVED with null text '- Pilih -'."
+  ]
+}

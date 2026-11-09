@@ -5,6 +5,9 @@ import { apiGet } from '../../lib/api';
 import { apiErrorOnly } from '../../lib/guard';
 import { first, type SearchParams } from '../../lib/routes';
 import { page } from '../../lib/spec';
+import { pageTitle } from '../../lib/spec';
+
+export const metadata = { title: pageTitle(100) };
 
 interface Home {
   kpis: { seq: string; icon: string; label: string; metric_value: string }[];

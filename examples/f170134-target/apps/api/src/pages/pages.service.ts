@@ -6,7 +6,7 @@ import { MasterDataEntity, MasterDataService } from '../business/master-data.ser
 import { RequestService } from '../business/request.service';
 import { AUTHORIZATION_SCHEMES, AuthorizationScheme, SecurityService } from '../business/security.service';
 import {
-  FormDef, SubmitResult, checksum, fetchForm, formDef, lockForChange, validateItems, writableItems,
+  FormDef, SubmitResult, changed, checksum, fetchForm, formDef, lockForChange, result, validateItems, writableItems,
 } from './forms';
 import { ReportQuery, runReport } from './report';
 import { DynamicLov, LOV_SOURCES, REGION_SOURCES, RegionName, RegionSource, lovSql, reportDef } from './report-definitions';
@@ -181,13 +181,12 @@ export class PagesService {
     if (text !== null && text.length > 1000) throw errors.validation([{ field: 'P191_NOTE', message: 'ORA-12899: value too large for column' }]);
     return this.run(actor, 191, async (tx) => {
       const id = Number(idOf(approvalId));
-      const p = UI_SPEC.pages[191].process;
       if (action === 'APPROVE') {
         await this.approvals.approve(tx, id, text);
-        return { id: String(id), message: p.CALL_APPROVE.processSuccessMessage };
+        return result(String(id), ['191:CALL_APPROVE']);
       }
       await this.approvals.reject(tx, id, text);
-      return { id: String(id), message: p.CALL_REJECT.processSuccessMessage };
+      return result(String(id), ['191:CALL_REJECT']);
     });
   }
 
@@ -232,7 +231,7 @@ export class PagesService {
       const { values, problems } = validateItems(form, input);
       assertNoProblems(problems);
       const row = await this.masterData.create(tx, entity, values);
-      return { id: String(row[form.pk.column]), message: null };
+      return result(String(row[form.pk.column]), ['DML:CREATED']);
     });
   }
 
@@ -241,9 +240,9 @@ export class PagesService {
     return this.run(actor, this.formPage(form), async (tx) => {
       const { values, problems } = validateItems(form, input);
       assertNoProblems(problems);
-      await lockForChange(tx, form, idOf(id), check);
+      const row = await lockForChange(tx, form, idOf(id), check);
       await this.masterData.update(tx, entity, Number(idOf(id)), values);
-      return { id: idOf(id), message: null };
+      return result(idOf(id), [changed(form, row, values) && 'DML:UPDATED']);
     });
   }
 
@@ -252,7 +251,7 @@ export class PagesService {
     return this.run(actor, this.formPage(form), async (tx) => {
       await lockForChange(tx, form, idOf(id), check); // DELETE: p_button_execute_validations N
       await this.masterData.delete(tx, entity, Number(idOf(id)));
-      return { id: idOf(id), message: null };
+      return result(idOf(id), ['DML:DELETED']);
     });
   }
 
@@ -262,12 +261,12 @@ export class PagesService {
     return this.run(actor, 511, async (tx) => {
       const { values, problems } = validateItems(form, input);
       assertNoProblems(problems);
-      await lockForChange(tx, form, docType, check);
+      const row = await lockForChange(tx, form, docType, check);
       const cols = writableItems(form).map((i) => i.column);
       await tx.query(
         `UPDATE app.apx_demo_doc_types SET ${cols.map((c, n) => `${c} = $${n + 2}`).join(', ')} WHERE doc_type = $1`,
         [docType, ...cols.map((c) => values[c])]);
-      return { id: docType, message: null };
+      return result(docType, [changed(form, row, values) && 'DML:UPDATED']);
     });
   }
 
@@ -280,7 +279,7 @@ export class PagesService {
         request_id: Number(values.request_id), item_id: Number(values.item_id), qty: values.qty as string,
         unit_price: values.unit_price,
       });
-      return { id: String(row.line_id), message: null };
+      return result(String(row.line_id), ['DML:CREATED']);
     });
   }
 
@@ -288,12 +287,12 @@ export class PagesService {
     return this.run(actor, 311, async (tx) => {
       const { values, problems } = validateItems(FORMS.requestLine, input);
       assertNoProblems(problems);
-      await lockForChange(tx, FORMS.requestLine, idOf(id), check);
+      const before = await lockForChange(tx, FORMS.requestLine, idOf(id), check);
       await this.requests.updateLine(tx, Number(idOf(id)), {
         request_id: Number(values.request_id), item_id: Number(values.item_id), qty: values.qty as string,
         unit_price: values.unit_price,
       });
-      return { id: idOf(id), message: null };
+      return result(idOf(id), [changed(FORMS.requestLine, before, values) && 'DML:UPDATED']);
     });
   }
 
@@ -301,7 +300,7 @@ export class PagesService {
     return this.run(actor, 311, async (tx) => {
       await lockForChange(tx, FORMS.requestLine, idOf(id), check);
       await this.requests.deleteLine(tx, Number(idOf(id)));
-      return { id: idOf(id), message: null };
+      return result(idOf(id), ['DML:DELETED']);
     });
   }
 
@@ -330,7 +329,7 @@ export class PagesService {
         department_id: Number(values.department_id), request_date: values.request_date, need_date: values.need_date,
         purpose: values.purpose as string, notes: values.notes,
       });
-      return { id: row.request_id, message: null };
+      return result(String(row.request_id), ['DML:CREATED']);
     });
   }
 
@@ -350,9 +349,10 @@ export class PagesService {
       const merged = { ...row, ...values };
       assertNoProblems([...problems, ...needDateValidation(merged)]);
       await this.requests.update(tx, Number(row.request_id), values);
-      if (!submit) return { id: row.request_id as string, message: null };
+      const updated = changed(FORMS.request, row, values) && 'DML:UPDATED';
+      if (!submit) return result(row.request_id as string, [updated]);
       await this.approvals.submit(tx, 'REQ', Number(row.request_id));
-      return { id: row.request_id as string, message: UI_SPEC.pages[301].process.CALL_SUBMIT_REQUESTS.processSuccessMessage };
+      return result(row.request_id as string, [updated, '301:CALL_SUBMIT_REQUESTS']);
     });
   }
 
@@ -361,7 +361,7 @@ export class PagesService {
       const row = await lockForChange(tx, FORMS.request, idOf(id), check);
       if (!requestButtons(row.request_id, row.status).DELETE) throw errors.actionNotAvailable('DELETE', `status ${row.status}`);
       await this.requests.delete(tx, Number(row.request_id));
-      return { id: row.request_id as string, message: null };
+      return result(row.request_id as string, ['DML:DELETED']);
     });
   }
 }

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { Session } from '../lib/api';
-import { APP, NAVIGATION } from '../lib/spec';
+import { APP_TITLE, NAVIGATION } from '../lib/spec';
 import { PAGE_ROUTES } from '../lib/routes';
 import { NavLink } from './NavLink';
 
@@ -16,7 +16,7 @@ export function Shell({ session, children }: { session: Session; children: React
   return (
     <div className="shell">
       <header className="topbar">
-        <a className="app-name" href="/">{APP.name}</a>
+        <a className="app-name" href="/">{APP_TITLE}</a>
         <nav className="navbar" aria-label="Navigation bar">
           <span data-testid="app-user">{session.username}</span>
           <form action="/logout" method="post">

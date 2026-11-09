@@ -11,6 +11,15 @@ const API_URL = process.env.API_URL ?? 'http://127.0.0.1:3001';
 export interface FieldError { field: string | null; message: string }
 export interface ApiErrorBody { code: string; message: string; oracleCode?: number | null; rule?: string; fieldErrors?: FieldError[] }
 
+/**
+ * Text APEX shows for an error: errors raised with RAISE_APPLICATION_ERROR keep their "ORA-2xxxx: " prefix
+ * (observed on oracleapex.com, WP9.6); other messages already carry their ORA code or none.
+ */
+export function displayError(body: ApiErrorBody): string {
+  const code = body.oracleCode;
+  return typeof code === 'number' && code <= -20000 && code >= -20999 ? `ORA-${-code}: ${body.message}` : body.message;
+}
+
 export class ApiError extends Error {
   constructor(readonly status: number, readonly body: ApiErrorBody) {
     super(body.message);

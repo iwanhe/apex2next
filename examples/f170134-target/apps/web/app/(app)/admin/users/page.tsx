@@ -1,5 +1,8 @@
 import { IrPage } from '../../../../components/IrPage';
 import type { SearchParams } from '../../../../lib/routes';
+import { pageTitle } from '../../../../lib/spec';
+
+export const metadata = { title: pageTitle(500) };
 
 /** Page 500 Users & Roles (ADMIN_RIGHTS; detail link and CREATE -> 501). */
 export default async function Page({ searchParams }: { searchParams: Promise<SearchParams> }) {

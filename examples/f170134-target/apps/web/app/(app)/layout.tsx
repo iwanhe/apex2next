@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Shell } from '../../components/Shell';
 import { apiGet, type Session } from '../../lib/api';
-import { APP } from '../../lib/spec';
+import { APP_TITLE } from '../../lib/spec';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,7 +12,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     return (
       <div className="login">
         <div className="panel denied">
-          <h1>{APP.name}</h1>
+          <h1>{APP_TITLE}</h1>
           <div className="alert alert-error" role="alert" data-error-code="FORBIDDEN">{session.appAccessDenied}</div>
           <form action="/logout" method="post"><button className="btn" type="submit">Sign Out</button></form>
         </div>

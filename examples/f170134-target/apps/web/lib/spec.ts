@@ -32,15 +32,33 @@ export function lovDisplay(name: string, value: string | null | undefined): stri
   return staticLov(name).find((v) => v.value === value)?.display ?? value;
 }
 
-/** Success message of a page process, addressed by "page:PROCESS" (flash key in the URL). */
-export function processMessage(key: string | undefined): string | null {
-  if (!key) return null;
-  const [p, name] = key.split(':');
-  if (!/^\d+$/.test(p ?? '') || !name) return null;
-  return page(Number(p)).process?.[name]?.processSuccessMessage ?? null;
+/** APEX runtime success messages of form DML (language en). */
+export const DML_MESSAGES: Record<string, string> = { 'DML:CREATED': 'Row created.', 'DML:UPDATED': 'Row updated.', 'DML:DELETED': 'Row deleted.' };
+
+/** Success message for flash keys "DML:*" / "page:PROCESS" (comma separated), joined like APEX does. */
+export function processMessage(keys: string | undefined): string | null {
+  if (!keys) return null;
+  const texts = keys.split(',').map((key) => {
+    if (DML_MESSAGES[key]) return DML_MESSAGES[key];
+    const [p, name] = key.split(':');
+    if (!/^\d+$/.test(p ?? '') || !name) return null;
+    try {
+      return page(Number(p)).process?.[name]?.processSuccessMessage ?? null;
+    } catch {
+      return null;
+    }
+  }).filter((t): t is string => !!t);
+  return texts.length ? texts.join(' ') : null;
 }
 
 export const APP = UI_SPEC.application;
+/** &APP_TITLE. / header logo text (p_logo_text). */
+export const APP_TITLE = (UI_SPEC.application as { logoText?: string | null }).logoText ?? APP.name;
 export const NAVIGATION = UI_SPEC.navigation as unknown as { label: string; page: number | null; sequence: number; icon: string | null; parent: string | null; scheme: string | null }[];
 export const BREADCRUMBS = UI_SPEC.breadcrumbs as unknown as { label: string; page: number; parent: string | null }[];
 export const DELETE_CONFIRM = 'Would you like to perform this delete action?';
+
+/** Browser title of a page: its step title (APEX p_step_title). */
+export function pageTitle(id: number): string {
+  return String(page(id).title ?? '').replace('&APP_TITLE.', APP_TITLE ?? '');
+}

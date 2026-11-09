@@ -1,6 +1,6 @@
 'use server';
 import { redirect } from 'next/navigation';
-import { ApiError, apiSend, type FieldError } from './api';
+import { ApiError, apiSend, displayError, type FieldError } from './api';
 import { safeReturn } from './routes';
 
 /** Serializable description of one APEX form dialog, bound to the server action by the page. */
@@ -11,8 +11,6 @@ export interface FormBinding {
   readonly returnTo: string;
   /** Columns posted for this render (read-only items are not submitted, like APEX). */
   readonly columns: string[];
-  /** Flash key ("page:PROCESS") shown on the parent page after a successful button. */
-  readonly flash?: Record<string, string>;
 }
 
 export interface FormState {
@@ -41,16 +39,18 @@ export async function submitApexForm(binding: FormBinding, prev: FormState, form
   const body = binding.form === 'approval'
     ? { note: values.note ?? '' }
     : { checksum: String(form.get('checksum') ?? '') || undefined, values: request === 'DELETE' ? undefined : values };
+  let keys: string[] = [];
   try {
-    await apiSend(target.method, target.path, body);
+    const r = await apiSend<{ messageKeys?: string[] }>(target.method, target.path, body);
+    keys = r.messageKeys ?? [];
   } catch (e) {
     if (e instanceof ApiError) {
       if (e.status === 401) redirect('/login');
-      return { error: e.body.fieldErrors?.length ? null : e.body.message, fieldErrors: e.body.fieldErrors ?? [], values, version: prev.version + 1 };
+      return { error: e.body.fieldErrors?.length ? null : displayError(e.body), fieldErrors: e.body.fieldErrors ?? [], values, version: prev.version + 1 };
     }
     throw e;
   }
   const back = safeReturn(binding.returnTo, '/');
-  const flash = binding.flash?.[request];
-  redirect(flash ? `${back}${back.includes('?') ? '&' : '?'}msg=${encodeURIComponent(flash)}` : back);
+  // Success message keys (DML:* / page:PROCESS) travel in the URL; the text is resolved from the UI spec.
+  redirect(keys.length ? `${back}${back.includes('?') ? '&' : '?'}msg=${encodeURIComponent(keys.join(','))}` : back);
 }

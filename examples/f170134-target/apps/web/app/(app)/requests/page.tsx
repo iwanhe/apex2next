@@ -8,6 +8,9 @@ import { apiGet, type ReportResult } from '../../../lib/api';
 import { apiErrorOnly } from '../../../lib/guard';
 import { all, first, qs, type SearchParams } from '../../../lib/routes';
 import { item, page } from '../../../lib/spec';
+import { pageTitle } from '../../../lib/spec';
+
+export const metadata = { title: pageTitle(300) };
 
 /** Page 300 Permintaan Barang: faceted search + classic report (15 rows, REQUEST_NO DESC, link -> 301). */
 export default async function Page({ searchParams }: { searchParams: Promise<SearchParams> }) {
@@ -32,7 +35,6 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             facets={facetViews(300, result, sp.facet)} />
         </aside>
         <section className="region" aria-label="Hasil Permintaan Barang">
-          <p className="nodata" style={{ padding: 0, marginBottom: 12 }} data-testid="total-row-count">{result.total} baris</p>
           <ReportTable result={result} basePath="/requests" params={params} noData={p.reportRegion['Hasil Permintaan Barang'].queryNoDataFound}
             columnLinks={{ request_no: (r) => `/requests/${r.request_id}?return=${encodeURIComponent(back)}` }} testId="report-requests" />
         </section>

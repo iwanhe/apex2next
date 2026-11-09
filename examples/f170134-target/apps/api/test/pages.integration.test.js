@@ -85,6 +85,7 @@ test('WP9.5 page layer over HTTP', { skip }, async (t) => {
     const ok = await req1.post('/forms/request', { values: {
       department_id: String(dept), request_date: today, need_date: '', purpose: '  ATK kantor  ', notes: '', status: 'APPROVED' } });
     assert.equal(ok.status, 201, JSON.stringify(ok.body));
+    assert.equal(ok.body.message, 'Row created.');
     requestId = ok.body.id;
     const row = await req1.get(`/forms/request/${requestId}`);
     assert.equal(row.body.values.purpose, 'ATK kantor', 'trim_spaces BOTH');
@@ -101,7 +102,7 @@ test('WP9.5 page layer over HTTP', { skip }, async (t) => {
     assert.equal(init.body.values.unit_price, '0', 'P311_UNIT_PRICE default 0');
     const bad = await req1.post('/forms/requestLine', { values: { request_id: requestId, item_id: String(api.ids.atk), qty: '1,5', unit_price: '' } });
     assert.deepEqual(bad.body.fieldErrors, [
-      { field: 'P311_QTY', message: 'Qty must be Numeric.' },
+      { field: 'P311_QTY', message: 'Qty must be a number greater than or equal to 0.' },
       { field: 'P311_UNIT_PRICE', message: 'Harga Satuan must have some value.' },
     ]);
     const ok = await req1.post('/forms/requestLine', { values: { request_id: requestId, item_id: String(api.ids.atk), qty: '3', unit_price: '55000' } });
@@ -127,7 +128,8 @@ test('WP9.5 page layer over HTTP', { skip }, async (t) => {
     delete values.request_id; delete values.request_no; delete values.status;
     const r = await req1.post(`/forms/request/${requestId}/submit`, { checksum: row.body.checksum, values: { ...values, notes: 'mohon segera' } });
     assert.equal(r.status, 200, JSON.stringify(r.body));
-    assert.equal(r.body.message, 'Dokumen diajukan untuk approval.');
+    assert.equal(r.body.message, 'Row updated. Dokumen diajukan untuk approval.', 'notes changed, so the DML message comes first');
+    assert.deepEqual(r.body.messageKeys, ['DML:UPDATED', '301:CALL_SUBMIT_REQUESTS']);
     const after = await req1.get(`/forms/request/${requestId}`);
     assert.equal(after.body.values.status, 'SUBMITTED');
     assert.equal(after.body.values.notes, 'mohon segera', 'SAVE_REQUESTS ran before CALL_SUBMIT_REQUESTS');
@@ -202,9 +204,13 @@ test('WP9.5 page layer over HTTP', { skip }, async (t) => {
       409, 'DB_FOREIGN_KEY_VIOLATION', 'ORA-02292: integrity constraint (APX_DEMO_REQUESTS_FK1) violated - child record found');
     const upd = await wh1.put(`/forms/department/${created.body.id}`, { checksum: row.body.checksum, values: { dept_code: 'qa', dept_name: 'Quality Assurance', active_yn: 'N' } });
     assert.equal(upd.status, 200, JSON.stringify(upd.body));
+    assert.equal(upd.body.message, 'Row updated.');
     expectError(await wh1.del(`/forms/department/${created.body.id}`, { checksum: row.body.checksum }), 409, 'LOST_UPDATE');
     const fresh = await wh1.get(`/forms/department/${created.body.id}`);
-    assert.equal((await wh1.del(`/forms/department/${created.body.id}`, { checksum: fresh.body.checksum })).status, 200);
+    const same = await wh1.put(`/forms/department/${created.body.id}`, { checksum: fresh.body.checksum, values: { dept_code: 'QA', dept_name: 'Quality Assurance', active_yn: 'N' } });
+    assert.deepEqual([same.status, same.body.message, same.body.messageKeys], [200, null, []], 'no change, no "Row updated."');
+    const del = await wh1.del(`/forms/department/${created.body.id}`, { checksum: fresh.body.checksum });
+    assert.deepEqual([del.status, del.body.message], [200, 'Row deleted.']);
     expectError(await wh1.get(`/forms/department/${created.body.id}`), 404, 'NOT_FOUND');
 
     const item = await wh1.get('/forms/item');
@@ -212,7 +218,7 @@ test('WP9.5 page layer over HTTP', { skip }, async (t) => {
     const badItem = await wh1.post('/forms/item', { values: { item_code: 'x', item_name: 'X', category: '', uom: 'pcs', std_price: 'abc', active_yn: 'Y' } });
     assert.deepEqual(badItem.body.fieldErrors, [
       { field: 'P211_CATEGORY', message: 'Kategori must have some value.' },
-      { field: 'P211_STD_PRICE', message: 'Harga Standar must be Numeric.' },
+      { field: 'P211_STD_PRICE', message: 'Harga Standar must be a number greater than or equal to 0.' },
     ]);
     expectError(await wh1.post('/forms/item', { values: { item_code: 'x', item_name: 'X', category: 'FOOD', uom: 'pcs', std_price: '1', active_yn: 'Y' } }),
       422, 'DB_CHECK_VIOLATION', 'ORA-02290: check constraint (APX_DEMO_ITEMS_CK1) violated');

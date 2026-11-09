@@ -23,6 +23,7 @@ export function ReportTable(props: {
   detailLink?: (row: Row) => string;
   columnLinks?: Record<string, (row: Row) => string>;
   testId?: string;
+  kind?: 'IR' | 'CLASSIC';
 }) {
   const { result, params } = props;
   const cols = visibleColumns(result.columns);
@@ -67,7 +68,7 @@ export function ReportTable(props: {
         </tbody>
       </table>
       <div className="pagination">
-        <span data-testid="row-range">{rowRange(result.page, result.rowsPerPage, result.rows.length, result.total)}</span>
+        <span data-testid="row-range">{rowRange(result.page, result.rowsPerPage, result.rows.length, result.total, props.kind ?? 'CLASSIC')}</span>
         {result.page > 1 && <Link href={link({ page: String(result.page - 1) })}>‹ Previous</Link>}
         {result.page < pages && <Link href={link({ page: String(result.page + 1) })}>Next ›</Link>}
       </div>

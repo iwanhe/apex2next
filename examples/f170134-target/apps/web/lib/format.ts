@@ -34,9 +34,12 @@ export function formatValue(value: string | null | undefined, type: string, mask
   return value ?? '';
 }
 
-/** APEX IR "Rows x - y of z" pagination label. */
-export function rowRange(page: number, size: number, shown: number, total: number): string {
+/**
+ * Pagination labels as observed on oracleapex.com (WP9.6): Interactive Report "1 - 15",
+ * classic report (Universal Theme pagination "row(s) x - y of z") "row(s) 1 - 15 of 40".
+ */
+export function rowRange(page: number, size: number, shown: number, total: number, kind: 'IR' | 'CLASSIC' = 'CLASSIC'): string {
   if (total === 0) return '';
   const from = (page - 1) * size + 1;
-  return `${from} - ${from + shown - 1} of ${total}`;
+  return kind === 'IR' ? `${from} - ${from + shown - 1}` : `row(s) ${from} - ${from + shown - 1} of ${total}`;
 }

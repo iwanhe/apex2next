@@ -12,7 +12,7 @@ import { Dialog } from './Dialog';
  */
 export async function FormDialog(props: {
   pageId: number; form: string; id: string | null; load: string; returnTo: string;
-  flash?: Record<string, string>; extraItems?: Record<string, { column: string }>;
+  extraItems?: Record<string, { column: string }>;
 }) {
   const p = page(props.pageId);
   let data: FormResponse;
@@ -29,7 +29,7 @@ export async function FormDialog(props: {
   return (
     <Dialog page={props.pageId} title={p.title} closeHref={props.returnTo}>
       <ApexForm
-        binding={{ form: props.form, id: props.id, returnTo: props.returnTo, columns: postedColumns(fields), flash: props.flash }}
+        binding={{ form: props.form, id: props.id, returnTo: props.returnTo, columns: postedColumns(fields) }}
         fields={fields} values={data.values} checksum={data.checksum} buttons={formButtons(props.pageId, data.buttons)}
         cancelHref={props.returnTo} cancelLabel={cancelLabel(props.pageId)} />
     </Dialog>

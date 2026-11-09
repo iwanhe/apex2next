@@ -7,6 +7,9 @@ import { apiGet, type ReportResult } from '../../../lib/api';
 import { apiErrorOnly } from '../../../lib/guard';
 import { all, first, qs, type SearchParams } from '../../../lib/routes';
 import { item, page } from '../../../lib/spec';
+import { pageTitle } from '../../../lib/spec';
+
+export const metadata = { title: pageTitle(210) };
 
 /** Page 210 Items: faceted search (P210_SEARCH, P210_CATEGORY, P210_ACTIVE_YN) + Cards "Hasil Items". */
 export default async function Page({ searchParams }: { searchParams: Promise<SearchParams> }) {
@@ -31,7 +34,6 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             facets={facetViews(210, result, sp.facet)} />
         </aside>
         <section className="region" aria-label="Hasil Items">
-          <p className="nodata" style={{ padding: 0, marginBottom: 12 }} data-testid="total-row-count">{result.total} baris</p>
           {result.rows.length === 0 ? <div className="nodata">{p.region['Hasil Items'].plugQueryNoDataFound}</div> : (
             <div className="cards" data-testid="cards">
               {result.rows.map((r) => (

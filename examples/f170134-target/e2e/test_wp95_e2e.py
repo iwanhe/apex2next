@@ -21,7 +21,7 @@ def submit(page: Page, request: str, *, confirm: bool | None = None) -> None:
 def test_login_and_navigation_by_role(app):
     page = app.login("req1", "wrong-password")
     expect(page.locator(".alert-error")).to_have_text("Invalid Login Credentials")
-    expect(page).to_have_title("Demo Permintaan Barang - Log In")
+    expect(page).to_have_title("DEMO - Log In")
     req1 = app.as_user("req1")
     expect(req1.get_by_test_id("app-user")).to_have_text("REQ1")
     nav = req1.get_by_role("navigation", name="Navigation menu")
@@ -57,7 +57,7 @@ def test_create_request_with_validation(app):
     expect(req1.locator("#P301_STATUS")).to_have_text("Draft")
     req1.fill("#P301_NEED_DATE", "2000-01-01")
     submit(req1, "CREATE")
-    expect(req1.locator(".alert-error")).to_have_text("3 errors have occurred")
+    expect(req1.locator(".alert-error .alert-title")).to_have_text("3 errors have occurred")
     expect(req1.locator("#P301_DEPARTMENT_ID_error")).to_have_text("Department must have some value.")
     expect(req1.locator("#P301_PURPOSE_error")).to_have_text("Keperluan must have some value.")
     expect(req1.locator("#P301_NEED_DATE_error")).to_have_text("Tanggal dibutuhkan tidak boleh sebelum tanggal permintaan.")
@@ -65,12 +65,13 @@ def test_create_request_with_validation(app):
     req1.fill("#P301_NEED_DATE", "")
     req1.fill("#P301_PURPOSE", "  ATK kantor ")
     submit(req1, "CREATE")
-    expect(req1).to_have_url(re.compile(r"/requests$"))
+    expect(req1).to_have_url(re.compile(r"/requests\?msg=DML%3ACREATED$"))
     row = req1.get_by_test_id("report-requests").locator("tbody tr").first
     expect(row).to_contain_text(REQ1_NO)
     expect(row).to_contain_text("ATK kantor")
     expect(row).to_contain_text("DRAFT")
-    expect(req1.get_by_test_id("total-row-count")).to_have_text("1 baris")
+    expect(req1.get_by_role("status")).to_have_text("Row created.")
+    expect(req1.get_by_test_id("row-range")).to_have_text("row(s) 1 - 1 of 1")
 
 
 def test_master_detail_add_line_and_submit(app):
@@ -86,7 +87,7 @@ def test_master_detail_add_line_and_submit(app):
     req1.select_option("#P311_ITEM_ID", label="ATK-001 - Kertas A4 80gsm (RIM)")
     req1.fill("#P311_QTY", "3,5")
     submit(req1, "CREATE")
-    expect(req1.locator("#P311_QTY_error")).to_have_text("Qty must be Numeric.")
+    expect(req1.locator("#P311_QTY_error")).to_have_text("Qty must be a number greater than or equal to 0.")
     req1.fill("#P311_QTY", "3")
     req1.fill("#P311_UNIT_PRICE", "55000")
     submit(req1, "CREATE")
@@ -102,7 +103,7 @@ def test_master_detail_add_line_and_submit(app):
     submit(req1, "SUBMIT", confirm=False)
     expect(req1.get_by_role("dialog")).to_be_visible()  # dismissed confirm: nothing submitted
     submit(req1, "SUBMIT", confirm=True)
-    expect(req1.get_by_role("status")).to_have_text("Dokumen diajukan untuk approval.")
+    expect(req1.get_by_role("status")).to_have_text("Row updated. Dokumen diajukan untuk approval.")
     expect(req1.get_by_test_id("header-status")).to_have_text("SUBMITTED")
     expect(req1.get_by_role("link", name="Tambah")).to_have_count(0)
 
@@ -125,7 +126,7 @@ def test_approval_inbox_reject_needs_note_then_approve(app):
     mgr.wait_for_load_state("networkidle")
     expect(mgr.locator("#P191_CAN_ACT_YN")).to_have_text("Y")
     submit(mgr, "REJECT", confirm=True)
-    expect(mgr.locator(".alert-error")).to_contain_text("Alasan penolakan wajib diisi.")
+    expect(mgr.locator(".alert-error")).to_have_text("1 error has occurredORA-20108: Alasan penolakan wajib diisi.")
     mgr.fill("#P191_NOTE", "ok")
     submit(mgr, "APPROVE")
     expect(mgr).to_have_url(re.compile(r"/approvals\?msg="))
@@ -153,7 +154,7 @@ def test_status_after_approval_and_lost_update(app):
     expect(req1.get_by_test_id("report-requests").locator("tbody tr").first).to_contain_text("FULFILLED")
     other.select_option("#P301_STATUS", "CLOSED")
     submit(other, "SAVE")
-    expect(other.locator(".alert-error")).to_have_text(
+    expect(other.locator(".alert-error li")).to_have_text(
         "Current version of data in database has changed since user initiated update process.")
 
 
@@ -165,7 +166,7 @@ def test_master_data_departments_and_items(app):
     wh.fill("#P201_DEPT_CODE", "ops")
     wh.fill("#P201_DEPT_NAME", "Duplicate")
     submit(wh, "CREATE")
-    expect(wh.locator(".alert-error")).to_have_text("ORA-00001: unique constraint (APX_DEMO_DEPARTMENTS_U1) violated")
+    expect(wh.locator(".alert-error li")).to_have_text("ORA-00001: unique constraint (APX_DEMO_DEPARTMENTS_U1) violated")
     wh.fill("#P201_DEPT_CODE", "qa")
     wh.fill("#P201_DEPT_NAME", "Quality")
     submit(wh, "CREATE")

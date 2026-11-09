@@ -39,7 +39,6 @@ export function ApexForm({ binding, fields, values, checksum, buttons, cancelHre
   const [state, formAction, pending] = useActionState<FormState, FormData>(action, { error: null, fieldErrors: [], values: null, version: 0 });
   const current = (c: string) => state.values?.[c] ?? values[c] ?? '';
   const errorsFor = (item: string) => state.fieldErrors.filter((e) => e.field === item);
-  const pageErrors = state.fieldErrors.filter((e) => !e.field);
   const left = buttons.filter((b) => b.position === 'left');
   const right = buttons.filter((b) => b.position === 'right');
   const renderButton = (b: ButtonView) => (
@@ -51,14 +50,18 @@ export function ApexForm({ binding, fields, values, checksum, buttons, cancelHre
     </button>
   );
   return (
-    <form action={formAction} key={state.version} noValidate>
+    <form action={formAction} key={state.version} data-version={state.version} noValidate>
       <div className="dialog-body">
-        {(state.error || pageErrors.length > 0 || state.fieldErrors.length > 0) && (
-          <div className="alert alert-error" role="alert">
-            {state.error ?? (state.fieldErrors.length === 1 ? '1 error has occurred' : `${state.fieldErrors.length} errors have occurred`)}
-            {pageErrors.map((e, i) => <div key={i}>{e.message}</div>)}
-          </div>
-        )}
+        {(state.error || state.fieldErrors.length > 0) && (() => {
+          // APEX error notification: "n error(s) have occurred", then every message (inline ones repeated below).
+          const messages = [...(state.error ? [state.error] : []), ...state.fieldErrors.map((e) => e.message)];
+          return (
+            <div className="alert alert-error" role="alert">
+              <div className="alert-title">{messages.length === 1 ? '1 error has occurred' : `${messages.length} errors have occurred`}</div>
+              <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>{messages.map((m, i) => <li key={i}>{m}</li>)}</ul>
+            </div>
+          );
+        })()}
         {checksum && <input type="hidden" name="checksum" value={checksum} />}
         {fields.map((f) => {
           const errs = errorsFor(f.item);

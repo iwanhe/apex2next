@@ -1,5 +1,8 @@
 import { FormDialog } from '../../../../components/FormDialog';
 import { first, qs, safeReturn, type SearchParams } from '../../../../lib/routes';
+import { pageTitle } from '../../../../lib/spec';
+
+export const metadata = { title: pageTitle(311) };
 
 /** Page 311 (modal), create mode; P311_REQUEST_ID may come from page 302 (CREATE_REQUEST_LINES). */
 export default async function Page({ searchParams }: { searchParams: Promise<SearchParams> }) {

@@ -19,6 +19,9 @@ export interface FormItem {
   readonly queryOnly: boolean;
   readonly lov: string | null;
   readonly defaultValue: string | null;
+  /** Number field attributes min_value / max_value (plug-in attributes in the export). */
+  readonly minValue: string | null;
+  readonly maxValue: string | null;
 }
 
 export interface FormDef {
@@ -33,6 +36,7 @@ export interface FormDef {
 type SpecItem = {
   prompt?: string; displayAs?: string; source?: string; sourceType?: string; sourceDataType?: string;
   isRequired?: boolean; isPrimaryKey?: boolean; isQueryOnly?: boolean; namedLov?: string; itemDefault?: string;
+  attributes?: Record<string, string>;
 };
 
 export function formDef(page: number, region: string): FormDef {
@@ -46,6 +50,7 @@ export function formDef(page: number, region: string): FormDef {
       dataType: (i.sourceDataType ?? 'VARCHAR2') as FormItem['dataType'], required: i.isRequired === true,
       primaryKey: i.isPrimaryKey === true, queryOnly: i.isQueryOnly === true, lov: i.namedLov ?? null,
       defaultValue: i.itemDefault ?? null,
+      minValue: i.attributes?.min_value ?? null, maxValue: i.attributes?.max_value ?? null,
     }));
   const pk = items.find((i) => i.primaryKey);
   if (!pk) throw new Error(`form ${page}:${region} has no primary key item`);
@@ -93,6 +98,19 @@ function validDate(v: string): boolean {
   return d.getUTCFullYear() === Number(m[1]) && d.getUTCMonth() === Number(m[2]) - 1 && d.getUTCDate() === Number(m[3]);
 }
 
+function inRange(value: string, item: FormItem): boolean {
+  const n = Number(value);
+  return (item.minValue === null || n >= Number(item.minValue)) && (item.maxValue === null || n <= Number(item.maxValue));
+}
+
+/** APEX number field messages (APEX.NUMBER_FIELD.*): the range message replaces "must be Numeric" when a bound exists. */
+function numberMessage(item: FormItem): string {
+  if (item.minValue !== null && item.maxValue !== null) return `${item.label} must be a number between ${item.minValue} and ${item.maxValue}.`;
+  if (item.minValue !== null) return `${item.label} must be a number greater than or equal to ${item.minValue}.`;
+  if (item.maxValue !== null) return `${item.label} must be a number less than or equal to ${item.maxValue}.`;
+  return `${item.label} must be Numeric.`;
+}
+
 /**
  * Normalizes submitted values ('' -> null, trimmed numbers) and runs the APEX built-in item validations:
  * value required and number/date format, with the APEX runtime messages (application language en).
@@ -116,8 +134,8 @@ export function validateItems(form: FormDef, input: Record<string, unknown>, ski
     const value = text === null || text.trim() === '' ? null : text.trim();
     if (value === null) {
       if (item.required) problems.push({ field: item.item, message: `${item.label} must have some value.` });
-    } else if (item.dataType === 'NUMBER' && !NUMBER.test(value)) {
-      problems.push({ field: item.item, message: `${item.label} must be Numeric.` });
+    } else if (item.dataType === 'NUMBER' && (!NUMBER.test(value) || !inRange(value, item))) {
+      problems.push({ field: item.item, message: numberMessage(item) });
     } else if (item.dataType === 'DATE' && !validDate(value)) {
       problems.push({ field: item.item, message: `${item.label} does not match format ${UI_SPEC.application.dateFormat}.` });
     }
@@ -126,9 +144,39 @@ export function validateItems(form: FormDef, input: Record<string, unknown>, ski
   return { values, problems };
 }
 
-/** Dialog/page response for one form submit: the row as reloaded and the APEX success message, if any. */
+/**
+ * APEX runtime success messages of NATIVE_FORM_DML (language en; assumption A-02, confirmed on oracleapex.com
+ * in WP9.6). "Row updated." appears only when the submit changed a value.
+ */
+export const DML_MESSAGES = { 'DML:CREATED': 'Row created.', 'DML:UPDATED': 'Row updated.', 'DML:DELETED': 'Row deleted.' } as const;
+
+/** Page response for one submit: message keys (DML:* or page:PROCESS, in APEX order) and their joined text. */
 export interface SubmitResult {
   readonly id: string;
   readonly message: string | null;
+  readonly messageKeys: string[];
   readonly ignored?: string[];
+}
+
+/** Builds a SubmitResult; process keys resolve to the export's process success message. */
+export function result(id: string, keys: (string | null | false)[]): SubmitResult {
+  const messageKeys = keys.filter((k): k is string => !!k);
+  const texts = messageKeys.map((k) => {
+    if (k in DML_MESSAGES) return DML_MESSAGES[k as keyof typeof DML_MESSAGES];
+    const [page, proc] = k.split(':');
+    const pages = UI_SPEC.pages as unknown as Record<string, { process?: Record<string, { processSuccessMessage?: string }> }>;
+    return pages[page]?.process?.[proc]?.processSuccessMessage ?? null;
+  }).filter((t): t is string => !!t);
+  return { id, message: texts.length ? texts.join(' ') : null, messageKeys };
+}
+
+/** True when a submitted value differs from the loaded row (numbers compared numerically). */
+export function changed(form: FormDef, row: Record<string, string | null>, values: Record<string, string | null>): boolean {
+  return form.items.some((i) => {
+    if (!(i.column in values)) return false;
+    const a = row[i.column] ?? null;
+    const b = values[i.column] ?? null;
+    if (a === null || b === null) return a !== b;
+    return i.dataType === 'NUMBER' ? Number(a) !== Number(b) : a !== b;
+  });
 }

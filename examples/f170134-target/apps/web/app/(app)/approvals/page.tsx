@@ -1,5 +1,8 @@
 import { IrPage } from '../../../components/IrPage';
 import type { SearchParams } from '../../../lib/routes';
+import { pageTitle } from '../../../lib/spec';
+
+export const metadata = { title: pageTitle(190) };
 
 /** Page 190 Approval Inbox (IR on apx_demo_approvals_v; detail link -> 191). */
 export default async function Page({ searchParams }: { searchParams: Promise<SearchParams> }) {

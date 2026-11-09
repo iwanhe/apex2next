@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { APP } from '../lib/spec';
+import { APP, APP_TITLE } from '../lib/spec';
 import './globals.css';
 
-export const metadata: Metadata = { title: APP.name };
+export const metadata: Metadata = { title: APP_TITLE ?? undefined };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

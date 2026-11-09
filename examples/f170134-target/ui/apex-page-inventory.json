@@ -3,6 +3,7 @@
   "application": {
     "name": "Demo Permintaan Barang",
     "alias": "DEMO",
+    "logoText": "DEMO",
     "dateFormat": "DD-MON-YYYY",
     "timestampFormat": "DS",
     "version": "Release 1.0",
@@ -757,7 +758,13 @@
             "display_as": "NATIVE_DISPLAY_ONLY",
             "source": "AMOUNT",
             "source_data_type": "NUMBER",
-            "item_sequence": 50
+            "item_sequence": 50,
+            "attributes": {
+              "based_on": "VALUE",
+              "format": "PLAIN",
+              "send_on_page_submit": "N",
+              "show_line_breaks": "Y"
+            }
           }
         },
         {
@@ -770,7 +777,10 @@
             "is_primary_key": true,
             "protection_level": "S",
             "source_data_type": "NUMBER",
-            "item_sequence": 5
+            "item_sequence": 5,
+            "attributes": {
+              "value_protected": "Y"
+            }
           }
         },
         {
@@ -782,7 +792,13 @@
             "display_as": "NATIVE_DISPLAY_ONLY",
             "source": "APPROVAL_LEVEL",
             "source_data_type": "NUMBER",
-            "item_sequence": 30
+            "item_sequence": 30,
+            "attributes": {
+              "based_on": "VALUE",
+              "format": "PLAIN",
+              "send_on_page_submit": "N",
+              "show_line_breaks": "Y"
+            }
           }
         },
         {
@@ -794,7 +810,13 @@
             "display_as": "NATIVE_DISPLAY_ONLY",
             "source": "APPROVER_ROLE",
             "source_data_type": "VARCHAR2",
-            "item_sequence": 40
+            "item_sequence": 40,
+            "attributes": {
+              "based_on": "VALUE",
+              "format": "PLAIN",
+              "send_on_page_submit": "N",
+              "show_line_breaks": "Y"
+            }
           }
         },
         {
@@ -806,7 +828,13 @@
             "display_as": "NATIVE_DISPLAY_ONLY",
             "source": "CAN_ACT_YN",
             "source_data_type": "VARCHAR2",
-            "item_sequence": 80
+            "item_sequence": 80,
+            "attributes": {
+              "based_on": "VALUE",
+              "format": "PLAIN",
+              "send_on_page_submit": "N",
+              "show_line_breaks": "Y"
+            }
           }
         },
         {
@@ -818,7 +846,13 @@
             "display_as": "NATIVE_DISPLAY_ONLY",
             "source": "DOC_NAME",
             "source_data_type": "VARCHAR2",
-            "item_sequence": 10
+            "item_sequence": 10,
+            "attributes": {
+              "based_on": "VALUE",
+              "format": "PLAIN",
+              "send_on_page_submit": "N",
+              "show_line_breaks": "Y"
+            }
           }
         },
         {
@@ -830,7 +864,13 @@
             "display_as": "NATIVE_DISPLAY_ONLY",
             "source": "DOC_NO",
             "source_data_type": "VARCHAR2",
-            "item_sequence": 20
+            "item_sequence": 20,
+            "attributes": {
+              "based_on": "VALUE",
+              "format": "PLAIN",
+              "send_on_page_submit": "N",
+              "show_line_breaks": "Y"
+            }
           }
         },
         {
@@ -841,7 +881,13 @@
             "prompt": "Catatan (wajib bila Reject)",
             "display_as": "NATIVE_TEXTAREA",
             "source_type": "ALWAYS_NULL",
-            "item_sequence": 200
+            "item_sequence": 200,
+            "attributes": {
+              "auto_height": "N",
+              "character_counter": "N",
+              "resizable": "Y",
+              "trim_spaces": "BOTH"
+            }
           }
         },
         {
@@ -853,7 +899,13 @@
             "display_as": "NATIVE_DISPLAY_ONLY",
             "source": "REQUESTED_BY",
             "source_data_type": "VARCHAR2",
-            "item_sequence": 60
+            "item_sequence": 60,
+            "attributes": {
+              "based_on": "VALUE",
+              "format": "PLAIN",
+              "send_on_page_submit": "N",
+              "show_line_breaks": "Y"
+            }
           }
         },
         {
@@ -865,7 +917,13 @@
             "display_as": "NATIVE_DISPLAY_ONLY",
             "source": "STATUS",
             "source_data_type": "VARCHAR2",
-            "item_sequence": 70
+            "item_sequence": 70,
+            "attributes": {
+              "based_on": "VALUE",
+              "format": "PLAIN",
+              "send_on_page_submit": "N",
+              "show_line_breaks": "Y"
+            }
           }
         },
         {
@@ -1179,7 +1237,10 @@
             "item_default": "Y",
             "source_data_type": "VARCHAR2",
             "lov_display_extra": "YES",
-            "item_sequence": 35
+            "item_sequence": 35,
+            "attributes": {
+              "page_action_on_selection": "NONE"
+            }
           }
         },
         {
@@ -1192,7 +1253,10 @@
             "is_primary_key": true,
             "protection_level": "S",
             "source_data_type": "NUMBER",
-            "item_sequence": 5
+            "item_sequence": 5,
+            "attributes": {
+              "value_protected": "Y"
+            }
           }
         },
         {
@@ -1205,7 +1269,13 @@
             "source": "DEPT_CODE",
             "is_required": true,
             "source_data_type": "VARCHAR2",
-            "item_sequence": 15
+            "item_sequence": 15,
+            "attributes": {
+              "disabled": "N",
+              "submit_when_enter_pressed": "N",
+              "subtype": "TEXT",
+              "trim_spaces": "BOTH"
+            }
           }
         },
         {
@@ -1218,7 +1288,13 @@
             "source": "DEPT_NAME",
             "is_required": true,
             "source_data_type": "VARCHAR2",
-            "item_sequence": 25
+            "item_sequence": 25,
+            "attributes": {
+              "disabled": "N",
+              "submit_when_enter_pressed": "N",
+              "subtype": "TEXT",
+              "trim_spaces": "BOTH"
+            }
           }
         },
         {
@@ -1372,7 +1448,11 @@
             "prompt": "Cari",
             "display_as": "NATIVE_SEARCH",
             "source_type": "FACET_COLUMN",
-            "item_sequence": 10
+            "item_sequence": 10,
+            "attributes": {
+              "input_field": "FACET",
+              "search_type": "ROW"
+            }
           }
         },
         {
@@ -1507,7 +1587,10 @@
             "item_default": "Y",
             "source_data_type": "VARCHAR2",
             "lov_display_extra": "YES",
-            "item_sequence": 65
+            "item_sequence": 65,
+            "attributes": {
+              "page_action_on_selection": "NONE"
+            }
           }
         },
         {
@@ -1524,7 +1607,10 @@
             "lov_null_text": "- Pilih -",
             "source_data_type": "VARCHAR2",
             "lov_display_extra": "YES",
-            "item_sequence": 35
+            "item_sequence": 35,
+            "attributes": {
+              "page_action_on_selection": "NONE"
+            }
           }
         },
         {
@@ -1537,7 +1623,13 @@
             "source": "ITEM_CODE",
             "is_required": true,
             "source_data_type": "VARCHAR2",
-            "item_sequence": 15
+            "item_sequence": 15,
+            "attributes": {
+              "disabled": "N",
+              "submit_when_enter_pressed": "N",
+              "subtype": "TEXT",
+              "trim_spaces": "BOTH"
+            }
           }
         },
         {
@@ -1550,7 +1642,10 @@
             "is_primary_key": true,
             "protection_level": "S",
             "source_data_type": "NUMBER",
-            "item_sequence": 5
+            "item_sequence": 5,
+            "attributes": {
+              "value_protected": "Y"
+            }
           }
         },
         {
@@ -1563,7 +1658,13 @@
             "source": "ITEM_NAME",
             "is_required": true,
             "source_data_type": "VARCHAR2",
-            "item_sequence": 25
+            "item_sequence": 25,
+            "attributes": {
+              "disabled": "N",
+              "submit_when_enter_pressed": "N",
+              "subtype": "TEXT",
+              "trim_spaces": "BOTH"
+            }
           }
         },
         {
@@ -1577,7 +1678,12 @@
             "is_required": true,
             "item_default": "0",
             "source_data_type": "NUMBER",
-            "item_sequence": 55
+            "item_sequence": 55,
+            "attributes": {
+              "min_value": "0",
+              "number_alignment": "right",
+              "virtual_keyboard": "decimal"
+            }
           }
         },
         {
@@ -1590,7 +1696,13 @@
             "source": "UOM",
             "is_required": true,
             "source_data_type": "VARCHAR2",
-            "item_sequence": 45
+            "item_sequence": 45,
+            "attributes": {
+              "disabled": "N",
+              "submit_when_enter_pressed": "N",
+              "subtype": "TEXT",
+              "trim_spaces": "BOTH"
+            }
           }
         },
         {
@@ -1708,7 +1820,11 @@
             "prompt": "Cari",
             "display_as": "NATIVE_SEARCH",
             "source_type": "FACET_COLUMN",
-            "item_sequence": 10
+            "item_sequence": 10,
+            "attributes": {
+              "input_field": "FACET",
+              "search_type": "ROW"
+            }
           }
         },
         {
@@ -1964,7 +2080,10 @@
             "read_only_when_type": "EXPRESSION",
             "source_data_type": "NUMBER",
             "lov_display_extra": "YES",
-            "item_sequence": 25
+            "item_sequence": 25,
+            "attributes": {
+              "page_action_on_selection": "NONE"
+            }
           }
         },
         {
@@ -1978,7 +2097,15 @@
             "read_only_when": "not (nvl(:P301_STATUS,'DRAFT') in ('DRAFT','REJECTED'))",
             "read_only_when_type": "EXPRESSION",
             "source_data_type": "DATE",
-            "item_sequence": 45
+            "item_sequence": 45,
+            "attributes": {
+              "display_as": "POPUP",
+              "max_date": "NONE",
+              "min_date": "NONE",
+              "multiple_months": "N",
+              "show_time": "N",
+              "use_defaults": "Y"
+            }
           }
         },
         {
@@ -1990,7 +2117,13 @@
             "display_as": "NATIVE_TEXTAREA",
             "source": "NOTES",
             "source_data_type": "VARCHAR2",
-            "item_sequence": 65
+            "item_sequence": 65,
+            "attributes": {
+              "auto_height": "N",
+              "character_counter": "N",
+              "resizable": "Y",
+              "trim_spaces": "BOTH"
+            }
           }
         },
         {
@@ -2005,7 +2138,13 @@
             "read_only_when": "not (nvl(:P301_STATUS,'DRAFT') in ('DRAFT','REJECTED'))",
             "read_only_when_type": "EXPRESSION",
             "source_data_type": "VARCHAR2",
-            "item_sequence": 55
+            "item_sequence": 55,
+            "attributes": {
+              "disabled": "N",
+              "submit_when_enter_pressed": "N",
+              "subtype": "TEXT",
+              "trim_spaces": "BOTH"
+            }
           }
         },
         {
@@ -2019,7 +2158,15 @@
             "is_required": true,
             "item_default": "select trunc(sysdate) from dual",
             "source_data_type": "DATE",
-            "item_sequence": 35
+            "item_sequence": 35,
+            "attributes": {
+              "display_as": "POPUP",
+              "max_date": "NONE",
+              "min_date": "NONE",
+              "multiple_months": "N",
+              "show_time": "N",
+              "use_defaults": "Y"
+            }
           }
         },
         {
@@ -2032,7 +2179,10 @@
             "is_primary_key": true,
             "protection_level": "S",
             "source_data_type": "NUMBER",
-            "item_sequence": 5
+            "item_sequence": 5,
+            "attributes": {
+              "value_protected": "Y"
+            }
           }
         },
         {
@@ -2045,7 +2195,13 @@
             "source": "REQUEST_NO",
             "is_query_only": true,
             "source_data_type": "VARCHAR2",
-            "item_sequence": 10
+            "item_sequence": 10,
+            "attributes": {
+              "based_on": "VALUE",
+              "format": "PLAIN",
+              "send_on_page_submit": "N",
+              "show_line_breaks": "Y"
+            }
           }
         },
         {
@@ -2065,7 +2221,10 @@
             "inline_help_text": "Status operasional setelah approved. Approval lewat Submit for Approval.",
             "source_data_type": "VARCHAR2",
             "lov_display_extra": "YES",
-            "item_sequence": 15
+            "item_sequence": 15,
+            "attributes": {
+              "page_action_on_selection": "NONE"
+            }
           }
         },
         {
@@ -2246,7 +2405,10 @@
           "props": {
             "display_as": "NATIVE_HIDDEN",
             "source_type": "ALWAYS_NULL",
-            "item_sequence": 5
+            "item_sequence": 5,
+            "attributes": {
+              "value_protected": "Y"
+            }
           }
         },
         {
@@ -2754,7 +2916,10 @@
             "lov_null_text": "- Pilih -",
             "source_data_type": "NUMBER",
             "lov_display_extra": "YES",
-            "item_sequence": 25
+            "item_sequence": 25,
+            "attributes": {
+              "page_action_on_selection": "NONE"
+            }
           }
         },
         {
@@ -2767,7 +2932,13 @@
             "source": "LINE_AMOUNT",
             "is_query_only": true,
             "source_data_type": "NUMBER",
-            "item_sequence": 55
+            "item_sequence": 55,
+            "attributes": {
+              "based_on": "VALUE",
+              "format": "PLAIN",
+              "send_on_page_submit": "N",
+              "show_line_breaks": "Y"
+            }
           }
         },
         {
@@ -2780,7 +2951,10 @@
             "is_primary_key": true,
             "protection_level": "S",
             "source_data_type": "NUMBER",
-            "item_sequence": 5
+            "item_sequence": 5,
+            "attributes": {
+              "value_protected": "Y"
+            }
           }
         },
         {
@@ -2793,7 +2967,12 @@
             "source": "QTY",
             "is_required": true,
             "source_data_type": "NUMBER",
-            "item_sequence": 35
+            "item_sequence": 35,
+            "attributes": {
+              "min_value": "0",
+              "number_alignment": "right",
+              "virtual_keyboard": "decimal"
+            }
           }
         },
         {
@@ -2810,7 +2989,10 @@
             "lov_null_text": "- Pilih -",
             "source_data_type": "NUMBER",
             "lov_display_extra": "YES",
-            "item_sequence": 15
+            "item_sequence": 15,
+            "attributes": {
+              "page_action_on_selection": "NONE"
+            }
           }
         },
         {
@@ -2824,7 +3006,12 @@
             "is_required": true,
             "item_default": "0",
             "source_data_type": "NUMBER",
-            "item_sequence": 45
+            "item_sequence": 45,
+            "attributes": {
+              "min_value": "0",
+              "number_alignment": "right",
+              "virtual_keyboard": "decimal"
+            }
           }
         },
         {
@@ -3248,7 +3435,10 @@
             "lov_null_text": "- Pilih -",
             "source_data_type": "VARCHAR2",
             "lov_display_extra": "YES",
-            "item_sequence": 20
+            "item_sequence": 20,
+            "attributes": {
+              "page_action_on_selection": "NONE"
+            }
           }
         },
         {
@@ -3262,7 +3452,13 @@
             "is_required": true,
             "item_default": "select :APP_USER from dual",
             "source_data_type": "VARCHAR2",
-            "item_sequence": 10
+            "item_sequence": 10,
+            "attributes": {
+              "disabled": "N",
+              "submit_when_enter_pressed": "N",
+              "subtype": "TEXT",
+              "trim_spaces": "BOTH"
+            }
           }
         },
         {
@@ -3275,7 +3471,10 @@
             "is_primary_key": true,
             "protection_level": "S",
             "source_data_type": "NUMBER",
-            "item_sequence": 5
+            "item_sequence": 5,
+            "attributes": {
+              "value_protected": "Y"
+            }
           }
         },
         {
@@ -3531,7 +3730,10 @@
             "lov_null_text": "- Tanpa approval -",
             "source_data_type": "VARCHAR2",
             "lov_display_extra": "YES",
-            "item_sequence": 30
+            "item_sequence": 30,
+            "attributes": {
+              "page_action_on_selection": "NONE"
+            }
           }
         },
         {
@@ -3547,7 +3749,10 @@
             "lov_null_text": "- Tidak ada -",
             "source_data_type": "VARCHAR2",
             "lov_display_extra": "YES",
-            "item_sequence": 40
+            "item_sequence": 40,
+            "attributes": {
+              "page_action_on_selection": "NONE"
+            }
           }
         },
         {
@@ -3560,7 +3765,13 @@
             "source": "DOC_NAME",
             "is_required": true,
             "source_data_type": "VARCHAR2",
-            "item_sequence": 10
+            "item_sequence": 10,
+            "attributes": {
+              "disabled": "N",
+              "submit_when_enter_pressed": "N",
+              "subtype": "TEXT",
+              "trim_spaces": "BOTH"
+            }
           }
         },
         {
@@ -3573,7 +3784,10 @@
             "is_primary_key": true,
             "protection_level": "S",
             "source_data_type": "VARCHAR2",
-            "item_sequence": 5
+            "item_sequence": 5,
+            "attributes": {
+              "value_protected": "Y"
+            }
           }
         },
         {
@@ -3586,7 +3800,12 @@
             "source": "LEVEL2_LIMIT",
             "is_required": true,
             "source_data_type": "NUMBER",
-            "item_sequence": 50
+            "item_sequence": 50,
+            "attributes": {
+              "min_value": "0",
+              "number_alignment": "right",
+              "virtual_keyboard": "decimal"
+            }
           }
         },
         {
@@ -3599,7 +3818,13 @@
             "source": "PREFIX",
             "is_required": true,
             "source_data_type": "VARCHAR2",
-            "item_sequence": 20
+            "item_sequence": 20,
+            "attributes": {
+              "disabled": "N",
+              "submit_when_enter_pressed": "N",
+              "subtype": "TEXT",
+              "trim_spaces": "BOTH"
+            }
           }
         },
         {
@@ -3685,7 +3910,10 @@
             "prompt": "Password",
             "display_as": "NATIVE_PASSWORD",
             "source_type": "ALWAYS_NULL",
-            "item_sequence": 20
+            "item_sequence": 20,
+            "attributes": {
+              "submit_when_enter_pressed": "Y"
+            }
           }
         },
         {
@@ -3699,7 +3927,10 @@
             "display_when": "apex_authentication.persistent_cookies_enabled",
             "display_when_type": "EXPRESSION",
             "item_sequence": 30,
-            "display_when2": "PLSQL"
+            "display_when2": "PLSQL",
+            "attributes": {
+              "use_defaults": "Y"
+            }
           }
         },
         {
@@ -3710,7 +3941,13 @@
             "prompt": "Username",
             "display_as": "NATIVE_TEXT_FIELD",
             "source_type": "ALWAYS_NULL",
-            "item_sequence": 10
+            "item_sequence": 10,
+            "attributes": {
+              "disabled": "N",
+              "submit_when_enter_pressed": "N",
+              "subtype": "TEXT",
+              "trim_spaces": "BOTH"
+            }
           }
         },
         {
@@ -3767,5 +4004,5 @@
     "pages": 19,
     "components": 269
   },
-  "sha256": "5e097a35de287a78cb6cd66bea575687a8966fde7ad625fe79c2068bf032e3ca"
+  "sha256": "59c75b198e52c9a355dc8f9b1107f68bb847c27fb11ab8b81b70d899bf8e4328"
 }

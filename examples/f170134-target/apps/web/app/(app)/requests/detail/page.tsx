@@ -7,6 +7,9 @@ import { formatValue } from '../../../../lib/format';
 import { apiErrorOnly } from '../../../../lib/guard';
 import { first, qs, type SearchParams } from '../../../../lib/routes';
 import { page } from '../../../../lib/spec';
+import { pageTitle } from '../../../../lib/spec';
+
+export const metadata = { title: pageTitle(302) };
 
 interface Detail {
   list: ReportResult;

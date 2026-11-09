@@ -31,7 +31,7 @@ export async function IrPage(props: {
           download={ir?.downloadFormats ? `/download/${props.region}${qs({ q: params.q, sort: params.sort, dir: params.dir }) || '?'}` : undefined}>
           {props.createHref && create && <Link className="btn btn-hot" href={props.createHref}>{create.buttonImageAlt}</Link>}
         </SearchBar>
-        <ReportTable result={result} basePath={props.basePath} params={params} sortable
+        <ReportTable kind="IR" result={result} basePath={props.basePath} params={params} sortable
           noData={ir?.noDataFoundMessage ?? 'No data found.'} detailLink={props.detailLink} testId={`report-${props.region}`} />
       </section>
     </>

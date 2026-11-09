@@ -109,7 +109,8 @@ def build_page_inventory(files: dict[str, str]) -> dict[str, Any]:
                 lit[k] = m.group(1).replace("''", "'")
         ref = {k: _ID.search(v).group(1) for k, v in props.items() if _ID.search(v)}
         inventory["application"] = {
-            "name": lit.get("p_name"), "alias": lit.get("p_alias"), "dateFormat": lit.get("p_date_format"),
+            "name": lit.get("p_name"), "alias": lit.get("p_alias"), "logoText": lit.get("p_logo_text"),
+            "dateFormat": lit.get("p_date_format"),
             "timestampFormat": lit.get("p_timestamp_format"), "version": lit.get("p_flow_version"),
             "language": lit.get("p_flow_language"),
             "securityScheme": schemes.get(ref.get("p_security_scheme")),
@@ -217,6 +218,9 @@ def build_page_inventory(files: dict[str, str]) -> dict[str, Any]:
                     {"action": a["arguments"].get("p_action"), "result": a["arguments"].get("p_event_result"),
                      "region": regions.get(_ref(a, "p_affected_region_id")) if _ref(a, "p_affected_region_id") else None}
                     for a in calls if a["routine"] == "create_page_da_action" and _ref(a, "p_event_id") == event_id]
+            if kind == "ITEM" and "wwv_flow_t_plugin_attributes" in (c["raw_arguments"].get("p_attributes") or ""):
+                values = [m.replace("''", "'") for m in _STRING.findall(c["raw_arguments"]["p_attributes"])]
+                props["attributes"] = dict(zip(values[0::2], values[1::2]))
             if kind == "PROCESS" and _ref(c, "p_process_when_button_id"):
                 props["when_button"] = buttons.get(_ref(c, "p_process_when_button_id"))
             if kind == "VALIDATION" and _ref(c, "p_associated_item"):

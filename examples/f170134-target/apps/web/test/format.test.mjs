@@ -21,8 +21,9 @@ test('TO_CHAR masks used by the application', () => {
   assert.equal(formatValue('x', 'STRING'), 'x');
 });
 
-test('IR pagination label', () => {
-  assert.equal(rowRange(1, 15, 15, 40), '1 - 15 of 40');
-  assert.equal(rowRange(3, 15, 10, 40), '31 - 40 of 40');
+test('pagination labels (observed on oracleapex.com)', () => {
+  assert.equal(rowRange(1, 15, 2, 2), 'row(s) 1 - 2 of 2');
+  assert.equal(rowRange(3, 15, 10, 40), 'row(s) 31 - 40 of 40');
+  assert.equal(rowRange(1, 50, 1, 1, 'IR'), '1 - 1');
   assert.equal(rowRange(1, 15, 0, 0), '');
 });
