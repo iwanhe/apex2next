@@ -425,6 +425,26 @@
             "null"
           ]
         },
+        "referenceContext": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourcePropertyPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expectedTargetTypes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "contextRuleId": {
+          "type": "string",
+          "minLength": 1
+        },
         "sourceLocator": {
           "$ref": "#/$defs/locator"
         },
