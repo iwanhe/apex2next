@@ -18,7 +18,7 @@ The PostgreSQL + NestJS + Next.js target for the WP9 pilot. It is **not** produc
 | `db/seed/dev-seed.sql` | Development/test seed (roles, REQ document type, test users). Not production data |
 | `e2e/` | Playwright end-to-end journeys (Python) |
 | `migration/oracle/extract_snapshot_apex_workshop.sql` | WP9.6 read-only Oracle snapshot query (SQL Workshop) |
-| `parity/` | WP9.6 parity journey J-01 (`journey.py`) and the texts observed on APEX |
+| `parity/` | WP9.6 parity journeys J-01, J-02, J-03 (`journey.py`) and the texts observed on APEX |
 
 Generated files are pinned by tests to the plan. Change rules, overrides or mappings and regenerate; never edit them by hand:
 

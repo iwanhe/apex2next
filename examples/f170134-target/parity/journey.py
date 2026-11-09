@@ -1,4 +1,4 @@
-"""WP9.6 parity journeys (J-01, J-02), executed on the target exactly as they were executed on APEX (oracleapex.com).
+"""WP9.6 parity journeys (J-01, J-02, J-03), executed on the target exactly as they were executed on APEX (oracleapex.com).
 
 Usage (disposable database; schema "app" is dropped):
   DATABASE_URL=... python parity/journey.py --s0 snapshot-s0.csv --s1 snapshot-s1.csv \
@@ -219,7 +219,59 @@ def run_j02(browser, base: str, rec: Recorder) -> None:
     rec.note("J2B doc type unchanged", admin)
 
 
-JOURNEYS = {"J-01": run_j01, "J-02": run_j02}
+def open_approval(page: Page, base: str, request_no: str, role: str):
+    go(page, base, "/approvals")
+    row = page.get_by_test_id("report-approvalInbox").locator("tbody tr", has_text=request_no).filter(has_text=role).first
+    row.get_by_role("link", name="Edit").click()
+    page.locator("form[data-version]").first.wait_for()
+    page.wait_for_load_state("networkidle")
+
+
+def run_j03(browser, base: str, rec: Recorder) -> None:
+    """J-03 two-level approval: amount above LEVEL2_LIMIT, MANAGER then DIRECTOR; MANAGER cannot act on level 2."""
+    req = login(browser, base, "demo_req")
+    go(req, base, "/requests/new")
+    req.select_option("#P301_DEPARTMENT_ID", label="IT - Information Technology")
+    req.fill("#P301_NEED_DATE", NEED)
+    req.fill("#P301_PURPOSE", "WP96 parity C")
+    submit(req, "CREATE")
+    rec.note("J3A create", req)
+    go(req, base, "/requests/detail")
+    req.get_by_test_id("master-list").get_by_role("link", name="REQ-2026-0005").click()
+    req.wait_for_load_state("networkidle")
+    req.get_by_role("link", name="Tambah").click()
+    req.wait_for_load_state("networkidle")
+    req.select_option("#P311_ITEM_ID", label="IT-001 - Laptop 14 inch (UNIT)")
+    req.fill("#P311_QTY", "1")
+    req.fill("#P311_UNIT_PRICE", "12500000")
+    submit(req, "CREATE")
+    rec.note("J3A line", req)
+    req.get_by_role("link", name="Edit", exact=True).click()
+    req.wait_for_load_state("networkidle")
+    submit(req, "SUBMIT", confirm=True)
+    rec.note("J3A submit", req)
+
+    mgr = login(browser, base, "demo_mgr")
+    open_approval(mgr, base, "REQ-2026-0005", "MANAGER")
+    mgr.fill("#P191_NOTE", "WP96 L1 ok")
+    submit(mgr, "APPROVE")
+    rec.note("J3B approve level 1", mgr)
+    open_approval(mgr, base, "REQ-2026-0005", "DIRECTOR")
+    buttons = mgr.locator("button[name=request]").all_inner_texts()
+    rec.steps.append({"step": "J3B level 2 as manager", "messages": [f"buttons={','.join(b.strip() for b in buttons) or '-'}"],
+                      "url": mgr.url.split("/", 3)[-1]})
+
+    director = login(browser, base, "demo_dir")
+    open_approval(director, base, "REQ-2026-0005", "DIRECTOR")
+    buttons = director.locator("button[name=request]").all_inner_texts()
+    rec.steps.append({"step": "J3C level 2 as director", "messages": [f"buttons={','.join(sorted(b.strip() for b in buttons)) or '-'}"],
+                      "url": director.url.split("/", 3)[-1]})
+    director.fill("#P191_NOTE", "WP96 L2 ok")
+    submit(director, "APPROVE")
+    rec.note("J3C approve level 2", director)
+
+
+JOURNEYS = {"J-01": run_j01, "J-02": run_j02, "J-03": run_j03}
 
 
 def main() -> int:

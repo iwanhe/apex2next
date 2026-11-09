@@ -1,0 +1,217 @@
+{
+  "journey": "J-03",
+  "s0": {
+    "name": "snapshot-s2.csv",
+    "sha256": "eb1a21493a7e09efb69bcc23e4d89508006325d40f6f3cd1e2ae1a38e9c4f674"
+  },
+  "s1": {
+    "name": "snapshot-s3.csv",
+    "sha256": "1cd4d4394ff01a847540035404ccd681a82aa918eeabeb41969d17ea3132d548",
+    "session": {
+      "db_user": "APEX_PUBLIC_USER",
+      "apex_app_user": "IWAN.HERDIAN@KCSI-ID.COM",
+      "pkg_app_user": "IWAN.HERDIAN@KCSI-ID.COM",
+      "sysdate": "2026-11-09T11:10:19",
+      "systimestamp": "2026-11-09T11:10:19.281303+00:00",
+      "dbtimezone": "-05:00",
+      "sessiontimezone": "+00:00",
+      "nls_date_format": "DS",
+      "nls_numeric_chars": ".,",
+      "nls_sort": "BINARY",
+      "nls_language": "AMERICAN",
+      "db_charset": "AL32UTF8"
+    }
+  },
+  "load": {
+    "SNP-001": "PASS",
+    "SNP-002": "PASS",
+    "SNP-003": "PASS",
+    "LOD-001": "PASS",
+    "LOD-002": "PASS",
+    "IDN-001": "PASS",
+    "TBL-001": "PASS",
+    "VIW-001": "PASS"
+  },
+  "state": {
+    "apx_demo_roles": {
+      "source": 5,
+      "target": 5,
+      "differences": {}
+    },
+    "apx_demo_user_roles": {
+      "source": 7,
+      "target": 7,
+      "differences": {}
+    },
+    "apx_demo_doc_types": {
+      "source": 1,
+      "target": 1,
+      "differences": {}
+    },
+    "apx_demo_doc_seq": {
+      "source": 1,
+      "target": 1,
+      "differences": {}
+    },
+    "apx_demo_departments": {
+      "source": 3,
+      "target": 3,
+      "differences": {}
+    },
+    "apx_demo_items": {
+      "source": 5,
+      "target": 5,
+      "differences": {}
+    },
+    "apx_demo_requests": {
+      "source": 4,
+      "target": 4,
+      "differences": {}
+    },
+    "apx_demo_approvals": {
+      "source": 4,
+      "target": 4,
+      "differences": {}
+    },
+    "apx_demo_request_lines": {
+      "source": 7,
+      "target": 7,
+      "differences": {}
+    }
+  },
+  "views": {
+    "principal": "IWAN.HERDIAN@KCSI-ID.COM",
+    "views": {
+      "apx_demo_user_roles_v": {
+        "source": 7,
+        "target": 7,
+        "differences": {}
+      },
+      "apx_demo_departments_v": {
+        "source": 3,
+        "target": 3,
+        "differences": {}
+      },
+      "apx_demo_items_v": {
+        "source": 5,
+        "target": 5,
+        "differences": {}
+      },
+      "apx_demo_requests_v": {
+        "source": 4,
+        "target": 4,
+        "differences": {}
+      },
+      "apx_demo_request_lines_v": {
+        "source": 7,
+        "target": 7,
+        "differences": {}
+      },
+      "apx_demo_request_summary_v": {
+        "source": 4,
+        "target": 4,
+        "differences": {}
+      },
+      "apx_demo_approvals_v": {
+        "source": 4,
+        "target": 4,
+        "differences": {}
+      },
+      "apx_demo_dash_c1_s1_v": {
+        "source": 3,
+        "target": 3,
+        "differences": {}
+      },
+      "apx_demo_dash_c2_s1_v": {
+        "source": 2,
+        "target": 2,
+        "differences": {}
+      },
+      "apx_demo_dash_kpi_v": {
+        "source": 3,
+        "target": 3,
+        "differences": {}
+      }
+    }
+  },
+  "messages": [
+    {
+      "step": "J3A create",
+      "url": "requests?msg=DML%3ACREATED",
+      "target": [
+        "Row created."
+      ],
+      "apex": [
+        "Row created."
+      ],
+      "equal": true
+    },
+    {
+      "step": "J3A line",
+      "url": "requests/detail?id=41&msg=DML%3ACREATED",
+      "target": [
+        "Row created."
+      ],
+      "apex": [
+        "Row created."
+      ],
+      "equal": true
+    },
+    {
+      "step": "J3A submit",
+      "url": "requests/detail?id=41&msg=301%3ACALL_SUBMIT_REQUESTS",
+      "target": [
+        "Dokumen diajukan untuk approval."
+      ],
+      "apex": [
+        "Dokumen diajukan untuk approval."
+      ],
+      "equal": true
+    },
+    {
+      "step": "J3B approve level 1",
+      "url": "approvals?msg=191%3ACALL_APPROVE",
+      "target": [
+        "Dokumen disetujui."
+      ],
+      "apex": [
+        "Dokumen disetujui."
+      ],
+      "equal": true
+    },
+    {
+      "step": "J3B level 2 as manager",
+      "url": "approvals/42?return=%2Fapprovals",
+      "target": [
+        "buttons=-"
+      ],
+      "apex": [
+        "buttons=-"
+      ],
+      "equal": true
+    },
+    {
+      "step": "J3C level 2 as director",
+      "url": "approvals/42?return=%2Fapprovals",
+      "target": [
+        "buttons=Approve,Reject"
+      ],
+      "apex": [
+        "buttons=Approve,Reject"
+      ],
+      "equal": true
+    },
+    {
+      "step": "J3C approve level 2",
+      "url": "approvals?msg=191%3ACALL_APPROVE",
+      "target": [
+        "Dokumen disetujui."
+      ],
+      "apex": [
+        "Dokumen disetujui."
+      ],
+      "equal": true
+    }
+  ],
+  "result": "PASS"
+}

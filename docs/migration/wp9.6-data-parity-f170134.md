@@ -1,14 +1,14 @@
 # WP9.6 — Data Migration & Functional Parity: Demo Permintaan Barang (170134)
 
-**Status:** Two end-to-end parity journeys (J-01 transactions/approval, J-02 master data/administration) have been executed on both the source and the target, and **the two sides are identical**:
+**Status:** Three end-to-end parity journeys (J-01 transactions/approval, J-02 master data/administration, J-03 two-level approval) have been executed on both the source and the target, and **the two sides are identical**:
 
 - **Source:** Oracle APEX 26.2.1 on oracleapex.com, workspace KCSI, schema WKSP_KCSI.
 - **Target:** Next.js + NestJS + PostgreSQL 16.
-- **Data and messages compared:** J-01: 9/9 tables, 10/10 views, 12/12 user-visible messages. J-02: 9/9 tables, 10/10 views, 11/11 messages.
+- **Data and messages compared:** J-01: 9/9 tables, 10/10 views, 12/12 user-visible messages. J-02: 9/9 tables, 10/10 views, 11/11 messages. J-03: 9/9 tables, 10/10 views, 7/7 messages and button states.
 
-The data migration of three read-consistent Oracle snapshots passes every check.
+The data migration of four read-consistent Oracle snapshots passes every check.
 
-This is evidence for two journeys on demo-sized data. It is **not** pilot qualification (WP9.7).
+This is evidence for three journeys on demo-sized data. It is **not** pilot qualification (WP9.7).
 
 ## 1. Method
 
@@ -30,20 +30,21 @@ Snapshots (not committed; owner demo data, hashes recorded):
 | S0 `report_2.csv` | `3b847e22b21c69da6a32882eb3c7ae4bb2c03faf3458234d611bf71fc5727b81` |
 | S1 `report_3.csv` (after J-01, before J-02) | `8ee82921b06e83918b8e459db6fd6f243a4e621c02cca1579f256cf6d6e21352` |
 | S2 `report_4.csv` (after J-02, 2026-11-09 10:47 UTC) | `eb1a21493a7e09efb69bcc23e4d89508006325d40f6f3cd1e2ae1a38e9c4f674` |
+| S3 `report_5.csv` (after J-03, 2026-11-09 11:10 UTC) | `1cd4d4394ff01a847540035404ccd681a82aa918eeabeb41969d17ea3132d548` |
 
 ## 2. Data migration
 
-| Check | S0 | S1 | S2 |
-|---|---|---|---|
-| SNP-001 every DOC matches its Oracle SHA-256 | PASS | PASS | PASS |
-| SNP-002 counts equal the rows received | PASS | PASS | PASS |
-| SNP-003 session facts, all objects, unique keys, valid JSON | PASS | PASS | PASS |
-| LOD-001 empty target / LOD-002 loaded = source (FK order, one transaction) | PASS | PASS | PASS |
-| IDN-001 identity next value ≥ max(key)+1 and ≥ Oracle LAST_NUMBER | PASS | PASS | PASS |
-| TBL-001 every column of every row equal (incl. the generated `line_amount`) | PASS (28 rows) | PASS (33 rows) | PASS (33 rows) |
-| VIW-001 every view row equal under the snapshot APP_USER | PASS (10 views) | PASS (10 views; incl. 2 approval steps and `can_act_yn`) | PASS (10 views) |
+| Check | S0 | S1 | S2 | S3 |
+|---|---|---|---|---|
+| SNP-001 every DOC matches its Oracle SHA-256 | PASS | PASS | PASS | PASS |
+| SNP-002 counts equal the rows received | PASS | PASS | PASS | PASS |
+| SNP-003 session facts, all objects, unique keys, valid JSON | PASS | PASS | PASS | PASS |
+| LOD-001 empty target / LOD-002 loaded = source (FK order, one transaction) | PASS | PASS | PASS | PASS |
+| IDN-001 identity next value ≥ max(key)+1 and ≥ Oracle LAST_NUMBER | PASS | PASS | PASS | PASS |
+| TBL-001 every column of every row equal (incl. the generated `line_amount`) | PASS (28 rows) | PASS (33 rows) | PASS (33 rows) | PASS (37 rows) |
+| VIW-001 every view row equal under the snapshot APP_USER | PASS (10 views) | PASS (10 views; incl. 2 approval steps and `can_act_yn`) | PASS (10 views) | PASS (10 views; incl. the DIRECTOR step) |
 
-Reports: [`snapshot-s0-migration.md`](wp9.6/f170134/snapshot-s0-migration.md), [`snapshot-s1-migration.md`](wp9.6/f170134/snapshot-s1-migration.md) and [`snapshot-s2-migration.md`](wp9.6/f170134/snapshot-s2-migration.md), with JSON versions alongside.
+Reports: [`snapshot-s0-migration.md`](wp9.6/f170134/snapshot-s0-migration.md), [`snapshot-s1-migration.md`](wp9.6/f170134/snapshot-s1-migration.md) and [`snapshot-s2-migration.md`](wp9.6/f170134/snapshot-s2-migration.md) and [`snapshot-s3-migration.md`](wp9.6/f170134/snapshot-s3-migration.md), with JSON versions alongside.
 
 Facts established from the source snapshots:
 - **Clock.** Oracle `sysdate` and `systimestamp` run in UTC (session zone +00:00; DBTIMEZONE -05:00 does not affect DATE). The target clock policy `APP_TIME_ZONE=UTC` therefore matches, which is evidence for the WP9.3 §6 timezone decision.
@@ -85,6 +86,22 @@ Result ([`parity-j02.json`](wp9.6/f170134/parity-j02.json)): **PASS**: 9/9 table
 
 J-02 deletes everything it creates, so the state comparison mainly proves two things: nothing else changed, and the configuration row stayed the same after a save without changes. The messages are the main evidence for J-02. The planned delete of department OPS (expected ORA-02292) was **not** executed on the source: the session's safety check refused it, because it would delete a real record if the foreign key did not hold. That case is covered only on the target (API test).
 
+### Journey J-03 (users DEMO_REQ, DEMO_MGR, DEMO_DIR; S2 → S3)
+
+Two-level approval: the amount (12,500,000) is above `LEVEL2_LIMIT` (10,000,000) of document type REQ.
+
+| Step | Action | APEX = target |
+|---|---|---|
+| C1 | DEMO_REQ creates REQ-2026-0005 (IT, "WP96 parity C") and adds IT-001, qty 1, price 12,500,000 | "Row created." ×2 |
+| C2 | Submits from the header dialog (confirm) | "Dokumen diajukan untuk approval." |
+| C3 | DEMO_MGR approves level 1 ("WP96 L1 ok") | "Dokumen disetujui."; a level-2 DIRECTOR step is created, `REQUESTED_ON` = level-1 `ACTED_ON` |
+| C4 | DEMO_MGR opens the level-2 step | No Approve/Reject button (`can_act_yn = 'N'`); only Close |
+| C5 | DEMO_DIR opens it and approves ("WP96 L2 ok") | Approve and Reject shown / "Dokumen disetujui."; request APPROVED, `UPDATED_BY` DEMO_DIR |
+
+Result ([`parity-j03.json`](wp9.6/f170134/parity-j03.json)): **PASS**: 9/9 tables, 10/10 views and 7/7 messages and button states. The target passed on the first run; no target change was needed.
+
+Observation on APEX: after Submit the "Tambah" button on page 302 stays visible until the page is reloaded. The button condition (status DRAFT/REJECTED) is evaluated at render time, and the dialog-closed action refreshes only the header region. This is the D-UI-05 behaviour already accepted; the target hides the button at once.
+
 ## 4. Changes made in the target from the observations
 
 Before J-01 the target differed from APEX in these points. Each was fixed and is covered by tests.
@@ -107,9 +124,9 @@ This confirms WP9.5 assumption A-02 for the texts seen: "Invalid Login Credentia
 
 ## 6. Not covered yet (WP9.7 input)
 
-- **Other pages and paths on APEX:** IR search, sort and download, facet filtering, lost update between two sessions, negative authorization paths, ORA-02292 on a referenced department, and the two-level approval above `LEVEL2_LIMIT` (DIRECTOR). The master data and admin pages are now covered by J-02.
+- **Other pages and paths on APEX:** IR search, sort and download, facet filtering, lost update between two sessions, negative authorization paths, and ORA-02292 on a referenced department. The master data and admin pages are covered by J-02; the two-level approval by J-03.
 - **Data volume and performance:** the data is demo-sized (≤ 33 rows).
-- **Test data left in the source:** REQ-2026-0003 ("WP96 parity A rev", FULFILLED), its two lines and two approval steps, and the counter `REQ/2026 = 4`. Removing them requires DML on the source and the owner's decision.
+- **Test data left in the source (owner decision 2026-11-09: keep):** REQ-2026-0003 ("WP96 parity A rev", FULFILLED) and REQ-2026-0005 ("WP96 parity C", APPROVED), with their lines and approval steps, and the counter `REQ/2026 = 5`.
 
 ## 7. Re-run
 
@@ -120,4 +137,4 @@ DATABASE_URL=postgresql://…/disposable python parity/journey.py --journey J-01
   --apex-observations parity/apex-observations-j01.json --output build/parity-j01.json
 ```
 
-For J-02 use `--journey J-02 --s0 snapshot-s1.csv --s1 snapshot-s2.csv --apex-observations parity/apex-observations-j02.json`. The script drops schema `app`, migrates, loads S0 (all checks must pass), starts API and web on free ports, runs J-01 and writes the comparison. The request date of J-01 is "today" in UTC, so the target run must happen on the same UTC date as the APEX run, or the dates in S1 must be shifted.
+For J-02 use `--journey J-02 --s0 snapshot-s1.csv --s1 snapshot-s2.csv --apex-observations parity/apex-observations-j02.json`; for J-03 `--journey J-03 --s0 snapshot-s2.csv --s1 snapshot-s3.csv --apex-observations parity/apex-observations-j03.json`. The script drops schema `app`, migrates, loads S0 (all checks must pass), starts API and web on free ports, runs J-01 and writes the comparison. The request date of J-01 is "today" in UTC, so the target run must happen on the same UTC date as the APEX run, or the dates in S1 must be shifted.
