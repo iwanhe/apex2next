@@ -103,6 +103,7 @@ def test_cross_format_adapters_share_the_same_ir_contract_shape() -> None:
     )
 
     for document in (apexlang, export):
+        assert document["metadata"]["adapterVersion"] == "0.2.0"
         assert set(document) >= {
             "irVersion", "application", "objects", "relationships",
             "references", "dependencies", "diagnostics", "metadata",
