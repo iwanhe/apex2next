@@ -108,7 +108,7 @@ Do not use content hash as the primary identity. Do not resolve name-only collis
 
 Initial adapter implementation (version 0.1.0) uses a deterministic SHA-256-derived identifier over source format, canonical object type, parent identity, and source-native identifier. Application roots have no parent. When no native identifier exists, the adapter falls back to parent-scoped name; if neither is available, it uses a source locator fallback and emits a low-confidence diagnostic. The digest is shortened for the public IR ID; collision detection remains a required resolver/validation hardening item.
 
-The content fingerprint is a separate SHA-256 over canonical JSON containing canonical type, source type, name, and normalized properties. It excludes source locator and generated metadata. Artifact hashes are full SHA-256 values and are retained in object provenance and snapshot metadata.
+The content fingerprint is a separate SHA-256 over canonical JSON containing canonical type, source type, name, and normalized properties. It excludes source locators, artifact hashes, source-format property keys, and parser-format-only raw source formatting metadata; properties are keyed by their canonical property name while all duplicate canonical values are retained deterministically. It retains normalized raw expressions and semantic values, so meaningful expression/value changes alter the fingerprint while file moves and formatting-only changes do not. Artifact hashes are full SHA-256 values and are retained in object provenance and snapshot metadata.
 
 For cross-snapshot comparison, implementations must retain the source-native key and identity strategy used. UUID database primary keys may wrap canonical identities, but must not replace the deterministic identity contract.
 
@@ -154,6 +154,8 @@ These are separate concepts:
 
 Every edge includes a type, source object, target object if resolved, origin, and provenance. Inferred dependencies must be marked `INFERRED`; they must never be represented as explicit source facts.
 
+For Oracle APEX SQL Export, an explicit `p_page_id` argument may establish a PAGE-to-component `CONTAINS` relationship only when it matches exactly one extracted PAGE source-native ID. Missing or duplicate matches produce `REL001`/`REL002` diagnostics and no guessed parent edge. Call order, names, and other unverified arguments are not used to infer containment.
+
 ### Reference statuses
 - PENDING
 - RESOLVED
@@ -173,6 +175,8 @@ Reference resolution algorithm:
 8. Create dependency edges only for resolved references.
 
 Name-only matching is permitted only when the reference type and scope make the candidate set unambiguous. Resolver must never guess.
+
+References may carry `referenceContext`, `sourcePropertyPath`, `expectedTargetTypes`, and `contextRuleId`. The resolver filters exact source-native-ID candidates by `expectedTargetTypes` before applying the unique-candidate rule. An empty expected-type list means no type restriction was established; a unique exact in-scope match may resolve, while multiple matches remain AMBIGUOUS. A context rule may add a target-type constraint only when the source property semantics are documented. The initial APEXLang rule `security.authorizationScheme` (and the exact `authorizationScheme` property) expects `AUTHORIZATION`; the resolver does not infer types from arbitrary property names or expression text. If type filtering leaves no candidate, the reference is DANGLING and diagnostics retain the unfiltered in-scope candidates for review.
 
 ## 9. Diagnostics and conversion classification
 
