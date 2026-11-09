@@ -172,7 +172,7 @@ def test_reference_resolver_resolves_one_exact_in_scope_candidate(tmp_path: Path
     )
     assert len(resolved["dependencies"]) == 1
     assert resolved["dependencies"][0]["origin"] == "EXPLICIT"
-    assert resolved["metadata"]["resolverVersion"] == "0.1.0"
+    assert resolved["metadata"]["resolverVersion"] == "0.2.0"
     assert validate_ir_document(resolved) == []
     assert resolve_references(resolved) == resolved
 
@@ -725,9 +725,9 @@ def test_reference_resolver_uses_explicit_property_context_target_type_and_is_im
     )
 
     assert reference["referenceContext"] == "APEXLANG_PROPERTY"
-    assert reference["sourcePropertyPath"] == "security.authorizationScheme"
+    assert reference["sourcePropertyPath"] == "authorizationScheme"
     assert reference["expectedTargetTypes"] == ["AUTHORIZATION"]
-    assert reference["contextRuleId"] == "APEXLANG_SECURITY_AUTHORIZATION_SCHEME_V1"
+    assert reference["contextRuleId"] == "APEXLANG_AUTHORIZATION_SCHEME_V1"
 
     resolved = resolve_references(source_document)
 
