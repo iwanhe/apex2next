@@ -65,15 +65,53 @@ def stable_identity(
     return "obj:" + hashlib.sha256(canonical_json(payload).encode("utf-8")).hexdigest()[:24]
 
 
+_FINGERPRINT_IGNORED_KEYS = {
+    "sourceLocator",
+    "sourcePropertyName",
+    "rawSourceValue",
+    "rawBlock",
+    "artifactHash",
+    "sourceIndent",
+}
+
+
+def _fingerprint_value(value: Any) -> Any:
+    """Remove source-location and parser-format metadata recursively."""
+    if isinstance(value, dict):
+        return {
+            key: _fingerprint_value(item)
+            for key, item in sorted(value.items())
+            if key not in _FINGERPRINT_IGNORED_KEYS
+        }
+    if isinstance(value, list):
+        return [_fingerprint_value(item) for item in value]
+    return value
+
+
 def object_fingerprint(
     object_type: str, source_type: str, name: str | None, properties: dict[str, Any]
 ) -> str:
-    """Fingerprint semantic source content, excluding locator and generated metadata."""
+    """Fingerprint normalized content, excluding locators and source-format key aliases."""
+    grouped_properties: dict[str, list[Any]] = {}
+    for source_name, property_value in properties.items():
+        canonical_name = (
+            property_value.get("canonicalPropertyName", source_name)
+            if isinstance(property_value, dict)
+            else source_name
+        )
+        grouped_properties.setdefault(str(canonical_name), []).append(
+            _fingerprint_value(property_value)
+        )
+    normalized_properties: dict[str, Any] = {}
+    for canonical_name, values in sorted(grouped_properties.items()):
+        normalized_properties[canonical_name] = (
+            values[0] if len(values) == 1 else sorted(values, key=canonical_json)
+        )
     payload = {
         "type": object_type,
         "sourceType": source_type,
         "name": name,
-        "properties": properties,
+        "properties": normalized_properties,
     }
     return "sha256:" + sha256_text(canonical_json(payload))
 
@@ -297,6 +335,86 @@ def _flatten_ast_declarations(declarations: list[ApexLangDeclaration]) -> list[A
         flattened.append(declaration)
         flattened.extend(_flatten_ast_declarations(declaration.children))
     return flattened
+
+
+REFERENCE_TARGET_TYPE_RULES = {
+    "authorizationScheme": (
+        ["AUTHORIZATION"],
+        "APEXLANG_AUTHORIZATION_SCHEME_V1",
+    ),
+    "security.authorizationScheme": (
+        ["AUTHORIZATION"],
+        "APEXLANG_SECURITY_AUTHORIZATION_SCHEME_V1",
+    ),
+}
+
+
+def _reference_type_rule(property_path: str) -> tuple[list[str], str | None]:
+    """Return target-type constraints only for documented source contexts."""
+    return REFERENCE_TARGET_TYPE_RULES.get(property_path, ([], None))
+
+
+def _collect_apexlang_property_references(
+    properties: list[ApexLangProperty],
+    object_id: str,
+    application_id: str,
+    file_name: str,
+    artifact_hash: str | None,
+) -> list[dict[str, Any]]:
+    """Collect references from typed AST properties with their exact property context."""
+    references: list[dict[str, Any]] = []
+
+    def visit(prop: ApexLangProperty, parent_path: str = "") -> None:
+        property_path = (
+            f"{parent_path}.{prop.name}" if parent_path else prop.name
+        )
+        if prop.value_type == "OBJECT" and prop.children:
+            for child in prop.children:
+                visit(child, property_path)
+            return
+        if prop.value_type == "ARRAY" and prop.items:
+            for index, item in enumerate(prop.items):
+                visit(item, f"{property_path}[{index}]")
+            return
+
+        masked = _mask_non_code(prop.raw_value)
+        expected_types, rule_id = _reference_type_rule(property_path)
+        for occurrence, match in enumerate(REFERENCE_RE.finditer(masked), start=1):
+            reference_value = match.group(1)
+            span = prop.span
+            locator = {
+                "file": file_name or None,
+                "line": span.start_line,
+                "column": span.start_column,
+                "endLine": span.end_line,
+                "endColumn": span.end_column,
+                "artifactHash": "sha256:" + artifact_hash if artifact_hash else None,
+            }
+            identity_source = (
+                f"{object_id}|{property_path}|{reference_value}|"
+                f"{span.start_line}:{span.start_column}|{occurrence}"
+            )
+            reference = {
+                "id": "ref:" + sha256_text(identity_source)[:24],
+                "sourceObjectId": object_id,
+                "referenceType": "APEXLANG_AT_REFERENCE",
+                "referenceValue": reference_value,
+                "targetObjectId": None,
+                "resolutionStatus": "PENDING",
+                "scope": application_id,
+                "sourceLocator": locator,
+                "candidateObjectIds": [],
+                "referenceContext": "APEXLANG_PROPERTY",
+                "sourcePropertyPath": property_path,
+                "expectedTargetTypes": expected_types,
+            }
+            if rule_id:
+                reference["contextRuleId"] = rule_id
+            references.append(reference)
+
+    for property_node in properties:
+        visit(property_node)
+    return references
 
 
 def adapt_apexlang_directory(source_dir: str | Path) -> dict[str, Any]:
@@ -540,15 +658,36 @@ def adapt_apexlang_directory(source_dir: str | Path) -> dict[str, Any]:
             })
         if object_type != "APPLICATION":
             stack.append((indent, object_id))
-        for reference_value in sorted(set(REFERENCE_RE.findall(_mask_non_code(raw_body or "")))):
-            reference_id = "ref:" + sha256_text(f"{object_id}|{reference_value}")[:24]
-            references.append({
-                "id": reference_id, "sourceObjectId": object_id,
-                "referenceType": "APEXLANG_AT_REFERENCE",
-                "referenceValue": reference_value, "targetObjectId": None,
-                "resolutionStatus": "PENDING", "scope": app_id,
-                "sourceLocator": locator, "candidateObjectIds": [],
-            })
+        if ast_node and use_ast_properties:
+            references.extend(
+                _collect_apexlang_property_references(
+                    ast_node.properties,
+                    object_id,
+                    app_id,
+                    file_name,
+                    artifact_hash,
+                )
+            )
+        else:
+            for reference_value in sorted(
+                set(REFERENCE_RE.findall(_mask_non_code(raw_body or "")))
+            ):
+                reference_id = "ref:" + sha256_text(
+                    f"{object_id}|DECLARATION_BODY|{reference_value}|{line or 0}"
+                )[:24]
+                references.append({
+                    "id": reference_id,
+                    "sourceObjectId": object_id,
+                    "referenceType": "APEXLANG_AT_REFERENCE",
+                    "referenceValue": reference_value,
+                    "targetObjectId": None,
+                    "resolutionStatus": "PENDING",
+                    "scope": app_id,
+                    "sourceLocator": locator,
+                    "candidateObjectIds": [],
+                    "referenceContext": "APEXLANG_DECLARATION_BODY",
+                    "expectedTargetTypes": [],
+                })
 
     for ast_key, ast_node in sorted(ast_by_declaration.items()):
         if ast_key not in ast_matched_keys:
@@ -609,11 +748,13 @@ def adapt_apex_export(source_text: str, source_name: str = "<memory>") -> dict[s
     app_id = stable_identity("APEX_SQL_EXPORT", "APPLICATION", app_native_id)
     app_name = flow_args.get("p_name")
     application = {
-        "id": app_id, "name": app_name, "sourceFormat": "APEX_SQL_EXPORT",
+        "id": app_id,
+        "name": app_name,
+        "sourceFormat": "APEX_SQL_EXPORT",
         "sourceVersion": {"metadataVersion": None, "runtimeVersion": None},
     }
-    objects: list[dict[str, Any]] = []
-    diagnostics: list[dict[str, Any]] = []
+
+    records: list[dict[str, Any]] = []
     occurrence: dict[tuple[str, str], int] = {}
     for call in calls:
         object_type = call.get("object_type", "OTHER")
@@ -625,23 +766,117 @@ def adapt_apex_export(source_text: str, source_name: str = "<memory>") -> dict[s
         } else "UNKNOWN"
         args = call.get("arguments", {})
         raw_args = call.get("raw_arguments", {})
-        native_id = args.get("p_id") or args.get("p_plug_id") or args.get("p_button_id")
-        name = next((args.get(key) for key in (
-            "p_name", "p_plug_name", "p_item_name", "p_button_name", "p_process_name"
-        ) if args.get(key) is not None), None)
+        native_id = (
+            args.get("p_id")
+            or args.get("p_plug_id")
+            or args.get("p_button_id")
+        )
+        name = next(
+            (
+                args.get(key)
+                for key in (
+                    "p_name", "p_plug_name", "p_item_name",
+                    "p_button_name", "p_process_name",
+                )
+                if args.get(key) is not None
+            ),
+            None,
+        )
         group_key = (canonical_type, str(native_id or name or ""))
         occurrence[group_key] = occurrence.get(group_key, 0) + 1
         fallback = f"{source_name}:{call.get('line')}:{occurrence[group_key]}"
-        identity_parent_id = None if canonical_type == "APPLICATION" else app_id
-        object_id = stable_identity(
-            "APEX_SQL_EXPORT", canonical_type, native_id,
-            parent_id=identity_parent_id, name=str(name) if name is not None else None,
-            fallback=fallback,
+        records.append({
+            "call": call,
+            "type": canonical_type,
+            "args": args,
+            "raw_args": raw_args,
+            "native_id": native_id,
+            "name": str(name) if name is not None else None,
+            "fallback": fallback,
+        })
+
+    # Resolve only explicit p_page_id ownership. No page is inferred from names,
+    # call order, or unrelated identifiers.
+    page_ids_by_native_id: dict[str, list[str]] = {}
+    for record in records:
+        if record["type"] != "PAGE":
+            continue
+        page_id = stable_identity(
+            "APEX_SQL_EXPORT",
+            "PAGE",
+            record["native_id"],
+            parent_id=app_id,
+            name=record["name"],
+            fallback=record["fallback"],
         )
+        record["object_id"] = page_id
+        if record["native_id"] not in (None, ""):
+            page_ids_by_native_id.setdefault(
+                str(record["native_id"]), []
+            ).append(page_id)
+
+    objects: list[dict[str, Any]] = []
+    relationships: list[dict[str, Any]] = []
+    diagnostics: list[dict[str, Any]] = []
+    for record in records:
+        call = record["call"]
+        canonical_type = record["type"]
+        args = record["args"]
+        raw_args = record["raw_args"]
+        native_id = record["native_id"]
+        name = record["name"]
+        if canonical_type == "APPLICATION":
+            object_id = app_id
+            parent_id = None
+        elif canonical_type == "PAGE":
+            object_id = record["object_id"]
+            parent_id = app_id
+        else:
+            parent_id = app_id
+            page_native_id = args.get("p_page_id")
+            if page_native_id not in (None, ""):
+                page_matches = page_ids_by_native_id.get(str(page_native_id), [])
+                if len(page_matches) == 1:
+                    parent_id = page_matches[0]
+                else:
+                    parent_id = None
+                    code = "REL001" if not page_matches else "REL002"
+                    message = (
+                        "Explicit p_page_id does not match an extracted PAGE object."
+                        if not page_matches
+                        else "Explicit p_page_id matches multiple PAGE objects."
+                    )
+                    diagnostics.append(_diagnostic(
+                        code,
+                        "WARNING",
+                        "STRUCTURAL_RELATIONSHIP",
+                        message,
+                        locator={
+                            "file": source_name,
+                            "line": call.get("line"),
+                            "column": call.get("column"),
+                            "artifactHash": "sha256:" + artifact_hash,
+                            "sourceNativeId": native_id,
+                            "apiRoutine": call.get("routine"),
+                        },
+                        details={"p_page_id": page_native_id},
+                    ))
+            object_id = stable_identity(
+                "APEX_SQL_EXPORT",
+                canonical_type,
+                native_id,
+                parent_id=parent_id,
+                name=name,
+                fallback=record["fallback"],
+            )
+
         locator = {
-            "file": source_name, "line": call.get("line"), "column": call.get("column"),
+            "file": source_name,
+            "line": call.get("line"),
+            "column": call.get("column"),
             "artifactHash": "sha256:" + artifact_hash,
-            "sourceNativeId": native_id, "apiRoutine": call.get("routine"),
+            "sourceNativeId": native_id,
+            "apiRoutine": call.get("routine"),
         }
         properties: dict[str, Any] = {}
         for key, value in sorted(args.items()):
@@ -651,61 +886,113 @@ def adapt_apex_export(source_text: str, source_name: str = "<memory>") -> dict[s
             else:
                 prop = _property(value, raw, locator)
             prop["sourcePropertyName"] = key
-            prop["canonicalPropertyName"] = _canonical_property_name(canonical_type, key, "APEX_SQL_EXPORT")
+            prop["canonicalPropertyName"] = _canonical_property_name(
+                canonical_type, key, "APEX_SQL_EXPORT"
+            )
             properties[key] = prop
+
+        source_type = call.get("routine", "unknown")
         obj = {
-            "id": object_id, "type": canonical_type, "sourceType": call.get("routine", "unknown"),
-            "name": str(name) if name is not None else None,
-            "parentId": None if canonical_type == "APPLICATION" else app_id,
-            "properties": properties, "source": locator,
+            "id": object_id,
+            "type": canonical_type,
+            "sourceType": source_type,
+            "name": name,
+            "parentId": parent_id,
+            "properties": properties,
+            "source": locator,
             "fingerprint": object_fingerprint(
-                canonical_type, call.get("routine", "unknown"),
-                str(name) if name is not None else None, properties,
+                canonical_type, source_type, name, properties
             ),
-            "status": {"parse": "SUCCESS", "resolve": "PENDING", "conversion": "PENDING"},
+            "status": {
+                "parse": "SUCCESS",
+                "resolve": "PENDING",
+                "conversion": "PENDING",
+            },
             "extensions": {"rawArguments": raw_args},
         }
         objects.append(obj)
+        if parent_id:
+            relationships.append({
+                "id": "rel:" + sha256_text(
+                    f"{parent_id}|{object_id}|CONTAINS"
+                )[:24],
+                "sourceObjectId": parent_id,
+                "targetObjectId": object_id,
+                "relationshipType": "CONTAINS",
+                "sourceLocator": locator,
+            })
         if canonical_type == "UNKNOWN":
             diagnostics.append(_diagnostic(
-                "IR002", "WARNING", "UNSUPPORTED_SOURCE_OBJECT",
+                "IR002",
+                "WARNING",
+                "UNSUPPORTED_SOURCE_OBJECT",
                 f"Unmapped APEX import API routine preserved as UNKNOWN: {call.get('routine')}",
-                locator=locator, object_id=object_id,
+                locator=locator,
+                object_id=object_id,
                 details={"routine": call.get("routine"), "rawArguments": raw_args},
             ))
+
     for item in parsed.get("diagnostics", []):
         diagnostics.append(_diagnostic(
-            item.get("code", "APEXEXP000"), item.get("severity", "WARNING"),
-            "SOURCE_PARSER", item.get("message", "APEX export parser diagnostic"),
-            locator={"file": source_name, "line": item.get("line"), "column": None,
-                     "artifactHash": "sha256:" + artifact_hash},
+            item.get("code", "APEXEXP000"),
+            item.get("severity", "WARNING"),
+            "SOURCE_PARSER",
+            item.get("message", "APEX export parser diagnostic"),
+            locator={
+                "file": source_name,
+                "line": item.get("line"),
+                "column": None,
+                "artifactHash": "sha256:" + artifact_hash,
+            },
         ))
     if not calls:
         diagnostics.append(_diagnostic(
-            "SRC003", "WARNING", "EXTRACTION",
+            "SRC003",
+            "WARNING",
+            "EXTRACTION",
             "No supported APEX import API calls were found in the supplied export text.",
             locator={"file": source_name, "artifactHash": "sha256:" + artifact_hash},
         ))
     return _document(
-        "APEX_SQL_EXPORT", application, objects, [], [], diagnostics, [artifact_hash]
+        "APEX_SQL_EXPORT",
+        application,
+        objects,
+        relationships,
+        [],
+        diagnostics,
+        [artifact_hash],
     )
 
 
-
 def resolve_references(document: dict[str, Any]) -> dict[str, Any]:
-    """Resolve exact source-native references without guessing; return a new IR document."""
+    """Resolve exact source-native references using explicit type/context constraints."""
     import copy
 
+    canonical_types = {
+        "APPLICATION", "PAGE", "REGION", "ITEM", "BUTTON", "BRANCH",
+        "VALIDATION", "PROCESS", "DYNAMIC_ACTION", "DYNAMIC_ACTION_ACTION",
+        "LIST", "LIST_ITEM", "BREADCRUMB", "LOV", "AUTHENTICATION",
+        "AUTHORIZATION", "THEME", "PLUGIN", "COLUMN", "DISPLAY_COLUMN",
+        "COMPONENT_ENTRY", "PAGE_GROUP", "STATIC_FILE", "BUILD_OPTION",
+        "COMPONENT_SETTING", "SUPPORTING_OBJECT", "SAVED_REPORT",
+        "REPORT_SORT", "PARAMETER", "CHART_SERIES", "CHART_AXIS", "UNKNOWN",
+    }
     resolved_document = copy.deepcopy(document)
     objects = resolved_document.get("objects", [])
     references = resolved_document.get("references", [])
-    object_by_id = {obj.get("id"): obj for obj in objects if obj.get("id")}
     id_counts: dict[str, int] = {}
     for obj in objects:
         object_id = obj.get("id")
         if object_id:
             id_counts[object_id] = id_counts.get(object_id, 0) + 1
-    duplicate_ids = {object_id for object_id, count in id_counts.items() if count > 1}
+    duplicate_ids = {
+        object_id for object_id, count in id_counts.items() if count > 1
+    }
+    object_by_id = {
+        obj["id"]: obj
+        for obj in objects
+        if obj.get("id") and obj["id"] not in duplicate_ids
+    }
     application_id = resolved_document.get("application", {}).get("id")
 
     def in_scope(candidate: dict[str, Any], scope: str | None) -> bool:
@@ -720,7 +1007,10 @@ def resolve_references(document: dict[str, Any]) -> dict[str, Any]:
             if not current_id or current_id in visited:
                 return False
             visited.add(current_id)
-            current = object_by_id.get(current.get("parentId"))
+            parent_id = current.get("parentId")
+            if parent_id in duplicate_ids:
+                return False
+            current = object_by_id.get(parent_id)
         return False
 
     by_native_id: dict[str, list[dict[str, Any]]] = {}
@@ -736,10 +1026,14 @@ def resolve_references(document: dict[str, Any]) -> dict[str, Any]:
     ]
     for duplicate_id in sorted(duplicate_ids):
         diagnostics.append(_diagnostic(
-            "IR004", "ERROR", "IDENTITY_COLLISION",
+            "IR004",
+            "ERROR",
+            "IDENTITY_COLLISION",
             f"Multiple IR objects share the same canonical identity: {duplicate_id}",
-            object_id=duplicate_id, details={"occurrences": id_counts[duplicate_id]},
+            object_id=duplicate_id,
+            details={"occurrences": id_counts[duplicate_id]},
         ))
+
     dependencies = [
         item for item in resolved_document.get("dependencies", [])
         if not (
@@ -754,41 +1048,83 @@ def resolve_references(document: dict[str, Any]) -> dict[str, Any]:
         reference_value = reference.get("referenceValue", "")
         reference_type = reference.get("referenceType", "")
         scope = reference.get("scope") or application_id
+        expected_types = reference.get("expectedTargetTypes", [])
         status = "PENDING"
         target_id: str | None = None
         candidates: list[dict[str, Any]] = []
+        scoped_candidates: list[dict[str, Any]] = []
 
-        if source_id not in object_by_id or source_id in duplicate_ids or not reference_value:
+        if (
+            source_id not in object_by_id
+            or source_id in duplicate_ids
+            or not reference_value
+        ):
             status = "INVALID"
             diagnostics.append(_diagnostic(
-                "REF004", "ERROR", "REFERENCE_INVALID",
+                "REF004",
+                "ERROR",
+                "REFERENCE_INVALID",
                 "Reference has a missing/ambiguous source object or empty reference value.",
-                locator=reference.get("sourceLocator"), details={"referenceId": reference.get("id")},
+                locator=reference.get("sourceLocator"),
+                details={"referenceId": reference.get("id")},
             ))
         elif reference_type != "APEXLANG_AT_REFERENCE":
             status = "UNSUPPORTED"
             diagnostics.append(_diagnostic(
-                "REF003", "WARNING", "REFERENCE_UNSUPPORTED",
+                "REF003",
+                "WARNING",
+                "REFERENCE_UNSUPPORTED",
                 f"Reference syntax is not supported by this resolver: {reference_type}",
-                locator=reference.get("sourceLocator"), details={"referenceId": reference.get("id")},
+                locator=reference.get("sourceLocator"),
+                details={"referenceId": reference.get("id")},
             ))
-        elif scope and scope != application_id:
+        elif (
+            not isinstance(expected_types, list)
+            or any(
+                not isinstance(target_type, str)
+                or target_type not in canonical_types
+                for target_type in expected_types
+            )
+        ):
+            status = "UNSUPPORTED"
+            diagnostics.append(_diagnostic(
+                "REF003",
+                "WARNING",
+                "REFERENCE_UNSUPPORTED",
+                "Reference contains an unsupported expected target type.",
+                locator=reference.get("sourceLocator"),
+                details={
+                    "referenceId": reference.get("id"),
+                    "expectedTargetTypes": expected_types,
+                },
+            ))
+        elif scope and scope not in object_by_id:
             status = "INVALID"
             diagnostics.append(_diagnostic(
-                "REF004", "ERROR", "REFERENCE_INVALID",
-                "Reference scope does not match the current application snapshot.",
+                "REF004",
+                "ERROR",
+                "REFERENCE_INVALID",
+                "Reference scope is not a unique object in the current application snapshot.",
                 locator=reference.get("sourceLocator"),
                 details={"referenceId": reference.get("id"), "scope": scope},
             ))
         else:
-            candidates = [
-                candidate for candidate in by_native_id.get(str(reference_value), [])
+            scoped_candidates = [
+                candidate
+                for candidate in by_native_id.get(str(reference_value), [])
                 if in_scope(candidate, scope)
             ]
-            candidate_ids = sorted({candidate["id"] for candidate in candidates})
-            if len(candidates) == 1:
+            candidates = [
+                candidate
+                for candidate in scoped_candidates
+                if not expected_types or candidate.get("type") in expected_types
+            ]
+            candidate_ids = sorted({
+                candidate["id"] for candidate in candidates if candidate.get("id")
+            })
+            if len(candidates) == 1 and len(candidate_ids) == 1:
                 status = "RESOLVED"
-                target_id = candidates[0]["id"]
+                target_id = candidate_ids[0]
                 dependency_id = "dep:" + sha256_text(
                     f"{source_id}|{target_id}|{reference_type}|EXPLICIT"
                 )[:24]
@@ -803,26 +1139,49 @@ def resolve_references(document: dict[str, Any]) -> dict[str, Any]:
                 if reference.get("sourceLocator") is not None:
                     dependency["sourceLocator"] = reference["sourceLocator"]
                 dependencies.append(dependency)
-            elif len(candidates) == 0:
+            elif not candidates:
                 status = "DANGLING"
                 diagnostics.append(_diagnostic(
-                    "REF001", "ERROR", "REFERENCE_DANGLING",
+                    "REF001",
+                    "ERROR",
+                    "REFERENCE_DANGLING",
                     f"No in-scope object matches reference: {reference_value}",
                     locator=reference.get("sourceLocator"),
-                    details={"referenceId": reference.get("id"), "scope": scope},
+                    details={
+                        "referenceId": reference.get("id"),
+                        "scope": scope,
+                        "referenceContext": reference.get("referenceContext"),
+                        "sourcePropertyPath": reference.get("sourcePropertyPath"),
+                        "expectedTargetTypes": expected_types,
+                        "typeFilteredCandidateObjectIds": sorted({
+                            candidate["id"]
+                            for candidate in scoped_candidates
+                            if candidate.get("id")
+                        }),
+                    },
                 ))
             else:
                 status = "AMBIGUOUS"
                 diagnostics.append(_diagnostic(
-                    "REF002", "ERROR", "REFERENCE_AMBIGUOUS",
+                    "REF002",
+                    "ERROR",
+                    "REFERENCE_AMBIGUOUS",
                     f"Multiple in-scope objects match reference: {reference_value}",
                     locator=reference.get("sourceLocator"),
-                    details={"referenceId": reference.get("id"), "candidateObjectIds": candidate_ids},
+                    details={
+                        "referenceId": reference.get("id"),
+                        "candidateObjectIds": candidate_ids,
+                        "referenceContext": reference.get("referenceContext"),
+                        "sourcePropertyPath": reference.get("sourcePropertyPath"),
+                        "expectedTargetTypes": expected_types,
+                    },
                 ))
 
         reference["resolutionStatus"] = status
         reference["targetObjectId"] = target_id
-        reference["candidateObjectIds"] = sorted({candidate["id"] for candidate in candidates})
+        reference["candidateObjectIds"] = sorted({
+            candidate["id"] for candidate in candidates if candidate.get("id")
+        })
         if source_id:
             resolution_by_source.setdefault(source_id, []).append(status)
 
@@ -830,25 +1189,27 @@ def resolve_references(document: dict[str, Any]) -> dict[str, Any]:
         statuses = resolution_by_source.get(obj.get("id"), [])
         if not statuses:
             obj.setdefault("status", {})["resolve"] = "SUCCESS"
+        elif all(status == "RESOLVED" for status in statuses):
+            obj.setdefault("status", {})["resolve"] = "SUCCESS"
+        elif any(status == "INVALID" for status in statuses):
+            obj.setdefault("status", {})["resolve"] = "FAILED"
         else:
-            if all(status == "RESOLVED" for status in statuses):
-                obj.setdefault("status", {})["resolve"] = "SUCCESS"
-            elif any(status == "INVALID" for status in statuses):
-                obj.setdefault("status", {})["resolve"] = "FAILED"
-            else:
-                obj.setdefault("status", {})["resolve"] = "PARTIAL"
+            obj.setdefault("status", {})["resolve"] = "PARTIAL"
 
-    unique_dependencies = {item["id"]: item for item in dependencies}
+    unique_dependencies = {
+        item["id"]: item for item in dependencies if item.get("id")
+    }
     resolved_document["dependencies"] = [
         unique_dependencies[key] for key in sorted(unique_dependencies)
     ]
     resolved_document["diagnostics"] = sorted(
         diagnostics,
-        key=lambda d: (
-            d.get("sourceLocator", {}).get("file", ""),
-            d.get("sourceLocator", {}).get("line") or 0,
-            d["code"], d["message"],
+        key=lambda item: (
+            item.get("sourceLocator", {}).get("file", ""),
+            item.get("sourceLocator", {}).get("line") or 0,
+            item["code"],
+            item["message"],
         ),
     )
-    resolved_document.setdefault("metadata", {})["resolverVersion"] = "0.1.0"
+    resolved_document.setdefault("metadata", {})["resolverVersion"] = "0.2.0"
     return resolved_document
