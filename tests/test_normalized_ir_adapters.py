@@ -695,3 +695,134 @@ def test_apexlang_nested_duplicate_properties_are_preserved_in_ast_ir_value(
     assert [
         item["property"]["value"] for item in settings["extensions"]["duplicateProperties"]
     ] == ["First nested", "Second nested"]
+
+def test_reference_resolver_uses_explicit_property_context_target_type_and_is_immutable(
+    tmp_path: Path,
+) -> None:
+    source_dir = tmp_path / "typed-reference-context"
+    source_dir.mkdir()
+    (source_dir / "application.apx").write_text(
+        "app DEMO (\n"
+        "    name: 'Typed references'\n"
+        ")\n"
+        "authorization requester (\n"
+        ")\n"
+        "authentication requester (\n"
+        ")\n"
+        "page 10 (\n"
+        "    security {\n"
+        "        authorizationScheme: @requester\n"
+        "    }\n"
+        ")\n",
+        encoding="utf-8",
+    )
+
+    source_document = adapt_apexlang_directory(source_dir)
+    reference = source_document["references"][0]
+    authorization = next(
+        obj for obj in source_document["objects"]
+        if obj["type"] == "AUTHORIZATION"
+    )
+
+    assert reference["referenceContext"] == "APEXLANG_PROPERTY"
+    assert reference["sourcePropertyPath"] == "security.authorizationScheme"
+    assert reference["expectedTargetTypes"] == ["AUTHORIZATION"]
+    assert reference["contextRuleId"] == "APEXLANG_SECURITY_AUTHORIZATION_SCHEME_V1"
+
+    resolved = resolve_references(source_document)
+
+    assert source_document["references"][0]["resolutionStatus"] == "PENDING"
+    assert source_document["dependencies"] == []
+    assert resolved["references"][0]["resolutionStatus"] == "RESOLVED"
+    assert resolved["references"][0]["targetObjectId"] == authorization["id"]
+    assert resolved["references"][0]["candidateObjectIds"] == [authorization["id"]]
+    assert validate_ir_document(resolved) == []
+    assert resolve_references(resolved) == resolved
+
+
+def test_apex_export_adapter_creates_only_explicit_page_containment() -> None:
+    source = """begin
+      wwv_flow_imp.create_flow(p_id => 100, p_name => 'Demo');
+      wwv_flow_imp_page.create_page(p_id => 10, p_name => 'Orders');
+      wwv_flow_imp_page.create_page_item(
+        p_id => 101,
+        p_page_id => 10,
+        p_name => 'P10_ORDER_ID'
+      );
+    end;"""
+
+    document = adapt_apex_export(source, "f100.sql")
+    page = next(obj for obj in document["objects"] if obj["type"] == "PAGE")
+    item = next(obj for obj in document["objects"] if obj["type"] == "ITEM")
+
+    assert validate_ir_document(document) == []
+    assert page["parentId"] == document["application"]["id"]
+    assert item["parentId"] == page["id"]
+    assert any(
+        edge["sourceObjectId"] == page["id"]
+        and edge["targetObjectId"] == item["id"]
+        and edge["relationshipType"] == "CONTAINS"
+        for edge in document["relationships"]
+    )
+
+
+def test_apex_export_adapter_does_not_guess_missing_page_relationship() -> None:
+    source = """begin
+      wwv_flow_imp_page.create_page_item(
+        p_id => 101,
+        p_page_id => 999,
+        p_name => 'P10_ORDER_ID'
+      );
+    end;"""
+
+    document = adapt_apex_export(source, "f100.sql")
+    item = next(obj for obj in document["objects"] if obj["type"] == "ITEM")
+
+    assert validate_ir_document(document) == []
+    assert item["parentId"] is None
+    assert document["relationships"] == []
+    assert any(
+        diagnostic["code"] == "REL001"
+        for diagnostic in document["diagnostics"]
+    )
+
+
+def test_object_fingerprint_ignores_source_locations_and_formatting_metadata() -> None:
+    first = {
+        "p_source": {
+            "valueType": "SQL_EXPRESSION",
+            "rawExpression": "SELECT order_id FROM orders",
+            "sourcePropertyName": "p_source",
+            "canonicalPropertyName": "source",
+            "sourceLocator": {
+                "file": "f100.sql",
+                "line": 10,
+                "column": 5,
+                "artifactHash": "sha256:first",
+            },
+            "extensions": {"rawSourceValue": "q'[SELECT order_id FROM orders]'"},
+        }
+    }
+    second = {
+        "source": {
+            "valueType": "SQL_EXPRESSION",
+            "rawExpression": "SELECT order_id FROM orders",
+            "sourcePropertyName": "source",
+            "canonicalPropertyName": "source",
+            "sourceLocator": {
+                "file": "pages/p10.apx",
+                "line": 25,
+                "column": 9,
+                "artifactHash": "sha256:second",
+            },
+            "extensions": {"rawSourceValue": "SELECT order_id FROM orders"},
+        }
+    }
+
+    first_fingerprint = object_fingerprint("PAGE", "page", "10", first)
+    second_fingerprint = object_fingerprint("PAGE", "page", "10", second)
+
+    assert first_fingerprint == second_fingerprint
+    second["source"]["rawExpression"] = "SELECT customer_id FROM customers"
+    assert object_fingerprint("PAGE", "page", "10", second) != first_fingerprint
+
