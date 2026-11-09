@@ -11,9 +11,10 @@ WP8 is phased and remains in progress. See the phase plan in ../migration/wp8-fu
 | WP8.5 | PL/SQL conversion workbench and rule registry | Implemented offline baseline; CI-verified |
 | WP8.6 | Runtime repositories, services, APIs, and PostgreSQL integration | Implemented generated runtime baseline; CI-verified |
 | WP8.7 | APEX-to-target functional parity test harness | Implemented offline baseline; CI-verified |
-| WP8.8 | Security mapping, rehearsal, rollback, and cutover readiness | Implemented offline baseline; CI pending |
+| WP8.8 | Security mapping, rehearsal, rollback, and cutover readiness | Implemented offline baseline; CI-verified on PR head 6fdde26; real rehearsal/sign-off pending |
 | WP9.1 | Candidate pilot archive intake and static source assessment | Completed; qualification incomplete |
 | WP9.2 | Real pilot source/database dependency analysis and partial PostgreSQL DDL draft | Completed offline/static; live reconciliation incomplete |
+| WP9.3 | Oracle schema conversion plan, PostgreSQL 16 integration and dictionary reconciliation | Offline conversion/integration CI-verified; unresolved installed-view drift and snapshot consistency remain |
 
 ## WP8.5 checklist
 
