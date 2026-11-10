@@ -2,6 +2,7 @@
   "journey": "J-01",
   "source": "oracleapex.com, workspace KCSI, app 170134 (DEMO), APEX 26.2.1",
   "executed": "2026-11-09 07:45-08:57 UTC by Claude in the built-in browser (users DEMO_REQ, DEMO_MGR signed in by the owner)",
+  "clockStart": "2026-11-09T07:45:00Z",
   "method": "APEX client API inside the dialog iframe (apex.item().setValue, button click, apex.confirm dialog); texts read from the DOM",
   "steps": [
     {

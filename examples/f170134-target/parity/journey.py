@@ -450,8 +450,10 @@ def main() -> int:
         print(json.dumps(load["checks"]), file=sys.stderr)
         return 2
     api_port, web_port = _free_port(), _free_port()
+    # replay with the business date of the APEX run (clockStart in the observations); see APP_CLOCK_START
+    clock = json.loads(args.apex_observations.read_text(encoding="utf-8")).get("clockStart")
     api = subprocess.Popen(["node", "dist/main.js"], cwd=ROOT / "apps/api", stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT,
-                           env={**env, "AUTH_MODE": "dev", "DEV_LOGIN_PASSWORD": DEV_PASSWORD, "API_PORT": str(api_port),
+                           env={**env, **({"APP_CLOCK_START": clock} if clock else {}), "AUTH_MODE": "dev", "DEV_LOGIN_PASSWORD": DEV_PASSWORD, "API_PORT": str(api_port),
                                 "SESSION_SECRET": "parity-session-secret-0123456789abcdef"})
     web = subprocess.Popen(["node", "node_modules/next/dist/bin/next", "start", "-p", str(web_port), "-H", "127.0.0.1"],
                            cwd=ROOT / "apps/web", stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT,

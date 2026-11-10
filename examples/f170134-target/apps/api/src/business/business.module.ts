@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { PostgresDatabase } from '../database/postgres-database';
 import { PagesService } from '../pages/pages.service';
 import { ApprovalService } from './approval.service';
-import { BusinessDatabase, Clock, businessConfigFromEnv, systemClock } from './context';
+import { BusinessDatabase, Clock, businessConfigFromEnv, clockFromEnv, systemClock } from './context';
 import { DocumentTypeRegistry } from './document-types';
 import { MasterDataService } from './master-data.service';
 import { NumberingService } from './numbering.service';
@@ -15,7 +15,7 @@ import { SecurityService } from './security.service';
     {
       provide: BusinessDatabase,
       inject: [PostgresDatabase],
-      useFactory: (database: PostgresDatabase) => new BusinessDatabase(database, systemClock, businessConfigFromEnv()),
+      useFactory: (database: PostgresDatabase) => new BusinessDatabase(database, clockFromEnv(), businessConfigFromEnv()),
     },
     SecurityService,
     NumberingService,

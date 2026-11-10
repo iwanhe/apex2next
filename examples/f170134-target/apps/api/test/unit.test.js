@@ -66,3 +66,15 @@ test('WP9.7 access log: one JSON line, no query string, request id echoed, user 
   run('bad id with spaces');
   assert.match(lines[1].id, /^[0-9a-f-]{36}$/);
 });
+
+test('APP_CLOCK_START: replay clock starts at the instant and runs forward; refused in production', () => {
+  const { clockFromEnv, systemClock } = require('../dist/business/context.js');
+  assert.equal(clockFromEnv({}), systemClock);
+  let real = Date.parse('2026-12-01T00:00:00Z');
+  const clock = clockFromEnv({ APP_CLOCK_START: '2026-11-09T07:45:00Z' }, () => real);
+  assert.equal(clock.now().toISOString(), '2026-11-09T07:45:00.000Z');
+  real += 90_000;
+  assert.equal(clock.now().toISOString(), '2026-11-09T07:46:30.000Z');
+  assert.throws(() => clockFromEnv({ APP_CLOCK_START: '2026-11-09T07:45:00Z', NODE_ENV: 'production' }), /refused/);
+  assert.throws(() => clockFromEnv({ APP_CLOCK_START: '2026-11-09 07:45' }), /ISO instant/);
+});

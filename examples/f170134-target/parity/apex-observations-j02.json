@@ -2,6 +2,7 @@
   "journey": "J-02",
   "source": "oracleapex.com, workspace KCSI, app 170134 (DEMO), APEX 26.2.1",
   "executed": "2026-11-09 10:40-10:47 UTC by Claude in the built-in browser (users DEMO_WH, DEMO_ADMIN signed in by the owner)",
+  "clockStart": "2026-11-09T09:40:00Z",
   "method": "APEX client API inside the dialog iframe; texts read from the DOM",
   "steps": [
     {

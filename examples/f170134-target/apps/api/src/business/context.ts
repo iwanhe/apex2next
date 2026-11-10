@@ -30,6 +30,21 @@ export interface Clock {
 
 export const systemClock: Clock = { now: () => new Date() };
 
+/**
+ * APP_CLOCK_START (ISO instant; tests and parity replays only): the business clock starts at that instant and runs
+ * forward in real time, so a journey recorded on APEX on one day can be replayed later with the same dates.
+ * Refused with NODE_ENV=production.
+ */
+export function clockFromEnv(env: NodeJS.ProcessEnv = process.env, realNow: () => number = Date.now): Clock {
+  const start = env.APP_CLOCK_START;
+  if (!start) return systemClock;
+  if (env.NODE_ENV === 'production') throw new Error('APP_CLOCK_START is refused when NODE_ENV=production.');
+  const t = Date.parse(start);
+  if (Number.isNaN(t) || !/T.*(Z|[+-]\d\d:\d\d)$/.test(start)) throw new Error('APP_CLOCK_START must be an ISO instant with a zone, e.g. 2026-11-09T07:45:00Z.');
+  const offset = t - realNow();
+  return { now: () => new Date(realNow() + offset) };
+}
+
 export function wallClock(date: Date, timeZone: string): { timestamp: string; date: string; year: string } {
   const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone, year: 'numeric', month: '2-digit', day: '2-digit',
