@@ -119,6 +119,8 @@ test('WP9.5 page layer over HTTP', { skip }, async (t) => {
     assert.equal(detail.body.lines.rows.length, 1);
     assert.equal(detail.body.lines.rows[0].item_id_dsp, 'ATK-001 - Kertas A4 80gsm (RIM)');
     assert.deepEqual(detail.body.buttons, { EDIT_HEADER: true, CREATE_REQUEST_LINES: true });
+    const asWarehouse = await wh1.get(`/pages/302?requestId=${requestId}`);
+    assert.deepEqual(asWarehouse.body.buttons, { EDIT_HEADER: false, CREATE_REQUEST_LINES: false }, 'button schemes: REQUESTER only (J-05)');
   });
 
   let approvalId;
@@ -272,6 +274,16 @@ test('WP9.5 page layer over HTTP', { skip }, async (t) => {
     expectError(await mgr1.get('/regions/requestSummary?sort=password'), 422, 'INVALID_INPUT');
     const lines = await req1.get('/regions/requestLines?all=1');
     assert.equal(lines.body.rows.length, 1);
+    // J-04: numbers sort by value, not by their text (9 < 10 < 165000; as text "10" < "165000" < "9")
+    const draftId = String(all.body.rows[0].request_id);
+    for (const price of ['10', '9']) {
+      const added = await req1.post('/forms/requestLine', { values: { request_id: draftId, item_id: String(api.ids.atk), qty: '1', unit_price: price } });
+      assert.equal(added.status, 201, JSON.stringify(added.body));
+    }
+    const byAmount = await req1.get('/regions/requestLines?sort=line_amount&dir=asc');
+    assert.deepEqual(byAmount.body.rows.map((r) => r.line_amount), ['9', '10', '165000']);
+    const byId = await req1.get('/regions/requestLines');
+    assert.deepEqual(byId.body.rows.map((r) => Number(r.line_id)), byId.body.rows.map((r) => Number(r.line_id)).sort((x, y) => x - y), 'default LINE_ID ASC by value');
     expectError(await req1.get('/regions/requestHeader'), 422, 'INVALID_INPUT', 'Region requestHeader tidak dikenal.');
     expectError(await req1.get('/regions/nope'), 422, 'INVALID_INPUT');
 

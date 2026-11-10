@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { apiGet, type ReportResult } from '../lib/api';
+import { buttonAllowed } from '../lib/authz';
 import { apiErrorOnly } from '../lib/guard';
 import { first, qs, type SearchParams } from '../lib/routes';
 import { page } from '../lib/spec';
@@ -21,7 +22,7 @@ export async function IrPage(props: {
     return <><PageHeader page={props.pageId} title={p.title} /><ErrorRegion error={apiErrorOnly(e)} /></>;
   }
   const ir = Object.values(p.ir ?? {})[0] as Record<string, string> | undefined;
-  const create = p.button?.CREATE;
+  const create = p.button?.CREATE && (await buttonAllowed(props.pageId, 'CREATE')) ? p.button.CREATE : undefined;
   return (
     <>
       <PageHeader page={props.pageId} title={p.title} />

@@ -5,6 +5,7 @@ import { facetViews } from '../../../components/facets-view';
 import { PageHeader } from '../../../components/PageHeader';
 import { ReportTable } from '../../../components/ReportTable';
 import { apiGet, type ReportResult } from '../../../lib/api';
+import { buttonAllowed } from '../../../lib/authz';
 import { apiErrorOnly } from '../../../lib/guard';
 import { all, first, qs, type SearchParams } from '../../../lib/routes';
 import { item, page } from '../../../lib/spec';
@@ -27,7 +28,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   return (
     <>
       <PageHeader page={300} title={p.title}
-        actions={<Link className="btn btn-hot" href={`/requests/new?return=${encodeURIComponent(back)}`}>{p.button.CREATE.buttonImageAlt}</Link>} />
+        actions={await buttonAllowed(300, 'CREATE') && <Link className="btn btn-hot" href={`/requests/new?return=${encodeURIComponent(back)}`}>{p.button.CREATE.buttonImageAlt}</Link>} />
       <SuccessMessage flash={first(sp.msg)} />
       <div className="layout-facets">
         <aside className="region" aria-label="Filter">

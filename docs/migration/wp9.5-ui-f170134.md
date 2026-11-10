@@ -1,6 +1,6 @@
 # WP9.5 — Pages & Features: Demo Permintaan Barang (170134)
 
-**Status:** Implemented on branch `feat/foundation-and-architecture-docs`. All 19 pages of the APEX SQL export (page 0 and pages 100–9999) are mapped to Next.js routes and NestJS endpoints. The work is verified on PostgreSQL 16 with API integration tests and Chromium end-to-end journeys. WP9.6 compared one journey with the running APEX application (identical data and messages, see [WP9.6](wp9.6-data-parity-f170134.md)); broader parity is WP9.7. The deviation DEV-06, the UI differences D-UI-01…04, the assumptions A-01…A-03 and the gaps G-01…G-03 need owner review.
+**Status:** Implemented on branch `feat/foundation-and-architecture-docs`. All 19 pages of the APEX SQL export (page 0 and pages 100–9999) are mapped to Next.js routes and NestJS endpoints. The work is verified on PostgreSQL 16 with API integration tests and Chromium end-to-end journeys. WP9.6 compared five journeys with the running APEX application (identical data, messages and reports, see [WP9.6](wp9.6-data-parity-f170134.md)); A-01…A-03 are confirmed there. The deviation DEV-06, the UI differences D-UI-01…04 and the gaps G-01…G-03 need owner review.
 
 ## 1. Source of truth (D-003)
 
@@ -18,7 +18,7 @@ This resolves the page 00302 question from WP9.1/9.2: the page is implemented fr
 
 ## 2. Page inventory and coverage
 
-`apex2next_extractor.page_inventory` builds a deterministic inventory from the unpacked SQL export (`examples/f170134-target/ui/apex-page-inventory.json`, format `apex2next.apex-page-inventory.v1`). The inventory contains 19 pages and 269 components with stable keys `P<page>:<KIND>:<name>` (regions, report regions, items, buttons, processes, validations, dynamic actions with their actions, IR/report/region columns, cards, charts), plus authorization schemes, LOVs (including static values), the navigation menu and bar, breadcrumbs and application formats. Only derived metadata is committed; the export itself is not (chain-of-custody policy).
+`apex2next_extractor.page_inventory` builds a deterministic inventory from the unpacked SQL export (`examples/f170134-target/ui/apex-page-inventory.json`, format `apex2next.apex-page-inventory.v1`). The inventory contains 19 pages and 269 components with stable keys `P<page>:<KIND>:<name>` (regions, report regions, items, buttons, processes, validations, dynamic actions with their actions, IR/report/region columns, cards, charts), plus authorization schemes (page and component level, `p_security_scheme`), LOVs (including static values), the navigation menu and bar, breadcrumbs and application formats. Only derived metadata is committed; the export itself is not (chain-of-custody policy).
 
 ```bash
 PYTHONPATH=workers/extraction-worker/src python -m apex2next_extractor.page_inventory \
@@ -100,7 +100,7 @@ The production identity provider is decided in WP9-009. Until then only `AUTH_MO
 
 | ID | Assumption to confirm against the running source (WP9.7) |
 |---|---|
-| A-01 | IR rows per page = 50 (the export stores no value; this is the IR runtime default). |
+| A-01 | IR rows per page = 50 (the export stores no value; this is the IR runtime default). **Confirmed on APEX in WP9.6 J-04.** |
 | A-02 | The APEX built-in texts above are those of APEX 26.2 in language `en`. **WP9.6 confirmed** "Invalid Login Credentials", the delete confirm, "n error(s) has/have occurred", "Row created/updated/deleted." and the number range message; the required, date and lost-update texts are not observed yet. |
 | A-03 | **Resolved in WP9.6:** oracleapex.com shows `P9999_REMEMBER`; set `LOGIN_REMEMBER_USERNAME=true` for parity (default off). |
 

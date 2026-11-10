@@ -1,6 +1,6 @@
 {
   "format": "apex2next.ui-coverage.v1",
-  "inventorySha256": "59c75b198e52c9a355dc8f9b1107f68bb847c27fb11ab8b81b70d899bf8e4328",
+  "inventorySha256": "ddcd262eda918f83d8a08aa0137b2774ba83fc47aaa4c83953acb7d31a50dac3",
   "statuses": [
     "IMPLEMENTED",
     "ADAPTED",
@@ -376,7 +376,8 @@
     },
     "P200:BUTTON:CREATE": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/app/(app)/departments/page.tsx"
+      "where": "apps/web/components/IrPage.tsx",
+      "note": "Button authorization scheme MASTER_DATA: shown only when authorized (lib/authz.ts buttonAllowed / PagesService.buttonAuthorized)."
     },
     "P200:DYNAMIC_ACTION:ON_DIALOG_CLOSED_REFRESH_REPORT": {
       "status": "ADAPTED",
@@ -490,7 +491,8 @@
     },
     "P210:BUTTON:CREATE": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/app/(app)/items/page.tsx"
+      "where": "apps/web/app/(app)/items/page.tsx",
+      "note": "Button authorization scheme MASTER_DATA: shown only when authorized (lib/authz.ts buttonAllowed / PagesService.buttonAuthorized)."
     },
     "P210:CARDS:Hasil Items": {
       "status": "IMPLEMENTED",
@@ -607,7 +609,8 @@
     },
     "P300:BUTTON:CREATE": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/app/(app)/requests/page.tsx"
+      "where": "apps/web/app/(app)/requests/page.tsx",
+      "note": "Button authorization scheme REQUESTER: shown only when authorized (lib/authz.ts buttonAllowed / PagesService.buttonAuthorized)."
     },
     "P300:DYNAMIC_ACTION:ON_DIALOG_CLOSED_REFRESH_REPORT": {
       "status": "ADAPTED",
@@ -772,11 +775,12 @@
     "P302:BUTTON:CREATE_REQUEST_LINES": {
       "status": "IMPLEMENTED",
       "where": "apps/api/src/pages/pages.service.ts",
-      "note": "Condition evaluated on the server for rendering and enforced on submit (DEV-06)."
+      "note": "Condition evaluated on the server for rendering and enforced on submit (DEV-06). Button authorization scheme REQUESTER: shown only when authorized (lib/authz.ts buttonAllowed / PagesService.buttonAuthorized)."
     },
     "P302:BUTTON:EDIT_HEADER": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/app/(app)/requests/detail/page.tsx"
+      "where": "apps/api/src/pages/pages.service.ts",
+      "note": "Button authorization scheme REQUESTER: shown only when authorized (lib/authz.ts buttonAllowed / PagesService.buttonAuthorized)."
     },
     "P302:DYNAMIC_ACTION:ON_DIALOG_CLOSED_REFRESH_HEADER": {
       "status": "ADAPTED",
@@ -887,7 +891,8 @@
     },
     "P310:BUTTON:CREATE": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/app/(app)/request-lines/page.tsx"
+      "where": "apps/web/components/IrPage.tsx",
+      "note": "Button authorization scheme REQUESTER: shown only when authorized (lib/authz.ts buttonAllowed / PagesService.buttonAuthorized)."
     },
     "P310:DYNAMIC_ACTION:ON_DIALOG_CLOSED_REFRESH_REPORT": {
       "status": "ADAPTED",

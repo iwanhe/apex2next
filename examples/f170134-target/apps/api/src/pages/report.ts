@@ -115,11 +115,14 @@ export async function runReport(tx: BusinessTx, def: ReportDef, query: ReportQue
   };
   const main = filter();
   const whereSql = main.where.length ? `WHERE ${main.where.join(' AND ')}` : '';
-  const sortExpr = sortCol.type === 'STRING' ? `${ident(sortName)} COLLATE "C"` : ident(sortName);
+  // Sort on the source column (src.col), not on the text-cast output alias of the same name: numbers and dates
+  // must sort by value as in APEX (J-04), strings byte-wise as NLS_SORT=BINARY.
+  const sortRef = `src.${ident(sortName)}`;
+  const sortExpr = sortCol.type === 'STRING' ? `${sortRef} COLLATE "C"` : sortRef;
   const page = Math.max(1, Math.floor(Number(query.page ?? 1)) || 1);
   const limit = query.all ? '' : `LIMIT ${def.rowsPerPage} OFFSET ${(page - 1) * def.rowsPerPage}`;
   const rows = await tx.query(
-    `SELECT ${def.columns.map(selectExpr).join(', ')} FROM ${def.from} ${whereSql}
+    `SELECT ${def.columns.map(selectExpr).join(', ')} FROM ${def.from} AS src ${whereSql}
       ORDER BY ${sortExpr} ${dir} NULLS ${dir === 'ASC' ? 'LAST' : 'FIRST'} ${limit}`, main.values);
   const total = await tx.query<{ n: string }>(`SELECT count(*)::text AS n FROM ${def.from} ${whereSql}`, main.values);
   const facets: FacetResult[] = [];

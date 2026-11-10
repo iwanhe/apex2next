@@ -223,6 +223,8 @@ def build_page_inventory(files: dict[str, str]) -> dict[str, Any]:
                 props["attributes"] = dict(zip(values[0::2], values[1::2]))
             if kind == "PROCESS" and _ref(c, "p_process_when_button_id"):
                 props["when_button"] = buttons.get(_ref(c, "p_process_when_button_id"))
+            if _ref(c, "p_security_scheme"):  # component authorization (e.g. a CREATE button for MASTER_DATA only)
+                props["security_scheme"] = schemes.get(_ref(c, "p_security_scheme"))
             if kind == "VALIDATION" and _ref(c, "p_associated_item"):
                 props["associated_item"] = page_items.get(_ref(c, "p_associated_item"))
             components.append({"key": f"P{page_id}:{kind}:{cname}", "kind": kind, "name": cname, "props": props})

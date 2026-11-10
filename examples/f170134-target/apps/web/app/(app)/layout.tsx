@@ -1,13 +1,13 @@
 import type { ReactNode } from 'react';
 import { Shell } from '../../components/Shell';
-import { apiGet, type Session } from '../../lib/api';
+import { getSession } from '../../lib/authz';
 import { APP_TITLE } from '../../lib/spec';
 
 export const dynamic = 'force-dynamic';
 
 /** Authenticated application shell; the application authorization scheme (APP_USERS) gates every page. */
 export default async function AppLayout({ children }: { children: ReactNode }) {
-  const session = await apiGet<Session>('/session');
+  const session = await getSession();
   if (session.appAccessDenied) {
     return (
       <div className="login">

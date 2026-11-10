@@ -101,6 +101,13 @@ export class PagesService {
     if (scheme && scheme !== app) await this.security.authorize(tx, scheme);
   }
 
+  /** Button authorization scheme (p_security_scheme of the button; J-05): a button without one is always allowed. */
+  private async buttonAuthorized(tx: BusinessTx, page: PageId, button: string): Promise<boolean> {
+    const pageSpec = (UI_SPEC.pages as unknown as Record<string, { button?: Record<string, { securityScheme?: string }> }>)[String(page)];
+    const scheme = pageSpec.button?.[button]?.securityScheme as AuthorizationScheme | undefined;
+    return !scheme || this.security.isAuthorized(tx, scheme);
+  }
+
   private run<T>(actor: Principal, page: PageId, work: (tx: BusinessTx) => Promise<T>) {
     return this.db.run(actor, async (tx) => {
       await this.authorizePage(tx, page);
@@ -160,7 +167,10 @@ export class PagesService {
         "SELECT 1 FROM app.apx_demo_requests WHERE request_id = $1 AND status IN ('DRAFT', 'REJECTED')", [id]);
       return {
         list, selected: header.rows[0] ?? null, headerColumns: header.columns, lines,
-        buttons: { EDIT_HEADER: true, CREATE_REQUEST_LINES: (open.rowCount ?? 0) > 0 },
+        buttons: {
+          EDIT_HEADER: await this.buttonAuthorized(tx, 302, 'EDIT_HEADER'),
+          CREATE_REQUEST_LINES: (open.rowCount ?? 0) > 0 && await this.buttonAuthorized(tx, 302, 'CREATE_REQUEST_LINES'),
+        },
       };
     });
   }

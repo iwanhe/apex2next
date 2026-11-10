@@ -43,9 +43,14 @@ def test_user_without_role_is_refused(app):
 def test_page_authorization_scheme_message(app):
     req1 = app.as_user("req1")
     app.go(req1, "/departments/new")
-    expect(req1.locator("[data-error-code=FORBIDDEN]")).to_have_text("Akses ditolak: hanya untuk role WAREHOUSE.")
+    expect(req1.locator("[data-error-code=FORBIDDEN] .alert-title")).to_have_text("Akses ditolak: hanya untuk role WAREHOUSE.")
     app.go(req1, "/admin/users")
-    expect(req1.locator("[data-error-code=FORBIDDEN]")).to_have_text("Akses ditolak: hanya untuk role ADMIN.")
+    denied = req1.locator("[data-error-code=FORBIDDEN] p")
+    expect(denied).to_have_text(["Akses ditolak: hanya untuk role ADMIN.", "Access denied by Page security check"])
+    # button authorization schemes (J-05): the lists are readable, CREATE is MASTER_DATA only
+    for path in ("/departments", "/items"):
+        app.go(req1, path)
+        expect(req1.get_by_role("link", name="Create", exact=True)).to_have_count(0)
 
 
 def test_create_request_with_validation(app):

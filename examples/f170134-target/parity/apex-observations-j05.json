@@ -1,0 +1,23 @@
+{
+  "journey": "J-05",
+  "source": "oracleapex.com, workspace KCSI, app 170134 (DEMO), APEX 26.2.1",
+  "executed": "2026-11-10 07:05-07:10 UTC by Claude in the built-in browser (user DEMO_REQ signed in by the owner)",
+  "method": "J5A: full pages fetched in the DEMO_REQ session and parsed (no change). J5B: the page-301 dialog (tab A) plus a second, hidden frame on the same dialog URL (tab B) in the same session; APEX client API; texts read from the DOM.",
+  "start_snapshot": "snapshot-s3.csv",
+  "end_snapshot": "snapshot-s4.csv",
+  "steps": [
+    {"step": "J5A users page as requester", "messages": ["Akses ditolak: hanya untuk role ADMIN.", "Access denied by Page security check"]},
+    {"step": "J5A document types page as requester", "messages": ["Akses ditolak: hanya untuk role ADMIN.", "Access denied by Page security check"]},
+    {"step": "J5A departments as requester", "messages": ["rows=3", "range=1 - 3", "create=0"]},
+    {"step": "J5A items as requester", "messages": ["cards=5", "create=0"]},
+    {"step": "J5B create", "messages": ["Row created."]},
+    {"step": "J5B round 1 tab B save", "messages": ["Row updated."]},
+    {"step": "J5B round 2 tab A save", "messages": ["Row updated."]},
+    {"step": "J5B round 2 tab B stale save", "messages": ["1 error has occurred", "Current version of data in database has changed since user initiated update process."]}
+  ],
+  "notes": [
+    "Round 1 happened by accident of the method: tab B's successful save closed dialog A (the parent page treats the hidden frame as its dialog). It is replayed as is on the target so both sides end in the same state.",
+    "On APEX the access-denied page shows the scheme message and 'Access denied by Page security check' with an OK button; HTTP status 200.",
+    "Page 200/210 lists are readable by DEMO_REQ (APP_USERS); the Create buttons are hidden (MASTER_DATA)."
+  ]
+}

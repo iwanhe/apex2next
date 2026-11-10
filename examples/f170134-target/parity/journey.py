@@ -1,4 +1,4 @@
-"""WP9.6 parity journeys (J-01, J-02, J-03), executed on the target exactly as they were executed on APEX (oracleapex.com).
+"""WP9.6 parity journeys (J-01 .. J-05), executed on the target exactly as they were executed on APEX (oracleapex.com).
 
 Usage (disposable database; schema "app" is dropped):
   DATABASE_URL=... python parity/journey.py --s0 snapshot-s0.csv --s1 snapshot-s1.csv \
@@ -41,7 +41,7 @@ class Recorder:
     def note(self, step: str, page: Page):
         if "msg=" in page.url:  # redirected with a success message: wait until the parent page rendered it
             page.locator(".alert-success").first.wait_for(timeout=10000)
-        texts = page.locator(".alert-error .alert-title, .alert-error li, .alert-success, .field .error").all_inner_texts()
+        texts = page.locator(".alert-error .alert-title, .alert-error li, .alert-error.denied p, .alert-success, .field .error").all_inner_texts()
         msgs = list(dict.fromkeys(t.strip() for t in texts if t.strip()))
         self.steps.append({"step": step, "messages": msgs, "url": page.url.split("/", 3)[-1]})
 
@@ -271,7 +271,160 @@ def run_j03(browser, base: str, rec: Recorder) -> None:
     rec.note("J3C approve level 2", director)
 
 
-JOURNEYS = {"J-01": run_j01, "J-02": run_j02, "J-03": run_j03}
+def _table_rows(page: Page, test_id: str) -> str:
+    rows = []
+    for tr in page.get_by_test_id(test_id).locator("tbody tr").all():
+        cells = [c for c in tr.locator("td").all() if not c.locator("a[aria-label=Edit]").count()]
+        rows.append("|".join(c.inner_text().strip() for c in cells))
+    return "rows=" + " ; ".join(rows)
+
+
+def _facets(page: Page) -> list[str]:
+    out = []
+    for fs in page.locator("form[aria-label=Filter] fieldset").all():
+        values = []
+        for lab in fs.locator("label").all():
+            count = lab.locator(".count").inner_text().strip()
+            values.append(f"{lab.inner_text().strip()[: -len(count)].strip()} {count}")
+        out.append(f"facet {fs.locator('legend').inner_text().strip()}=" + ", ".join(values))
+    return out
+
+
+def _ir(rec: Recorder, step: str, page: Page, test_id: str):
+    rec.steps.append({"step": step, "messages": [_table_rows(page, test_id), "range=" + page.get_by_test_id("row-range").inner_text().strip()],
+                      "url": page.url.split("/", 3)[-1]})
+
+
+def _csv(rec: Recorder, step: str, page: Page, base: str):
+    link = page.get_by_role("link", name="Download CSV")
+    href = link.get_attribute("href")
+    with page.expect_download() as d:
+        link.click()
+    body = Path(d.value.path()).read_bytes().decode("utf-8")  # strict: a BOM would show up as U+FEFF
+    rec.steps.append({"step": step, "messages": [f"file={d.value.suggested_filename}", "csv=" + body], "url": href})
+
+
+def _ir_search(page: Page, text: str):
+    page.get_by_role("search").get_by_role("searchbox").fill(text)
+    page.get_by_role("search").get_by_role("button", name="Go").click()
+    page.wait_for_url(f"**q={text}**")
+    page.wait_for_load_state("networkidle")
+
+
+def _ir_sort(page: Page, test_id: str, label: str, direction: str):
+    for _ in range(2):
+        header = page.get_by_test_id(test_id).locator("thead a", has_text=label)
+        if direction == "desc" and header.inner_text().endswith("▼") or direction == "asc" and header.inner_text().endswith("▲"):
+            return
+        header.click()
+        page.wait_for_url("**dir=**")
+        page.wait_for_load_state("networkidle")
+
+
+def _faceted(rec: Recorder, step: str, page: Page, content: list[str]):
+    rec.steps.append({"step": step, "messages": content + _facets(page), "url": page.url.split("/", 3)[-1]})
+
+
+def _cards(page: Page) -> str:
+    cards = [" | ".join(x.strip() for x in c.inner_text().split("\n") if x.strip() and x.strip() != "◆")
+             for c in page.locator("[data-testid=cards] article").all()]
+    return "cards=" + " ; ".join(cards)
+
+
+def _facet_click(page: Page, value: str):
+    with page.expect_navigation():
+        page.locator(f"form[aria-label=Filter] input[type=checkbox][value='{value}']").check()
+    page.wait_for_load_state("networkidle")
+
+
+def _facet_search(page: Page, item: str, text: str):
+    page.fill(f"#{item}", text)
+    with page.expect_navigation():
+        page.press(f"#{item}", "Enter")
+    page.wait_for_load_state("networkidle")
+
+
+def run_j04(browser, base: str, rec: Recorder) -> None:
+    """J-04 read-only reports: IR search/sort/CSV (pages 310, 400) and faceted search (pages 300, 210) on snapshot S3."""
+    admin = login(browser, base, "demo_admin")
+    go(admin, base, "/request-lines")
+    _ir(rec, "J4A lines default", admin, "report-requestLines")
+    _ir_search(admin, "laptop")
+    _ir(rec, "J4A lines search laptop", admin, "report-requestLines")
+    _ir_sort(admin, "report-requestLines", "Jumlah", "desc")
+    _ir(rec, "J4A lines search laptop, sort Jumlah desc", admin, "report-requestLines")
+    _csv(rec, "J4A lines CSV", admin, base)
+    go(admin, base, "/reports/requests")
+    _ir(rec, "J4B summary default", admin, "report-requestSummary")
+    _ir_sort(admin, "report-requestSummary", "Total", "asc")
+    _ir(rec, "J4B summary sort Total asc", admin, "report-requestSummary")
+    _ir_search(admin, "OPERATIONS")
+    _ir(rec, "J4B summary sort Total asc, search OPERATIONS", admin, "report-requestSummary")
+    _csv(rec, "J4B summary CSV", admin, base)
+
+    go(admin, base, "/requests")
+    rng = lambda: "range=" + admin.get_by_test_id("row-range").inner_text().strip()  # noqa: E731
+    _faceted(rec, "J4C requests default", admin, [_table_rows(admin, "report-requests"), rng()])
+    _facet_click(admin, "P300_STATUS:DRAFT")
+    _faceted(rec, "J4C requests Status DRAFT", admin, [_table_rows(admin, "report-requests"), rng()])
+    _facet_search(admin, "P300_SEARCH", "laptop")
+    _faceted(rec, "J4C requests Status DRAFT, search laptop", admin, [_table_rows(admin, "report-requests"), rng()])
+    go(admin, base, "/items")
+    _faceted(rec, "J4D items default", admin, [_cards(admin)])
+    _facet_click(admin, "P210_CATEGORY:IT")
+    _faceted(rec, "J4D items Kategori IT", admin, [_cards(admin)])
+    go(admin, base, "/items")
+    _facet_search(admin, "P210_SEARCH", "toner")
+    _faceted(rec, "J4D items search toner", admin, [_cards(admin)])
+
+
+def _region_text(page: Page) -> str:
+    return page.locator("main").inner_text()
+
+
+def run_j05(browser, base: str, rec: Recorder) -> None:
+    """J-05 negative authorization (DEMO_REQ on admin and master data pages) and lost update between two tabs."""
+    req = login(browser, base, "demo_req")
+    for path, step in (("/admin/users", "J5A users page as requester"), ("/admin/document-types", "J5A document types page as requester")):
+        go(req, base, path)
+        rec.note(step, req)
+    for path, step, test_id in (("/departments", "J5A departments as requester", "report-departments"),):
+        go(req, base, path)
+        rec.steps.append({"step": step, "messages": [_table_rows(req, test_id).split("|")[0] and f"rows={req.get_by_test_id(test_id).locator('tbody tr').count()}",
+                                                     "range=" + req.get_by_test_id("row-range").inner_text().strip(),
+                                                     f"create={req.get_by_role('link', name='Create', exact=True).count()}"],
+                          "url": req.url.split("/", 3)[-1]})
+    go(req, base, "/items")
+    rec.steps.append({"step": "J5A items as requester", "messages": [f"cards={req.locator('[data-testid=cards] article').count()}",
+                                                                     f"create={req.get_by_role('link', name='Create', exact=True).count()}"],
+                      "url": req.url.split("/", 3)[-1]})
+
+    go(req, base, "/requests/new")
+    req.select_option("#P301_DEPARTMENT_ID", label="OPS - Operations")
+    req.fill("#P301_NEED_DATE", NEED)
+    req.fill("#P301_PURPOSE", "WP96 parity D")
+    submit(req, "CREATE")
+    rec.note("J5B create", req)
+    # round 1 (as on APEX): a second tab saves while the first one stays open without saving
+    tab_a = req
+    open_request(tab_a, base, "REQ-2026-0006")
+    tab_b = req.context.new_page()
+    open_request(tab_b, base, "REQ-2026-0006")
+    tab_b.fill("#P301_PURPOSE", "WP96 parity D tab B")
+    submit(tab_b, "SAVE")
+    rec.note("J5B round 1 tab B save", tab_b)
+    # round 2: both tabs open on the same version; A saves, then B saves its stale form
+    open_request(tab_a, base, "REQ-2026-0006")
+    open_request(tab_b, base, "REQ-2026-0006")
+    tab_a.fill("#P301_PURPOSE", "WP96 parity D tab A")
+    submit(tab_a, "SAVE")
+    rec.note("J5B round 2 tab A save", tab_a)
+    tab_b.fill("#P301_NOTES", "stale edit from tab B")
+    submit(tab_b, "SAVE")
+    rec.note("J5B round 2 tab B stale save", tab_b)
+
+
+JOURNEYS = {"J-01": run_j01, "J-02": run_j02, "J-03": run_j03, "J-04": run_j04, "J-05": run_j05}
 
 
 def main() -> int:
