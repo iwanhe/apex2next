@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { PostgresDatabase } from '../database/postgres-database';
-import { BusinessRuleError, errors } from '../business/errors';
+import { BusinessRuleError, errors } from '../errors';
 import type { AuthConfig } from './auth.config';
 import { AUTH_CONFIG } from './auth.tokens';
 import { checkPolicy, dummyHash, hashPassword, verifyPassword } from './password';

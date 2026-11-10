@@ -65,6 +65,10 @@ test('coverage matrix maps every inventory component exactly once', () => {
     for (const ref of `${entry.where ?? ''} ${entry.web ?? ''}`.match(/apps\/[A-Za-z0-9_./()[\]-]+/g) ?? []) {
       assert.ok(fs.existsSync(path.join(ROOT, ref)), `${key}: ${ref} exists`);
     }
+    // shared runtime packages of the repository (roadmap R2)
+    for (const ref of `${entry.where ?? ''} ${entry.web ?? ''}`.match(/(?<![\w/])packages\/runtime-[A-Za-z0-9_./()[\]-]+/g) ?? []) {
+      assert.ok(fs.existsSync(path.join(ROOT, '..', '..', ref)), `${key}: ${ref} exists`);
+    }
   }
   for (const gap of coverage.gaps) assert.match(gap.id, /^G-\d{2}$/);
 });

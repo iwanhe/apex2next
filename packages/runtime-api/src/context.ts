@@ -1,5 +1,5 @@
 import { PoolClient } from 'pg';
-import { PostgresDatabase } from '../database/postgres-database';
+import { PostgresDatabase } from './database/postgres-database';
 import { errors } from './errors';
 
 /**

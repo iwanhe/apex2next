@@ -1,9 +1,6 @@
 import { Body, Controller, Delete, Get, HttpCode, Inject, Param, Post, Put, Query } from '@nestjs/common';
-import type { AuthConfig } from '../auth/auth.config';
-import { AUTH_CONFIG } from '../auth/auth.tokens';
-import { Actor } from '../auth/auth.guard';
-import type { Principal } from '../business/context';
-import { errors } from '../business/errors';
+import { Actor, AUTH_CONFIG, errors } from '@apex2next/runtime-api';
+import type { AuthConfig, Principal } from '@apex2next/runtime-api';
 import { MasterFormName, PagesService } from './pages.service';
 import { REGION_SOURCES, RegionName } from './report-definitions';
 

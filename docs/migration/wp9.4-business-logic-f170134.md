@@ -9,7 +9,7 @@
 
 | Source unit | Target | Where |
 |---|---|---|
-| `APX_DEMO_SEC_PKG` (app_user, bootstrap_mode, has_role[_yn], has_any_role, set_test_user) | `app.current_username/has_role/has_role_yn/has_any_role` SQL functions; `SecurityService`; `Principal` | `0002_wp94_business_functions.sql`, `business/security.service.ts`, `business/context.ts` |
+| `APX_DEMO_SEC_PKG` (app_user, bootstrap_mode, has_role[_yn], has_any_role, set_test_user) | `app.current_username/has_role/has_role_yn/has_any_role` SQL functions; `SecurityService`; `Principal` | `0002_wp94_business_functions.sql`, `business/security.service.ts`, `packages/runtime-api/src/context.ts` (since R2) |
 | `APX_DEMO_DOC_PKG.NEXT_NO` | `NumberingService.nextNo` (same transaction as the insert) | `business/numbering.service.ts` |
 | `APX_DEMO_APPROVAL_PKG` (submit, approve, reject, can_act_yn, doc_amount, bypass, get_type/get_doc/set_doc_status/create_step) | `ApprovalService`, `DocumentTypeRegistry` with reviewed `DocumentAdapter`s, and `app.can_act_yn` SQL function | `business/approval.service.ts`, `business/document-types.ts`, `0002` |
 | `APX_DEMO_REQUEST_PKG.CHECK_SUBMIT` | `requestDocument.validate` | `business/document-types.ts` |

@@ -32,10 +32,11 @@ Bayangkan pindah rumah:
 | Package, trigger, data seed | **Manual** | 28 objek; alat memberi daftar temuan dan apa yang harus diputuskan |
 | Cek rencana terhadap database Oracle asli | **Otomatis** | 12 pemeriksaan (REC-001 … REC-012) |
 | Pindah data + verifikasi | **Otomatis** | sekali transaksi; tidak ada data tersimpan kalau satu pemeriksaan gagal |
-| Halaman Next.js dan API NestJS | **Manual, dipandu** | developer mengikuti spesifikasi UI hasil generate; contoh lengkap di `examples/f170134-target` |
+| Fondasi web dan API (runtime bersama) | **Siap pakai** | paket `packages/runtime-api` dan `packages/runtime-web`: koneksi database, login akun lokal, pesan error gaya APEX, log akses, mesin laporan, form APEX, facet, grafik, kerangka halaman |
+| Halaman Next.js dan API NestJS | **Manual, dipandu** | developer menulis bagian khusus aplikasi (halaman, definisi laporan, logika bisnis) di atas runtime bersama; contoh lengkap di `examples/f170134-target` |
 | Uji kesamaan dengan APEX | **Manual per aplikasi** | metode dan contoh skrip tersedia (5 alur pilot identik) |
 | Latihan migrasi, backup–restore, uji performa | **Contoh siap pakai** | skrip di `examples/f170134-target/rehearsal` untuk diadaptasi |
-| Login | **Tersedia di contoh** | akun lokal dengan ganti password wajib, kunci akun, audit |
+| Login | **Tersedia di runtime bersama** | akun lokal dengan ganti password wajib, kunci akun, audit |
 | Interactive Grid, upload file, cetak PDF, email, REST data source, job, plug-in | **Belum didukung** | akan ditambahkan sesuai kebutuhan aplikasi nyata (lihat roadmap) |
 
 **Yang dibutuhkan agar hasilnya bisa dipercaya:** bahan dari environment non-produksi, review oleh orang yang
@@ -214,8 +215,8 @@ dipakai pada aplikasi nyata.
 
 | Tahap | Tujuan | Hasil | Selesai bila |
 |---|---|---|---|
-| **R1 — Alat bantu** (sekarang) | Satu pintu untuk alat yang sudah ada | `tools/apex2next`, panduan ini | Langkah 0–5, 7 dan 9 bisa dijalankan dari satu perintah |
-| **R2 — Runtime bersama** | Fondasi aplikasi target tidak ditulis ulang per aplikasi | Paket bersama untuk web dan API: form APEX, Interactive Report, facet, validasi, pesan, hak akses, lost update, login | App 170134 berjalan di atas paket tersebut dan semua tes serta J-01…J-05 tetap lulus |
+| **R1 — Alat bantu** (selesai) | Satu pintu untuk alat yang sudah ada | `tools/apex2next`, panduan ini | Langkah 0–5, 7 dan 9 bisa dijalankan dari satu perintah |
+| **R2 — Runtime bersama** (selesai 10 Nov 2026) | Fondasi aplikasi target tidak ditulis ulang per aplikasi | `packages/runtime-api` dan `packages/runtime-web`: form APEX, Interactive Report, facet, pesan dan error gaya APEX, hak akses tombol, cek versi data (lost update), login akun lokal | Tercapai: app 170134 berjalan di atas paket tersebut; 63 tes API, 3 tes runtime web, 12 tes e2e dan J-01…J-05 tetap lulus |
 | **R3 — Generator** | Mengurangi pekerjaan manual terbesar | Generator halaman, definisi laporan dan form, LOV, tombol, navigasi dari inventaris; penerjemah SQL Oracle → PostgreSQL untuk query region dan LOV; query snapshot dibuat otomatis dari rencana schema | 170134 bisa di-generate ulang dan lulus tes yang sama |
 | **R4 — Aplikasi nyata pertama** (usulan: FRITS) | Menguji alat pada aplikasi yang dipakai user | Komponen yang dibutuhkan FRITS ditambahkan; pemilahan PL/SQL menjadi template service; koneksi langsung ke database non-produksi; pemindahan data bertahap untuk volume besar | Alur kerja penting FRITS identik dengan APEX; gate WP9 lulus |
 | **R5 — Konverter** | Satu perintah dari export sampai aplikasi | `apex2next convert` dengan laporan "dibuat otomatis vs TODO"; template deploy (Docker, Cloudflare Tunnel); komponen lanjutan (Interactive Grid, upload, PDF, email, REST, job) sesuai kebutuhan; opsi login eksternal (Entra ID, Keycloak) | Aplikasi kedua (mis. SIPP) dikonversi dengan porsi manual yang terukur di laporan |
@@ -229,7 +230,7 @@ cakupan, dan bukti kesamaan perilaku.
 **Apakah aplikasi APEX lama diubah?** Tidak. Alat hanya membaca. Data uji yang dibuat saat uji kesamaan
 dicatat dan diputuskan pemiliknya.
 
-**Apakah bisa sekali klik?** Belum. Lihat roadmap R2–R5.
+**Apakah bisa sekali klik?** Belum. Lihat roadmap R3–R5.
 
 **Berapa lama untuk satu aplikasi?** Tergantung jumlah halaman, komponen dan PL/SQL. Langkah 2, 3 dan 5 memberi
 angka untuk memperkirakannya. Belum ada patokan dari aplikasi nyata. Aplikasi pertama di tahap R4 akan

@@ -4,9 +4,9 @@
 const { execFileSync } = require('node:child_process');
 const path = require('node:path');
 const { Pool } = require('pg');
-const { PostgresDatabase } = require('../dist/database/postgres-database.js');
+const { PostgresDatabase } = require('@apex2next/runtime-api');
 const { createBusinessServices } = require('../dist/business/business.module.js');
-const { principal } = require('../dist/business/context.js');
+const { principal } = require('@apex2next/runtime-api');
 
 const DATABASE_URL = process.env.DATABASE_URL;
 const skip = !DATABASE_URL && 'DATABASE_URL (disposable PostgreSQL) not set';

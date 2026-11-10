@@ -1,8 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useActionState } from 'react';
-import type { FormBinding, FormState } from '../lib/form-actions';
-import { submitApexForm } from '../lib/form-actions';
+import type { FormBinding, FormState } from '../form-types';
 
 export interface FieldView {
   item: string;
@@ -31,11 +30,13 @@ export interface ButtonView {
  * Generic APEX form dialog body: items in sequence, inline errors, buttons by position (CLOSE/DELETE left,
  * NEXT right). Read-only items render as text and are not submitted.
  */
-export function ApexForm({ binding, fields, values, checksum, buttons, cancelHref, cancelLabel }: {
+export function ApexForm({ submit, binding, fields, values, checksum, buttons, cancelHref, cancelLabel }: {
+  /** The application's form submit server action (AppRuntime.submit). */
+  submit: (binding: FormBinding, prev: FormState, form: FormData) => Promise<FormState>;
   binding: FormBinding; fields: FieldView[]; values: Record<string, string | null>; checksum: string | null;
   buttons: ButtonView[]; cancelHref: string; cancelLabel: string;
 }) {
-  const action = submitApexForm.bind(null, binding);
+  const action = submit.bind(null, binding);
   const [state, formAction, pending] = useActionState<FormState, FormData>(action, { error: null, fieldErrors: [], values: null, version: 0 });
   const current = (c: string) => state.values?.[c] ?? values[c] ?? '';
   const errorsFor = (item: string) => state.fieldErrors.filter((e) => e.field === item);

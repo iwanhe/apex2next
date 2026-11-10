@@ -15,7 +15,9 @@
     ],
     "allowJs": true,
     "resolveJsonModule": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "module": "esnext",
+    "moduleResolution": "bundler"
   },
   "exclude": [
     "node_modules"

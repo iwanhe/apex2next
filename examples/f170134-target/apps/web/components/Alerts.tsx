@@ -1,25 +1,9 @@
-import { ApiError, displayError } from '../lib/api';
-import { processMessage } from '../lib/spec';
+// Binds a shared component of @apex2next/runtime-web to this application (roadmap R2).
+import type { ComponentProps } from 'react';
+import { SuccessMessage as Rt } from '@apex2next/runtime-web/components/Alerts';
+import { APP } from '../lib/app';
 
-/** APEX success message after a dialog closed (flash key "page:PROCESS" -> process success message). */
-export function SuccessMessage({ flash }: { flash?: string }) {
-  const text = processMessage(flash);
-  return text ? <div className="alert alert-success" role="status">{text}</div> : null;
-}
-
-/** APEX error page / inline notification for an API error. */
-export function ErrorRegion({ error }: { error: unknown }) {
-  if (error instanceof ApiError && error.body.code === 'FORBIDDEN') {
-    // A page authorization scheme failed: APEX shows the scheme message and "Access denied by Page security check" (J-05).
-    return (
-      <div className="alert alert-error denied" role="alert" data-error-code="FORBIDDEN">
-        <p className="alert-title">{displayError(error.body)}</p>
-        <p>Access denied by Page security check</p>
-      </div>
-    );
-  }
-  if (error instanceof ApiError) {
-    return <div className="alert alert-error denied" role="alert" data-error-code={error.body.code}>{displayError(error.body)}</div>;
-  }
-  throw error;
+export { ErrorRegion } from '@apex2next/runtime-web/components/Alerts';
+export function SuccessMessage(props: Omit<ComponentProps<typeof Rt>, 'app'>) {
+  return <Rt app={APP} {...props} />;
 }

@@ -2,6 +2,8 @@ import type { NextConfig } from 'next';
 
 const config: NextConfig = {
   poweredByHeader: false,
+  // shared runtime (roadmap R2) ships TypeScript source and is compiled with the application
+  transpilePackages: ['@apex2next/runtime-web'],
   async headers() {
     return [{
       source: '/:path*',

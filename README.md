@@ -14,6 +14,7 @@ Pages and business logic are built by developers from the generated specificatio
 tests. The pilot (app 170134) shows the full method end to end; see the [pilot closure](docs/migration/wp9-pilot-closure-f170134.md).
 
 - **User guide (Bahasa Indonesia):** [docs/panduan/README.md](docs/panduan/README.md): plain-language usage, capability scope and roadmap
+- **Shared runtime (R2):** [`packages/runtime-api`](packages/runtime-api/README.md) (NestJS) and [`packages/runtime-web`](packages/runtime-web/README.md) (Next.js), so a converted app only writes its own pages, report definitions and business logic
 - **One entry point:** `tools/apex2next` (`doctor`, `queries`, `inventory`, `schema-plan`, `dictionary-check`, `plsql`, `load-data`, `assess`)
 
 ```bash

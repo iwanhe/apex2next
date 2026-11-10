@@ -1,7 +1,7 @@
 // Display formats of the source application (DD-MON-YYYY, TO_CHAR number masks). Node >= 22.6 strips TS types.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { formatDate, formatNumber, formatValue, rowRange } from '../lib/format.ts';
+import { formatDate, formatNumber, formatValue, rowRange } from '../src/format.ts';
 
 test('DD-MON-YYYY from ISO date or timestamp', () => {
   assert.equal(formatDate('2026-11-09'), '09-NOV-2026');

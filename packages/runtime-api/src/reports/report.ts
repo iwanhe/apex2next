@@ -1,5 +1,5 @@
-import { BusinessTx } from '../business/context';
-import { errors } from '../business/errors';
+import { BusinessTx } from '../context';
+import { errors } from '../errors';
 
 /**
  * WP9.5 report engine for APEX Interactive Reports, Classic Reports and Cards regions.

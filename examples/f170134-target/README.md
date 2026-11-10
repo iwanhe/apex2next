@@ -8,13 +8,14 @@ The PostgreSQL + NestJS + Next.js target for the WP9 pilot. It is **not** produc
 | `db/migrations/0002_wp94_business_functions.sql` | **Hand-written, reviewed**: principal and role functions, `app.can_act_yn` |
 | `db/migrations/0003_wp94_deferred_views.sql` | **Generated**: views that need the reviewed functions (via `db/function-mappings.json`) |
 | `db/schema-plan.json`, `db/post-load-identity-alignment.sql` | Generated plan and post-load identity alignment |
-| `apps/api/src/database`, `main.ts`, `health.controller.ts`, `scripts/migrate.mjs` | Copied from the WP7 generator runtime |
+| `apps/api/src/main.ts`, `health.controller.ts`, `scripts/migrate.mjs` | Copied from the WP7 generator runtime |
+| [`packages/runtime-api`](../../packages/runtime-api), [`packages/runtime-web`](../../packages/runtime-web) | **Shared runtime** (R2): database, auth/local accounts, error mapping, access log, reports, forms (API); session, guard, formatting, APEX-style components (web). Used through the workspace |
 | `apps/api/src/business/**` | **Hand-written** WP9.4 business services ([rule catalog](../../docs/migration/wp9.4-business-logic-f170134.md)) |
 | `ui/apex-page-inventory.json` | **Generated** from the APEX SQL export (`apex2next_extractor.page_inventory`) |
 | `apps/*/…/ui-spec.generated.ts` | **Generated** from the inventory (`node scripts/generate-ui-spec.mjs`; `--check` in CI) |
 | `ui/coverage.json` | **Reviewed** mapping of every inventory component to its target ([WP9.5](../../docs/migration/wp9.5-ui-f170134.md)) |
-| `apps/api/src/auth`, `apps/api/src/pages`, `apps/api/src/http` | **Hand-written** WP9.5 session auth, page layer and error mapping |
-| `apps/web/**` | **Hand-written** WP9.5 Next.js pages |
+| `apps/api/src/pages` | **Hand-written** WP9.5 page layer (app-specific: report definitions, form bindings) |
+| `apps/web/**` | **Hand-written** WP9.5 Next.js pages. `lib/*` and `components/*` are thin wrappers that bind the shared runtime to this app's UI spec |
 | `db/seed/dev-seed.sql` | Development/test seed (roles, REQ document type, test users). Not production data |
 | `e2e/` | Playwright end-to-end journeys (Python) |
 | `migration/oracle/extract_snapshot_apex_workshop.sql` | WP9.6 read-only Oracle snapshot query (SQL Workshop) |

@@ -1,8 +1,8 @@
 import { CanActivate, ExecutionContext, Inject, Injectable, Optional, SetMetadata, createParamDecorator } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
-import { Principal, principal } from '../business/context';
-import { BusinessRuleError, errors } from '../business/errors';
+import { Principal, principal } from '../context';
+import { BusinessRuleError, errors } from '../errors';
 import { AccountsService } from './accounts.service';
 import { AUTH_CONFIG } from './auth.tokens';
 import type { AuthConfig } from './auth.config';

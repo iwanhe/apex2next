@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { BusinessTx } from './context';
-import { errors } from './errors';
+import { BusinessTx, errors } from '@apex2next/runtime-api';
 
 /**
  * Replaces the configuration-driven dynamic SQL of APX_DEMO_APPROVAL_PKG (GET_DOC, SET_DOC_STATUS,

@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { accessLog } from './http/access-log';
+import { accessLog } from '@apex2next/runtime-api';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: false });

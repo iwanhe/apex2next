@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { BusinessTx } from './context';
-import { errors } from './errors';
+import { BusinessTx, errors } from '@apex2next/runtime-api';
 
 /**
  * Master-data write paths. Replace the normalization/audit triggers APX_DEMO_USER_ROLES_TRG,

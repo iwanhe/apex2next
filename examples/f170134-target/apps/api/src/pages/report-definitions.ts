@@ -1,4 +1,4 @@
-import { ColumnType, FacetDef, ReportColumn, ReportDef } from './report';
+import { ColumnType, FacetDef, ReportColumn, ReportDef } from '@apex2next/runtime-api';
 import { UI_SPEC } from './ui-spec.generated';
 
 /**

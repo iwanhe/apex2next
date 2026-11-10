@@ -4,7 +4,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { skip, startApi } = require('./helpers');
-const { signSession } = require('../dist/auth/session-token.js');
+const { signSession } = require('@apex2next/runtime-api');
 
 const year = String(new Date().getUTCFullYear());
 const today = new Date().toISOString().slice(0, 10);

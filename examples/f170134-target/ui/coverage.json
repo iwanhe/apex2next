@@ -144,7 +144,7 @@
     },
     "authentication": {
       "status": "ADAPTED",
-      "where": "apps/api/src/auth",
+      "where": "packages/runtime-api/src/auth",
       "note": "Oracle APEX Accounts -> AUTH_MODE=dev session tokens; production IdP is WP9-009."
     },
     "authorizations": {
@@ -153,11 +153,11 @@
     },
     "lovs": {
       "status": "IMPLEMENTED",
-      "where": "apps/api/src/pages/report-definitions.ts (LOV_SOURCES) + apps/web/lib/forms.ts"
+      "where": "apps/api/src/pages/report-definitions.ts (LOV_SOURCES) + packages/runtime-web/src/forms.ts"
     },
     "applicationFormats": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/format.ts",
+      "where": "packages/runtime-web/src/format.ts",
       "note": "DD-MON-YYYY and TO_CHAR masks; NLS AMERICAN."
     }
   },
@@ -305,48 +305,48 @@
     },
     "P191:DYNAMIC_ACTION:ON_CLICK_CANCEL_CLOSE_DIALOG": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/components/ApexForm.tsx",
+      "where": "packages/runtime-web/src/components/ApexForm.tsx",
       "note": "Cancel/Close link back to the parent page."
     },
     "P191:ITEM:P191_AMOUNT": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P191:ITEM:P191_APPROVAL_ID": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P191:ITEM:P191_APPROVAL_LEVEL": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P191:ITEM:P191_APPROVER_ROLE": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P191:ITEM:P191_CAN_ACT_YN": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P191:ITEM:P191_DOC_NAME": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P191:ITEM:P191_DOC_NO": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P191:ITEM:P191_NOTE": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P191:ITEM:P191_REQUESTED_BY": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P191:ITEM:P191_STATUS": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P191:PROCESS:CALL_APPROVE": {
       "status": "IMPLEMENTED",
@@ -371,7 +371,7 @@
     },
     "P191:REGION:Buttons": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/components/ApexForm.tsx",
+      "where": "packages/runtime-web/src/components/ApexForm.tsx",
       "note": "Dialog button region: footer, CLOSE/DELETE left, NEXT right."
     },
     "P200:BUTTON:CREATE": {
@@ -447,24 +447,24 @@
     },
     "P201:DYNAMIC_ACTION:ON_CLICK_CANCEL_CLOSE_DIALOG": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/components/ApexForm.tsx",
+      "where": "packages/runtime-web/src/components/ApexForm.tsx",
       "note": "Cancel/Close link back to the parent page."
     },
     "P201:ITEM:P201_ACTIVE_YN": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P201:ITEM:P201_DEPARTMENT_ID": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P201:ITEM:P201_DEPT_CODE": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P201:ITEM:P201_DEPT_NAME": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P201:PROCESS:CLOSE_DIALOG": {
       "status": "ADAPTED",
@@ -482,7 +482,7 @@
     },
     "P201:REGION:Buttons": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/components/ApexForm.tsx",
+      "where": "packages/runtime-web/src/components/ApexForm.tsx",
       "note": "Dialog button region: footer, CLOSE/DELETE left, NEXT right."
     },
     "P201:REGION:Department": {
@@ -509,15 +509,15 @@
     },
     "P210:ITEM:P210_ACTIVE_YN": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/components/Facets.tsx + apps/api/src/pages/report.ts"
+      "where": "apps/web/components/Facets.tsx + packages/runtime-api/src/reports/report.ts"
     },
     "P210:ITEM:P210_CATEGORY": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/components/Facets.tsx + apps/api/src/pages/report.ts"
+      "where": "apps/web/components/Facets.tsx + packages/runtime-api/src/reports/report.ts"
     },
     "P210:ITEM:P210_SEARCH": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/components/Facets.tsx + apps/api/src/pages/report.ts"
+      "where": "apps/web/components/Facets.tsx + packages/runtime-api/src/reports/report.ts"
     },
     "P210:REGION:Filter": {
       "status": "ADAPTED",
@@ -553,36 +553,36 @@
     },
     "P211:DYNAMIC_ACTION:ON_CLICK_CANCEL_CLOSE_DIALOG": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/components/ApexForm.tsx",
+      "where": "packages/runtime-web/src/components/ApexForm.tsx",
       "note": "Cancel/Close link back to the parent page."
     },
     "P211:ITEM:P211_ACTIVE_YN": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P211:ITEM:P211_CATEGORY": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P211:ITEM:P211_ITEM_CODE": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P211:ITEM:P211_ITEM_ID": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P211:ITEM:P211_ITEM_NAME": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P211:ITEM:P211_STD_PRICE": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P211:ITEM:P211_UOM": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P211:PROCESS:CLOSE_DIALOG": {
       "status": "ADAPTED",
@@ -600,7 +600,7 @@
     },
     "P211:REGION:Buttons": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/components/ApexForm.tsx",
+      "where": "packages/runtime-web/src/components/ApexForm.tsx",
       "note": "Dialog button region: footer, CLOSE/DELETE left, NEXT right."
     },
     "P211:REGION:Item": {
@@ -619,15 +619,15 @@
     },
     "P300:ITEM:P300_DEPARTMENT_ID_DSP": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/components/Facets.tsx + apps/api/src/pages/report.ts"
+      "where": "apps/web/components/Facets.tsx + packages/runtime-api/src/reports/report.ts"
     },
     "P300:ITEM:P300_SEARCH": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/components/Facets.tsx + apps/api/src/pages/report.ts"
+      "where": "apps/web/components/Facets.tsx + packages/runtime-api/src/reports/report.ts"
     },
     "P300:ITEM:P300_STATUS": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/components/Facets.tsx + apps/api/src/pages/report.ts"
+      "where": "apps/web/components/Facets.tsx + packages/runtime-api/src/reports/report.ts"
     },
     "P300:REGION:Filter": {
       "status": "ADAPTED",
@@ -704,42 +704,42 @@
     },
     "P301:DYNAMIC_ACTION:ON_CLICK_CANCEL_CLOSE_DIALOG": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/components/ApexForm.tsx",
+      "where": "packages/runtime-web/src/components/ApexForm.tsx",
       "note": "Cancel/Close link back to the parent page."
     },
     "P301:ITEM:P301_DEPARTMENT_ID": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts + apps/api/src/pages/pages.service.ts (requestReadOnly)"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts + apps/api/src/pages/pages.service.ts (requestReadOnly)"
     },
     "P301:ITEM:P301_NEED_DATE": {
       "status": "ADAPTED",
-      "where": "apps/web/components/ApexForm.tsx + apps/api/src/pages/pages.service.ts (requestReadOnly)",
+      "where": "packages/runtime-web/src/components/ApexForm.tsx + apps/api/src/pages/pages.service.ts (requestReadOnly)",
       "note": "Native browser date input; value stored as date (D-UI-02)."
     },
     "P301:ITEM:P301_NOTES": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P301:ITEM:P301_PURPOSE": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts + apps/api/src/pages/pages.service.ts (requestReadOnly)"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts + apps/api/src/pages/pages.service.ts (requestReadOnly)"
     },
     "P301:ITEM:P301_REQUEST_DATE": {
       "status": "ADAPTED",
-      "where": "apps/web/components/ApexForm.tsx",
+      "where": "packages/runtime-web/src/components/ApexForm.tsx",
       "note": "Native browser date input; value stored as date (D-UI-02)."
     },
     "P301:ITEM:P301_REQUEST_ID": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P301:ITEM:P301_REQUEST_NO": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P301:ITEM:P301_STATUS": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts + apps/api/src/pages/pages.service.ts (requestReadOnly)"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts + apps/api/src/pages/pages.service.ts (requestReadOnly)"
     },
     "P301:PROCESS:CALL_SUBMIT_REQUESTS": {
       "status": "IMPLEMENTED",
@@ -761,7 +761,7 @@
     },
     "P301:REGION:Buttons": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/components/ApexForm.tsx",
+      "where": "packages/runtime-web/src/components/ApexForm.tsx",
       "note": "Dialog button region: footer, CLOSE/DELETE left, NEXT right."
     },
     "P301:REGION:Permintaan Barang": {
@@ -799,7 +799,7 @@
     },
     "P302:ITEM:P302_REQUEST_ID": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P302:REGION:Belum dipilih": {
       "status": "IMPLEMENTED",
@@ -970,32 +970,32 @@
     },
     "P311:DYNAMIC_ACTION:ON_CLICK_CANCEL_CLOSE_DIALOG": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/components/ApexForm.tsx",
+      "where": "packages/runtime-web/src/components/ApexForm.tsx",
       "note": "Cancel/Close link back to the parent page."
     },
     "P311:ITEM:P311_ITEM_ID": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P311:ITEM:P311_LINE_AMOUNT": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P311:ITEM:P311_LINE_ID": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P311:ITEM:P311_QTY": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P311:ITEM:P311_REQUEST_ID": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P311:ITEM:P311_UNIT_PRICE": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P311:PROCESS:CLOSE_DIALOG": {
       "status": "ADAPTED",
@@ -1017,7 +1017,7 @@
     },
     "P311:REGION:Buttons": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/components/ApexForm.tsx",
+      "where": "packages/runtime-web/src/components/ApexForm.tsx",
       "note": "Dialog button region: footer, CLOSE/DELETE left, NEXT right."
     },
     "P400:IR:Rekap Permintaan": {
@@ -1138,20 +1138,20 @@
     },
     "P501:DYNAMIC_ACTION:ON_CLICK_CANCEL_CLOSE_DIALOG": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/components/ApexForm.tsx",
+      "where": "packages/runtime-web/src/components/ApexForm.tsx",
       "note": "Cancel/Close link back to the parent page."
     },
     "P501:ITEM:P501_ROLE_CODE": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P501:ITEM:P501_USERNAME": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P501:ITEM:P501_USER_ROLE_ID": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P501:PROCESS:CLOSE_DIALOG": {
       "status": "ADAPTED",
@@ -1169,7 +1169,7 @@
     },
     "P501:REGION:Buttons": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/components/ApexForm.tsx",
+      "where": "packages/runtime-web/src/components/ApexForm.tsx",
       "note": "Dialog button region: footer, CLOSE/DELETE left, NEXT right."
     },
     "P501:REGION:User Role": {
@@ -1234,32 +1234,32 @@
     },
     "P511:DYNAMIC_ACTION:ON_CLICK_CANCEL_CLOSE_DIALOG": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/components/ApexForm.tsx",
+      "where": "packages/runtime-web/src/components/ApexForm.tsx",
       "note": "Cancel/Close link back to the parent page."
     },
     "P511:ITEM:P511_APPROVER1_ROLE": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P511:ITEM:P511_APPROVER2_ROLE": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P511:ITEM:P511_DOC_NAME": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P511:ITEM:P511_DOC_TYPE": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P511:ITEM:P511_LEVEL2_LIMIT": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P511:ITEM:P511_PREFIX": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/lib/forms.ts + apps/api/src/pages/forms.ts"
+      "where": "packages/runtime-web/src/forms.ts + apps/api/src/pages/forms.ts"
     },
     "P511:PROCESS:CLOSE_DIALOG": {
       "status": "ADAPTED",
@@ -1277,7 +1277,7 @@
     },
     "P511:REGION:Buttons": {
       "status": "IMPLEMENTED",
-      "where": "apps/web/components/ApexForm.tsx",
+      "where": "packages/runtime-web/src/components/ApexForm.tsx",
       "note": "Dialog button region: footer, CLOSE/DELETE left, NEXT right."
     },
     "P511:REGION:Document Type": {
@@ -1303,22 +1303,22 @@
     },
     "P9999:PROCESS:Clear Page(s) Cache": {
       "status": "NOT_APPLICABLE",
-      "where": "apps/web/app/login/actions.ts + apps/api/src/auth/auth.controller.ts",
+      "where": "apps/web/app/login/actions.ts + packages/runtime-api/src/auth/auth.controller.ts",
       "note": "The target keeps no server-side page session state."
     },
     "P9999:PROCESS:Get Username Cookie": {
       "status": "ADAPTED",
-      "where": "apps/web/app/login/actions.ts + apps/api/src/auth/auth.controller.ts",
+      "where": "apps/web/app/login/actions.ts + packages/runtime-api/src/auth/auth.controller.ts",
       "note": "Username cookie only when P9999_REMEMBER is shown and checked."
     },
     "P9999:PROCESS:Login": {
       "status": "ADAPTED",
-      "where": "apps/web/app/login/actions.ts + apps/api/src/auth/auth.controller.ts",
+      "where": "apps/web/app/login/actions.ts + packages/runtime-api/src/auth/auth.controller.ts",
       "note": "AUTH_MODE=dev until the identity provider is decided (WP9-009)."
     },
     "P9999:PROCESS:Set Username Cookie": {
       "status": "ADAPTED",
-      "where": "apps/web/app/login/actions.ts + apps/api/src/auth/auth.controller.ts",
+      "where": "apps/web/app/login/actions.ts + packages/runtime-api/src/auth/auth.controller.ts",
       "note": "Username cookie only when P9999_REMEMBER is shown and checked."
     },
     "P9999:REGION:Login": {

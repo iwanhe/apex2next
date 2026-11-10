@@ -1,14 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { ApprovalService } from '../business/approval.service';
-import { BusinessDatabase, BusinessTx, Principal } from '../business/context';
-import { FieldError, errors } from '../business/errors';
+import { BusinessDatabase, BusinessTx, errors, FieldError, Principal, ReportQuery, runReport } from '@apex2next/runtime-api';
 import { MasterDataEntity, MasterDataService } from '../business/master-data.service';
 import { RequestService } from '../business/request.service';
 import { AUTHORIZATION_SCHEMES, AuthorizationScheme, SecurityService } from '../business/security.service';
 import {
   FormDef, SubmitResult, changed, checksum, fetchForm, formDef, lockForChange, result, validateItems, writableItems,
 } from './forms';
-import { ReportQuery, runReport } from './report';
 import { DynamicLov, LOV_SOURCES, REGION_SOURCES, RegionName, RegionSource, lovSql, reportDef } from './report-definitions';
 import { UI_SPEC } from './ui-spec.generated';
 

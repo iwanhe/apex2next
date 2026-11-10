@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ApprovalService } from './approval.service';
-import { BusinessDatabase, Principal } from './context';
+import { BusinessDatabase, Principal } from '@apex2next/runtime-api';
 import { MasterDataService } from './master-data.service';
 import { LineInput, RequestInput, RequestPatch, RequestService } from './request.service';
 import { AuthorizationScheme, SecurityService } from './security.service';

@@ -1,2 +1,4 @@
 packages:
   - 'apps/*'
+  # shared runtime packages of the repository (roadmap R2)
+  - '../../packages/runtime-*'

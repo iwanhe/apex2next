@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { AuthModule } from '../auth/auth.module';
+import { AuthModule } from '@apex2next/runtime-api';
 import { BusinessModule } from '../business/business.module';
 import { PagesController } from './pages.controller';
 import { PagesService } from './pages.service';

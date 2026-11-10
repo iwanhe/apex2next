@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { BusinessTx } from './context';
-import { errors } from './errors';
+import { BusinessTx, errors } from '@apex2next/runtime-api';
 
 /**
  * Replaces APX_DEMO_SEC_PKG (install.sql lines 171-316). Role checks are delegated to the reviewed SQL

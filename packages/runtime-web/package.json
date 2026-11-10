@@ -1,0 +1,28 @@
+{
+  "name": "@apex2next/runtime-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared Next.js runtime for applications converted from Oracle APEX: API client and session, spec access, APEX forms, Interactive/classic reports, facets, charts, dialogs, shell. TypeScript source, compiled by the application (transpilePackages).",
+  "exports": {
+    "./*": "./src/*.ts",
+    "./components/*": "./src/components/*.tsx"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --experimental-strip-types --no-warnings --test test/*.test.mjs"
+  },
+  "peerDependencies": {
+    "next": "^15.5.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "next": "^15.5.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "typescript": "^5.7.2"
+  }
+}

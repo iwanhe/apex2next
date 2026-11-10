@@ -1,6 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
-import { Public } from './auth/auth.guard';
-import { DatabaseHealthService } from './database/database-health.service';
+import { DatabaseHealthService, Public } from '@apex2next/runtime-api';
 
 @Controller()
 export class HealthController {

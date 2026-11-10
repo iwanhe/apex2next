@@ -5,9 +5,9 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const { skip, startApi, DATABASE_URL } = require('./helpers');
-const { hashPassword, verifyPassword, checkPolicy, temporaryPassword } = require('../dist/auth/password.js');
-const { RateLimiter } = require('../dist/auth/rate-limit.js');
-const { authConfigFromEnv } = require('../dist/auth/auth.config.js');
+const { hashPassword, verifyPassword, checkPolicy, temporaryPassword } = require('@apex2next/runtime-api');
+const { RateLimiter } = require('@apex2next/runtime-api');
+const { authConfigFromEnv } = require('@apex2next/runtime-api');
 
 const CLI = path.join(__dirname, '..', 'scripts', 'accounts.mjs');
 const cli = (...args) => execFileSync(process.execPath, [CLI, ...args, '--by', 'TEST_OPERATOR'],

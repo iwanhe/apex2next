@@ -1,12 +1,15 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, Logger } from '@nestjs/common';
 import type { Response } from 'express';
-import { BusinessRuleError, errors } from '../business/errors';
+import { BusinessRuleError, errors } from '../errors';
 
-/**
- * Schema name shown in Oracle-style constraint messages. The source shows the parsing schema
- * (observed on oracleapex.com in WP9.6: WKSP_KCSI); set DB_ERROR_SCHEMA to change it.
- */
-const OWNER = (process.env.DB_ERROR_SCHEMA ?? 'WKSP_KCSI').toUpperCase();
+/** Options of the Oracle-compatible error mapping. */
+export interface ErrorMappingOptions {
+  /**
+   * Schema name shown in Oracle-style constraint messages: APEX shows the parsing schema of the source application
+   * (e.g. WKSP_KCSI for app 170134, observed in WP9.6).
+   */
+  readonly oracleSchema: string;
+}
 
 /** Column list of a PostgreSQL key detail, e.g. "Key (dept_code)=(OPS) already exists." -> DEPT_CODE. */
 function keyColumns(detail: string | undefined): string {
@@ -18,7 +21,8 @@ function keyColumns(detail: string | undefined): string {
  * Maps PostgreSQL constraint errors to the Oracle errors APEX users see for the same constraint (constraint and
  * table names are identical after WP9.3). ORA-00001 uses the Oracle 23ai text observed on oracleapex.com.
  */
-export function mapDatabaseError(error: unknown): BusinessRuleError | null {
+export function mapDatabaseError(error: unknown, options: ErrorMappingOptions): BusinessRuleError | null {
+  const OWNER = options.oracleSchema.toUpperCase();
   const e = error as { code?: string; constraint?: string; column?: string; table?: string; detail?: string };
   if (!e || typeof e.code !== 'string') return null;
   const name = `${OWNER}.${(e.constraint ?? '').toUpperCase()}`;
@@ -54,9 +58,11 @@ export function mapDatabaseError(error: unknown): BusinessRuleError | null {
 export class ApiErrorFilter implements ExceptionFilter {
   private readonly logger = new Logger('ApiErrorFilter');
 
+  constructor(private readonly options: ErrorMappingOptions) {}
+
   catch(exception: unknown, host: ArgumentsHost) {
     const res = host.switchToHttp().getResponse<Response>();
-    const business = exception instanceof BusinessRuleError ? exception : mapDatabaseError(exception);
+    const business = exception instanceof BusinessRuleError ? exception : mapDatabaseError(exception, this.options);
     if (business) {
       res.status(business.httpStatus).json(business.toJSON());
       return;

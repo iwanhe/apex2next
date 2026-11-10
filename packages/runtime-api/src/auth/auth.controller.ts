@@ -1,8 +1,8 @@
 import { Body, Controller, HttpCode, Inject, Post, Req } from '@nestjs/common';
 import type { Request } from 'express';
 import { createHash, timingSafeEqual } from 'node:crypto';
-import { Principal, principal } from '../business/context';
-import { BusinessRuleError } from '../business/errors';
+import { Principal, principal } from '../context';
+import { BusinessRuleError } from '../errors';
 import { AccountsService, INVALID_LOGIN } from './accounts.service';
 import type { AuthConfig } from './auth.config';
 import { Actor, AllowDuringPasswordChange, Public } from './auth.guard';

@@ -1,8 +1,7 @@
 import { Module } from '@nestjs/common';
-import { PostgresDatabase } from '../database/postgres-database';
+import { businessConfigFromEnv, BusinessDatabase, Clock, clockFromEnv, PostgresDatabase, systemClock } from '@apex2next/runtime-api';
 import { PagesService } from '../pages/pages.service';
 import { ApprovalService } from './approval.service';
-import { BusinessDatabase, Clock, businessConfigFromEnv, clockFromEnv, systemClock } from './context';
 import { DocumentTypeRegistry } from './document-types';
 import { MasterDataService } from './master-data.service';
 import { NumberingService } from './numbering.service';

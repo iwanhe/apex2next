@@ -1,8 +1,8 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { principal, wallClock, businessConfigFromEnv } = require('../dist/business/context.js');
-const { errors } = require('../dist/business/errors.js');
+const { principal, wallClock, businessConfigFromEnv } = require('@apex2next/runtime-api');
+const { errors } = require('@apex2next/runtime-api');
 const { normalizeSql, requestDocument } = require('../dist/business/document-types.js');
 const { AUTHORIZATION_SCHEMES } = require('../dist/business/security.service.js');
 
@@ -46,7 +46,7 @@ test('BR-SEC-05 authorization schemes match the APEX export', () => {
 
 test('WP9.7 access log: one JSON line, no query string, request id echoed, user after auth', () => {
   const { EventEmitter } = require('node:events');
-  const { accessLog } = require('../dist/http/access-log.js');
+  const { accessLog } = require('@apex2next/runtime-api');
   const lines = [];
   const mw = accessLog((l) => lines.push(JSON.parse(l)));
   const run = (header) => {
@@ -68,7 +68,7 @@ test('WP9.7 access log: one JSON line, no query string, request id echoed, user 
 });
 
 test('APP_CLOCK_START: replay clock starts at the instant and runs forward; refused in production', () => {
-  const { clockFromEnv, systemClock } = require('../dist/business/context.js');
+  const { clockFromEnv, systemClock } = require('@apex2next/runtime-api');
   assert.equal(clockFromEnv({}), systemClock);
   let real = Date.parse('2026-12-01T00:00:00Z');
   const clock = clockFromEnv({ APP_CLOCK_START: '2026-11-09T07:45:00Z' }, () => real);

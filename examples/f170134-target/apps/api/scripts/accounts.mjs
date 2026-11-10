@@ -10,12 +10,12 @@
 //   node scripts/accounts.mjs reset <username>               new temporary password, sessions revoked, unlocked
 //   node scripts/accounts.mjs unlock|lock|deactivate|activate|revoke <username>
 //
-// Requires DATABASE_URL and a built API (dist/) for the password hashing code.
+// Requires DATABASE_URL and a built @apex2next/runtime-api (pnpm build) for the password hashing code.
 import { createRequire } from 'node:module';
 import pg from 'pg';
 
 const require = createRequire(import.meta.url);
-const { hashPassword, temporaryPassword } = require('../dist/auth/password.js');
+const { hashPassword, temporaryPassword } = require('@apex2next/runtime-api');
 
 const [cmd, arg, ...rest] = process.argv.slice(2);
 const by = (() => {

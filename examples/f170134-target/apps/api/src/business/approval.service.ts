@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { BusinessTx } from './context';
+import { BusinessTx, errors } from '@apex2next/runtime-api';
 import { DocumentAdapter, DocumentTypeConfig, DocumentTypeRegistry } from './document-types';
-import { errors } from './errors';
 import { SecurityService } from './security.service';
 
 /**

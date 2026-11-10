@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { BusinessTx } from './context';
-import { errors } from './errors';
+import { BusinessTx, errors } from '@apex2next/runtime-api';
 
 /**
  * Replaces APX_DEMO_DOC_PKG.NEXT_NO (install.sql lines 348-378).

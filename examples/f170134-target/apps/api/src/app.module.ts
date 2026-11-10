@@ -1,15 +1,14 @@
 import { Module } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
-import { AuthModule } from './auth/auth.module';
+import { ApiErrorFilter, AuthModule, DatabaseModule } from '@apex2next/runtime-api';
 import { BusinessModule } from './business/business.module';
-import { DatabaseModule } from './database/database.module';
 import { HealthController } from './health.controller';
-import { ApiErrorFilter } from './http/error.filter';
 import { PagesModule } from './pages/pages.module';
 
 @Module({
   imports: [DatabaseModule, AuthModule, BusinessModule, PagesModule],
   controllers: [HealthController],
-  providers: [{ provide: APP_FILTER, useClass: ApiErrorFilter }],
+  // Oracle-style constraint messages name the parsing schema of the source application (WP9.6: WKSP_KCSI).
+  providers: [{ provide: APP_FILTER, useFactory: () => new ApiErrorFilter({ oracleSchema: process.env.DB_ERROR_SCHEMA ?? 'WKSP_KCSI' }) }],
 })
 export class AppModule {}
