@@ -20,7 +20,9 @@ Extract the runtime behavior proven in the WP9 pilot into reusable, framework-ne
 | UI adapter | Next.js forms, reports, facets, messages and navigation | React/Next boundary |
 | Event adapter | Dynamic action event dispatch and supported actions | Explicit allowlist; no expression eval |
 
-## Implemented slice
+## Implemented slices
+
+### R2.1 — Framework-neutral foundation
 
 Package `@apex2next/shared-runtime` currently provides:
 - TypeScript contracts for runtime application, page, item, region, button, authorization, principal, report, messages and event actions.
@@ -38,6 +40,22 @@ Package `@apex2next/shared-runtime` currently provides:
 5. Sort columns must come from the report definition allowlist.
 6. Dynamic actions are data contracts only; source expressions are never evaluated.
 7. Business transactions remain owned by the target application use case layer.
+
+### R2.2 — NestJS adapter
+
+Package `@apex2next/nestjs-adapter` currently provides:
+- `RuntimePolicyGuard` with explicit public-route opt-in and fail-closed behavior when policy metadata is absent.
+- `RequireRuntimePolicy` and `PublicRuntimeRoute` decorators.
+- Resolver port for central policy lookup; consuming applications supply a trusted policy provider.
+- `RuntimePageItemsPipe` to normalize/validate form payloads and return structured HTTP 400 validation responses.
+
+### R2.3 — Next.js/React adapter
+
+Package `@apex2next/nextjs-adapter` currently provides:
+- Server-component-compatible `RuntimeForm` for text, textarea, number, date, select, radio, checkbox, display, hidden, file and password item types.
+- Inline validation messages, required markers, help text and LOV options.
+- `RuntimeReportTable` with hidden-column filtering, row rendering and empty state.
+- Server rendering tests using React DOM; no client-side state or direct database access.
 
 ## R2 completion plan
 
