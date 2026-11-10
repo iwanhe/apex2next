@@ -101,3 +101,37 @@ def test_form_and_report_contracts_capture_safe_metadata_but_never_claim_runtime
     assert '"bindingStatus": "NOT_BOUND"' in report
     assert '"bindingsGenerated": false' in files["migration-report/form-generation.json"]
     assert '"bindingsGenerated": false' in files["migration-report/report-generation.json"]
+
+
+
+def test_static_literal_lovs_generate_safe_web_adapter_and_keep_dynamic_lovs_manual():
+    doc = _document()
+    doc["objects"][1]["properties"]["namedLov"] = {
+        "valueType": "STRING", "value": "ORDER_STATUS"
+    }
+    doc["objects"].extend([
+        {"id": "lov:static", "type": "LOV", "sourceType": "lov", "name": "ORDER_STATUS",
+         "properties": {"staticValues": {"valueType": "ARRAY", "value": [
+             {"display": "Open", "return": "O"},
+             {"display": "Closed", "return": "C"},
+         ]}}},
+        {"id": "lov:dynamic", "type": "LOV", "sourceType": "lov", "name": "CUSTOMER_LOV",
+         "properties": {"source": {"valueType": "SQL_EXPRESSION",
+                                   "rawExpression": "select secret from customer"}}},
+    ])
+    spec = build_ui_spec(doc)
+    static = next(item for item in spec["lovs"] if item["id"] == "lov:static")
+    dynamic = next(item for item in spec["lovs"] if item["id"] == "lov:dynamic")
+    assert static["adapterStatus"] == "STATIC_LITERAL"
+    assert static["staticValues"] == [
+        {"display": "Open", "return": "O"}, {"display": "Closed", "return": "C"}
+    ]
+    assert dynamic["adapterStatus"] == "MANUAL_REVIEW"
+    assert "select secret" not in str(spec)
+    files = build_ui_generator_files(doc)
+    generated = files["apps/web/lib/generated-lovs.ts"]
+    assert '"ORDER_STATUS"' in generated
+    assert '"display": "Open"' in generated
+    assert '"CUSTOMER_LOV"' not in generated
+    assert '"dynamicAdaptersGenerated": false' in files["migration-report/lov-generation.json"]
+    assert '"namedLov": "ORDER_STATUS"' in files["apps/web/lib/apex2next-generated-spec.ts"]
