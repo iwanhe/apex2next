@@ -35,7 +35,7 @@ def test_generator_emits_workspace_and_review_artifacts(tmp_path):
         "apps/api/src/health.controller.ts", "apps/api/src/auth/auth.service.ts",
         "apps/api/src/auth/authorization-review.guard.ts", "db/migrations/0001_baseline.sql",
         "migration-report/source-ir.json", "migration-report/semantic-analysis.json",
-        "migration-report/manual-review.md", "generation-manifest.json"]
+        "migration-report/manual-review.md", "migration-report/query-migration-plan.json", "generation-manifest.json"]
     for relative in expected:
         assert (root / relative).is_file(), relative
     assert result["pageCount"] == 1
