@@ -15,20 +15,26 @@ export function createRuntimeReportPlan(
   if (requestedDirection !== 'ASC' && requestedDirection !== 'DESC') {
     throw new Error('Report direction must be ASC or DESC.');
   }
-  const page = Math.max(1, Math.floor(query.page ?? 1));
+
+  const requestedPage = query.page ?? 1;
+  if (!Number.isFinite(requestedPage) || requestedPage < 1) {
+    throw new Error('Report page must be a finite positive number.');
+  }
+  const page = Math.floor(requestedPage);
   if (!Number.isSafeInteger(page)) throw new Error('Report page must be a safe positive integer.');
-  const pageSize = Math.min(
-    definition.maxPageSize,
-    Math.max(1, Math.floor(query.pageSize ?? definition.defaultPageSize)),
-  );
+
+  const requestedPageSize = query.pageSize ?? definition.defaultPageSize;
+  if (!Number.isFinite(requestedPageSize) || requestedPageSize < 1) {
+    throw new Error('Report page size must be a finite positive number.');
+  }
+  if (!Number.isSafeInteger(definition.maxPageSize) || definition.maxPageSize < 1) {
+    throw new Error('Report definition maxPageSize must be a positive safe integer.');
+  }
+  const pageSize = Math.min(definition.maxPageSize, Math.max(1, Math.floor(requestedPageSize)));
+  const offset = (page - 1) * pageSize;
+  if (!Number.isSafeInteger(offset)) throw new Error('Report offset exceeds the safe integer range.');
+
   const search = (query.search ?? '').trim();
   if (search && !definition.searchable) throw new Error('This report does not support search.');
-  return {
-    search,
-    sort: sortColumn.name,
-    direction: requestedDirection,
-    page,
-    pageSize,
-    offset: (page - 1) * pageSize,
-  };
+  return { search, sort: sortColumn.name, direction: requestedDirection, page, pageSize, offset };
 }
