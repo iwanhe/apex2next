@@ -243,6 +243,14 @@ export function GeneratedPageInventory({ page }: { page: GeneratedPage }) {
 }
 """,
         "migration-report/ui-generation.json": json.dumps(report, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
+        "migration-report/lov-generation.json": json.dumps({
+            "format": "apex2next.generated-lovs.v1",
+            "lovCount": len(spec["lovs"]),
+            "staticLiteralCount": len(static_lovs),
+            "manualReviewCount": len(spec["lovs"]) - len(static_lovs),
+            "sqlExecuted": False,
+            "dynamicAdaptersGenerated": False,
+        }, ensure_ascii=False, sort_keys=True, indent=2) + "\\n",
         "migration-report/report-generation.json": json.dumps({
             "format": "apex2next.generated-reports.v1", "reportCount": len(report_definitions),
             "manualReviewCount": len(report_definitions), "queryTextExecuted": False,
