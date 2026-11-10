@@ -60,7 +60,7 @@ The validator checks structure only. A schema-valid document is not evidence of 
 Generate a target scaffold from a validated Normalized IR document:
 
 ```bash
-PYTHONPATH=workers/extraction-worker/src \
+PYTHONPATH=workers/extraction-worker/src:workers/schema-analyzer/src \
   python -m apex2next_extractor.generator_cli build/normalized-ir.json \
   --output build/generated-target
 ```
