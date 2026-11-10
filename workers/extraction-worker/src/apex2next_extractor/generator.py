@@ -12,6 +12,7 @@ from .dependency_graph import analyze_dependency_graph
 from .ir_schema import validate_ir_document
 from .semantic_analysis import analyze_semantics
 from .runtime_templates import build_runtime_files
+from .ui_generator import build_ui_generator_files
 
 GENERATOR_VERSION = "0.2.0"
 
@@ -316,6 +317,7 @@ def generate_project(document: dict[str, Any], output_dir: str | Path,
     files = _files(document, sem, graph)
     _extend_files(files, document)
     files.update(build_runtime_files(files))
+    files.update(build_ui_generator_files(document))
     manifest = {"manifestVersion": "1.0.0", "generatorVersion": GENERATOR_VERSION,
         "applicationId": document["application"]["id"], "fileCount": len(files) + 1,
         "files": {p: "sha256:" + hashlib.sha256(c.encode()).hexdigest()
