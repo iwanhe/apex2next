@@ -1,5 +1,8 @@
 # Documentation Index
 
+## User guide
+- [Panduan APEX2NEXT untuk Pengguna (Bahasa Indonesia): usage, scope, roadmap](panduan/README.md)
+
 ## Architecture
 - [Blueprint](architecture/blueprint.md)
 - [FRS](architecture/frs.md)

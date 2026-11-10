@@ -6,6 +6,22 @@ APEX2NEXT is a migration platform intended to inventory, analyze, convert, migra
 
 > **Important:** Full automation is the engineering goal, not a guarantee that every Oracle/APEX construct can be translated without review. The platform must never silently discard data or behavior. Every source object must receive an explicit disposition, diagnostics, and validation evidence.
 
+## Current status: assistive toolkit
+
+APEX2NEXT is currently used as an **assistive toolkit**, not a one-click converter. Inventory, schema conversion,
+dictionary reconciliation, PL/SQL triage, data loading with verification and readiness assessment are automated.
+Pages and business logic are built by developers from the generated specification and proven equal to APEX by parity
+tests. The pilot (app 170134) shows the full method end to end; see the [pilot closure](docs/migration/wp9-pilot-closure-f170134.md).
+
+- **User guide (Bahasa Indonesia):** [docs/panduan/README.md](docs/panduan/README.md): plain-language usage, capability scope and roadmap
+- **One entry point:** `tools/apex2next` (`doctor`, `queries`, `inventory`, `schema-plan`, `dictionary-check`, `plsql`, `load-data`, `assess`)
+
+```bash
+tools/apex2next doctor
+tools/apex2next inventory path/to/f123 --out work/inventory
+tools/apex2next schema-plan path/to/install.sql --apex-export path/to/f123/application --out work/schema
+```
+
 ## Target architecture
 
 - **Frontend:** Next.js App Router + TypeScript
@@ -20,8 +36,11 @@ APEX2NEXT is a migration platform intended to inventory, analyze, convert, migra
 
 This repository is the foundation for the reusable converter and pilot migration. Detailed scope and design decisions are documented under [docs/](docs/).
 
-- [WP6 Semantic Analysis](docs/architecture/wp6-semantic-analysis.md)\n- [WP7 Target Code Generation](docs/architecture/wp7-target-code-generation.md)
-- [WP8 Functional Migration — Phase Plan](docs/migration/wp8-functional-migration.md)\n\n## Documentation
+- [WP6 Semantic Analysis](docs/architecture/wp6-semantic-analysis.md)
+- [WP7 Target Code Generation](docs/architecture/wp7-target-code-generation.md)
+- [WP8 Functional Migration — Phase Plan](docs/migration/wp8-functional-migration.md)
+
+## Documentation
 
 - [Architecture Blueprint](docs/architecture/blueprint.md)
 - [Functional Requirements Specification](docs/architecture/frs.md)

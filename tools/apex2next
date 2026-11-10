@@ -1,0 +1,240 @@
+#!/usr/bin/env python3
+"""apex2next — one entry point for the APEX2NEXT toolkit (assistive tools, not a one-click converter).
+
+Every command reads source evidence you supply (APEX export, install script, CSV from SQL Workshop), writes its
+results into the --out directory, prints a short summary and exits non-zero when something needs attention.
+Nothing here connects to Oracle; only `load-data` writes, and only to the PostgreSQL database you name.
+
+  apex2next doctor                                  check the tools on this machine
+  apex2next queries      --out DIR                  SQL Workshop queries to run on the APEX schema
+  apex2next inventory    EXPORT_DIR --out DIR       pages and components of an APEX SQL export (split files)
+  apex2next schema-plan  INSTALL_SQL --out DIR      Oracle DDL -> PostgreSQL migration + conversion report
+  apex2next dictionary-check --plan F --install F --dictionary CSV --out DIR
+                                                    compare the plan with the installed Oracle objects
+  apex2next plsql        SOURCE_SQL --out DIR       PL/SQL inventory: what converts, what needs hand work
+  apex2next load-data    SNAPSHOT_CSV --plan F --database-url URL --out DIR
+                                                    load a data snapshot into PostgreSQL and verify it
+  apex2next assess       MANIFEST --out FILE        twelve-gate qualification assessment
+
+Run `apex2next <command> -h` for the options of one command. Guide (Bahasa Indonesia): docs/panduan/README.md
+"""
+from __future__ import annotations
+
+import argparse
+import importlib.util
+import json
+import os
+import shutil
+import subprocess
+import sys
+from collections import Counter
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[1]
+PYPATH = os.pathsep.join(str(REPO / p) for p in ("workers/schema-analyzer/src", "workers/extraction-worker/src"))
+QUERIES = {
+    "dictionary_inventory_apex_workshop.sql": REPO / "workers/schema-analyzer/sql/dictionary_inventory_apex_workshop.sql",
+    "example_snapshot_f170134_apex_workshop.sql": REPO / "examples/f170134-target/migration/oracle/extract_snapshot_apex_workshop.sql",
+}
+
+
+def run(module: str, *args: str) -> int:
+    env = {**os.environ, "PYTHONPATH": PYPATH + (os.pathsep + os.environ["PYTHONPATH"] if os.environ.get("PYTHONPATH") else "")}
+    # runpy warns when a package __init__ already imported the module; the notice is harmless, so hide it
+    boot = ("import runpy, sys, warnings; warnings.filterwarnings('ignore', r'.*found in sys.modules', RuntimeWarning); "
+            "m = sys.argv.pop(1); sys.argv[0] = m; runpy.run_module(m, run_name='__main__', alter_sys=True)")
+    return subprocess.run([sys.executable, "-c", boot, module, *args], env=env).returncode
+
+
+def out_dir(path: str) -> Path:
+    p = Path(path)
+    p.mkdir(parents=True, exist_ok=True)
+    return p
+
+
+def say(*lines: str) -> None:
+    print("\n".join(lines))
+
+
+# ------------------------------------------------------------------------------------------------ commands
+def cmd_doctor(_: argparse.Namespace) -> int:
+    checks = [
+        ("python >= 3.12", sys.version_info >= (3, 12), sys.version.split()[0]),
+        ("node (target apps)", bool(shutil.which("node")), shutil.which("node") or "-"),
+        ("pnpm (target apps)", bool(shutil.which("pnpm")), shutil.which("pnpm") or "-"),
+        ("psycopg (load-data)", importlib.util.find_spec("psycopg") is not None, ""),
+        ("pg_dump / pg_restore (rehearsal)", bool(shutil.which("pg_dump") and shutil.which("pg_restore")), ""),
+        ("playwright (browser tests, optional)", importlib.util.find_spec("playwright") is not None, ""),
+    ]
+    for name, ok, info in checks:
+        print(f"  [{'OK' if ok else '--'}] {name} {info}".rstrip())
+    missing = [n for n, ok, _ in checks[:4] if not ok]
+    if missing:
+        say("", "Missing: " + ", ".join(missing), "See docs/development/setup.md (pip install 'psycopg[binary]', Node 22 + pnpm).")
+    return 1 if missing else 0
+
+
+def cmd_queries(a: argparse.Namespace) -> int:
+    d = out_dir(a.out)
+    for name, src in QUERIES.items():
+        shutil.copyfile(src, d / name)
+    say(f"Copied {len(QUERIES)} queries to {d}:",
+        "  dictionary_inventory_apex_workshop.sql   run in SQL Workshop > SQL Commands as the application schema;",
+        "                                           download the result as CSV (used by dictionary-check)",
+        "  example_snapshot_f170134_apex_workshop.sql  data snapshot query of the pilot app; adapt the table and view",
+        "                                           list to your application (generation from the plan is on the roadmap)",
+        "The queries only read. Run them on a non-production copy whenever possible.")
+    return 0
+
+
+def cmd_inventory(a: argparse.Namespace) -> int:
+    d = out_dir(a.out)
+    target = d / "apex-page-inventory.json"
+    rc = run("apex2next_extractor.page_inventory", a.export_dir, "--output", str(target))
+    if rc != 0 or not target.exists():
+        return rc or 1
+    inv = json.loads(target.read_text(encoding="utf-8"))
+    pages = inv.get("pages", [])
+    kinds = Counter(c["kind"] for p in pages for c in p.get("components", []))
+    app = inv.get("application", {})
+    say(f"{app.get('name', '?')} ({app.get('alias', '?')}, sign-in: {app.get('authentication', '?')}): "
+        f"{len(pages)} pages, {sum(kinds.values())} components",
+        *(f"  {k:<22}{n:>5}" for k, n in kinds.most_common()),
+        f"Written: {target}")
+    return 0
+
+
+def cmd_schema_plan(a: argparse.Namespace) -> int:
+    d = out_dir(a.out)
+    args = [a.install_sql, "--output", str(d / "schema-plan.json"), "--sql-output", str(d / "0001_schema.sql"),
+            "--post-load-output", str(d / "post-load-identity-alignment.sql"), "--deferred-sql-output", str(d / "0003_deferred_views.sql"),
+            "--source-name", Path(a.install_sql).name]
+    if a.apex_export:
+        args += ["--apex-export", a.apex_export]
+    if a.overrides:
+        args += ["--overrides", a.overrides]
+    if a.function_mappings:
+        args += ["--function-mappings", a.function_mappings]
+    if a.runner_format:
+        args += ["--runner-format"]
+    rc = run("apex2next_schema_analyzer.schema_plan", *args)
+    plan_file = d / "schema-plan.json"
+    if not plan_file.exists():
+        return rc or 1
+    run("apex2next_schema_analyzer.schema_report", str(plan_file), "--output", str(d / "schema-conversion-report.md"))
+    s = json.loads(plan_file.read_text(encoding="utf-8")).get("summary", {})
+    disp = s.get("dispositions", {})
+    say(f"Tables {s.get('tables', {}).get('emitted', '?')}/{s.get('tables', {}).get('source', '?')}, "
+        f"views {s.get('views', {}).get('emitted', '?')}/{s.get('views', {}).get('source', '?')}, "
+        f"indexes {s.get('indexes', {}).get('emitted', '?')}/{s.get('indexes', {}).get('source', '?')}",
+        f"Objects: {disp.get('AUTOMATIC', 0)} automatic, {disp.get('ASSISTED', 0)} assisted (review), {disp.get('MANUAL', 0)} manual",
+        f"Validation passed: {s.get('validationPassed')}",
+        f"Read first: {d / 'schema-conversion-report.md'}")
+    return rc
+
+
+def cmd_dictionary_check(a: argparse.Namespace) -> int:
+    d = out_dir(a.out)
+    args = [a.plan, a.install, a.dictionary, "--output", str(d / "dictionary-reconciliation.json"),
+            "--markdown-output", str(d / "dictionary-reconciliation.md")]
+    if a.view_texts:
+        args += ["--view-texts", a.view_texts]
+    if a.overrides:
+        args += ["--overrides", a.overrides]
+    rc = run("apex2next_schema_analyzer.dictionary_reconciliation", *args)
+    rep = d / "dictionary-reconciliation.json"
+    if rep.exists():
+        s = json.loads(rep.read_text(encoding="utf-8")).get("summary", {})
+        failed = [k for k, v in s.get("checks", {}).items() if v != "PASS"]
+        say(f"Reconciled: {s.get('reconciled')}, drift: {s.get('drift')}, checks not passing: {', '.join(failed) or 'none'}",
+            f"Read: {d / 'dictionary-reconciliation.md'}")
+    return rc
+
+
+def cmd_plsql(a: argparse.Namespace) -> int:
+    d = out_dir(a.out)
+    target = d / "plsql-analysis.json"
+    rc = run("apex2next_schema_analyzer.plsql_workbench", a.source, "--output", str(target))
+    if not target.exists():
+        return rc or 1
+    r = json.loads(target.read_text(encoding="utf-8"))
+    first: dict[str, dict] = {}
+    for d in r.get("diagnostics", []):
+        first.setdefault(d["code"], {**d, "n": 0})["n"] += 1
+    inv = {k: v for k, v in r.get("statementInventory", {}).items() if v}
+    say(f"Status: {r.get('status')} (lexical analysis; no PL/SQL is converted automatically yet)",
+        "Statements: " + ", ".join(f"{k} {v}" for k, v in inv.items()),
+        "Findings (count, disposition, what to do):",
+        *(f"  {c} x{d['n']:<3} {d.get('disposition', ''):<11} {d.get('message', '')}" for c, d in sorted(first.items())),
+        f"Written: {target}")
+    if rc == 2:
+        say("Exit code 2: the source uses constructs without a target equivalent; plan hand-written services for them.")
+    return rc
+
+
+def cmd_load_data(a: argparse.Namespace) -> int:
+    d = out_dir(a.out)
+    name = Path(a.snapshot).stem
+    rc = run("apex2next_schema_analyzer.snapshot_migration", a.snapshot, "--plan", a.plan, "--database-url", a.database_url,
+             "--output", str(d / f"{name}-migration.json"), "--markdown", str(d / f"{name}-migration.md"))
+    rep = d / f"{name}-migration.json"
+    if rep.exists():
+        r = json.loads(rep.read_text(encoding="utf-8"))
+        failed = [k for k, v in r.get("checks", {}).items() if v != "PASS"]
+        say(f"Committed: {r.get('committed')}; checks not passing: {', '.join(failed) or 'none'}",
+            "Nothing is kept unless every check passes (one transaction).", f"Read: {d / f'{name}-migration.md'}")
+    return rc
+
+
+def cmd_assess(a: argparse.Namespace) -> int:
+    return run("apex2next_schema_analyzer.pilot_qualification", a.manifest, "--output", a.out)
+
+
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(prog="apex2next", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    sub = ap.add_subparsers(dest="cmd", required=True, metavar="command")
+    sub.add_parser("doctor", help="check the tools on this machine").set_defaults(fn=cmd_doctor)
+    p = sub.add_parser("queries", help="SQL Workshop queries to run on the APEX schema")
+    p.add_argument("--out", required=True)
+    p.set_defaults(fn=cmd_queries)
+    p = sub.add_parser("inventory", help="pages and components of an APEX SQL export")
+    p.add_argument("export_dir", help="unpacked SQL export (split files), e.g. f123/")
+    p.add_argument("--out", required=True)
+    p.set_defaults(fn=cmd_inventory)
+    p = sub.add_parser("schema-plan", help="Oracle DDL -> PostgreSQL migration and report")
+    p.add_argument("install_sql", help="DDL / supporting-objects install script of the application schema")
+    p.add_argument("--apex-export", help="unpacked SQL export: records which objects the pages use")
+    p.add_argument("--overrides", help="dictionary overrides JSON (when installed objects drifted from the script)")
+    p.add_argument("--function-mappings", help="reviewed PL/SQL -> PostgreSQL function mappings (views that call PL/SQL)")
+    p.add_argument("--runner-format", action="store_true",
+                   help="no BEGIN/COMMIT in the SQL files (for the target project's migration runner, which adds them)")
+    p.add_argument("--out", required=True)
+    p.set_defaults(fn=cmd_schema_plan)
+    p = sub.add_parser("dictionary-check", help="compare the plan with the installed Oracle objects")
+    p.add_argument("--plan", required=True)
+    p.add_argument("--install", required=True, help="the install script the plan was built from")
+    p.add_argument("--dictionary", required=True, help="CSV of dictionary_inventory_apex_workshop.sql")
+    p.add_argument("--view-texts", help="CSV of USER_VIEWS (VIEW_NAME, TEXT_LENGTH, TEXT_VC)")
+    p.add_argument("--overrides")
+    p.add_argument("--out", required=True)
+    p.set_defaults(fn=cmd_dictionary_check)
+    p = sub.add_parser("plsql", help="PL/SQL inventory and conversion dispositions")
+    p.add_argument("source", help="SQL file with packages, procedures, functions or triggers")
+    p.add_argument("--out", required=True)
+    p.set_defaults(fn=cmd_plsql)
+    p = sub.add_parser("load-data", help="load a data snapshot into PostgreSQL and verify it")
+    p.add_argument("snapshot", help="CSV produced by the snapshot query in SQL Workshop")
+    p.add_argument("--plan", required=True, help="schema-plan.json")
+    p.add_argument("--database-url", required=True, help="PostgreSQL with the migrations applied; target tables must be empty")
+    p.add_argument("--out", required=True)
+    p.set_defaults(fn=cmd_load_data)
+    p = sub.add_parser("assess", help="twelve-gate qualification assessment")
+    p.add_argument("manifest", help="apex2next.wp9-pilot-input.v1 JSON")
+    p.add_argument("--out", required=True)
+    p.set_defaults(fn=cmd_assess)
+    a = ap.parse_args(argv)
+    return a.fn(a)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

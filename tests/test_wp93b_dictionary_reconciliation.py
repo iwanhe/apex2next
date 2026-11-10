@@ -240,3 +240,14 @@ def test_reconciliation_regenerates_identically():
                     view_texts_sha256=hashlib.sha256(vraw).hexdigest(),
                     overrides=load_overrides(D / "dictionary-overrides.json"))
     assert json.loads(json.dumps(rec)) == json.loads((D / "dictionary-reconciliation.json").read_text(encoding="utf-8"))
+
+
+def test_function_mapped_calls_still_explain_installed_dependencies():
+    """A view whose package call is replaced by a reviewed function mapping keeps the source dependency (REC-009)."""
+    rows = _rows() + [["DEPENDENCY", "VIEW", "V", "TABLE", "S.C", "HARD", "", ""]]
+    plan = json.loads(json.dumps(build_schema_plan(SOURCE, source_name="t.sql")))
+    view = next(v for v in (plan["views"].values() if isinstance(plan["views"], dict) else plan["views"]) if v["name"] == "V")
+    dep = lambda p: next(c for c in reconcile(p, parse_workshop_csv(_csv(rows)), SOURCE)["checks"] if c["id"] == "REC-009")  # noqa: E731
+    assert dep(plan)["status"] == "FAIL"
+    view["mappedCalls"] = ["C.FN"]
+    assert dep(plan)["status"] == "PASS"

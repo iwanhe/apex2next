@@ -351,7 +351,8 @@ def reconcile(plan: dict[str, Any], dictionary: dict[str, Any], source: str, *,
     plan_edges: set[tuple[str, str]] = set()
     for v in views.values():
         plan_edges |= {(v["name"], d) for d in v["dependencies"]}
-        plan_edges |= {(v["name"], c.split(".")[0]) for c in v["plsqlCalls"]}
+        # source-level calls count whether or not a reviewed function mapping replaced them in the target
+        plan_edges |= {(v["name"], c.split(".")[0]) for c in v["plsqlCalls"] + v.get("mappedCalls", [])}
     for trg in triggers.values():
         plan_edges |= {(trg["name"], trg["table"])} | {(trg["name"], c.split(".")[0]) for c in trg["calls"]}
         plan_edges |= {(trg["name"], x) for x in trg["tablesRead"] + trg["tablesWritten"]}
