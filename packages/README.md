@@ -2,6 +2,7 @@
 
 Planned and implemented packages:
 - `shared-runtime` — framework-neutral runtime contracts, validation, fail-closed authorization, and report planning (R2 foundation).
+- `nestjs-adapter` — NestJS authorization guard and page-item validation pipe (R2.2).
 - `shared-contracts`
 - `apex-parser`
 - `oracle-analyzer`
