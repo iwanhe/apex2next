@@ -136,3 +136,27 @@ export interface RuntimeEventAction {
   readonly targetIds: readonly string[];
   readonly sequence: number;
 }
+
+export interface RuntimeLovOption {
+  readonly display: string;
+  readonly value: string;
+}
+
+export interface RuntimeLovDefinition {
+  readonly id: string;
+  readonly source: 'STATIC' | 'PROVIDER';
+  readonly options?: readonly RuntimeLovOption[];
+  readonly providerId?: string;
+  readonly searchable: boolean;
+  readonly maxRows: number;
+}
+
+export interface RuntimeNavigationEntry {
+  readonly id: string;
+  readonly label: string;
+  readonly href: string;
+  readonly pageId?: number;
+  readonly sequence: number;
+  readonly public: boolean;
+  readonly authorizationPolicyId?: string;
+}
