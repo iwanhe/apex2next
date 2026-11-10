@@ -183,6 +183,15 @@ export function GeneratedPageInventory({ page }: { page: GeneratedPage }) {
 }
 """,
         "migration-report/ui-generation.json": json.dumps(report, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
+        "migration-report/report-generation.json": json.dumps({
+            "format": "apex2next.generated-reports.v1", "reportCount": len(report_definitions),
+            "manualReviewCount": len(report_definitions), "queryTextExecuted": False,
+        }, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
+        "migration-report/form-generation.json": json.dumps({
+            "format": "apex2next.generated-forms.v1", "formFieldCount": len(form_definitions),
+            "manualReviewCount": len(form_definitions), "writesGenerated": False,
+            "validationsGenerated": False,
+        }, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
     }
     for page in spec["pages"]:
         route_file = f"apps/web/app/pages/{page['route']}/page.tsx"
