@@ -14,7 +14,7 @@ from .semantic_analysis import analyze_semantics
 from .runtime_templates import build_runtime_files
 from .ui_generator import build_ui_generator_files
 
-GENERATOR_VERSION = "0.2.0"
+GENERATOR_VERSION = "0.3.0"
 
 
 def _json(value: Any) -> str:
