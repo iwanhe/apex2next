@@ -107,12 +107,22 @@ test('AUTH_MODE=local end to end', { skip }, async () => {
     const reset = tempFrom(cli('reset', 'REQ1'));
     assert.deepEqual((await login('req1', 'Permintaan2026')).body, invalid);
     assert.equal((await login('req1', reset)).body.mustChangePassword, true);
+    // temporary passwords travel by e-mail, so they expire
+    await api.pool.query("UPDATE iam.accounts SET temp_password_expires_at = now() - interval '1 minute' WHERE username = 'REQ1'");
+    assert.deepEqual((await login('req1', reset)).body, invalid);
+    const last = (await api.pool.query("SELECT detail FROM iam.account_events WHERE username = 'REQ1' ORDER BY event_id DESC LIMIT 1")).rows[0];
+    assert.equal(last.detail, 'temporary password expired');
     assert.match(cli('list'), /REQ1/);
 
     // roles still come from the APEX role table: an account without roles is refused by APP_USERS
     const noRoles = tempFrom(cli('create', 'norole'));
+    const exp = (await api.pool.query(
+      "SELECT temp_password_expires_at BETWEEN now() + interval '71 hours' AND now() + interval '73 hours' AS ok FROM iam.accounts WHERE username = 'NOROLE'")).rows[0];
+    assert.equal(exp.ok, true, 'default expiry 72 h');
     const t2 = await login('norole', noRoles);
     const c2 = await api.call(t2.body.token, 'POST', '/auth/password', { current: noRoles, next: 'Lainnya12345', confirm: 'Lainnya12345' });
+    const cleared = (await api.pool.query("SELECT temp_password_expires_at FROM iam.accounts WHERE username = 'NOROLE'")).rows[0];
+    assert.equal(cleared.temp_password_expires_at, null);
     const home = await api.call(c2.body.token, 'GET', '/pages/100');
     assert.equal(home.status, 403);
   } finally {

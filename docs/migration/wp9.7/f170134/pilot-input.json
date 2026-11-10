@@ -47,7 +47,7 @@
     "WP9-005": {
       "status": "WARN",
       "evidenceRef": "docs/migration/wp9.4-business-logic-f170134.md",
-      "note": "Packages and triggers replaced by services; DEV-01..06 and F-01..05 accepted for now, final sign-off pending."
+      "note": "Packages and triggers replaced by services; DEV-01..06 and F-01..05 accepted for now (F-04 decided 2026-11-10), final sign-off pending."
     },
     "WP9-006": {
       "status": "PASS",
@@ -67,7 +67,7 @@
     "WP9-009": {
       "status": "WARN",
       "evidenceRef": "docs/migration/wp9-009-local-accounts-f170134.md",
-      "note": "Local accounts (owner decision 2026-11-10): scrypt hashes, forced change of temporary passwords, lockout, login rate limit, server-side revocation, audit trail; API and browser tests. Open: row-level ownership (F-04), temporary-password handover channel, security review/sign-off."
+      "note": "Local accounts (owner decision 2026-11-10): scrypt hashes, temporary passwords by e-mail with 72 h expiry and forced change, lockout, login rate limit, server-side revocation, audit trail; API and browser tests. F-04 kept as in the source (decided). Open: security review and sign-off."
     },
     "WP9-010": {
       "status": "WARN",

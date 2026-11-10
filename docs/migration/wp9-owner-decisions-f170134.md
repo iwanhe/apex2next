@@ -7,6 +7,8 @@ Decisions by the application owner (Iwan Herdian), recorded on 2026-11-09. "Acce
 | WP9.6 test data in the source (REQ-2026-0003 with 2 lines and 2 approval steps; REQ counter = 4) | Keep in the source | 2026-11-09 |
 | WP9.6 later test data (REQ-2026-0005 APPROVED from J-03, REQ-2026-0006 DRAFT from J-05; REQ counter = 6) | Kept under the same decision | 2026-11-10 |
 | WP9-009 sign-in: local accounts in the application first (external identity provider later) | Implemented, see [WP9-009](wp9-009-local-accounts-f170134.md) | 2026-11-10 |
+| F-04 row-level ownership: any REQUESTER/MANAGER may change requests of other users (source behavior kept) | Accepted | 2026-11-10 |
+| WP9-009 handover of temporary passwords: by e-mail | Accepted; mitigated by expiry (72 h), forced change at first sign-in, lockout and audit trail | 2026-11-10 |
 | D-UI-05: the target re-renders the parent page after a dialog closes (APEX refreshes only some regions) | Accepted | 2026-11-09 |
 | D-UI-06: browser `confirm()` instead of `apex.confirm` (same texts) | Accepted | 2026-11-09 |
 | WP9.4 deviations DEV-01…DEV-05 | Accepted for now | 2026-11-09 |

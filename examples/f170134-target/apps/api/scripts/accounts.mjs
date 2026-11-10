@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // WP9-009 local account administration (operator CLI; replaces APEX Workspace Administration > Manage Users).
 // Temporary passwords are printed once to this terminal only and must be changed at the first login.
-// Never paste them into chat, tickets or logs; hand them over through an agreed channel.
+// Handover channel (owner decision 2026-11-10): e-mail to the user's own mailbox. They therefore expire after
+// TEMP_PASSWORD_HOURS (default 72); never paste them into chat, tickets or logs.
 //
 //   node scripts/accounts.mjs list
 //   node scripts/accounts.mjs create <username> [--by OPERATOR]
@@ -34,18 +35,22 @@ function usage(msg) {
 }
 if (!process.env.DATABASE_URL) usage('DATABASE_URL is required');
 
+const tempHours = Number(process.env.TEMP_PASSWORD_HOURS ?? 72);
+if (!Number.isInteger(tempHours) || tempHours < 1 || tempHours > 720) usage('TEMP_PASSWORD_HOURS must be an integer between 1 and 720');
+
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 1 });
 const q = (sql, params) => pool.query(sql, params);
 const event = (u, e, detail = null) => q('INSERT INTO iam.account_events (username, event, actor, detail) VALUES ($1, $2, $3, $4)', [u, e, by, detail]);
 
 async function create(username) {
   const temp = temporaryPassword();
-  const r = await q(`INSERT INTO iam.accounts (username, password_hash, must_change_password, created_by, updated_by)
-                     VALUES ($1, $2, true, $3, $3) ON CONFLICT (username) DO NOTHING RETURNING username`,
-  [username, await hashPassword(temp), by]);
+  const r = await q(`INSERT INTO iam.accounts (username, password_hash, must_change_password, temp_password_expires_at, created_by, updated_by)
+                     VALUES ($1, $2, true, now() + make_interval(hours => $4), $3, $3) ON CONFLICT (username) DO NOTHING
+                     RETURNING to_char(temp_password_expires_at, 'YYYY-MM-DD HH24:MI TZ') AS expires`,
+  [username, await hashPassword(temp), by, tempHours]);
   if (!r.rowCount) return console.log(`${username}\texists (unchanged)`);
   await event(username, 'CREATED');
-  console.log(`${username}\ttemporary password: ${temp}`);
+  console.log(`${username}\ttemporary password: ${temp}\t(expires ${r.rows[0].expires})`);
 }
 
 async function update(username, sql, ev, detail = null, params = []) {
@@ -63,6 +68,7 @@ try {
   switch (cmd) {
     case 'list': {
       const r = await q(`SELECT a.username, a.active, a.must_change_password AS temp_pw,
+                                to_char(a.temp_password_expires_at, 'YYYY-MM-DD HH24:MI') AS temp_expires,
                                 coalesce(a.locked_until > now(), false) AS locked, a.failed_attempts,
                                 to_char(a.last_login_at, 'YYYY-MM-DD HH24:MI') AS last_login,
                                 (SELECT string_agg(role_code, ',' ORDER BY role_code) FROM app.apx_demo_user_roles ur
@@ -83,9 +89,10 @@ try {
       const u = norm(arg);
       const temp = temporaryPassword();
       if (await update(u, `password_hash = $3, must_change_password = true, failed_attempts = 0, locked_until = NULL,
+                           temp_password_expires_at = now() + make_interval(hours => $4),
                            session_version = session_version + 1, password_changed_at = now()`, 'PASSWORD_RESET', null,
-      [await hashPassword(temp)])) {
-        console.log(`${u}\ttemporary password: ${temp}`);
+      [await hashPassword(temp), tempHours])) {
+        console.log(`${u}\ttemporary password: ${temp}\t(expires in ${tempHours} h)`);
       }
       break;
     }

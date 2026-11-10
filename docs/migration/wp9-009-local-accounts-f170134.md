@@ -19,7 +19,7 @@ Roles do not change. They stay in `APX_DEMO_USER_ROLES` and are managed on page 
 | Lockout | After `LOGIN_MAX_FAILURES` (default 5) consecutive failures the account locks for `LOGIN_LOCK_MINUTES` (default 15). A successful login resets the count. APEX workspace accounts instead stay locked until an administrator unlocks them; the operator can do that with `lock`. |
 | Throttling | `LOGIN_RATE_PER_MINUTE` (default 20) login attempts per client per minute, answered with HTTP 429. The web tier passes the browser address (`cf-connecting-ip`, else `x-forwarded-for`) in `x-forwarded-for`, and the API trusts it only with `TRUST_PROXY=1`. Set that only behind a proxy that overwrites these headers, such as Cloudflare Tunnel. Without it, every login comes from the web tier and the limit applies to all users together, so size it accordingly. The counter is in memory, which is enough for one API instance. |
 | Session and revocation | The HMAC session token carries the account's `session_version`. The guard checks it, plus "active" and "not locked", on every request. A password change, Sign Out, reset, deactivation or `revoke` raises the version, which ends **all** sessions of the account. |
-| Temporary password | A token issued with a temporary password reaches only `/auth/password` and `/auth/logout`. Everything else answers `PASSWORD_CHANGE_REQUIRED`, and the web sends the user to `/account/password`. |
+| Temporary password | Handed over **by e-mail** (owner decision 2026-11-10). It therefore expires after `TEMP_PASSWORD_HOURS` (default 72, set by the CLI on create/reset, migration 0005); an expired one is refused like a wrong password and logged as "temporary password expired". A token issued with a temporary password reaches only `/auth/password` and `/auth/logout`. Everything else answers `PASSWORD_CHANGE_REQUIRED`, and the web sends the user to `/account/password`. |
 | Web | Login handles the forced change. The new page `/account/password` sits outside the application shell. The navigation bar shows "Ganti Password" in local mode. Sign Out revokes the session in the API. |
 | Administration | Operator CLI `apps/api/scripts/accounts.mjs` (replaces Workspace Administration > Manage Users): `list`, `create`, `import-roles` (one account per user in the role table), `reset`, `unlock`, `lock`, `deactivate`, `activate`, `revoke`. A temporary password is printed once, to the operator's terminal only. |
 | Dev mode | `AUTH_MODE=dev` (one shared password) stays for tests and parity runs only. It is refused with `NODE_ENV=production`. |
@@ -33,6 +33,7 @@ Roles do not change. They stay in `APX_DEMO_USER_ROLES` and are managed on page 
   - revocation after a password change and after Sign Out;
   - lockout after 3 failures (audit trail checked, no passwords in it);
   - unlock, deactivate (a live token stops working), activate, reset;
+  - an expired temporary password is refused, the default expiry is 72 h, and a password change clears it;
   - a user without a role refused by APP_USERS;
   - rate limit (HTTP 429 on the 4th attempt with a limit of 3).
 - **Browser test** (`e2e/test_wp9009_local_accounts.py`, Chromium):
@@ -48,17 +49,31 @@ Roles do not change. They stay in `APX_DEMO_USER_ROLES` and are managed on page 
 
   The restore therefore includes the accounts.
 
-## 4. Open points (gate WP9-009 stays WARN)
+## 4. Owner decisions (2026-11-10)
 
-- **F-04 row-level ownership:** today any REQUESTER/MANAGER can edit any request, as in the source. The owner decides whether to keep this.
+- **F-04 row-level ownership:** any REQUESTER/MANAGER may change requests of other users, as in the source. No ownership rule is added.
+- **Temporary passwords by e-mail.** E-mail is not a secure channel: a mailbox that is forwarded, shared or compromised reveals the password. The residual risk is limited by these measures:
+  - the password expires after 72 h;
+  - it works only to set a new password, so nothing in the application is reachable with it;
+  - once the user has changed it, the e-mailed password is worthless; if someone else used it first, the user's own sign-in fails, and the user reports it;
+  - lockout and the audit trail stay in place.
+
+  Recommended practice for operators:
+  - send to the user's own company mailbox only;
+  - put the password in the e-mail without the username, or send the username separately;
+  - delete the sent mail;
+  - never put it in the ticket.
+
+## 5. Open points (gate WP9-009 stays WARN)
+
+
 - **No account administration screen.** The CLI is for operators. A page like APEX "Manage Users" can follow if needed.
 - **No MFA and no single sign-on.** These come with an external identity provider later.
-- **Handing over temporary passwords:** the channel needs a decision (e.g. in person or a password manager, not chat or e-mail in clear).
 - **Security review and sign-off** of this design.
 
-## 5. Go-live steps for accounts
+## 6. Go-live steps for accounts
 
-1. Apply migration 0004 (it runs with the others).
+1. Apply migrations 0004 and 0005 (they run with the others).
 2. Run `node apps/api/scripts/accounts.mjs import-roles --by <operator>` after the data load. It creates one account for each user in the role table and prints the temporary passwords.
-3. Hand the temporary passwords over through the agreed channel. Users change them at the first sign-in.
+3. E-mail each temporary password to the user's company mailbox within 72 hours of creating it (otherwise run `reset`). Users change it at the first sign-in.
 4. Start the API with `AUTH_MODE=local`, a fresh `SESSION_SECRET` (at least 32 characters, kept in the secret store) and `TRUST_PROXY=1` only behind a proxy that overwrites the client-address headers (e.g. Cloudflare Tunnel).

@@ -15,6 +15,7 @@ interface AccountRow {
   active: boolean;
   failed_attempts: number;
   locked: boolean;
+  temp_expired: boolean;
   session_version: number;
 }
 
@@ -31,7 +32,8 @@ export class AccountsService {
   private async find(username: string): Promise<AccountRow | null> {
     const r = await this.db.query<AccountRow>(
       `SELECT username, password_hash, must_change_password, active, failed_attempts,
-              coalesce(locked_until > now(), false) AS locked, session_version
+              coalesce(locked_until > now(), false) AS locked,
+              (must_change_password AND coalesce(temp_password_expires_at <= now(), false)) AS temp_expired, session_version
          FROM iam.accounts WHERE username = $1`, [username]);
     return r.rows[0] ?? null;
   }
@@ -47,6 +49,11 @@ export class AccountsService {
     if (!account) throw invalid();
     if (!account.active || account.locked) {
       await this.event(account.username, 'LOGIN_FAILED', account.username, account.active ? 'locked' : 'inactive');
+      throw invalid();
+    }
+    if (ok && account.temp_expired) {
+      // temporary passwords travel by e-mail, so they expire (TEMP_PASSWORD_HOURS); the operator issues a new one
+      await this.event(account.username, 'LOGIN_FAILED', account.username, 'temporary password expired');
       throw invalid();
     }
     if (!ok) {
@@ -92,7 +99,7 @@ export class AccountsService {
       throw new BusinessRuleError('VALIDATION_FAILED', fieldErrors.map((f) => f.message).join('\n'), null, 'BR-SEC-07', fieldErrors);
     }
     const r = await this.db.query<{ session_version: number }>(
-      `UPDATE iam.accounts SET password_hash = $2, must_change_password = false, password_changed_at = now(),
+      `UPDATE iam.accounts SET password_hash = $2, must_change_password = false, temp_password_expires_at = NULL, password_changed_at = now(),
               session_version = session_version + 1, updated_by = $1, updated_at = now()
         WHERE username = $1 RETURNING session_version`, [username, await hashPassword(next)]);
     await this.event(username, 'PASSWORD_CHANGED', username);
