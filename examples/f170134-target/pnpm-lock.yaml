@@ -12,7 +12,7 @@ importers:
     dependencies:
       '@apex2next/shared-runtime':
         specifier: workspace:*
-        version: link:../../packages/shared-runtime
+        version: link:../../../packages/shared-runtime
       '@nestjs/common':
         specifier: ^11.0.0
         version: 11.2.8(reflect-metadata@0.2.2)(rxjs@7.8.2)
