@@ -66,6 +66,12 @@ jobs:
       - name: Build and test NestJS adapter
         run: pnpm --filter @apex2next/nestjs-adapter test
 
+      - name: Typecheck Next.js adapter
+        run: pnpm --filter @apex2next/nextjs-adapter typecheck
+
+      - name: Build and test Next.js adapter
+        run: pnpm --filter @apex2next/nextjs-adapter test
+
       - name: Typecheck shared runtime
         run: pnpm --filter @apex2next/shared-runtime typecheck
 
