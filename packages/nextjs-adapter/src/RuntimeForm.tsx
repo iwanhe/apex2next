@@ -45,7 +45,7 @@ export function RuntimeForm({
         } else if (field.kind === 'TEXTAREA') {
           control = <textarea id={id} name={field.name} defaultValue={value} required={field.required}
             aria-invalid={fieldErrors.length > 0 || undefined} aria-describedby={describedBy} />;
-        } else if (field.kind === 'SELECT' || field.kind === 'RADIO' || field.kind === 'CHECKBOX') {
+        } else if (field.kind === 'SELECT') {
           control = (
             <select id={id} name={field.name} defaultValue={value} required={field.required}
               aria-invalid={fieldErrors.length > 0 || undefined} aria-describedby={describedBy}>
@@ -55,10 +55,25 @@ export function RuntimeForm({
               ))}
             </select>
           );
+        } else if (field.kind === 'RADIO') {
+          control = (
+            <fieldset id={id} aria-describedby={describedBy}>
+              {(field.options ?? []).map((option) => (
+                <label key={option.value}>
+                  <input type="radio" name={field.name} value={option.value} defaultChecked={value === option.value} />
+                  {option.display}
+                </label>
+              ))}
+            </fieldset>
+          );
+        } else if (field.kind === 'CHECKBOX') {
+          control = <input id={id} name={field.name} type="checkbox" value="Y"
+            defaultChecked={value === 'Y' || value === 'true'} />;
         } else {
           const type = field.kind === 'NUMBER' ? 'number'
             : field.kind === 'DATE' ? 'date'
             : field.kind === 'PASSWORD' ? 'password'
+            : field.kind === 'FILE' ? 'file'
             : field.kind === 'HIDDEN' ? 'hidden' : 'text';
           control = <input id={id} name={field.name} type={type} defaultValue={value}
             required={field.required} readOnly={!field.writable}
