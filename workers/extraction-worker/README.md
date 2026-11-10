@@ -288,3 +288,10 @@ The generator emits a reusable PostgreSQL runtime foundation, not application-sp
 Start local PostgreSQL with docker compose up -d postgres, then run pnpm db:migrate. Set DATABASE_URL before starting the API. The generated integration test verifies CRUD, bind-parameter handling, identifier/column rejection, and transaction rollback against a disposable PostgreSQL database.
 
 No business schema, entity, or service is guessed from page items. Application-specific runtime generation requires reviewed schema/domain metadata and approved service contracts. Production qualification still requires TLS/secrets management, pool sizing, observability, load testing, and representative application data.
+
+
+### R3 form and report metadata contracts
+
+The R3 UI generator emits richer, deterministic form-field and report-region metadata from the presentation allowlist. Form fields can include a recognized display control, label, required/read-only hints, placeholder, format mask, and sequence. Report-region entries reserve explicit column, filter, sorting, and pagination slots.
+
+These are **metadata contracts only**: each generated definition is marked `bindingStatus: NOT_BOUND`; report SQL, form table/column mappings, LOV queries, validation expressions, submit/DML behavior, and authorization conditions are not inferred or executed. Unknown control types remain `UNKNOWN`. A reviewer must map a form to an approved schema object and map a report to a reviewed query plan before enabling runtime behavior. The generation reports explicitly record that bindings and pagination behavior have not been generated.
