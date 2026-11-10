@@ -64,6 +64,14 @@ The shared runtime now also provides:
 - Navigation visibility filtered through authorization policies, stable ordering, and application-relative URL validation.
 - Declarative event-action planning with supported event/action allowlists, known-target validation and deterministic sequence ordering. No source JavaScript is evaluated.
 
+### R2.5 — Session, transaction and lost-update contracts
+
+The shared runtime now defines:
+- Session claims, max-age/clock-skew policy, and a session-store port for create/read/revoke/revoke-all.
+- Session-claim validation after cryptographic verification by the consuming authentication adapter. The shared package does not sign or verify tokens.
+- Database-agnostic transaction and transaction-runner ports; the application adapter owns connection lifecycle and commit/rollback.
+- Opaque version-token comparison that fails closed for missing or stale values (`LOST_UPDATE`).
+
 ## R2 completion plan
 
 | Slice | Scope | Acceptance evidence |
