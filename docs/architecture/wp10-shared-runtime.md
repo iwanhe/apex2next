@@ -57,6 +57,13 @@ Package `@apex2next/nextjs-adapter` currently provides:
 - `RuntimeReportTable` with hidden-column filtering, row rendering and empty state.
 - Server rendering tests using React DOM; no client-side state or direct database access.
 
+### R2.4 — LOV, navigation and declarative events
+
+The shared runtime now also provides:
+- Static LOV filtering/deduplication and registered-provider resolution with bounded results; callers cannot submit SQL.
+- Navigation visibility filtered through authorization policies, stable ordering, and application-relative URL validation.
+- Declarative event-action planning with supported event/action allowlists, known-target validation and deterministic sequence ordering. No source JavaScript is evaluated.
+
 ## R2 completion plan
 
 | Slice | Scope | Acceptance evidence |
