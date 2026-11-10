@@ -102,6 +102,10 @@ Exit codes: 0 QUALIFIED, 1 BLOCKED, 3 CONDITIONAL, 4 INCOMPLETE, 2 invalid input
 - RTO/RPO measured in a witnessed rehearsal.
 - Business/application/security/operations sign-off recorded.
 
+## WP9.7 result for app 170134
+
+Recorded in [WP9.7 rehearsal, performance, operations and qualification](wp9.7-qualification-f170134.md). Migration rehearsal (fail-closed rerun, injected failure, retry, backup, restore with full verification) passes. A light performance test on synthetic volume (20k requests, 60k lines) shows p95 below 0.42 s for one user and below 2.7 s for 10 concurrent users on 2 vCPU, after JIT was turned off for the API pool. A JSON access log was added. The twelve-gate assessment is **BLOCKED**: WP9-009 fails because there is no production identity provider yet, and owner attestations, approvals of RTO/RPO, targets and journeys, a witnessed rehearsal and the four sign-offs are outstanding.
+
 ## Current blockers
 
 Formal sanitization attestation and source scope; confirmed actual runtime/snapshot; Oracle dictionary reconciliation and any missing object/grant evidence; archive-aware extraction and parser coverage; review of dynamic SQL and trigger/package semantics; consistent data evidence; disposable PostgreSQL target and target build; approved critical journeys and role matrix; witnessed rehearsal/restore/rollback/performance; formal owner approvals.

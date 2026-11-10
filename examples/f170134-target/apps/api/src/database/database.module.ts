@@ -19,6 +19,9 @@ import { DatabaseHealthService } from './database-health.service';
       return new PostgresDatabase(new Pool({
         connectionString, max, connectionTimeoutMillis: 5000,
         idleTimeoutMillis: 30000, application_name: 'apex2next-f170134-api',
+        // OLTP pages: JIT compilation cost more than it saved on the report views (WP9.7 performance test,
+        // 2x slower IR search at 60k lines). PG_JIT=on restores the server default.
+        options: process.env.PG_JIT === 'on' ? undefined : '-c jit=off',
       }));
     },
   }, DatabaseHealthService],

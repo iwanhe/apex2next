@@ -1,0 +1,153 @@
+{
+  "format": "apex2next.wp97-performance.v1",
+  "runAt": "2026-11-10T12:59:34+00:00",
+  "environment": {
+    "postgres": "16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)",
+    "node": "v22.23.4",
+    "cpus": 2,
+    "host": "disposable cloud sandbox (shared CPU); API and database on the same host",
+    "auth": "AUTH_MODE=dev"
+  },
+  "load": {
+    "concurrentUsers": 10,
+    "iterationsPerScenario": 200,
+    "warmup": 5
+  },
+  "volume": {
+    "apx_demo_requests": 20005,
+    "apx_demo_request_lines": 60007,
+    "apx_demo_approvals": 13337,
+    "synthetic": true,
+    "generationMs": 1045,
+    "baseSnapshot": "snapshot-s4.csv"
+  },
+  "results": [
+    {
+      "scenario": "S1 dashboard (page 100)",
+      "method": "GET",
+      "path": "/pages/100",
+      "n": 200,
+      "p50": 1059.0,
+      "p95": 1160.1,
+      "max": 1208.8,
+      "throughputPerSec": 9.3,
+      "errors": 0,
+      "statuses": [
+        200
+      ]
+    },
+    {
+      "scenario": "S2 requests + facets (page 300)",
+      "method": "GET",
+      "path": "/regions/requests",
+      "n": 200,
+      "p50": 287.6,
+      "p95": 347.8,
+      "max": 383.2,
+      "throughputPerSec": 34.3,
+      "errors": 0,
+      "statuses": [
+        200
+      ]
+    },
+    {
+      "scenario": "S3 requests facet DRAFT + search (page 300)",
+      "method": "GET",
+      "path": "/regions/requests?facet=P300_STATUS%3ADRAFT&q=request%201",
+      "n": 200,
+      "p50": 590.0,
+      "p95": 648.8,
+      "max": 691.6,
+      "throughputPerSec": 16.8,
+      "errors": 0,
+      "statuses": [
+        200
+      ]
+    },
+    {
+      "scenario": "S4 lines IR default (page 310)",
+      "method": "GET",
+      "path": "/regions/requestLines",
+      "n": 200,
+      "p50": 21.7,
+      "p95": 35.1,
+      "max": 40.1,
+      "throughputPerSec": 454.3,
+      "errors": 0,
+      "statuses": [
+        200
+      ]
+    },
+    {
+      "scenario": "S5 lines IR search + sort (page 310)",
+      "method": "GET",
+      "path": "/regions/requestLines?q=laptop&sort=line_amount&dir=desc",
+      "n": 200,
+      "p50": 2064.0,
+      "p95": 2660.1,
+      "max": 2752.5,
+      "throughputPerSec": 4.7,
+      "errors": 0,
+      "statuses": [
+        200
+      ]
+    },
+    {
+      "scenario": "S6 lines IR last page (page 310)",
+      "method": "GET",
+      "path": "/regions/requestLines?page=1200",
+      "n": 200,
+      "p50": 742.7,
+      "p95": 884.6,
+      "max": 1004.2,
+      "throughputPerSec": 13.4,
+      "errors": 0,
+      "statuses": [
+        200
+      ]
+    },
+    {
+      "scenario": "S7 summary IR sort total (page 400)",
+      "method": "GET",
+      "path": "/regions/requestSummary?sort=total_amount&dir=desc",
+      "n": 200,
+      "p50": 265.5,
+      "p95": 313.1,
+      "max": 346.3,
+      "throughputPerSec": 37.2,
+      "errors": 0,
+      "statuses": [
+        200
+      ]
+    },
+    {
+      "scenario": "S8 approval inbox (page 190)",
+      "method": "GET",
+      "path": "/regions/approvalInbox",
+      "n": 200,
+      "p50": 29.0,
+      "p95": 44.3,
+      "max": 49.6,
+      "throughputPerSec": 340.2,
+      "errors": 0,
+      "statuses": [
+        200
+      ]
+    },
+    {
+      "scenario": "S9 create request (page 301)",
+      "method": "POST",
+      "path": "/forms/request",
+      "n": 200,
+      "p50": 20.3,
+      "p95": 51.7,
+      "max": 134.0,
+      "throughputPerSec": 396.8,
+      "errors": 0,
+      "statuses": [
+        201
+      ]
+    }
+  ],
+  "note": "Indicative only: shared sandbox hardware, no network between tiers, no APEX baseline at this volume."
+}
