@@ -56,3 +56,30 @@ def test_ui_generator_emits_web_api_and_review_artifacts_without_source_expressi
 
 def test_ui_generator_is_deterministic():
     assert build_ui_generator_files(_document()) == build_ui_generator_files(_document())
+
+
+def test_ui_spec_keeps_navigation_lovs_and_authorization_as_review_metadata():
+    doc = _document()
+    doc["objects"].extend([
+        {"id": "lov:status", "type": "LOV", "sourceType": "lov", "name": "STATUS_LOV",
+         "properties": {"source": {"valueType": "SQL_EXPRESSION", "rawExpression": "select secret from dual"}}},
+        {"id": "auth:admin", "type": "AUTHORIZATION", "sourceType": "authorization",
+         "name": "ADMIN_ONLY", "properties": {}},
+        {"id": "list:main", "type": "LIST", "sourceType": "list", "name": "Main Navigation",
+         "properties": {}},
+    ])
+    spec = build_ui_spec(doc)
+    assert spec["navigation"][0]["name"] == "Main Navigation"
+    assert spec["lovs"][0]["reviewStatus"] == "MANUAL_REVIEW"
+    assert spec["authorizationSchemes"][0]["name"] == "ADMIN_ONLY"
+    assert "select secret from dual" not in str(spec)
+
+
+def test_ui_generator_emits_report_and_form_definitions_as_manual_stubs():
+    files = build_ui_generator_files(_document())
+    assert "apps/api/src/generated/report-definitions.ts" in files
+    assert "apps/api/src/generated/form-definitions.ts" in files
+    assert "migration-report/report-generation.json" in files
+    assert "migration-report/form-generation.json" in files
+    assert "MANUAL_REVIEW" in files["apps/api/src/generated/form-definitions.ts"]
+    assert "queryGenerated" in files["apps/api/src/generated/report-definitions.ts"]
