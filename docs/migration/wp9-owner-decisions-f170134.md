@@ -9,6 +9,7 @@ Decisions by the application owner (Iwan Herdian), recorded on 2026-11-09. "Acce
 | WP9-009 sign-in: local accounts in the application first (external identity provider later) | Implemented, see [WP9-009](wp9-009-local-accounts-f170134.md) | 2026-11-10 |
 | F-04 row-level ownership: any REQUESTER/MANAGER may change requests of other users (source behavior kept) | Accepted | 2026-11-10 |
 | WP9-009 handover of temporary passwords: by e-mail | Accepted; mitigated by expiry (72 h), forced change at first sign-in, lockout and audit trail | 2026-11-10 |
+| Goal of the pilot: app 170134 is a proof and template, it does not go live; next step is a real PANDAWA application | Decided; formal sign-offs, witnessed rehearsal and RTO/RPO approval move to the next application ([closure](wp9-pilot-closure-f170134.md)) | 2026-11-10 |
 | D-UI-05: the target re-renders the parent page after a dialog closes (APEX refreshes only some regions) | Accepted | 2026-11-09 |
 | D-UI-06: browser `confirm()` instead of `apex.confirm` (same texts) | Accepted | 2026-11-09 |
 | WP9.4 deviations DEV-01…DEV-05 | Accepted for now | 2026-11-09 |

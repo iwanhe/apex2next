@@ -4,6 +4,8 @@
 
 Evidence is in [`wp9.7/f170134/`](wp9.7/f170134/): `rehearsal.json`, `perf.json`, `perf-1user.json`, `pilot-input.json` (gate manifest) and `qualification.json` (assessor output). Everything ran on a disposable PostgreSQL 16 database in a cloud sandbox with 2 vCPU. Nothing was written to Oracle.
 
+> **Owner decision 2026-11-10:** app 170134 does not go live; the pilot is closed as proof and template ([closure](wp9-pilot-closure-f170134.md)). The open gates below therefore apply to the next application.
+
 ## 1. Migration rehearsal (WP9-007, WP9-011)
 
 The rehearsal uses `rehearsal/rehearse.py` with snapshot S4 (`report_6.csv`, SHA-256 `9fe1721f…`, 38 rows).
