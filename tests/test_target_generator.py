@@ -45,7 +45,7 @@ def test_generator_emits_workspace_and_review_artifacts(tmp_path):
     page = (root / f"apps/web/app/pages/{route}/page.tsx").read_text()
     assert "Orders / Review" in page
     assert "BEGIN NULL; END;" not in page
-    assert "disabled" in page
+    assert "GeneratedPageInventory" in page
     assert any((root / "apps/api/src/dto").glob("*.dto.ts"))
     assert any((root / "apps/api/src/processes").glob("*.service.ts"))
     assert (root / "apps/api/test/generated-scaffold.test.js").is_file()
