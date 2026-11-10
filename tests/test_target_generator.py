@@ -122,3 +122,16 @@ def test_generator_postgres_runtime_is_deterministic(tmp_path):
         if path.is_file():
             relative = path.relative_to(tmp_path / "first")
             assert path.read_bytes() == (tmp_path / "second" / relative).read_bytes()
+
+
+def test_generator_integrates_r3_ui_metadata_and_inventory(tmp_path):
+    generate_project(_ir(), tmp_path / "generated")
+    root = tmp_path / "generated"
+    spec = (root / "apps/web/lib/apex2next-generated-spec.ts").read_text()
+    page = (root / "apps/web/app/pages/orders-review-" +
+            hashlib.sha256(b"page:10").hexdigest()[:8] + "/page.tsx").read_text()
+    report = json.loads((root / "migration-report/ui-generation.json").read_text())
+    assert "GENERATED_UI_SPEC" in spec
+    assert "GeneratedPageInventory" in page
+    assert report["pageCount"] == 1
+    assert report["componentCount"] == 1
