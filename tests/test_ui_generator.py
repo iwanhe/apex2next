@@ -11,7 +11,7 @@ def _document():
             {"id": "item:10", "type": "ITEM", "sourceType": "page_item", "name": "Order Number",
              "parentId": "page:10", "properties": {
                  "label": {"valueType": "STRING", "value": "Order number"},
-                 "required": {"valueType": "BOOLEAN", "value": True},
+                 "required": {"valueType": "BOOLEAN", "value": True},\n                 "displayAs": {"valueType": "STRING", "value": "NATIVE_TEXT_FIELD"},\n                 "placeholder": {"valueType": "STRING", "value": "Enter order number"},
                  "source": {"valueType": "SQL_EXPRESSION", "rawExpression": "select secret from dual"},
              }},
             {"id": "process:10", "type": "PROCESS", "sourceType": "process", "name": "Save order",
@@ -83,3 +83,19 @@ def test_ui_generator_emits_report_and_form_definitions_as_manual_stubs():
     assert "migration-report/form-generation.json" in files
     assert "MANUAL_REVIEW" in files["apps/api/src/generated/form-definitions.ts"]
     assert "queryGenerated" in files["apps/api/src/generated/report-definitions.ts"]
+
+
+def test_form_and_report_contracts_capture_safe_metadata_but_never_claim_runtime_binding():
+    files = build_ui_generator_files(_document())
+    form = files["apps/api/src/generated/form-definitions.ts"]
+    report = files["apps/api/src/generated/report-definitions.ts"]
+    assert '"fieldType": "TEXT"' in form
+    assert '"label": "Order number"' in form
+    assert '"required": true' in form
+    assert '"placeholder": "Enter order number"' in form
+    assert '"bindingStatus": "NOT_BOUND"' in form
+    assert '"queryGenerated": false' in report
+    assert '"pagination": {' in report
+    assert '"bindingStatus": "NOT_BOUND"' in report
+    assert '"bindingsGenerated": false' in files["migration-report/form-generation.json"]
+    assert '"bindingsGenerated": false' in files["migration-report/report-generation.json"]
