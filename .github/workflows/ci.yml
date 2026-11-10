@@ -57,6 +57,15 @@ jobs:
       - name: Install workspace dependencies
         run: pnpm install --no-frozen-lockfile
 
+      - name: Build shared runtime dependency
+        run: pnpm --filter @apex2next/shared-runtime build
+
+      - name: Typecheck NestJS adapter
+        run: pnpm --filter @apex2next/nestjs-adapter typecheck
+
+      - name: Build and test NestJS adapter
+        run: pnpm --filter @apex2next/nestjs-adapter test
+
       - name: Typecheck shared runtime
         run: pnpm --filter @apex2next/shared-runtime typecheck
 
