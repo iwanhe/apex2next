@@ -33,7 +33,7 @@ test('static LOV supports case-insensitive search, deduplication and max rows', 
       { display: 'Draft duplicate', value: 'DRAFT' },
       { display: 'Approved', value: 'APPROVED' },
     ],
-  }, {}, 'd');
+  }, {}, 'raft');
   assert.deepEqual(result, [{ display: 'Draft', value: 'DRAFT' }, { display: 'Draft duplicate', value: 'DRAFT' }].slice(0, 1));
 });
 
