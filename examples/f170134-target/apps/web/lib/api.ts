@@ -26,11 +26,11 @@ export class ApiError extends Error {
   }
 }
 
-async function call<T>(method: string, path: string, body?: unknown, token?: string | null): Promise<T> {
+async function call<T>(method: string, path: string, body?: unknown, token?: string | null, extra: Record<string, string> = {}): Promise<T> {
   const auth = token === undefined ? await sessionToken() : token;
   const res = await fetch(`${API_URL}${path}`, {
     method, cache: 'no-store',
-    headers: { ...(auth ? { authorization: `Bearer ${auth}` } : {}), ...(body !== undefined ? { 'content-type': 'application/json' } : {}) },
+    headers: { ...extra, ...(auth ? { authorization: `Bearer ${auth}` } : {}), ...(body !== undefined ? { 'content-type': 'application/json' } : {}) },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
   const text = await res.text();
@@ -39,24 +39,33 @@ async function call<T>(method: string, path: string, body?: unknown, token?: str
   return json as T;
 }
 
+/** GET without the redirects of apiGet (for the change-password page itself). */
+export function apiGetRaw<T>(path: string): Promise<T> {
+  return call<T>('GET', path);
+}
+
 /** GET for server components: an expired/missing session sends the user to the login page. */
 export async function apiGet<T>(path: string): Promise<T> {
   try {
     return await call<T>('GET', path);
   } catch (e) {
     if (e instanceof ApiError && e.status === 401) redirect('/login');
+    if (e instanceof ApiError && e.body.code === 'PASSWORD_CHANGE_REQUIRED') redirect('/account/password');
     throw e;
   }
 }
 
-export function apiSend<T>(method: 'POST' | 'PUT' | 'DELETE', path: string, body?: unknown, token?: string | null): Promise<T> {
-  return call<T>(method, path, body ?? {}, token);
+export function apiSend<T>(method: 'POST' | 'PUT' | 'DELETE', path: string, body?: unknown, token?: string | null,
+  headers?: Record<string, string>): Promise<T> {
+  return call<T>(method, path, body ?? {}, token, headers);
 }
 
 export interface Session {
   username: string;
   schemes: Record<string, boolean>;
   appAccessDenied: string | null;
+  /** 'local': accounts in schema iam (Change Password available); 'dev': test mode. */
+  authMode?: 'local' | 'dev';
 }
 
 export interface ReportColumn {

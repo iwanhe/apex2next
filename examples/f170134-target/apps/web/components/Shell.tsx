@@ -19,6 +19,7 @@ export function Shell({ session, children }: { session: Session; children: React
         <a className="app-name" href="/">{APP_TITLE}</a>
         <nav className="navbar" aria-label="Navigation bar">
           <span data-testid="app-user">{session.username}</span>
+          {session.authMode === 'local' && <a className="linklike" href="/account/password">Ganti Password</a>}
           <form action="/logout" method="post">
             <button className="linklike" type="submit">Sign Out</button>
           </form>

@@ -21,6 +21,7 @@ async function resetDatabase() {
   const pool = new Pool({ connectionString: DATABASE_URL, max: 1 });
   try {
     await pool.query('DROP SCHEMA IF EXISTS app CASCADE');
+    await pool.query('DROP SCHEMA IF EXISTS iam CASCADE');
   } finally {
     await pool.end();
   }
@@ -65,9 +66,9 @@ const SESSION_SECRET = 'test-session-secret-0123456789abcdef';
  * Starts the real Nest application (guards, filters, controllers) on an ephemeral port against a freshly
  * migrated and seeded database. Returns an HTTP client that logs users in through /auth/login.
  */
-async function startApi() {
+async function startApi({ authEnv } = {}) {
   const env = await setup();
-  Object.assign(process.env, { AUTH_MODE: 'dev', DEV_LOGIN_PASSWORD: DEV_PASSWORD, SESSION_SECRET });
+  Object.assign(process.env, { AUTH_MODE: 'dev', DEV_LOGIN_PASSWORD: DEV_PASSWORD, SESSION_SECRET }, authEnv ?? {});
   const { NestFactory } = require('@nestjs/core');
   const { AppModule } = require('../dist/app.module.js');
   const nest = await NestFactory.create(AppModule, { logger: false });

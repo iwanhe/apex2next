@@ -110,3 +110,10 @@ table.report tr:hover td { background: #fafbfc; }
   .grid-2, .layout-facets, .master-detail { grid-template-columns: 1fr; }
   .field { grid-template-columns: 1fr; }
 }
+
+/* WP9-009 change password (login-style panel) */
+.login .field { grid-template-columns: 1fr; }
+.login .field label { padding-top: 0; }
+.login h2 { font-size: 15px; text-align: center; margin: 0 0 12px; }
+.hint { color: var(--muted); font-size: 12px; }
+.navbar .linklike { margin-left: 4px; }

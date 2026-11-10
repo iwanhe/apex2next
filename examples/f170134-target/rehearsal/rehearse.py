@@ -8,8 +8,8 @@ Every step runs against a disposable PostgreSQL database (DATABASE_URL) and is t
   R4  injected failure: a copy of the snapshot whose last loaded table violates a foreign key -> LOD-002,
       the whole load rolls back (every table empty again)
   R5  retry after the failure: the real snapshot loads with every check PASS
-  R6  backup: pg_dump -Fc of the database (file kept outside Git; size and SHA-256 recorded)
-  R7  simulated loss: drop schema app
+  R6  backup: pg_dump -Fc of schemas app and iam (local accounts) (file kept outside Git; size and SHA-256 recorded)
+  R7  simulated loss: drop schemas app and iam
   R8  restore: pg_restore, then table/view comparison with the snapshot, identity high-water marks, and an API
       smoke test (health/ready, dev login, report rows) on the restored database
 
@@ -27,6 +27,7 @@ import copy
 import hashlib
 import json
 import os
+import secrets
 import subprocess
 import sys
 import time
@@ -43,7 +44,7 @@ sys.path.insert(0, str(ROOT / "e2e"))
 from apex2next_schema_analyzer.snapshot_migration import (  # noqa: E402
     compare_state, compare_views_after, migrate, parse_snapshot,
 )
-from conftest import DEV_PASSWORD, _free_port, _wait  # noqa: E402
+from conftest import _free_port, _wait  # noqa: E402
 
 TABLES = ["apx_demo_roles", "apx_demo_user_roles", "apx_demo_departments", "apx_demo_items", "apx_demo_doc_types",
           "apx_demo_doc_seq", "apx_demo_requests", "apx_demo_request_lines", "apx_demo_approvals"]
@@ -76,6 +77,7 @@ def migrate_schema(db: str) -> None:
     import psycopg
     with psycopg.connect(db, autocommit=True) as c:
         c.execute("DROP SCHEMA IF EXISTS app CASCADE")
+        c.execute("DROP SCHEMA IF EXISTS iam CASCADE")
     subprocess.run(["node", "apps/api/scripts/migrate.mjs"], cwd=ROOT, env={**os.environ, "ALLOW_DB_RESET": "1"},
                    check=True, stdout=subprocess.DEVNULL)
 
@@ -156,16 +158,23 @@ def main() -> int:
                 "rowsLeft": sum(left.values()), "ok": not rep["committed"] and sum(left.values()) == 0}
     steps.run("R4", "Injected mid-load failure rolls the whole load back", r4)
 
+    account: dict = {}
+
     def r5():
         rep = load(db, snap, plan, args.snapshot.name)
-        return {"checks": rep["checks"], "committed": rep["committed"], "ok": rep["committed"] and compare(db, snap)["ok"]}
-    steps.run("R5", "Retry after the failure loads with every check PASS", r5)
+        # a local account (schema iam) for the API smoke after the restore: proves accounts are in the backup
+        out = subprocess.run(["node", "apps/api/scripts/accounts.mjs", "create", "demo_admin", "--by", "REHEARSAL"], cwd=ROOT,
+                             env=os.environ, check=True, capture_output=True, text=True).stdout
+        account["temp"] = out.split("temporary password: ", 1)[1].split()[0] if "temporary password" in out else None
+        return {"checks": rep["checks"], "committed": rep["committed"], "localAccount": "DEMO_ADMIN" if account["temp"] else None,
+                "ok": rep["committed"] and compare(db, snap)["ok"] and bool(account["temp"])}
+    steps.run("R5", "Retry after the failure loads with every check PASS (+ local account DEMO_ADMIN)", r5)
 
     def r6():
-        subprocess.run(["pg_dump", "-Fc", "--no-owner", "-n", "app", "-f", str(dump), db], check=True)
+        subprocess.run(["pg_dump", "-Fc", "--no-owner", "-n", "app", "-n", "iam", "-f", str(dump), db], check=True)
         return {"bytes": dump.stat().st_size, "sha256": hashlib.sha256(dump.read_bytes()).hexdigest(),
                 "takenAt": datetime.now(timezone.utc).isoformat(timespec="seconds")}
-    steps.run("R6", "Backup (pg_dump custom format, schema app)", r6)
+    steps.run("R6", "Backup (pg_dump custom format, schemas app and iam)", r6)
 
     rto_start = time.perf_counter()
     import psycopg
@@ -173,9 +182,10 @@ def main() -> int:
     def r7():
         with psycopg.connect(db, autocommit=True) as c:
             c.execute("DROP SCHEMA app CASCADE")
-            gone = c.execute("SELECT count(*) FROM pg_namespace WHERE nspname = 'app'").fetchone()[0] == 0
+            c.execute("DROP SCHEMA IF EXISTS iam CASCADE")
+            gone = c.execute("SELECT count(*) FROM pg_namespace WHERE nspname IN ('app', 'iam')").fetchone()[0] == 0
         return {"ok": gone}
-    steps.run("R7", "Simulated loss: schema app dropped", r7)
+    steps.run("R7", "Simulated loss: schemas app and iam dropped", r7)
 
     def r8():
         subprocess.run(["pg_restore", "--no-owner", "--exit-on-error", "-d", db, str(dump)], check=True)
@@ -183,7 +193,7 @@ def main() -> int:
         idn = identities(db)
         idn_ok = all(v["next"] > v["maxKey"] for v in idn.values()) and all(
             (idn.get(t.split('.')[0].lower(), {}).get("next") or 0) >= (i.get("last_number") or 0) for t, i in snap.identities.items())
-        smoke = api_smoke(db)
+        smoke = api_smoke(db, account.get("temp") or "")
         return {"comparison": {k: v for k, v in cmp_.items() if k != "ok"}, "identities": idn, "apiSmoke": smoke,
                 "ok": cmp_["ok"] and idn_ok and smoke["ok"]}
     steps.run("R8", "Restore and verify (tables, views, identities, API smoke)", r8)
@@ -211,9 +221,11 @@ def server_version(db: str) -> str:
         return c.execute("SHOW server_version").fetchone()[0]
 
 
-def api_smoke(db: str) -> dict:
+def api_smoke(db: str, temp_password: str) -> dict:
+    """Restored database, AUTH_MODE=local: the account created before the backup signs in with its temporary
+    password, must change it, and then reads the reports."""
     port = _free_port()
-    env = {**os.environ, "DATABASE_URL": db, "AUTH_MODE": "dev", "DEV_LOGIN_PASSWORD": DEV_PASSWORD, "API_PORT": str(port),
+    env = {**os.environ, "DATABASE_URL": db, "AUTH_MODE": "local", "API_PORT": str(port),
            "SESSION_SECRET": "rehearsal-session-secret-0123456789abcdef"}
     api = subprocess.Popen(["node", "dist/main.js"], cwd=ROOT / "apps/api", env=env, stdout=subprocess.DEVNULL,
                            stderr=subprocess.STDOUT)
@@ -221,17 +233,25 @@ def api_smoke(db: str) -> dict:
     try:
         _wait(f"{base}/health")
         ready = json.loads(urllib.request.urlopen(f"{base}/health/ready", timeout=10).read())
-        req = urllib.request.Request(f"{base}/auth/login", method="POST", headers={"content-type": "application/json"},
-                                     data=json.dumps({"username": "demo_admin", "password": DEV_PASSWORD}).encode())
-        token = json.loads(urllib.request.urlopen(req, timeout=10).read())["token"]
+        def post(path, body, token=None):
+            r = urllib.request.Request(base + path, method="POST", data=json.dumps(body).encode(),
+                                       headers={"content-type": "application/json",
+                                                **({"authorization": f"Bearer {token}"} if token else {})})
+            return json.loads(urllib.request.urlopen(r, timeout=30).read())
+        first = post("/auth/login", {"username": "demo_admin", "password": temp_password})
+        new_password = "Rehearsal" + secrets.token_hex(4) + "9"
+        token = post("/auth/password", {"current": temp_password, "next": new_password, "confirm": new_password},
+                     first["token"])["token"]
 
         def get(path):
             r = urllib.request.Request(base + path, headers={"authorization": f"Bearer {token}"})
             return json.loads(urllib.request.urlopen(r, timeout=10).read())
         lines = get("/regions/requestLines?all=1")["rows"]
         summary = get("/regions/requestSummary?all=1")["rows"]
-        return {"ready": ready.get("status"), "requestLines": len(lines), "requestSummary": len(summary),
-                "ok": ready.get("status") in ("ok", "ready") and len(lines) > 0 and len(summary) > 0}
+        return {"ready": ready.get("status"), "authMode": "local", "forcedPasswordChange": first.get("mustChangePassword"),
+                "requestLines": len(lines), "requestSummary": len(summary),
+                "ok": ready.get("status") in ("ok", "ready") and first.get("mustChangePassword") is True
+                and len(lines) > 0 and len(summary) > 0}
     finally:
         api.terminate()
         api.wait(timeout=10)

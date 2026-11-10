@@ -32,11 +32,11 @@ async function snapshot(pool) {
   return { tables, views };
 }
 
-test('runner applies 0001 schema, 0002 reviewed functions and 0003 deferred views', { skip }, async () => {
+test('runner applies 0001 schema, 0002 reviewed functions, 0003 deferred views and 0004 local accounts', { skip }, async () => {
   const env = await setup({ seedData: false });
   try {
     const applied = (await env.pool.query('SELECT version FROM app.schema_migrations ORDER BY version')).rows.map((r) => r.version);
-    assert.deepEqual(applied, ['0001_wp93_schema.sql', '0002_wp94_business_functions.sql', '0003_wp94_deferred_views.sql']);
+    assert.deepEqual(applied, ['0001_wp93_schema.sql', '0002_wp94_business_functions.sql', '0003_wp94_deferred_views.sql', '0004_wp9009_local_accounts.sql']);
     const out = execFileSync(process.execPath, [path.join(__dirname, '..', 'scripts', 'migrate.mjs')],
       { env: { ...process.env, DATABASE_URL } }).toString();
     assert.equal(out, '', 're-running the runner must be a no-op');

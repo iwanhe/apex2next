@@ -1,6 +1,6 @@
 # WP9.7 — Rehearsal, performance, operations and qualification gates: app 170134
 
-**Status:** The engineering rehearsal is done. Migration with retry, backup and restore pass, a light performance test ran on synthetic volume, and access logging was added. The twelve-gate assessment is **BLOCKED**: 10 checks PASS, 6 WARN, 5 NOT VERIFIED and 1 FAIL. The FAIL is WP9-009: there is no production identity provider (the target runs only with `AUTH_MODE=dev`). The pilot is therefore **not qualified for go-live**. Most open items are owner decisions and sign-offs, listed in §6.
+**Status:** The engineering rehearsal is done. Migration with retry, backup and restore pass, a light performance test ran on synthetic volume, and access logging was added. The twelve-gate assessment is now **CONDITIONAL** (10 checks PASS, 7 WARN, 5 NOT VERIFIED, 0 FAIL). The assessor reports CONDITIONAL as soon as nothing fails, even while checks are still NOT VERIFIED. It was BLOCKED until local accounts were built for WP9-009 (see [WP9-009](wp9-009-local-accounts-f170134.md)). The pilot is **not qualified for go-live** yet. The open items are owner decisions and sign-offs, listed in §6.
 
 Evidence is in [`wp9.7/f170134/`](wp9.7/f170134/): `rehearsal.json`, `perf.json`, `perf-1user.json`, `pilot-input.json` (gate manifest) and `qualification.json` (assessor output). Everything ran on a disposable PostgreSQL 16 database in a cloud sandbox with 2 vCPU. Nothing was written to Oracle.
 
@@ -10,18 +10,18 @@ The rehearsal uses `rehearsal/rehearse.py` with snapshot S4 (`report_6.csv`, SHA
 
 | Step | What it proves | Result | Time |
 |---|---|---|---:|
-| R1 | Clean target; apply the reviewed migrations 0001–0003 | PASS | 198 ms |
-| R2 | Load S4 in one transaction; every check (SNP, LOD, IDN, TBL, VIW) passes | PASS | 43 ms |
-| R3 | Rerun on a loaded target fails closed (LOD-001) and changes nothing | PASS | 46 ms |
-| R4 | Injected mid-load failure (FK violation in the last table): LOD-002, whole load rolled back, 0 rows left | PASS | 174 ms |
-| R5 | Retry after the failure: every check PASS | PASS | 48 ms |
-| R6 | Backup with `pg_dump -Fc -n app` (35,575 bytes; kept outside Git) | PASS | 78 ms |
-| R7 | Simulated loss: `DROP SCHEMA app` | PASS | 18 ms |
-| R8 | `pg_restore`, then 9/9 tables and 10/10 views equal to S4, identity next values ≥ Oracle `LAST_NUMBER`, and API smoke (`/health/ready`, login, report rows) | PASS | 692 ms |
+| R1 | Clean target; apply the reviewed migrations 0001–0004 | PASS | 231 ms |
+| R2 | Load S4 in one transaction; every check (SNP, LOD, IDN, TBL, VIW) passes | PASS | 37 ms |
+| R3 | Rerun on a loaded target fails closed (LOD-001) and changes nothing | PASS | 38 ms |
+| R4 | Injected mid-load failure (FK violation in the last table): LOD-002, whole load rolled back, 0 rows left | PASS | 148 ms |
+| R5 | Retry after the failure: every check PASS; then a local account (DEMO_ADMIN) is created | PASS | 399 ms |
+| R6 | Backup with `pg_dump -Fc -n app -n iam` (40,248 bytes; kept outside Git) | PASS | 89 ms |
+| R7 | Simulated loss: `DROP SCHEMA app`, `DROP SCHEMA iam` | PASS | 22 ms |
+| R8 | `pg_restore`, then 9/9 tables and 10/10 views equal to S4, identity next values ≥ Oracle `LAST_NUMBER`, and API smoke with `AUTH_MODE=local` (`/health/ready`, sign-in with the temporary password, forced change, report rows) | PASS | 1,521 ms |
 
 **Retry and resume.** The load is all-or-nothing, so "resume" means rerun from an empty target. R3–R5 show that this is safe.
 
-**Measured RTO.** Restore plus verification (R7 → R8) took **0.7 s** at demo volume. At production volume the rehearsal must be repeated, because the time grows with data size. **RPO** equals the age of the last backup. At cutover it is 0, because APEX is frozen before the final snapshot.
+**Measured RTO.** Restore plus verification (R7 → R8) took **1.5 s** at demo volume; most of it is the API start and one password hash. At production volume the rehearsal must be repeated, because the time grows with data size. **RPO** equals the age of the last backup. At cutover it is 0, because APEX is frozen before the final snapshot.
 
 The rehearsal was run by the engineer. **It was not witnessed**, and RTO/RPO targets have not been approved.
 
@@ -39,7 +39,7 @@ The rehearsal was run by the engineer. **It was not witnessed**, and RTO/RPO tar
 
 ## 2. Performance (WP9-010)
 
-The test uses `rehearsal/perf.py` on a disposable database: S4 plus **synthetic** volume of 20,005 requests, 60,007 lines and 13,337 approval steps. The synthetic rows are marked `SYN-…` / `SYNTHETIC`. The API runs with `AUTH_MODE=dev`. Each scenario was called 200 times (30 for the single-user run) after 5 warm-up calls. Latency was measured at the client. API and database share the same 2 vCPU.
+The test uses `rehearsal/perf.py` on a disposable database: S4 plus **synthetic** volume of 20,005 requests, 60,007 lines and 13,337 approval steps. The synthetic rows are marked `SYN-…` / `SYNTHETIC`. The API ran with `AUTH_MODE=dev`, before local accounts existed. Local accounts add one indexed account lookup per request and about 0.3 s of scrypt per sign-in. Each scenario was called 200 times (30 for the single-user run) after 5 warm-up calls. Latency was measured at the client. API and database share the same 2 vCPU.
 
 | Scenario (page) | 1 user p50 / p95 | 10 users p50 / p95 | Errors |
 |---|---:|---:|---:|
@@ -80,6 +80,7 @@ The measurements meet these targets. There is no APEX baseline at this volume, s
 | Access log | **New:** one JSON line per request on stdout with time, request id, method, path, status, ms and user. The path is logged without the query string, so search terms stay out. A valid `x-request-id` header is reused, otherwise a new id is generated and echoed. `ACCESS_LOG=off` disables the log. A unit test covers it. |
 | Error log | Unexpected errors are logged with stack trace; the user only sees "Terjadi kesalahan pada server." |
 | Backup | `pg_dump -Fc -n app`; restore is rehearsed in R6–R8 |
+| Security audit | `iam.account_events`: account created, sign-in ok/failed, locked, unlocked, password changed/reset, Sign Out, sessions revoked, deactivated/activated (no passwords) |
 | Missing | Monitoring and alerting (uptime, error rate, latency), log shipping and retention, an operations runbook (start/stop, configuration, secrets, backup schedule), and a defect workflow |
 
 ## 4. Defects
@@ -94,7 +95,7 @@ All defects found in WP9.6/9.7 are fixed and covered by tests or the parity jour
 
 ## 5. Twelve-gate assessment
 
-The assessment was produced with `pilot_qualification` from [`pilot-input.json`](wp9.7/f170134/pilot-input.json). Result: **BLOCKED** (exit code 1). Gate statuses are the engineer's assessment; they become evidence only with the sign-offs in §6.
+The assessment was produced with `pilot_qualification` from [`pilot-input.json`](wp9.7/f170134/pilot-input.json). Result: **CONDITIONAL** (exit code 3; BLOCKED before WP9-009). Only all-PASS gives QUALIFIED. Gate statuses are the engineer's assessment; they become evidence only with the sign-offs in §6.
 
 | Gate | Status | Evidence | Needed to PASS |
 |---|---|---|---|
@@ -106,7 +107,7 @@ The assessment was produced with `pilot_qualification` from [`pilot-input.json`]
 | WP9-006 Target build | PASS | CI on the feature branch: build, migrations, API/web/e2e | — |
 | WP9-007 Data rehearsal | PASS | 5 snapshot migrations, `rehearsal.json` R1–R5 | Repeat at production volume before cutover |
 | WP9-008 Journey parity | WARN | [WP9.6](wp9.6-data-parity-f170134.md): J-01…J-05 identical | Business approval of the journeys and results |
-| WP9-009 Identity, access | **FAIL** | J-05 negative paths pass | Identity provider and role mapping, throttling, session revocation, decision on row-level ownership (F-04) |
+| WP9-009 Identity, access | WARN | [WP9-009 local accounts](wp9-009-local-accounts-f170134.md): scrypt, forced change, lockout, throttling, revocation, audit trail; J-05 negative paths | Decision on row-level ownership (F-04); channel for temporary passwords; security review and sign-off |
 | WP9-010 Performance, operations | WARN | §2–§3, `perf.json` | Approved targets; monitoring and alerting; runbook |
 | WP9-011 Restore, rollback | WARN | `rehearsal.json` R6–R8 | Approved RTO/RPO; a witnessed rehearsal; rollback option chosen (§1) |
 | WP9-012 Sign-off | NOT VERIFIED | — | Business, application, security and operations sign-off |
@@ -119,7 +120,7 @@ The source checks also report SRC-002 (sanitization attestation) as NOT VERIFIED
 2. RTO/RPO and the rollback option after first write (§1).
 3. Performance targets (§2).
 4. Approval of journeys J-01…J-05 and their results (WP9-008).
-5. **Identity provider for WP9-009.** For example, the provider the company already uses for its other applications. Also decide on row-level ownership (F-04).
+5. **WP9-009:** local accounts are built (owner decision 2026-11-10). Still to decide: row-level ownership (F-04) and the channel for handing over temporary passwords. An external identity provider can follow later.
 6. Remaining open items: D-UI-01…04, the WP9.3 §6 type decisions, and final sign-off on DEV/F/G.
 7. Names for the four sign-offs (business, application, security, operations) and a date for a witnessed rehearsal.
 

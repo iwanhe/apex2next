@@ -441,6 +441,7 @@ def main() -> int:
     env = {**os.environ, "ALLOW_DB_RESET": "1"}
     with psycopg.connect(db, autocommit=True) as c:
         c.execute("DROP SCHEMA IF EXISTS app CASCADE")
+        c.execute("DROP SCHEMA IF EXISTS iam CASCADE")
     subprocess.run(["node", "apps/api/scripts/migrate.mjs"], cwd=ROOT, env=env, check=True, stdout=subprocess.DEVNULL)
     plan = json.loads((ROOT / "db" / "schema-plan.json").read_text(encoding="utf-8"))
     with psycopg.connect(db) as conn:

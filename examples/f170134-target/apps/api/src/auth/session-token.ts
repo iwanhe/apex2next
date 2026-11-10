@@ -2,14 +2,17 @@ import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 
 /**
  * Stateless session token: base64url(JSON payload) + "." + base64url(HMAC-SHA256). The payload holds the
- * normalized username (the APEX APP_USER), issue/expiry times and a random id. The web tier keeps it in
- * an httpOnly cookie and forwards it as a Bearer token; it is never exposed to browser scripts.
+ * normalized username (the APEX APP_USER), issue/expiry times, a random id and, for local accounts, the account's
+ * session version (raising it revokes every token of the account) and the forced-password-change flag. The web
+ * tier keeps it in an httpOnly cookie and forwards it as a Bearer token; it is never exposed to browser scripts.
  */
 export interface SessionPayload {
   readonly sub: string;
   readonly iat: number;
   readonly exp: number;
   readonly jti: string;
+  readonly ver?: number;
+  readonly pwc?: boolean;
 }
 
 const b64 = (buf: Buffer) => buf.toString('base64url');
@@ -18,8 +21,9 @@ function mac(secret: string, data: string): Buffer {
   return createHmac('sha256', secret).update(data).digest();
 }
 
-export function signSession(secret: string, username: string, ttlSeconds: number, nowSeconds = Math.floor(Date.now() / 1000)): string {
-  const payload: SessionPayload = { sub: username, iat: nowSeconds, exp: nowSeconds + ttlSeconds, jti: b64(randomBytes(12)) };
+export function signSession(secret: string, username: string, ttlSeconds: number, nowSeconds = Math.floor(Date.now() / 1000),
+  extra: { ver?: number; pwc?: boolean } = {}): string {
+  const payload: SessionPayload = { sub: username, iat: nowSeconds, exp: nowSeconds + ttlSeconds, jti: b64(randomBytes(12)), ...extra };
   const body = b64(Buffer.from(JSON.stringify(payload), 'utf8'));
   return `${body}.${b64(mac(secret, body))}`;
 }

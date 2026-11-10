@@ -46,6 +46,7 @@ export async function submitApexForm(binding: FormBinding, prev: FormState, form
   } catch (e) {
     if (e instanceof ApiError) {
       if (e.status === 401) redirect('/login');
+      if (e.body.code === 'PASSWORD_CHANGE_REQUIRED') redirect('/account/password');
       return { error: e.body.fieldErrors?.length ? null : displayError(e.body), fieldErrors: e.body.fieldErrors ?? [], values, version: prev.version + 1 };
     }
     throw e;

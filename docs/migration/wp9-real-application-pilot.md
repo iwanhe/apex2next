@@ -104,7 +104,7 @@ Exit codes: 0 QUALIFIED, 1 BLOCKED, 3 CONDITIONAL, 4 INCOMPLETE, 2 invalid input
 
 ## WP9.7 result for app 170134
 
-Recorded in [WP9.7 rehearsal, performance, operations and qualification](wp9.7-qualification-f170134.md). Migration rehearsal (fail-closed rerun, injected failure, retry, backup, restore with full verification) passes. A light performance test on synthetic volume (20k requests, 60k lines) shows p95 below 0.42 s for one user and below 2.7 s for 10 concurrent users on 2 vCPU, after JIT was turned off for the API pool. A JSON access log was added. The twelve-gate assessment is **BLOCKED**: WP9-009 fails because there is no production identity provider yet, and owner attestations, approvals of RTO/RPO, targets and journeys, a witnessed rehearsal and the four sign-offs are outstanding.
+Recorded in [WP9.7 rehearsal, performance, operations and qualification](wp9.7-qualification-f170134.md). Migration rehearsal (fail-closed rerun, injected failure, retry, backup, restore with full verification) passes. A light performance test on synthetic volume (20k requests, 60k lines) shows p95 below 0.42 s for one user and below 2.7 s for 10 concurrent users on 2 vCPU, after JIT was turned off for the API pool. A JSON access log was added. The twelve-gate assessment is **CONDITIONAL** (no FAIL, but 7 WARN and 5 NOT VERIFIED): local accounts for WP9-009 are built ([WP9-009](wp9-009-local-accounts-f170134.md)), but owner attestations, approvals of RTO/RPO, targets and journeys, the F-04 decision, a witnessed rehearsal and the four sign-offs are outstanding.
 
 ## Current blockers
 

@@ -20,6 +20,7 @@
 - [WP9.5 Pages & features (170134)](migration/wp9.5-ui-f170134.md)
 - [WP9.6 Data migration & functional parity (170134)](migration/wp9.6-data-parity-f170134.md)
 - [WP9.7 Rehearsal, performance, operations & qualification gates (170134)](migration/wp9.7-qualification-f170134.md)
+- [WP9-009 Local accounts (170134)](migration/wp9-009-local-accounts-f170134.md)
 - [WP9 owner decisions (170134)](migration/wp9-owner-decisions-f170134.md)
 
 ## Decisions

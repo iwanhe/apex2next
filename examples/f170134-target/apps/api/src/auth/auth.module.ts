@@ -1,14 +1,18 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { DatabaseModule } from '../database/database.module';
+import { AccountsService } from './accounts.service';
 import { authConfigFromEnv } from './auth.config';
 import { AuthController } from './auth.controller';
 import { SessionGuard } from './auth.guard';
 import { AUTH_CONFIG } from './auth.tokens';
 
 @Module({
+  imports: [DatabaseModule],
   controllers: [AuthController],
   providers: [
     { provide: AUTH_CONFIG, useFactory: () => authConfigFromEnv() },
+    AccountsService,
     { provide: APP_GUARD, useClass: SessionGuard },
   ],
   exports: [AUTH_CONFIG],

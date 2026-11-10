@@ -1,4 +1,6 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Inject, Param, Post, Put, Query } from '@nestjs/common';
+import type { AuthConfig } from '../auth/auth.config';
+import { AUTH_CONFIG } from '../auth/auth.tokens';
 import { Actor } from '../auth/auth.guard';
 import type { Principal } from '../business/context';
 import { errors } from '../business/errors';
@@ -23,11 +25,12 @@ function asList(v: unknown): string[] {
 
 @Controller()
 export class PagesController {
-  constructor(private readonly pages: PagesService) {}
+  constructor(private readonly pages: PagesService, @Inject(AUTH_CONFIG) private readonly auth: AuthConfig) {}
 
+  /** The signed-in user, evaluated authorization schemes and the account mode (local accounts can change their password). */
   @Get('session')
-  me(@Actor() actor: Principal) {
-    return this.pages.me(actor);
+  async me(@Actor() actor: Principal) {
+    return { ...(await this.pages.me(actor)), authMode: this.auth.mode };
   }
 
   @Get('pages/100')

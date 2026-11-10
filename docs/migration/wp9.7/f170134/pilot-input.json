@@ -1,29 +1,91 @@
 {
   "manifestVersion": "apex2next.wp9-pilot-input.v1",
-  "project": {"id": "f170134-demo-permintaan-barang", "name": "Demo Permintaan Barang (APEX app 170134, workspace KCSI)"},
+  "project": {
+    "id": "f170134-demo-permintaan-barang",
+    "name": "Demo Permintaan Barang (APEX app 170134, workspace KCSI)"
+  },
   "source": {
     "format": "APEX_SQL_EXPORT",
     "applicationId": "170134",
     "apexRuntimeVersion": "26.2.1",
     "snapshotId": "oracleapex.com WKSP_KCSI snapshot S4 2026-11-10T08:03:33Z sha256:9fe1721fa1d5b83d259681a9b6a3e89367e8dbc4b75ca949fbe3805036f079a7",
     "artifacts": [
-      {"path": "f170134.zip", "sizeBytes": 340473, "sha256": "sha256:7c2cc3dcc0304bf12946bafb1684c03db8083b25d40f5c82908fb805faa135bb", "note": "sizeBytes = uncompressed bytes as recorded in WP9.1"},
-      {"path": "install.sql", "sizeBytes": 38098, "sha256": "sha256:7c71e9c56b76d5fe893d2f357e692b9e7c458adc37791784379842ec1712d66d"}
+      {
+        "path": "f170134.zip",
+        "sizeBytes": 340473,
+        "sha256": "sha256:7c2cc3dcc0304bf12946bafb1684c03db8083b25d40f5c82908fb805faa135bb",
+        "note": "sizeBytes = uncompressed bytes as recorded in WP9.1"
+      },
+      {
+        "path": "install.sql",
+        "sizeBytes": 38098,
+        "sha256": "sha256:7c71e9c56b76d5fe893d2f357e692b9e7c458adc37791784379842ec1712d66d"
+      }
     ]
   },
   "gates": {
-    "WP9-001": {"status": "NOT_VERIFIED", "evidenceRef": "docs/migration/wp9.1-pilot-intake-f170134.md", "note": "Hashes and inventory recorded; the owner's sanitization attestation and chain-of-custody record are not yet given (the data holds owner/demo user names only)."},
-    "WP9-002": {"status": "PASS", "evidenceRef": "docs/migration/wp9.6-data-parity-f170134.md#1-method", "note": "APEX 26.2.1 and app 170134 observed on oracleapex.com; owner Iwan Herdian; snapshots S0-S4 with SHA-256."},
-    "WP9-003": {"status": "WARN", "evidenceRef": "docs/migration/wp9.5-ui-f170134.md", "note": "269/269 components mapped; J-05 found the inventory had dropped component p_security_scheme (fixed). APEXLang archive lacks page 302; the SQL export is authoritative (D-003)."},
-    "WP9-004": {"status": "WARN", "evidenceRef": "docs/migration/wp9.3-source-validation-schema-f170134.md", "note": "REC/DEP 12/12 PASS; owner decisions on WP9.3 section 6 type semantics are open."},
-    "WP9-005": {"status": "WARN", "evidenceRef": "docs/migration/wp9.4-business-logic-f170134.md", "note": "Packages and triggers replaced by services; DEV-01..06 and F-01..05 accepted for now, final sign-off pending."},
-    "WP9-006": {"status": "PASS", "evidenceRef": "https://github.com/iwanhe/apex2next/actions (branch feat/foundation-and-architecture-docs)", "note": "Next.js/NestJS build, PostgreSQL 16 migrations, API/web/e2e tests green in CI."},
-    "WP9-007": {"status": "PASS", "evidenceRef": "docs/migration/wp9.7/f170134/rehearsal.json", "note": "Five Oracle snapshots migrate with all checks PASS; rehearsal R1-R8 incl. fail-closed rerun, injected failure, retry, restore."},
-    "WP9-008": {"status": "WARN", "evidenceRef": "docs/migration/wp9.6-data-parity-f170134.md#3-journey-j-01-users-demo_req-demo_mgr", "note": "J-01..J-05 identical on source and target; business approval of the journeys and results pending."},
-    "WP9-009": {"status": "FAIL", "evidenceRef": "docs/migration/wp9.5-ui-f170134.md", "note": "AUTH_MODE=dev only: no identity provider, no role mapping from a real directory, no throttling or session revocation; row-level ownership not decided (F-04). Negative access paths pass (J-05)."},
-    "WP9-010": {"status": "WARN", "evidenceRef": "docs/migration/wp9.7/f170134/perf.json", "note": "Light test on synthetic volume only; JSON access log and health endpoints, no monitoring/alerting or operations runbook yet; targets not approved."},
-    "WP9-011": {"status": "WARN", "evidenceRef": "docs/migration/wp9.7/f170134/rehearsal.json", "note": "Backup/restore rehearsed and verified (not witnessed); RTO/RPO not approved; rollback to APEX is a procedure, not rehearsed with production traffic."},
-    "WP9-012": {"status": "NOT_VERIFIED", "note": "Business, application, security and operations sign-off not given."}
+    "WP9-001": {
+      "status": "NOT_VERIFIED",
+      "evidenceRef": "docs/migration/wp9.1-pilot-intake-f170134.md",
+      "note": "Hashes and inventory recorded; the owner's sanitization attestation and chain-of-custody record are not yet given (the data holds owner/demo user names only)."
+    },
+    "WP9-002": {
+      "status": "PASS",
+      "evidenceRef": "docs/migration/wp9.6-data-parity-f170134.md#1-method",
+      "note": "APEX 26.2.1 and app 170134 observed on oracleapex.com; owner Iwan Herdian; snapshots S0-S4 with SHA-256."
+    },
+    "WP9-003": {
+      "status": "WARN",
+      "evidenceRef": "docs/migration/wp9.5-ui-f170134.md",
+      "note": "269/269 components mapped; J-05 found the inventory had dropped component p_security_scheme (fixed). APEXLang archive lacks page 302; the SQL export is authoritative (D-003)."
+    },
+    "WP9-004": {
+      "status": "WARN",
+      "evidenceRef": "docs/migration/wp9.3-source-validation-schema-f170134.md",
+      "note": "REC/DEP 12/12 PASS; owner decisions on WP9.3 section 6 type semantics are open."
+    },
+    "WP9-005": {
+      "status": "WARN",
+      "evidenceRef": "docs/migration/wp9.4-business-logic-f170134.md",
+      "note": "Packages and triggers replaced by services; DEV-01..06 and F-01..05 accepted for now, final sign-off pending."
+    },
+    "WP9-006": {
+      "status": "PASS",
+      "evidenceRef": "https://github.com/iwanhe/apex2next/actions (branch feat/foundation-and-architecture-docs)",
+      "note": "Next.js/NestJS build, PostgreSQL 16 migrations, API/web/e2e tests green in CI."
+    },
+    "WP9-007": {
+      "status": "PASS",
+      "evidenceRef": "docs/migration/wp9.7/f170134/rehearsal.json",
+      "note": "Five Oracle snapshots migrate with all checks PASS; rehearsal R1-R8 incl. fail-closed rerun, injected failure, retry, restore."
+    },
+    "WP9-008": {
+      "status": "WARN",
+      "evidenceRef": "docs/migration/wp9.6-data-parity-f170134.md#3-journey-j-01-users-demo_req-demo_mgr",
+      "note": "J-01..J-05 identical on source and target; business approval of the journeys and results pending."
+    },
+    "WP9-009": {
+      "status": "WARN",
+      "evidenceRef": "docs/migration/wp9-009-local-accounts-f170134.md",
+      "note": "Local accounts (owner decision 2026-11-10): scrypt hashes, forced change of temporary passwords, lockout, login rate limit, server-side revocation, audit trail; API and browser tests. Open: row-level ownership (F-04), temporary-password handover channel, security review/sign-off."
+    },
+    "WP9-010": {
+      "status": "WARN",
+      "evidenceRef": "docs/migration/wp9.7/f170134/perf.json",
+      "note": "Light test on synthetic volume only; JSON access log and health endpoints, no monitoring/alerting or operations runbook yet; targets not approved."
+    },
+    "WP9-011": {
+      "status": "WARN",
+      "evidenceRef": "docs/migration/wp9.7/f170134/rehearsal.json",
+      "note": "Backup/restore rehearsed and verified (not witnessed); RTO/RPO not approved; rollback to APEX is a procedure, not rehearsed with production traffic."
+    },
+    "WP9-012": {
+      "status": "NOT_VERIFIED",
+      "note": "Business, application, security and operations sign-off not given."
+    }
   },
-  "acceptance": {"maxCriticalDefects": 0, "maxHighDefects": 0}
+  "acceptance": {
+    "maxCriticalDefects": 0,
+    "maxHighDefects": 0
+  }
 }
