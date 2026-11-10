@@ -215,7 +215,8 @@ export function GeneratedPageInventory({ page }: { page: GeneratedPage }) {
         "migration-report/ui-generation.json": json.dumps(report, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
         "migration-report/report-generation.json": json.dumps({
             "format": "apex2next.generated-reports.v1", "reportCount": len(report_definitions),
-            "manualReviewCount": len(report_definitions), "queryTextExecuted": False,\n            "bindingsGenerated": False, "paginationGenerated": False,
+            "manualReviewCount": len(report_definitions), "queryTextExecuted": False,
+            "bindingsGenerated": False, "paginationGenerated": False,
         }, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
         "migration-report/form-generation.json": json.dumps({
             "format": "apex2next.generated-forms.v1", "formFieldCount": len(form_definitions),
