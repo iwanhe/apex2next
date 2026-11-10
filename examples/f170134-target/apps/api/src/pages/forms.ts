@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { assertRuntimeVersion } from '@apex2next/shared-runtime';
 import { BusinessTx } from '../business/context';
 import { FieldError, errors } from '../business/errors';
 import { UI_SPEC } from './ui-spec.generated';
@@ -84,7 +85,12 @@ export async function fetchForm(tx: BusinessTx, form: FormDef, id: string | numb
 export async function lockForChange(tx: BusinessTx, form: FormDef, id: string | number, clientChecksum: unknown) {
   const row = await fetchForm(tx, form, id, true);
   if (!row) throw errors.notFound(`${form.region} ${id}`, 'UI-FRM-01');
-  if (typeof clientChecksum !== 'string' || clientChecksum !== checksum(form, row)) throw errors.lostUpdate();
+  try {
+    assertRuntimeVersion(clientChecksum, checksum(form, row));
+  } catch {
+    // Preserve the pilot's established HTTP/business error contract while sharing the version invariant.
+    throw errors.lostUpdate();
+  }
   return row;
 }
 
