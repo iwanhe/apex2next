@@ -160,3 +160,43 @@ export interface RuntimeNavigationEntry {
   readonly public: boolean;
   readonly authorizationPolicyId?: string;
 }
+
+export interface RuntimeSessionClaims {
+  readonly sessionId: string;
+  readonly subject: string;
+  readonly issuedAtEpochSeconds: number;
+  readonly expiresAtEpochSeconds: number;
+  readonly authVersion: number;
+}
+
+export interface RuntimeSessionPolicy {
+  readonly maxAgeSeconds: number;
+  readonly clockSkewSeconds: number;
+}
+
+export interface RuntimeSessionRecord {
+  readonly claims: RuntimeSessionClaims;
+  readonly createdAtEpochSeconds: number;
+  readonly lastSeenAtEpochSeconds: number;
+}
+
+export interface RuntimeSessionStore {
+  create(record: RuntimeSessionRecord): Promise<void>;
+  read(sessionId: string): Promise<RuntimeSessionRecord | null>;
+  revoke(sessionId: string): Promise<void>;
+  revokeAll(subject: string): Promise<void>;
+}
+
+export interface RuntimeTransaction {
+  query<T = unknown>(sql: string, parameters?: readonly unknown[]): Promise<{
+    readonly rows: readonly T[];
+    readonly rowCount: number;
+  }>;
+}
+
+export interface RuntimeTransactionRunner {
+  run<T>(
+    principal: RuntimePrincipal,
+    work: (transaction: RuntimeTransaction) => Promise<T>,
+  ): Promise<T>;
+}
