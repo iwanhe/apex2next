@@ -71,6 +71,7 @@ The R3 generator emits deterministic, typed metadata artifacts:
 - `apps/web/app/pages/*/page.tsx`: generated routes that render a read-only component inventory.
 - `apps/api/src/generated/form-definitions.ts` and `report-definitions.ts`: metadata-only form/report stubs.
 - `migration-report/ui-generation.json`: counts, unassigned components and safety status.
+- `migration-report/query-migration-plan.json`: token-level Oracle SQL rewrites, disposition, object-reference findings and target SQL for review. Queries are never executed.
 
 Only an explicit presentation-property allowlist is copied into app-facing metadata. SQL, PL/SQL,
 JavaScript, authorization expressions and arbitrary source properties are not executed or copied.
