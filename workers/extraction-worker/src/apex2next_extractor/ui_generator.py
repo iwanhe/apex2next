@@ -138,15 +138,45 @@ def build_ui_generator_files(document: dict[str, Any]) -> dict[str, str]:
         "unassignedComponentIds": spec["unassignedComponentIds"],
         "safety": spec["safety"],
     }
+    def field_type(presentation: dict[str, Any]) -> str:
+        raw = str(presentation.get("display_as") or presentation.get("displayAs")
+                  or presentation.get("item_type") or presentation.get("itemType") or "").upper()
+        aliases = {
+            "NATIVE_TEXT_FIELD": "TEXT", "TEXT": "TEXT",
+            "NATIVE_TEXTAREA": "TEXTAREA", "TEXTAREA": "TEXTAREA",
+            "NATIVE_NUMBER_FIELD": "NUMBER", "NUMBER": "NUMBER",
+            "NATIVE_DATE_PICKER_APEX": "DATE", "DATE": "DATE",
+            "NATIVE_SELECT_LIST": "SELECT", "SELECT": "SELECT",
+            "NATIVE_CHECKBOX": "CHECKBOX", "NATIVE_SINGLE_CHECKBOX": "CHECKBOX",
+            "NATIVE_DISPLAY_ONLY": "DISPLAY", "NATIVE_HIDDEN": "HIDDEN",
+            "NATIVE_PASSWORD": "PASSWORD",
+        }
+        return aliases.get(raw, "UNKNOWN")
+
     report_definitions = [
-        {"pageId": page["id"], "regionId": component["id"], "name": component["name"],
-         "kind": component["type"], "queryStatus": "MANUAL_REVIEW", "queryGenerated": False}
+        {
+            "pageId": page["id"], "regionId": component["id"], "name": component["name"],
+            "kind": component["type"], "heading": component["presentation"].get("heading"),
+            "queryStatus": "MANUAL_REVIEW", "queryGenerated": False,
+            "columns": [], "filters": [], "defaultSort": None, "pagination": {"enabled": False},
+            "bindingStatus": "NOT_BOUND",
+        }
         for page in spec["pages"] for component in page["components"]
         if component["type"] == "REGION"
     ]
     form_definitions = [
-        {"pageId": page["id"], "itemId": component["id"], "name": component["name"],
-         "fieldType": "UNKNOWN", "writeStatus": "MANUAL_REVIEW", "validationGenerated": False}
+        {
+            "pageId": page["id"], "itemId": component["id"], "name": component["name"],
+            "fieldType": field_type(component["presentation"]),
+            "label": component["presentation"].get("label") or component["name"],
+            "required": component["presentation"].get("required", component["presentation"].get("is_required", False)),
+            "readOnly": component["presentation"].get("read_only", component["presentation"].get("is_read_only", False)),
+            "placeholder": component["presentation"].get("placeholder"),
+            "formatMask": component["presentation"].get("format_mask"),
+            "sequence": component["presentation"].get("sequence"),
+            "writeStatus": "MANUAL_REVIEW", "validationGenerated": False,
+            "bindingStatus": "NOT_BOUND",
+        }
         for page in spec["pages"] for component in page["components"]
         if component["type"] == "ITEM"
     ]
@@ -185,12 +215,12 @@ export function GeneratedPageInventory({ page }: { page: GeneratedPage }) {
         "migration-report/ui-generation.json": json.dumps(report, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
         "migration-report/report-generation.json": json.dumps({
             "format": "apex2next.generated-reports.v1", "reportCount": len(report_definitions),
-            "manualReviewCount": len(report_definitions), "queryTextExecuted": False,
+            "manualReviewCount": len(report_definitions), "queryTextExecuted": False,\n            "bindingsGenerated": False, "paginationGenerated": False,
         }, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
         "migration-report/form-generation.json": json.dumps({
             "format": "apex2next.generated-forms.v1", "formFieldCount": len(form_definitions),
             "manualReviewCount": len(form_definitions), "writesGenerated": False,
-            "validationsGenerated": False,
+            "validationsGenerated": False, "bindingsGenerated": False,
         }, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
     }
     for page in spec["pages"]:
