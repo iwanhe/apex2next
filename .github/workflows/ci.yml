@@ -258,7 +258,7 @@ jobs:
 
       - name: Generate target project from synthetic APEXLang fixture
         run: |
-          PYTHONPATH=workers/extraction-worker/src python -c "from apex2next_extractor import adapt_apexlang_directory, generate_project; ir=adapt_apexlang_directory('tests/fixtures/apexlang-26.2'); print(generate_project(ir, '/tmp/apex2next-generated'))"
+          PYTHONPATH=workers/extraction-worker/src:workers/schema-analyzer/src python -c "from apex2next_extractor import adapt_apexlang_directory, generate_project; ir=adapt_apexlang_directory('tests/fixtures/apexlang-26.2'); print(generate_project(ir, '/tmp/apex2next-generated'))"
 
       - name: Install generated workspace dependencies
         working-directory: /tmp/apex2next-generated
