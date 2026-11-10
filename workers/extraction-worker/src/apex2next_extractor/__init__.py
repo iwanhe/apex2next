@@ -15,6 +15,7 @@ from .apexlang_ast import (
 from .dependency_graph import analyze_dependency_graph
 from .semantic_analysis import analyze_semantics
 from .generator import GENERATOR_VERSION, generate_project
+from .ui_generator import build_ui_spec
 from .normalized_ir import (
     adapt_apex_export,
     adapt_apexlang_directory,
@@ -44,4 +45,5 @@ __all__ = [
     "analyze_semantics",
     "GENERATOR_VERSION",
     "generate_project",
+    "build_ui_spec",
 ]
