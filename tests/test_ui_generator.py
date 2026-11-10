@@ -38,7 +38,7 @@ def test_ui_spec_groups_page_components_and_keeps_manual_work_explicit():
     assert page["route"] == "orders-" + __import__("hashlib").sha256(b"page:10").hexdigest()[:8]
     assert [component["id"] for component in page["components"]] == ["item:10", "process:10", "region:10"]
     item = page["components"][0]
-    assert item["presentation"] == {"label": "Order number", "required": True}
+    assert item["presentation"] == {"displayAs": "NATIVE_TEXT_FIELD", "label": "Order number", "placeholder": "Enter order number", "required": True}
     assert page["components"][1]["reviewStatus"] == "MANUAL_REVIEW"
     assert spec["unassignedComponentIds"] == ["item:orphan"]
     assert spec["safety"]["sourceExpressionsIncluded"] is False
