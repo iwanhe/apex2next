@@ -72,6 +72,13 @@ The shared runtime now defines:
 - Database-agnostic transaction and transaction-runner ports; the application adapter owns connection lifecycle and commit/rollback.
 - Opaque version-token comparison that fails closed for missing or stale values (`LOST_UPDATE`).
 
+
+### R2.6 — Pilot extraction (in progress)
+
+The f170134 API workspace now consumes `@apex2next/shared-runtime` through a pnpm workspace dependency. The first behavior extracted is the opaque lost-update/version invariant: `lockForChange` delegates token comparison to `assertRuntimeVersion`, then maps the shared exception back to the pilot's existing `LOST_UPDATE` business error. The pilot continues to own the SHA-256 checksum format, row locking, database transaction, and HTTP error contract. This keeps the reusable invariant generic without moving application-specific persistence behavior into the shared package.
+
+The pilot test/typecheck scripts explicitly target the API and web applications so the nested workspace's existing two-suite CI accounting remains stable; the shared-runtime package's own tests remain covered by the dedicated R2 CI job.
+
 ## R2 completion plan
 
 | Slice | Scope | Acceptance evidence |
