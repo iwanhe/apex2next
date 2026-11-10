@@ -11,7 +11,9 @@ def _document():
             {"id": "item:10", "type": "ITEM", "sourceType": "page_item", "name": "Order Number",
              "parentId": "page:10", "properties": {
                  "label": {"valueType": "STRING", "value": "Order number"},
-                 "required": {"valueType": "BOOLEAN", "value": True},\n                 "displayAs": {"valueType": "STRING", "value": "NATIVE_TEXT_FIELD"},\n                 "placeholder": {"valueType": "STRING", "value": "Enter order number"},
+                 "required": {"valueType": "BOOLEAN", "value": True},
+                 "displayAs": {"valueType": "STRING", "value": "NATIVE_TEXT_FIELD"},
+                 "placeholder": {"valueType": "STRING", "value": "Enter order number"},
                  "source": {"valueType": "SQL_EXPRESSION", "rawExpression": "select secret from dual"},
              }},
             {"id": "process:10", "type": "PROCESS", "sourceType": "process", "name": "Save order",
