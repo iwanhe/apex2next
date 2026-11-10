@@ -3,11 +3,13 @@
   "private": true,
   "version": "0.1.0",
   "packageManager": "pnpm@10.0.0",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "build": "pnpm -r build",
     "db:migrate": "pnpm --filter @f170134/api db:migrate",
-    "test": "pnpm -r test",
-    "typecheck": "pnpm -r typecheck"
+    "test": "pnpm --filter @f170134/api --filter @f170134/web test",
+    "typecheck": "pnpm --filter @f170134/api --filter @f170134/web typecheck"
   }
 }
