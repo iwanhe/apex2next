@@ -1,0 +1,4 @@
+{
+  "appUserExpr": "apx_demo_sec_pkg.app_user",
+  "viewKeys": { "APX_DEMO_REQUEST_SUMMARY_V": ["REQUEST_NO"] }
+}

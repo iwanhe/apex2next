@@ -13,6 +13,7 @@ It was extracted from the pilot app 170134 without changing behaviour. The accep
 | `http/access-log` | `accessLog()` | One JSON line per request: time, request id, method, path without query string, status, duration, user. `ACCESS_LOG=off` disables it |
 | `auth/*` | `AuthModule`, `AuthGuard`, `AccountsService`, password/session helpers | `AUTH_MODE=dev` (refused in production) or `local` (schema `iam`: scrypt, forced change, temporary-password expiry, lockout, rate limit, session revocation, audit) |
 | `reports/report` | Report engine | Interactive/classic reports: search, sort on the source column, paging (rows per page from the definition), facets |
+| `reports/region-source` | `RegionSource`, `LovSource`, `bindRegionSources(spec, {schema})` → `{regionColumns, regionDefaultSort, reportDef, lovSql}` | Turns the generated region and LOV sources (R3) into report definitions and LOV SQL |
 | `forms/forms` | `bindUiSpec(spec)` → `{formDef, result}` | Form definitions read from the app's generated UI spec |
 
 ## How an app uses it

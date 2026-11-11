@@ -20,4 +20,5 @@ export * from './auth/auth.guard';
 export * from './auth/auth.controller';
 export * from './auth/auth.module';
 export * from './reports/report';
+export * from './reports/region-source';
 export * from './forms/forms';

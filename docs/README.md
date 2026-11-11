@@ -10,6 +10,7 @@
 - [Extractor and Schema Analyzer POC](architecture/extractor-analyzer-poc.md)
 - [Normalized Application IR v1 — Detailed Technical Design](architecture/normalized-ir-v1.md)
 - [WP9.3 Oracle → PostgreSQL Schema Conversion Engine](architecture/wp9.3-schema-conversion-engine.md)
+- [R3 Application generator (region and LOV SQL, routes, pages, TODO report)](architecture/r3-application-generator.md)
 
 ## Data
 - [Framework ERD](data/erd.md)

@@ -13,16 +13,23 @@ The PostgreSQL + NestJS + Next.js target for the WP9 pilot. It is **not** produc
 | `apps/api/src/business/**` | **Hand-written** WP9.4 business services ([rule catalog](../../docs/migration/wp9.4-business-logic-f170134.md)) |
 | `ui/apex-page-inventory.json` | **Generated** from the APEX SQL export (`apex2next_extractor.page_inventory`) |
 | `apps/*/…/ui-spec.generated.ts` | **Generated** from the inventory (`node scripts/generate-ui-spec.mjs`; `--check` in CI) |
+| `ui/app-map.json` | **Reviewed** names the export does not decide: routes, region keys, form names (input of the generator) |
+| `db/target-catalog.json` | **Generated** from the migrated schema (`tools/apex2next catalog`); pinned by the migration integration test |
+| `apps/api/src/pages/app-sources.generated.ts`, `apps/web/lib/app-routes.generated.ts`, 20 `page.tsx` files starting with `GENERATED` | **Generated** (`tools/apex2next generate`, [R3](../../docs/architecture/r3-application-generator.md)): region, LOV and form sources, routes, pages of the common patterns |
+| `ui/generation-report.md`, `.json` | **Generated**: what was generated and what is left by hand |
 | `ui/coverage.json` | **Reviewed** mapping of every inventory component to its target ([WP9.5](../../docs/migration/wp9.5-ui-f170134.md)) |
-| `apps/api/src/pages` | **Hand-written** WP9.5 page layer (app-specific: report definitions, form bindings) |
-| `apps/web/**` | **Hand-written** WP9.5 Next.js pages. `lib/*` and `components/*` are thin wrappers that bind the shared runtime to this app's UI spec |
+| `apps/api/src/pages` | **Hand-written** WP9.5 page layer (controller and service: business wiring, conditions, validations) |
+| `apps/web/**` | Shell, login, the two pages outside the generator patterns (home dashboard, master-detail) and `form-actions.ts` are **hand-written**. `lib/*` and `components/*` are thin wrappers that bind the shared runtime to this app's UI spec |
 | `db/seed/dev-seed.sql` | Development/test seed (roles, REQ document type, test users). Not production data |
 | `e2e/` | Playwright end-to-end journeys (Python) |
-| `migration/oracle/extract_snapshot_apex_workshop.sql` | WP9.6 read-only Oracle snapshot query (SQL Workshop) |
+| `migration/oracle/extract_snapshot_apex_workshop.sql` | WP9.6 read-only Oracle snapshot query (SQL Workshop), hand-written; it produced S0…S4 |
+| `migration/oracle/snapshot_apex_workshop.generated.sql`, `migration/snapshot-config.json` | **Generated** snapshot query (`tools/apex2next queries --plan`) and its reviewed config; a test proves it equals the hand-written query |
 | `parity/` | WP9.6 parity journeys J-01 … J-05 (`journey.py`) and the texts observed on APEX |
 | `rehearsal/` | WP9.7 migration/restore rehearsal (`rehearse.py`) and light performance test (`perf.py`) |
 
-Generated files are pinned by tests to the plan. Change rules, overrides or mappings and regenerate; never edit them by hand:
+Generated files are pinned by tests. Never edit them by hand. For the application sources, change `ui/app-map.json`
+and run `tools/apex2next generate examples/f170134-target` from the repository root (`--check` verifies).
+For the schema, change rules, overrides or mappings and regenerate:
 
 ```bash
 export PYTHONPATH=workers/schema-analyzer/src:workers/extraction-worker/src

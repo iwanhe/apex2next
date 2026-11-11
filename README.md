@@ -10,12 +10,13 @@ APEX2NEXT is a migration platform intended to inventory, analyze, convert, migra
 
 APEX2NEXT is currently used as an **assistive toolkit**, not a one-click converter. Inventory, schema conversion,
 dictionary reconciliation, PL/SQL triage, data loading with verification and readiness assessment are automated.
-Pages and business logic are built by developers from the generated specification and proven equal to APEX by parity
-tests. The pilot (app 170134) shows the full method end to end; see the [pilot closure](docs/migration/wp9-pilot-closure-f170134.md).
+Pages of the common patterns are generated; other pages and all business logic are built by developers and proven
+equal to APEX by parity tests. The pilot (app 170134) shows the full method end to end; see the [pilot closure](docs/migration/wp9-pilot-closure-f170134.md).
 
 - **User guide (Bahasa Indonesia):** [docs/panduan/README.md](docs/panduan/README.md): plain-language usage, capability scope and roadmap
 - **Shared runtime (R2):** [`packages/runtime-api`](packages/runtime-api/README.md) (NestJS) and [`packages/runtime-web`](packages/runtime-web/README.md) (Next.js), so a converted app only writes its own pages, report definitions and business logic
-- **One entry point:** `tools/apex2next` (`doctor`, `queries`, `inventory`, `schema-plan`, `dictionary-check`, `plsql`, `load-data`, `assess`)
+- **Generators (R3):** `tools/apex2next generate` writes region and LOV SQL (Oracle → PostgreSQL), routes and the pages of the common APEX patterns, with a report of what is left to do by hand; see [R3 application generator](docs/architecture/r3-application-generator.md)
+- **One entry point:** `tools/apex2next` (`doctor`, `queries`, `inventory`, `schema-plan`, `dictionary-check`, `plsql`, `load-data`, `catalog`, `generate`, `assess`)
 
 ```bash
 tools/apex2next doctor

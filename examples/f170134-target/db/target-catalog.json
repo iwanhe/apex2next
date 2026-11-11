@@ -1,0 +1,208 @@
+{
+  "format": "apex2next.target-catalog.v1",
+  "schema": "app",
+  "relations": {
+    "apx_demo_approvals": {
+      "approval_id": "bigint",
+      "doc_type": "character varying(10)",
+      "doc_id": "numeric",
+      "doc_no": "character varying(30)",
+      "approval_level": "numeric",
+      "approver_role": "character varying(30)",
+      "amount": "numeric",
+      "requested_by": "character varying(255)",
+      "requested_on": "timestamp(0) without time zone",
+      "status": "character varying(20)",
+      "acted_by": "character varying(255)",
+      "acted_on": "timestamp(0) without time zone",
+      "note": "character varying(1000)"
+    },
+    "apx_demo_approvals_v": {
+      "approval_id": "bigint",
+      "doc_type": "character varying(10)",
+      "doc_name": "character varying(100)",
+      "doc_id": "numeric",
+      "doc_no": "character varying(30)",
+      "approval_level": "numeric",
+      "approver_role": "character varying(30)",
+      "amount": "numeric",
+      "requested_by": "character varying(255)",
+      "requested_on": "timestamp(0) without time zone",
+      "status": "character varying(20)",
+      "acted_by": "character varying(255)",
+      "acted_on": "timestamp(0) without time zone",
+      "note": "character varying(1000)",
+      "can_act_yn": "text"
+    },
+    "apx_demo_dash_c1_s1_v": {
+      "label": "character varying(20)",
+      "value": "bigint"
+    },
+    "apx_demo_dash_c2_s1_v": {
+      "label": "character varying(100)",
+      "value": "numeric"
+    },
+    "apx_demo_dash_kpi_v": {
+      "seq": "integer",
+      "icon": "text",
+      "label": "text",
+      "metric_value": "bigint"
+    },
+    "apx_demo_departments": {
+      "department_id": "bigint",
+      "dept_code": "character varying(20)",
+      "dept_name": "character varying(100)",
+      "active_yn": "character varying(1)",
+      "created_by": "character varying(255)",
+      "created_on": "timestamp(0) without time zone",
+      "updated_by": "character varying(255)",
+      "updated_on": "timestamp(0) without time zone"
+    },
+    "apx_demo_departments_v": {
+      "department_id": "bigint",
+      "dept_code": "character varying(20)",
+      "dept_name": "character varying(100)",
+      "active_yn": "character varying(1)",
+      "created_by": "character varying(255)",
+      "created_on": "timestamp(0) without time zone",
+      "updated_by": "character varying(255)",
+      "updated_on": "timestamp(0) without time zone"
+    },
+    "apx_demo_doc_seq": {
+      "doc_type": "character varying(10)",
+      "period": "character varying(4)",
+      "last_no": "numeric"
+    },
+    "apx_demo_doc_types": {
+      "doc_type": "character varying(10)",
+      "doc_name": "character varying(100)",
+      "prefix": "character varying(10)",
+      "table_name": "character varying(128)",
+      "pk_column": "character varying(128)",
+      "number_column": "character varying(128)",
+      "status_column": "character varying(128)",
+      "amount_expr": "character varying(4000)",
+      "validate_proc": "character varying(261)",
+      "approver1_role": "character varying(30)",
+      "approver2_role": "character varying(30)",
+      "level2_limit": "numeric"
+    },
+    "apx_demo_items": {
+      "item_id": "bigint",
+      "item_code": "character varying(30)",
+      "item_name": "character varying(200)",
+      "category": "character varying(20)",
+      "uom": "character varying(10)",
+      "std_price": "numeric",
+      "active_yn": "character varying(1)",
+      "created_by": "character varying(255)",
+      "created_on": "timestamp(0) without time zone",
+      "updated_by": "character varying(255)",
+      "updated_on": "timestamp(0) without time zone"
+    },
+    "apx_demo_items_v": {
+      "item_id": "bigint",
+      "item_code": "character varying(30)",
+      "item_name": "character varying(200)",
+      "category": "character varying(20)",
+      "uom": "character varying(10)",
+      "std_price": "numeric",
+      "active_yn": "character varying(1)",
+      "created_by": "character varying(255)",
+      "created_on": "timestamp(0) without time zone",
+      "updated_by": "character varying(255)",
+      "updated_on": "timestamp(0) without time zone"
+    },
+    "apx_demo_request_lines": {
+      "line_id": "bigint",
+      "request_id": "bigint",
+      "item_id": "bigint",
+      "qty": "numeric",
+      "unit_price": "numeric",
+      "line_amount": "numeric",
+      "created_by": "character varying(255)",
+      "created_on": "timestamp(0) without time zone",
+      "updated_by": "character varying(255)",
+      "updated_on": "timestamp(0) without time zone"
+    },
+    "apx_demo_request_lines_v": {
+      "line_id": "bigint",
+      "request_id": "bigint",
+      "request_id_dsp": "text",
+      "item_id": "bigint",
+      "item_id_dsp": "text",
+      "qty": "numeric",
+      "unit_price": "numeric",
+      "line_amount": "numeric",
+      "created_by": "character varying(255)",
+      "created_on": "timestamp(0) without time zone",
+      "updated_by": "character varying(255)",
+      "updated_on": "timestamp(0) without time zone"
+    },
+    "apx_demo_request_summary_v": {
+      "request_id": "bigint",
+      "request_no": "character varying(30)",
+      "dept_name": "character varying(100)",
+      "request_date": "timestamp(0) without time zone",
+      "purpose": "character varying(300)",
+      "line_count": "bigint",
+      "total_amount": "numeric",
+      "status": "character varying(20)"
+    },
+    "apx_demo_requests": {
+      "request_id": "bigint",
+      "request_no": "character varying(30)",
+      "department_id": "bigint",
+      "request_date": "timestamp(0) without time zone",
+      "need_date": "timestamp(0) without time zone",
+      "purpose": "character varying(300)",
+      "notes": "character varying(1000)",
+      "status": "character varying(20)",
+      "created_by": "character varying(255)",
+      "created_on": "timestamp(0) without time zone",
+      "updated_by": "character varying(255)",
+      "updated_on": "timestamp(0) without time zone"
+    },
+    "apx_demo_requests_v": {
+      "request_id": "bigint",
+      "request_no": "character varying(30)",
+      "department_id": "bigint",
+      "department_id_dsp": "text",
+      "request_date": "timestamp(0) without time zone",
+      "need_date": "timestamp(0) without time zone",
+      "purpose": "character varying(300)",
+      "notes": "character varying(1000)",
+      "status": "character varying(20)",
+      "created_by": "character varying(255)",
+      "created_on": "timestamp(0) without time zone",
+      "updated_by": "character varying(255)",
+      "updated_on": "timestamp(0) without time zone"
+    },
+    "apx_demo_roles": {
+      "role_code": "character varying(30)",
+      "role_name": "character varying(100)",
+      "description": "character varying(400)"
+    },
+    "apx_demo_user_roles": {
+      "user_role_id": "bigint",
+      "username": "character varying(255)",
+      "role_code": "character varying(30)",
+      "created_by": "character varying(255)",
+      "created_on": "timestamp(0) without time zone",
+      "updated_by": "character varying(255)",
+      "updated_on": "timestamp(0) without time zone"
+    },
+    "apx_demo_user_roles_v": {
+      "user_role_id": "bigint",
+      "username": "character varying(255)",
+      "role_code": "character varying(30)",
+      "role_name": "character varying(100)",
+      "created_by": "character varying(255)",
+      "created_on": "timestamp(0) without time zone"
+    },
+    "schema_migrations": {
+      "version": "text",
+      "applied_at": "timestamp with time zone"
+    }
+  }
+}

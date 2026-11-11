@@ -14,9 +14,11 @@ It was extracted from the pilot app 170134 without changing behaviour. The accep
 | `routes` | `first`, `all`, `qs`, `safeReturn` (no open redirects) |
 | `forms`, `form-types`, `form-submit` | APEX form model and `submitApexForm` (CREATE/SAVE/DELETE plus app-defined requests) |
 | `facets-view` | Faceted search view model |
-| `components/*` | `Shell`, `PageHeader`, `NavLink`, `Alerts`, `ApexForm`, `FormDialog`, `Dialog`, `IrPage`, `ReportTable`, `Facets`, `Charts` |
+| `download` | `downloadRegion(req, region, titles)`: Interactive Report download (CSV, HTML) in the APEX format |
+| `components/*` | `Shell`, `PageHeader`, `NavLink`, `Alerts`, `ApexForm`, `FormDialog`, `Dialog`, `IrPage`, `FacetedPage`, `ReportTable`, `Facets`, `Charts` |
 
 Components that need app data take an `app: AppRuntime` prop (`{spec, routes, submit}`).
+`IrPage`, `FacetedPage` and `FormDialog` are the page patterns that `apex2next generate` writes pages for (R3).
 
 ## How an app uses it
 

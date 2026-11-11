@@ -47,6 +47,17 @@ test('runner applies 0001 schema, 0002 reviewed functions, 0003 deferred views a
     assert.deepEqual(snap.views, { ...plan.expectedCatalog.views, ...plan.expectedCatalog.deferredViews });
     assert.equal(Object.keys(snap.views).length, 10, 'all 10 source views exist in PostgreSQL');
 
+    // R3: the generator reads column types from db/target-catalog.json (tools/apex2next catalog); it must be current
+    const catalog = JSON.parse(fs.readFileSync(path.join(DB_DIR, 'target-catalog.json'), 'utf8'));
+    const live = {};
+    for (const r of (await env.pool.query(`select c.relname, a.attname, format_type(a.atttypid, a.atttypmod) as typ
+        from pg_attribute a join pg_class c on c.oid = a.attrelid join pg_namespace n on n.oid = c.relnamespace
+        where n.nspname = $1 and c.relkind in ('r', 'v', 'm', 'p') and a.attnum > 0 and not a.attisdropped
+        order by c.relname, a.attnum`, [catalog.schema])).rows) {
+      (live[r.relname] ??= {})[r.attname] = r.typ;
+    }
+    assert.deepEqual(live, catalog.relations, 'db/target-catalog.json matches the migrated schema');
+
     const fns = (await env.pool.query(`select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
       where n.nspname = 'app' order by 1`)).rows.map((r) => r.proname);
     assert.deepEqual(fns, ['can_act_yn', 'current_username', 'has_any_role', 'has_role', 'has_role_yn']);

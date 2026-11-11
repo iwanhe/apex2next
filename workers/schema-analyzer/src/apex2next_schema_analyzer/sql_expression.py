@@ -62,6 +62,7 @@ SYS_CONTEXT V NV USERENV SYS_GUID RAWTOHEX HEXTORAW DUMP VSIZE TO_CLOB TO_NCHAR 
 SYS_EXTRACT_UTC FROM_TZ NEW_TIME NUMTODSINTERVAL NUMTOYMINTERVAL WM_CONCAT XMLAGG XMLELEMENT
 JSON_VALUE JSON_QUERY JSON_TABLE JSON_OBJECT JSON_ARRAYAGG STANDARD_HASH ORA_HASH
 """.split())
+FUNCTION_FROM = frozenset({"EXTRACT", "TRIM", "SUBSTRING", "OVERLAY"})
 PSEUDO_COLUMNS = frozenset({"ROWNUM", "ROWID", "LEVEL", "USER", "UID", "ORA_ROWSCN"})
 UNSUPPORTED_WORDS = {"CONNECT": "BY", "PRIOR": None, "PIVOT": None, "UNPIVOT": None,
                      "MODEL": None}
@@ -165,6 +166,20 @@ def convert_expression(tokens: list[Token], *, known_objects: frozenset[str] | s
 
     def blank(k: int) -> None:
         out[sig[k]] = ""
+
+    def in_function_from(k: int) -> bool:
+        """True when the FROM at k is not a query FROM: EXTRACT(.. FROM ..), TRIM(.. FROM ..), IS DISTINCT FROM."""
+        if word(k - 1) == "DISTINCT" and word(k - 2) in {"IS", "NOT"}:
+            return True  # IS [NOT] DISTINCT FROM
+        depth = 0
+        for j in range(k - 1, -1, -1):
+            if is_op(j, ")"):
+                depth += 1
+            elif is_op(j, "("):
+                if depth == 0:
+                    return word(j - 1) in FUNCTION_FROM
+                depth -= 1
+        return False
 
     k = 0
     while k < len(sig):
@@ -276,6 +291,9 @@ def convert_expression(tokens: list[Token], *, known_objects: frozenset[str] | s
                 add("EXP004")
                 k += 2
                 continue
+        if t.kind == "IDENT" and upper == "FROM" and in_function_from(k):
+            k += 1  # EXTRACT(field FROM expr), TRIM(x FROM expr): not a table reference
+            continue
         if t.kind == "IDENT" and upper in {"FROM", "JOIN"}:
             target = tok(k + 1)
             if target is not None and target.kind in {"IDENT", "QIDENT"}:

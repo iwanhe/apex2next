@@ -7,7 +7,9 @@ import { AUTHORIZATION_SCHEMES, AuthorizationScheme, SecurityService } from '../
 import {
   FormDef, SubmitResult, changed, checksum, fetchForm, formDef, lockForChange, result, validateItems, writableItems,
 } from './forms';
-import { DynamicLov, LOV_SOURCES, REGION_SOURCES, RegionName, RegionSource, lovSql, reportDef } from './report-definitions';
+import {
+  DynamicLov, FORM_SOURCES, FormName, LOV_SOURCES, REGION_SOURCES, RegionName, RegionSource, lovSql, reportDef,
+} from './report-definitions';
 import { UI_SPEC } from './ui-spec.generated';
 
 /**
@@ -19,15 +21,10 @@ type PageId = number;
 const pageScheme = (page: PageId) =>
   ((UI_SPEC.pages as unknown as Record<string, { scheme: string | null }>)[String(page)]?.scheme ?? null) as AuthorizationScheme | null;
 
-const FORMS = {
-  approval: formDef(191, 'Approval'),
-  department: formDef(201, 'Department'),
-  item: formDef(211, 'Item'),
-  request: formDef(301, 'Permintaan Barang'),
-  requestLine: formDef(311, 'Baris Permintaan'),
-  userRole: formDef(501, 'User Role'),
-  docType: formDef(511, 'Document Type'),
-} as const;
+/** Form definitions by form name; pages and regions come from the generated form sources (R3). */
+const FORMS = Object.fromEntries(
+  Object.entries(FORM_SOURCES).map(([name, f]) => [name, formDef(f.page, f.region)]),
+) as Record<FormName, FormDef>;
 
 /** Master-data forms whose DML goes through MasterDataService (normalization + audit triggers). */
 const MASTER_FORMS: Record<'department' | 'item' | 'userRole', { form: FormDef; entity: MasterDataEntity }> = {
@@ -139,7 +136,8 @@ export class PagesService {
 
   report(actor: Principal, name: RegionName, query: ReportQuery) {
     const src: RegionSource = REGION_SOURCES[name];
-    if (!src || src.where) throw errors.invalidInput(`Region ${name} tidak dikenal.`);
+    // regions with binds (master-detail) are served by their page method, which supplies the values
+    if (!src || src.binds?.length) throw errors.invalidInput(`Region ${name} tidak dikenal.`);
     return this.run(actor, src.page, (tx) => runReport(tx, reportDef(src), query));
   }
 

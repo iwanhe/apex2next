@@ -6,7 +6,7 @@ results into the --out directory, prints a short summary and exits non-zero when
 Nothing here connects to Oracle; only `load-data` writes, and only to the PostgreSQL database you name.
 
   apex2next doctor                                  check the tools on this machine
-  apex2next queries      --out DIR                  SQL Workshop queries to run on the APEX schema
+  apex2next queries      --out DIR [--plan F]       SQL Workshop queries to run on the APEX schema
   apex2next inventory    EXPORT_DIR --out DIR       pages and components of an APEX SQL export (split files)
   apex2next schema-plan  INSTALL_SQL --out DIR      Oracle DDL -> PostgreSQL migration + conversion report
   apex2next dictionary-check --plan F --install F --dictionary CSV --out DIR
@@ -14,6 +14,11 @@ Nothing here connects to Oracle; only `load-data` writes, and only to the Postgr
   apex2next plsql        SOURCE_SQL --out DIR       PL/SQL inventory: what converts, what needs hand work
   apex2next load-data    SNAPSHOT_CSV --plan F --database-url URL --out DIR
                                                     load a data snapshot into PostgreSQL and verify it
+  apex2next catalog      --database-url URL --out FILE
+                                                    column types of the migrated schema (input of generate)
+  apex2next generate     APP_DIR [--init-map|--check]
+                                                    region and LOV SQL, routes and pages of the common patterns,
+                                                    with a report of what is left to do by hand
   apex2next assess       MANIFEST --out FILE        twelve-gate qualification assessment
 
 Run `apex2next <command> -h` for the options of one command. Guide (Bahasa Indonesia): docs/panduan/README.md
@@ -81,10 +86,22 @@ def cmd_queries(a: argparse.Namespace) -> int:
     say(f"Copied {len(QUERIES)} queries to {d}:",
         "  dictionary_inventory_apex_workshop.sql   run in SQL Workshop > SQL Commands as the application schema;",
         "                                           download the result as CSV (used by dictionary-check)",
-        "  example_snapshot_f170134_apex_workshop.sql  data snapshot query of the pilot app; adapt the table and view",
-        "                                           list to your application (generation from the plan is on the roadmap)",
-        "The queries only read. Run them on a non-production copy whenever possible.")
-    return 0
+        "  example_snapshot_f170134_apex_workshop.sql  data snapshot query of the pilot app, for reference")
+    rc = 0
+    if a.plan:
+        target = d / "snapshot_apex_workshop.sql"
+        args = ["--plan", a.plan, "--output", str(target)]
+        for flag, value in (("--catalog", a.catalog), ("--config", a.config), ("--title", a.title)):
+            if value:
+                args += [flag, value]
+        rc = run("apex2next_schema_analyzer.snapshot_query", *args)
+        if rc == 0:
+            say("  snapshot_apex_workshop.sql               data snapshot query of YOUR application, written from the plan;",
+                "                                           run it the same way and download the CSV (used by load-data)")
+    else:
+        say("Add --plan work/schema/schema-plan.json to get the data snapshot query of your application.")
+    say("The queries only read. Run them on a non-production copy whenever possible.")
+    return rc
 
 
 def cmd_inventory(a: argparse.Namespace) -> int:
@@ -186,6 +203,33 @@ def cmd_load_data(a: argparse.Namespace) -> int:
     return rc
 
 
+def cmd_catalog(a: argparse.Namespace) -> int:
+    return run("apex2next_schema_analyzer.target_catalog", "--database-url", a.database_url, "--schema", a.schema,
+               "--output", a.out)
+
+
+def cmd_generate(a: argparse.Namespace) -> int:
+    app = Path(a.app)
+    for needed in ("ui/apex-page-inventory.json", "db/schema-plan.json"):
+        if not (app / needed).exists():
+            say(f"{app / needed} not found. An application directory holds ui/apex-page-inventory.json (inventory) "
+                "and db/schema-plan.json (schema-plan).")
+            return 2
+    rc = run("apex2next_schema_analyzer.app_generator", str(app), *(["--check"] if a.check else []),
+             *(["--init-map"] if a.init_map else []))
+    report = app / "ui/generation-report.json"
+    if not a.init_map and report.exists():
+        s = json.loads(report.read_text(encoding="utf-8"))["summary"]
+        pages = s["pages"]
+        say(f"Pages: {pages.get('GENERATED', 0)} generated, {pages.get('PROVIDED', 0)} provided by the runtime, "
+            f"{pages.get('MANUAL', 0)} to write by hand.",
+            f"Open items: {s['todo'].get('MANUAL', 0)} manual, {s['todo'].get('ASSISTED', 0)} to review.",
+            f"Read: {app / 'ui/generation-report.md'}")
+    if a.check and rc:
+        say("Generated files are stale. Run `apex2next generate` again and commit the result; never edit them by hand.")
+    return rc
+
+
 def cmd_assess(a: argparse.Namespace) -> int:
     return run("apex2next_schema_analyzer.pilot_qualification", a.manifest, "--output", a.out)
 
@@ -196,6 +240,10 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("doctor", help="check the tools on this machine").set_defaults(fn=cmd_doctor)
     p = sub.add_parser("queries", help="SQL Workshop queries to run on the APEX schema")
     p.add_argument("--out", required=True)
+    p.add_argument("--plan", help="schema-plan.json: also write the data snapshot query of your application")
+    p.add_argument("--catalog", help="target-catalog.json (types of view key columns)")
+    p.add_argument("--config", help="reviewed JSON with appUserExpr and viewKeys")
+    p.add_argument("--title", help="application name for the header comment")
     p.set_defaults(fn=cmd_queries)
     p = sub.add_parser("inventory", help="pages and components of an APEX SQL export")
     p.add_argument("export_dir", help="unpacked SQL export (split files), e.g. f123/")
@@ -228,6 +276,16 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--database-url", required=True, help="PostgreSQL with the migrations applied; target tables must be empty")
     p.add_argument("--out", required=True)
     p.set_defaults(fn=cmd_load_data)
+    p = sub.add_parser("catalog", help="column types of the migrated PostgreSQL schema (input of generate)")
+    p.add_argument("--database-url", required=True, help="PostgreSQL with the migrations applied")
+    p.add_argument("--schema", default="app")
+    p.add_argument("--out", required=True, help="e.g. APP_DIR/db/target-catalog.json")
+    p.set_defaults(fn=cmd_catalog)
+    p = sub.add_parser("generate", help="region/LOV SQL, routes and pages of the common patterns, with a TODO report")
+    p.add_argument("app", help="application directory with ui/apex-page-inventory.json and db/schema-plan.json")
+    p.add_argument("--init-map", action="store_true", help="propose ui/app-map.json (routes and names) for review")
+    p.add_argument("--check", action="store_true", help="fail when a generated file is stale; write nothing")
+    p.set_defaults(fn=cmd_generate)
     p = sub.add_parser("assess", help="twelve-gate qualification assessment")
     p.add_argument("manifest", help="apex2next.wp9-pilot-input.v1 JSON")
     p.add_argument("--out", required=True)

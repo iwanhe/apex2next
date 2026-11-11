@@ -59,6 +59,9 @@ jobs:
       - name: Pytest
         run: python -m pytest
 
+      - name: Generated application sources of the pilot are current (R3)
+        run: python tools/apex2next generate examples/f170134-target --check
+
   schema-postgres:
     name: WP9.3 schema migrations on PostgreSQL 16
     runs-on: ubuntu-latest

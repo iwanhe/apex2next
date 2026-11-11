@@ -33,7 +33,10 @@ Bayangkan pindah rumah:
 | Cek rencana terhadap database Oracle asli | **Otomatis** | 12 pemeriksaan (REC-001 … REC-012) |
 | Pindah data + verifikasi | **Otomatis** | sekali transaksi; tidak ada data tersimpan kalau satu pemeriksaan gagal |
 | Fondasi web dan API (runtime bersama) | **Siap pakai** | paket `packages/runtime-api` dan `packages/runtime-web`: koneksi database, login akun lokal, pesan error gaya APEX, log akses, mesin laporan, form APEX, facet, grafik, kerangka halaman |
-| Halaman Next.js dan API NestJS | **Manual, dipandu** | developer menulis bagian khusus aplikasi (halaman, definisi laporan, logika bisnis) di atas runtime bersama; contoh lengkap di `examples/f170134-target` |
+| Query region dan LOV (Oracle → PostgreSQL) | **Otomatis / dibantu** | 11 dari 11 query laporan dan 5 dari 5 LOV dinamis pilot diterjemahkan; query yang tidak aman diterjemahkan dilaporkan, tidak dijalankan |
+| Halaman pola umum: Interactive Report, Faceted Search, form dialog | **Otomatis** | 15 dari 19 halaman pilot dibuat generator (1 halaman login disediakan runtime) |
+| Halaman pola khusus dan logika bisnis | **Manual, dipandu** | 2 halaman pilot (dashboard, master-detail), service, validasi dan hak akses ditulis developer; daftar lengkapnya ada di laporan generator |
+| Query snapshot data | **Otomatis** | dibuat dari rencana schema; untuk pilot sama dengan query yang sudah terbukti (38 bagian) |
 | Uji kesamaan dengan APEX | **Manual per aplikasi** | metode dan contoh skrip tersedia (5 alur pilot identik) |
 | Latihan migrasi, backup–restore, uji performa | **Contoh siap pakai** | skrip di `examples/f170134-target/rehearsal` untuk diadaptasi |
 | Login | **Tersedia di runtime bersama** | akun lokal dengan ganti password wajib, kunci akun, audit |
@@ -85,8 +88,15 @@ tools/apex2next queries --out ../kerja/queries
   - ubah awalan nama objek di baris `with p as (select 'APX\_DEMO\_%' prefix from dual)` sesuai aplikasi Anda;
   - jalankan di **SQL Workshop → SQL Commands** sebagai schema aplikasi, lalu download hasilnya sebagai CSV;
   - query ini hanya membaca dan membutuhkan Oracle 23ai atau lebih baru.
-- `example_snapshot_f170134_apex_workshop.sql` adalah contoh query snapshot data pilot. Untuk aplikasi lain, daftar
-  tabel dan view-nya perlu disesuaikan oleh developer. Pembuatan otomatis query ini ada di roadmap.
+- `example_snapshot_f170134_apex_workshop.sql` adalah contoh query snapshot data pilot, untuk referensi.
+- Query snapshot data **aplikasi Anda** dibuat otomatis setelah langkah 3 (rencana schema sudah ada):
+
+```bash
+tools/apex2next queries --out ../kerja/queries --plan ../kerja/schema/schema-plan.json
+```
+
+  Hasilnya `snapshot_apex_workshop.sql`: satu query berisi semua tabel dan view dari rencana schema. Query ini dipakai
+  di langkah 7.
 
 ### Langkah 2 — Inventaris halaman
 
@@ -132,20 +142,50 @@ Hasilnya adalah jumlah statement dan daftar temuan, misalnya pemakaian `SYSDATE`
 `%TYPE`. Setiap temuan disertai arahan yang perlu diputuskan. Kode keluar 2 berarti ada bagian yang harus ditulis
 ulang sebagai service. Daftar ini dipakai untuk memperkirakan pekerjaan developer.
 
-### Langkah 6 — Bangun aplikasi target (developer)
+### Langkah 6 — Bangun aplikasi target (generator + developer)
 
-Mulailah dari contoh `examples/f170134-target`:
-- `apps/api` (NestJS);
-- `apps/web` (Next.js);
-- `db/migrations`;
-- `ui/coverage.json` (matriks cakupan).
+Mulailah dari contoh `examples/f170134-target` sebagai kerangka proyek:
+- `apps/api` (NestJS) dan `apps/web` (Next.js), keduanya memakai runtime bersama di `packages/`;
+- `db/migrations` (hasil langkah 3) dan `db/schema-plan.json`;
+- `ui/apex-page-inventory.json` (hasil langkah 2) dan `ui/coverage.json` (matriks cakupan).
 
-Developer membuat halaman dan service mengikuti inventaris, lalu menandai setiap komponen di matriks cakupan.
-CI menolak kalau ada komponen yang belum diberi status.
+Lalu jalankan generator. Urutannya:
+
+```bash
+# a. baca tipe kolom dari database PostgreSQL uji yang sudah berisi migration
+tools/apex2next catalog --database-url postgresql://user:pass@localhost:5432/db_uji \
+  --out ../proyek/db/target-catalog.json
+
+# b. minta usulan nama: alamat halaman (route), nama region dan nama form
+tools/apex2next generate ../proyek --init-map
+
+# c. periksa dan perbaiki ../proyek/ui/app-map.json, lalu generate
+tools/apex2next generate ../proyek
+```
+
+Yang dibuat otomatis:
+- query region dan LOV yang sudah diterjemahkan ke PostgreSQL (`app-sources.generated.ts`);
+- alamat halaman dan daftar laporan yang bisa di-download (`app-routes.generated.ts`);
+- halaman untuk tiga pola umum: Interactive Report, Faceted Search (classic report atau cards) dan form dialog;
+- **laporan `ui/generation-report.md`**: daftar apa yang dibuat otomatis dan apa yang masih harus dikerjakan
+  developer (TODO), per halaman.
+
+Yang tetap dikerjakan developer (semuanya tercantum di laporan sebagai MANUAL):
+- halaman yang tidak cocok dengan tiga pola di atas (pada pilot: dashboard dan master-detail);
+- logika bisnis: proses PL/SQL, validasi, kondisi tombol, simpan/ubah/hapus form;
+- aturan hak akses (authorization scheme);
+- query yang tidak bisa diterjemahkan dengan aman. Query seperti ini tidak dijalankan, hanya dilaporkan.
+
+File berakhiran `.generated.ts` dan halaman berawalan komentar `GENERATED` **tidak boleh diedit tangan**. Ubah
+`app-map.json` atau sumbernya, lalu jalankan generator lagi. `tools/apex2next generate ../proyek --check` dipakai di
+CI untuk menolak file yang tidak sinkron.
+
+Terakhir, developer menandai setiap komponen di matriks cakupan. CI menolak kalau ada komponen yang belum diberi
+status.
 
 ### Langkah 7 — Pindahkan dan cek data
 
-1. Jalankan query snapshot di SQL Workshop, lalu download CSV-nya.
+1. Jalankan query snapshot (`snapshot_apex_workshop.sql` dari langkah 1) di SQL Workshop, lalu download CSV-nya.
 2. Siapkan database PostgreSQL uji yang sudah berisi migration (`pnpm db:migrate` di proyek target).
 3. Muat datanya:
 
@@ -217,7 +257,7 @@ dipakai pada aplikasi nyata.
 |---|---|---|---|
 | **R1 — Alat bantu** (selesai) | Satu pintu untuk alat yang sudah ada | `tools/apex2next`, panduan ini | Langkah 0–5, 7 dan 9 bisa dijalankan dari satu perintah |
 | **R2 — Runtime bersama** (selesai 10 Nov 2026) | Fondasi aplikasi target tidak ditulis ulang per aplikasi | `packages/runtime-api` dan `packages/runtime-web`: form APEX, Interactive Report, facet, pesan dan error gaya APEX, hak akses tombol, cek versi data (lost update), login akun lokal | Tercapai: app 170134 berjalan di atas paket tersebut; 63 tes API, 3 tes runtime web, 12 tes e2e dan J-01…J-05 tetap lulus |
-| **R3 — Generator** | Mengurangi pekerjaan manual terbesar | Generator halaman, definisi laporan dan form, LOV, tombol, navigasi dari inventaris; penerjemah SQL Oracle → PostgreSQL untuk query region dan LOV; query snapshot dibuat otomatis dari rencana schema | 170134 bisa di-generate ulang dan lulus tes yang sama |
+| **R3 — Generator** (selesai 11 Nov 2026) | Mengurangi pekerjaan manual terbesar | `tools/apex2next generate` dan `catalog`: sumber region, LOV dan form, alamat halaman, halaman tiga pola umum, laporan "otomatis vs TODO"; penerjemah SQL Oracle → PostgreSQL untuk query region dan LOV; query snapshot dari rencana schema | Tercapai: 170134 di-generate ulang (15 dari 19 halaman, 11 query region, 5 LOV); 63 tes API, 12 tes e2e dan J-01…J-05 tetap lulus |
 | **R4 — Aplikasi nyata pertama** (usulan: FRITS) | Menguji alat pada aplikasi yang dipakai user | Komponen yang dibutuhkan FRITS ditambahkan; pemilahan PL/SQL menjadi template service; koneksi langsung ke database non-produksi; pemindahan data bertahap untuk volume besar | Alur kerja penting FRITS identik dengan APEX; gate WP9 lulus |
 | **R5 — Konverter** | Satu perintah dari export sampai aplikasi | `apex2next convert` dengan laporan "dibuat otomatis vs TODO"; template deploy (Docker, Cloudflare Tunnel); komponen lanjutan (Interactive Grid, upload, PDF, email, REST, job) sesuai kebutuhan; opsi login eksternal (Entra ID, Keycloak) | Aplikasi kedua (mis. SIPP) dikonversi dengan porsi manual yang terukur di laporan |
 
@@ -230,7 +270,7 @@ cakupan, dan bukti kesamaan perilaku.
 **Apakah aplikasi APEX lama diubah?** Tidak. Alat hanya membaca. Data uji yang dibuat saat uji kesamaan
 dicatat dan diputuskan pemiliknya.
 
-**Apakah bisa sekali klik?** Belum. Lihat roadmap R3–R5.
+**Apakah bisa sekali klik?** Belum. Generator sudah membuat bagian yang berpola umum, tetapi kerangka proyek masih disalin dari contoh dan logika bisnis ditulis developer. Lihat roadmap R4–R5.
 
 **Berapa lama untuk satu aplikasi?** Tergantung jumlah halaman, komponen dan PL/SQL. Langkah 2, 3 dan 5 memberi
 angka untuk memperkirakannya. Belum ada patokan dari aplikasi nyata. Aplikasi pertama di tahap R4 akan

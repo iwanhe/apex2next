@@ -4,7 +4,7 @@ import { errors } from '../errors';
 /**
  * WP9.5 report engine for APEX Interactive Reports, Classic Reports and Cards regions.
  *
- * Region SQL is an allowlisted constant per region (report-definitions.ts); request parameters only choose
+ * Region SQL is an allowlisted constant per region (region-source.ts; a view or a derived table); request parameters only choose
  * among known columns, so no client text reaches the SQL text. Semantics kept from APEX:
  *  - row search: case-insensitive "contains" over the displayed columns (dates as DD-MON-YYYY);
  *  - sort: one column, ASC NULLS LAST / DESC NULLS FIRST (Oracle default) with binary collation ("C"),
@@ -124,13 +124,13 @@ export async function runReport(tx: BusinessTx, def: ReportDef, query: ReportQue
   const rows = await tx.query(
     `SELECT ${def.columns.map(selectExpr).join(', ')} FROM ${def.from} AS src ${whereSql}
       ORDER BY ${sortExpr} ${dir} NULLS ${dir === 'ASC' ? 'LAST' : 'FIRST'} ${limit}`, main.values);
-  const total = await tx.query<{ n: string }>(`SELECT count(*)::text AS n FROM ${def.from} ${whereSql}`, main.values);
+  const total = await tx.query<{ n: string }>(`SELECT count(*)::text AS n FROM ${def.from} AS src ${whereSql}`, main.values);
   const facets: FacetResult[] = [];
   for (const f of def.facets ?? []) {
     const fq = filter(f.item);
     const col = ident(f.column.toLowerCase());
     const r = await tx.query<{ value: string; count: string }>(
-      `SELECT ${col}::text AS value, count(*)::text AS count FROM ${def.from}
+      `SELECT ${col}::text AS value, count(*)::text AS count FROM ${def.from} AS src
         WHERE ${[...fq.where, `${col} IS NOT NULL`].join(' AND ')}
         GROUP BY ${col} ORDER BY count(*) DESC, ${col}::text COLLATE "C"`, fq.values);
     facets.push({ item: f.item, values: r.rows.map((x) => ({ value: x.value, count: Number(x.count) })) });
