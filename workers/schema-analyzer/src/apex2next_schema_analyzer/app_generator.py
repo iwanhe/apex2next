@@ -68,6 +68,7 @@ GEN_RULES: dict[str, tuple[str, str]] = {
     "GEN022": ("MANUAL", "Page is marked manual in app-map.json; the generator does not write it."),
     "GEN023": ("MANUAL", "Form item type is not rendered by the form runtime (file upload, rich text, multi-select, ...)."),
     "GEN024": ("ASSISTED", "Form item is shown as a select list (switch, radio group or popup LOV in APEX)."),
+    "GEN025": ("MANUAL", "Form item uses a shared LOV that is not generated (see its findings); the form page is not written."),
 }
 FORM_ITEM_KINDS = {"NATIVE_TEXT_FIELD", "NATIVE_TEXTAREA", "NATIVE_NUMBER_FIELD", "NATIVE_DATE_PICKER_APEX",
                    "NATIVE_SELECT_LIST", "NATIVE_DISPLAY_ONLY", "NATIVE_HIDDEN"}
@@ -330,6 +331,7 @@ class Generator:
         self.files: dict[str, str] = {}
         self.regions: list[dict[str, Any]] = []
         self.lovs: list[dict[str, Any]] = []
+        self.lov_blocked: dict[int, list[str]] = {}
         self.page_reports: list[dict[str, Any]] = []
         self.forms: dict[int, dict[str, Any]] = {}
         for pid, entry in app_map["pages"].items():
@@ -454,12 +456,14 @@ class Generator:
             t = translate_lov(lov["query"] or "", known_objects=self.inp.known,
                               source_schemas=frozenset(s.upper() for s in self.map.get("sourceSchemas", [])),
                               function_mappings=self.inp.mappings, target_schema=self.inp.schema,
-                              numeric_columns=self.inp.numeric)
+                              numeric_columns=self.inp.numeric,
+                              object_columns={n.upper(): {c.upper() for c in cols} for n, cols in self.inp.types.items()})
             entry = {"name": lov["name"], "findings": t["findings"], "disposition": t["disposition"],
                      "status": "GENERATED" if t["sql"] is not None and not t["binds"] else "MANUAL"}
             if entry["status"] == "GENERATED":
                 entry["source"] = {"source": re.sub(r"\s+", " ", t["source"]).strip(), "sql": t["sql"], "orderBy": t["orderBy"],
-                                   **({"numeric": True} if t["numeric"] else {})}
+                                   **({"numeric": True} if t["numeric"] else {}),
+                                   **({"order": t["order"]} if t.get("order") else {})}
             elif t["binds"]:
                 entry["findings"] = entry["findings"] + [finding("GEN003", "LOV with bind variables (cascading LOV)")]
             self.lovs.append(entry)
@@ -497,8 +501,13 @@ class Generator:
             if lov["status"] != "GENERATED":
                 continue
             s = lov["source"]
+            order = ""
+            if s.get("order"):
+                order = " order: [" + ", ".join(
+                    "{ dir: " + ts_str(o["dir"]) + (", numeric: true" if o.get("numeric") else "") + " }"
+                    for o in s["order"]) + "],"
             out.append(f"  {ts_key(lov['name'])}: {{\n    source: {ts_str(s['source'])},\n    sql: {ts_str(s['sql'])},\n"
-                       f"    orderBy: {ts_str(s['orderBy'])},{' numeric: true,' if s.get('numeric') else ''}\n  }},\n")
+                       f"    orderBy: {ts_str(s['orderBy'])},{' numeric: true,' if s.get('numeric') else ''}{order}\n  }},\n")
         out.append("} as const satisfies Record<string, LovSource>;\n\nexport type DynamicLov = keyof typeof LOV_SOURCES;\n\n")
         out.append("/** Form regions (NATIVE_FORM) by form name: page and region of the UI spec. */\nexport const FORM_SOURCES = {\n")
         for f in sorted(self.forms.values(), key=lambda f: f["page"]):
@@ -511,7 +520,7 @@ class Generator:
     # ---------------------------------------------------------------- web
     def link_to_form(self, link: dict[str, Any] | None, row: str = "r") -> str | None:
         """Template-literal body of a link to a generated form page (edit when the primary key is passed)."""
-        if not link or link["page"] not in self.forms:
+        if not link or link["page"] not in self.forms or link["page"] in self.lov_blocked:
             return None
         form = self.forms[link["page"]]
         column = row_column(link["items"].get(form["pk"], ""))
@@ -522,7 +531,8 @@ class Generator:
     def create_href(self, page: dict[str, Any]) -> str | None:
         button = next((b for b in components(page, "BUTTON") if b["name"] == "CREATE"), None)
         link = parse_link(button["props"].get("button_redirect_url")) if button else None
-        if not link or link["page"] not in self.forms or not self.forms[link["page"]]["insert"]:
+        if not link or link["page"] not in self.forms or not self.forms[link["page"]]["insert"] \
+                or link["page"] in self.lov_blocked:
             return None
         return f"{self.forms[link['page']]['route']}/new"
 
@@ -611,6 +621,11 @@ class Generator:
             if form is None:
                 report.update(status="MANUAL", todo=report["todo"] + [finding("GEN001", "no form name in app-map.json")])
                 return
+            missing = self.lov_blocked.get(pid)
+            if missing:
+                # the runtime cannot list the options of such an item: a generated page would fail when opened
+                report.update(status="MANUAL", todo=report["todo"] + [finding("GEN025", m) for m in missing])
+                return
             extra_items = [i for i in components(page, "ITEM") if i["props"].get("source_type") == "ALWAYS_NULL"
                            and i["props"].get("display_as") != "NATIVE_HIDDEN"]
             extra = ""
@@ -677,6 +692,8 @@ class Generator:
         if link is None:
             return None
         target = link["page"]
+        if target in self.lov_blocked:
+            return None
         if target in self.forms:
             form = self.forms[target]
             page = self.inp.pages[target]
@@ -991,6 +1008,15 @@ class Generator:
     def build(self) -> dict[str, Any]:
         self.build_regions()
         self.build_lovs()
+        # form pages with a select item whose shared LOV is not generated are not written (GEN025), nor linked to
+        usable = {lov["name"] for lov in self.lovs if lov["status"] in {"GENERATED", "PROVIDED"}}
+        self.lov_blocked = {}
+        for pid in self.forms:
+            missing = sorted({f"{i['name']}: {i['props']['named_lov']}" for i in components(self.inp.pages[pid], "ITEM")
+                              if i["props"].get("named_lov") and i["props"]["named_lov"] not in usable
+                              and i["props"].get("display_as") != "NATIVE_HIDDEN"})
+            if missing:
+                self.lov_blocked[pid] = missing
         self.emit_sources()
         self.scheme_todo = self.emit_schemes()
         for page in self.inp.inventory["pages"]:

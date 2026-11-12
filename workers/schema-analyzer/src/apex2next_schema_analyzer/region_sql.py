@@ -362,13 +362,42 @@ def translate_query(sql: str, *, known_objects: set[str] | frozenset[str], sourc
     return out
 
 
+def _order_columns(order: list[Token], objects: list[str], numeric_columns: dict[str, set[str]] | None,
+                   object_columns: dict[str, set[str]] | None) -> list[dict[str, Any]] | None:
+    """ORDER BY of plain columns of the LOV's single object (``col [ASC|DESC], ...``), else None."""
+    if len(objects) != 1 or numeric_columns is None or not object_columns or objects[0] not in object_columns:
+        return None  # without the target catalog the columns and their sort semantics are unknown
+    out: list[dict[str, Any]] = []
+    parts: list[list[Token]] = [[]]
+    for t in order:
+        if t.kind == "OP" and t.text == ",":
+            parts.append([])
+        else:
+            parts[-1].append(t)
+    for part in parts:
+        if not part or part[0].kind != "IDENT" or len(part) > 2:
+            return None
+        direction = part[1].upper if len(part) == 2 else "ASC"
+        if direction not in {"ASC", "DESC"}:
+            return None
+        column = part[0].upper
+        if column in SQL_KEYWORDS or column not in object_columns[objects[0]]:
+            return None
+        out.append({"column": column.lower(), "dir": direction,
+                    "numeric": column in numeric_columns.get(objects[0], set())})
+    return out
+
+
 def translate_lov(sql: str, *, known_objects: set[str] | frozenset[str], source_schemas: set[str] | frozenset[str] = frozenset(),
                   function_mappings: dict[str, str] | None = None, target_schema: str = "app",
-                  numeric_columns: dict[str, set[str]] | None = None) -> dict[str, Any]:
+                  numeric_columns: dict[str, set[str]] | None = None,
+                  object_columns: dict[str, set[str]] | None = None) -> dict[str, Any]:
     """Translate a shared-component LOV query (display column, return column).
 
-    Returns ``{source, sql, orderBy: 'd'|'r', numeric, binds, findings, disposition}``; ``sql`` is the query
+    Returns ``{source, sql, orderBy: 'd'|'r'|'o', numeric, binds, findings, disposition}``; ``sql`` is the query
     without its ORDER BY (the runtime orders the derived table with binary collation, as NLS_SORT=BINARY does).
+    An ORDER BY on columns that are not selected (``order by display_order``) gives ``orderBy: 'o'``: the
+    columns are appended to the select list and ``order`` lists their direction and type.
     ``numeric_columns`` maps an upper-case object name to its numeric column names (upper-case).
     """
     source = _clean(sql)
@@ -411,12 +440,23 @@ def translate_lov(sql: str, *, known_objects: set[str] | frozenset[str], source_
                 name = order[0].upper
                 target = next((n for n, e in enumerate(exprs) if name in {e["alias"], e["bare"]}), None)
             if target is None:
-                findings.append(_finding("RGN011", query.order_by))
-                target = 0
-        out["orderBy"] = "dr"[target]
-        bare = exprs[target]["bare"]
-        if bare and numeric_columns and len(query.objects) == 1:
-            out["numeric"] = bare in numeric_columns.get(query.objects[0], set())
+                extra = _order_columns(order, query.objects, numeric_columns, object_columns)
+                if extra is None:
+                    findings.append(_finding("RGN011", query.order_by))
+                    target = 0
+                else:
+                    # ORDER BY columns that are not selected: carried as extra derived-table columns o1..on
+                    from_at = _top_level_index(sql_tokens, ("FROM",))
+                    head = render(sql_tokens[:from_at]).rstrip()
+                    tail = render(sql_tokens[from_at:order_i] if order_i is not None else sql_tokens[from_at:])
+                    out["sql"] = collapse_sql(head + ", " + ", ".join(c["column"] for c in extra) + " " + tail)
+                    out["orderBy"] = "o"
+                    out["order"] = [{"dir": c["dir"], **({"numeric": True} if c["numeric"] else {})} for c in extra]
+        if target is not None:
+            out["orderBy"] = "dr"[target]
+            bare = exprs[target]["bare"]
+            if bare and numeric_columns and len(query.objects) == 1:
+                out["numeric"] = bare in numeric_columns.get(query.objects[0], set())
     out["findings"] = findings
     out["disposition"] = worst_disposition(findings)
     if DISPOSITION_RANK[out["disposition"]] > DISPOSITION_RANK["ASSISTED"]:

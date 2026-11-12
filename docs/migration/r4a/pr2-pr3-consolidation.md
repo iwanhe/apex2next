@@ -23,7 +23,7 @@ region SQL translator) supersedes that path.
 | From PR #2 | Gap in Foundation | Now |
 |---|---|---|
 | `validation.ts` trim policy (BOTH / LEADING / TRAILING) | Text items were always trimmed on both sides; 67 of 510 text items in the 26.2 sample apps have `trim_spaces` NONE | `normalizeValue()` honours the item's `trim_spaces` attribute (BOTH default; numbers and dates always trimmed because they are parsed); `''` stays NULL. Used by `validateItems` and the entered key of `validateForInsert` |
-| `report.ts` safe paging arithmetic | `?page=Infinity` or a huge page put a non-integer OFFSET into the SQL (HTTP 500) | `runReport` refuses a page whose offset is not a safe integer (INVALID_INPUT, 400); garbage still falls back to page 1 as before |
+| `report.ts` safe paging arithmetic | `?page=Infinity` or a huge page put a non-integer OFFSET into the SQL (HTTP 500) | `runReport` refuses a page whose offset is not a safe integer (INVALID_INPUT, HTTP 422); garbage still falls back to page 1 as before |
 | `report.ts` hidden columns not sortable | A user could sort by a hidden column (reveals the order of values the region does not show) | A hidden column is refused as an explicit sort unless it is the region's default sort |
 | `session.ts` issued-in-future / max-age checks | Only signature and expiry were checked | `verifySession(..., { maxLifetimeSeconds, clockSkewSeconds })`: tokens with `iat` more than 60 s ahead or `exp - iat` above the configured `SESSION_TTL_SECONDS` are refused, so shrinking the TTL also shortens tokens already issued. `AuthGuard` passes the TTL |
 

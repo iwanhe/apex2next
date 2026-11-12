@@ -39,8 +39,10 @@ export interface LovSource {
   /** The query as exported (kept for the drift test against the inventory). */
   readonly source: string;
   readonly sql: string;
-  readonly orderBy: 'd' | 'r';
+  /** 'o': the query selects extra columns o1..on (ORDER BY columns that are not displayed), sorted per `order`. */
+  readonly orderBy: 'd' | 'r' | 'o';
   readonly numeric?: boolean;
+  readonly order?: readonly { readonly dir: 'ASC' | 'DESC'; readonly numeric?: boolean }[];
 }
 
 type AnyMap = Record<string, Record<string, unknown>>;
@@ -100,6 +102,15 @@ export function reportDef(spec: UiSpecLike, schema: string, src: RegionSource): 
 }
 
 export function lovSql(lov: LovSource): string {
+  if (lov.orderBy === 'o') {
+    const order = lov.order ?? [];
+    if (!order.length) throw new Error('LOV orderBy o needs order columns');
+    const names = order.map((_, i) => `o${i + 1}`);
+    // text sorts byte-wise as NLS_SORT=BINARY; numbers by value; ISO date/time text sorts chronologically
+    const keys = order.map((o, i) => (o.numeric ? `lov.${names[i]}` : `lov.${names[i]}::text COLLATE "C"`)
+      + (o.dir === 'DESC' ? ' DESC' : ''));
+    return `SELECT lov.d::text AS d, lov.r::text AS r FROM (${lov.sql}) lov(d, r, ${names.join(', ')}) ORDER BY ${keys.join(', ')}`;
+  }
   return `SELECT lov.d::text AS d, lov.r::text AS r FROM (${lov.sql}) lov(d, r) ORDER BY lov.${lov.orderBy}${lov.numeric ? '' : ' COLLATE "C"'}`;
 }
 

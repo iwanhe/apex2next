@@ -86,3 +86,19 @@ def test_generic_page_layer_compiles_against_the_runtime_contract():
         assert name in service
     index = (ROOT / "packages/runtime-api/src/index.ts").read_text()
     assert "./generic/table-dml" in index and "./generic/schemes" in index
+
+
+def test_form_with_an_ungenerated_lov_is_not_written_nor_linked(tmp_path):
+    """GEN025: a select item whose shared LOV is manual would make the generated page fail when it opens."""
+    app = composer._app(tmp_path)
+    inv = json.loads((app / "ui/apex-page-inventory.json").read_text())
+    inv["lovs"] = [{"name": "DEPTS", "location": "LOCAL", "query": "select dname, deptno from dept order by loc"}]
+    inv["pages"][1]["components"].append(
+        composer._c(2, "ITEM", "P2_DEPT", display_as="NATIVE_SELECT_LIST", source="DEPTNO", named_lov="DEPTS"))
+    (app / "ui/apex-page-inventory.json").write_text(json.dumps(inv))
+    files, report = generate(app)
+    form = next(p for p in report["pages"] if p["id"] == 2)
+    assert form["status"] == "MANUAL" and [t["detail"] for t in form["todo"] if t["code"] == "GEN025"] == ["P2_DEPT: DEPTS"]
+    assert not any("pageId={2}" in body for body in files.values())
+    listing = next(p for p in report["pages"] if p["id"] == 1)
+    assert any(t["code"] == "GEN005" for t in listing["todo"])  # the row link to the form is left out

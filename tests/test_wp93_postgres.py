@@ -184,3 +184,5 @@ def test_r4a_guid_key_default_generates_distinct_numeric_keys(conn):
     conn.execute(plan["sql"])
     ids = [conn.execute("insert into app.t (name) values ('x') returning id").fetchone()[0] for _ in range(20)]
     assert len(set(ids)) == 20 and all(0 <= i < 2 ** 128 and i == int(i) for i in ids)
+    # scale 0: the key prints as an integer (no ".0000000000000000"), as the Oracle NUMBER key does
+    assert all(i.as_tuple().exponent == 0 for i in ids)

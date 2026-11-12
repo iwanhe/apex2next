@@ -106,3 +106,20 @@ def test_one_line_sql_keeps_string_literals_and_drops_comments():
     assert collapse_sql("select 'a  b' x -- note\n  from t /* c */ where y = 'p\n q'") == "select 'a  b' x from t where y = 'p\n q'"
     lov = translate_lov("select dname || '  -  ' || loc d, -- display\n deptno r\n from dept order by 1", known_objects=KNOWN)
     assert lov["sql"] == "select dname || '  -  ' || loc d, deptno r from app.dept"
+
+
+def test_lov_order_by_columns_that_are_not_selected():
+    """R4a: `order by display_order` (a column the LOV does not show) is carried as extra columns o1..on."""
+    cols = {"EBA_STATUS": {"CD", "DESCRIPTION", "DISPLAY_ORDER", "UPDATED"}}
+    numeric = {"EBA_STATUS": {"DISPLAY_ORDER"}}
+    lov = translate_lov("select description d, cd r\nfrom eba_status\norder by display_order, updated desc",
+                        known_objects={"EBA_STATUS"}, numeric_columns=numeric, object_columns=cols)
+    assert lov["sql"] == "select description d, cd r, display_order, updated from app.eba_status"
+    assert lov["orderBy"] == "o" and lov["order"] == [{"dir": "ASC", "numeric": True}, {"dir": "DESC"}]
+    assert "RGN011" not in {f["code"] for f in lov["findings"]}
+    # unknown column or no catalog: still manual
+    unknown = translate_lov("select description d, cd r from eba_status order by nope",
+                            known_objects={"EBA_STATUS"}, numeric_columns=numeric, object_columns=cols)
+    no_catalog = translate_lov("select description d, cd r from eba_status order by display_order",
+                               known_objects={"EBA_STATUS"})
+    assert unknown["sql"] is None and no_catalog["sql"] is None

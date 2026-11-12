@@ -103,11 +103,19 @@ def create_project(app: Path, *, oracle_schema: str, name: str | None = None, ru
             root = json.loads((app / "package.json").read_text(encoding="utf-8"))
             root["scripts"]["typecheck"] = "pnpm -r typecheck"
             (app / "package.json").write_text(json.dumps(root, indent=2) + "\n", encoding="utf-8")
-    put("db/migrations/0001_schema.sql", (app / "db/0001_schema.sql").read_bytes())
+    stale: list[str] = []
+
+    def put_migration(rel: str, data: bytes) -> None:
+        # an applied migration never changes: a newer schema plan is reported, not copied over the old file
+        if (app / rel).exists() and (app / rel).read_bytes() != data:
+            stale.append(rel)
+        put(rel, data)
+
+    put_migration("db/migrations/0001_schema.sql", (app / "db/0001_schema.sql").read_bytes())
     deferred = app / "db/0003_deferred_views.sql"
     if deferred.exists() and deferred.read_text(encoding="utf-8").strip():
-        put("db/migrations/0003_deferred_views.sql", deferred.read_bytes())
-    return {"written": written, "kept": kept, "slug": [app_slug]}
+        put_migration("db/migrations/0003_deferred_views.sql", deferred.read_bytes())
+    return {"written": written, "kept": kept, "slug": [app_slug], "stale": stale}
 
 
 def main() -> int:
@@ -125,6 +133,10 @@ def main() -> int:
     print(f"{len(out['written'])} file(s) written, {len(out['kept'])} existing file(s) kept unchanged")
     for rel in out["kept"]:
         print(f"  kept: {rel}")
+    for rel in out["stale"]:
+        print(f"  NOTE {rel} differs from the current schema plan and was not replaced (an applied migration never "
+              "changes). On a disposable database: delete it and run new again. Otherwise add the difference as a new "
+              "migration.")
     return 0
 
 

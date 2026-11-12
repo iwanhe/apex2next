@@ -179,6 +179,8 @@ def load_snapshot(conn, snap: Snapshot, plan: dict[str, Any], schema: str = "app
             report["problems"].append({"check": "LOD-001", "message": f"{t} is not empty ({n} rows)"})
     if report["problems"]:
         return report
+    # converted triggers (R4a) skip their body while loading: migrated rows keep their source audit values and keys
+    conn.execute("SELECT set_config('apex2next.loading', 'on', true)")
     for t in order:
         spec = load_plan[t]
         cols = [c for c in spec["columns"] if c not in spec.get("excludedGenerated", [])]

@@ -30,6 +30,7 @@ Bayangkan pindah rumah:
 | Tabel, kolom, primary/unique/foreign key, check, index | **Otomatis** | 31 objek otomatis |
 | Identity, view, kolom generated | **Dibantu** | 27 objek dikonversi lalu wajib direview (ditandai ASSISTED) |
 | Package, trigger, data seed | **Manual** | 28 objek; alat memberi daftar temuan dan apa yang harus diputuskan |
+| Trigger pola umum (audit, kunci, versi, huruf besar, validasi sederhana) | **Dibantu** | `schema-plan --convert-triggers`; di aplikasi contoh Oracle 45 dari 60 trigger terkonversi |
 | Cek rencana terhadap database Oracle asli | **Otomatis** | 12 pemeriksaan (REC-001 … REC-012) |
 | Pindah data + verifikasi | **Otomatis** | sekali transaksi; tidak ada data tersimpan kalau satu pemeriksaan gagal |
 | Fondasi web dan API (runtime bersama) | **Siap pakai** | paket `packages/runtime-api` dan `packages/runtime-web`: koneksi database, login akun lokal, pesan error gaya APEX, log akses, mesin laporan, form APEX, facet, grafik, kerangka halaman |
@@ -124,6 +125,11 @@ Baca `schema-conversion-report.md` terlebih dahulu. Setiap objek diberi status:
 - **MANUAL**: harus ditulis tangan.
 
 File SQL hasilnya (`0001_schema.sql`, dll.) adalah migration untuk PostgreSQL.
+
+Tambahkan `--convert-triggers` bila trigger aplikasi berisi pola umum (isi kolom audit CREATED_BY/UPDATED_BY,
+isi kunci, nomor versi baris, huruf besar, validasi sederhana dengan RAISE_APPLICATION_ERROR). Trigger seperti itu
+ditulis ulang sebagai trigger PostgreSQL di migration; trigger lain tetap MANUAL beserta alasannya. Jangan pakai
+opsi ini bila logika trigger sudah ditulis ulang di layanan aplikasi (seperti pilot).
 
 ### Langkah 4 — Cocokkan dengan database Oracle asli
 
@@ -280,7 +286,7 @@ dipakai pada aplikasi nyata.
 | **R1 — Alat bantu** (selesai) | Satu pintu untuk alat yang sudah ada | `tools/apex2next`, panduan ini | Langkah 0–5, 7 dan 9 bisa dijalankan dari satu perintah |
 | **R2 — Runtime bersama** (selesai 10 Nov 2026) | Fondasi aplikasi target tidak ditulis ulang per aplikasi | `packages/runtime-api` dan `packages/runtime-web`: form APEX, Interactive Report, facet, pesan dan error gaya APEX, hak akses tombol, cek versi data (lost update), login akun lokal | Tercapai: app 170134 berjalan di atas paket tersebut; 63 tes API, 3 tes runtime web, 12 tes e2e dan J-01…J-05 tetap lulus |
 | **R3 — Generator** (selesai 11 Nov 2026) | Mengurangi pekerjaan manual terbesar | `tools/apex2next generate` dan `catalog`: sumber region, LOV dan form, alamat halaman, halaman tiga pola umum, laporan "otomatis vs TODO"; penerjemah SQL Oracle → PostgreSQL untuk query region dan LOV; query snapshot dari rencana schema | Tercapai: 170134 di-generate ulang (15 dari 19 halaman, 11 query region, 5 LOV); 63 tes API, 12 tes e2e dan J-01…J-05 tetap lulus |
-| **R4a — Uji lebar dengan aplikasi contoh Oracle** (berjalan, mulai 12 Nov 2026) | Menemukan celah alat sebelum aplikasi nyata | 29 aplikasi contoh APEX 26.2: ambil DDL dari supporting objects, komposer halaman, kerangka proyek (`apex2next new`), DML form bawaan, aturan authorization, `apex2next smoke`; 2 aplikasi (Sample Master Detail, Forms Patterns) di-install di workspace KCSI untuk uji kesamaan | Forms Patterns berjalan di PostgreSQL dan lulus smoke 9/9; berikutnya trigger, Interactive Grid, uji kesamaan dengan APEX |
+| **R4a — Uji lebar dengan aplikasi contoh Oracle** (berjalan, mulai 12 Nov 2026) | Menemukan celah alat sebelum aplikasi nyata | 29 aplikasi contoh APEX 26.2: ambil DDL dari supporting objects, komposer halaman, kerangka proyek (`apex2next new`), DML form bawaan, aturan authorization, `apex2next smoke`; 2 aplikasi (Sample Master Detail, Forms Patterns) di-install di workspace KCSI untuk uji kesamaan | Forms Patterns lulus smoke 9/9; trigger pola umum terkonversi (45/60), Sample Master Detail berjalan di PostgreSQL (smoke 14/14, form 17/28 tanpa PL/SQL); berikutnya uji kesamaan dengan APEX, lalu Interactive Grid |
 | **R4 — Aplikasi nyata pertama** (usulan: FRITS) | Menguji alat pada aplikasi yang dipakai user | Komponen yang dibutuhkan FRITS ditambahkan; pemilahan PL/SQL menjadi template service; koneksi langsung ke database non-produksi; pemindahan data bertahap untuk volume besar | Alur kerja penting FRITS identik dengan APEX; gate WP9 lulus |
 | **R5 — Konverter** | Satu perintah dari export sampai aplikasi | `apex2next convert` dengan laporan "dibuat otomatis vs TODO"; template deploy (Docker, Cloudflare Tunnel); komponen lanjutan (Interactive Grid, upload, PDF, email, REST, job) sesuai kebutuhan; opsi login eksternal (Entra ID, Keycloak) | Aplikasi kedua (mis. SIPP) dikonversi dengan porsi manual yang terukur di laporan |
 

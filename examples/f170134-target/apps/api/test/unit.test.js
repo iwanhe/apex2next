@@ -122,3 +122,22 @@ test('report paging refuses page numbers that overflow the OFFSET; hidden column
   await assert.rejects(runReport(tx, { ...def, defaultSort: { column: 'NAME', dir: 'ASC' } }, { sort: 'id' }),
     (e) => e.code === 'INVALID_INPUT');
 });
+
+test('LOV ordered by columns it does not show (R4a): extra derived columns, binary text order', () => {
+  const { lovSql } = require('@apex2next/runtime-api');
+  const sql = lovSql({ source: 'x', sql: 'select description d, cd r, display_order, updated from app.s', orderBy: 'o',
+    order: [{ dir: 'ASC', numeric: true }, { dir: 'DESC' }] });
+  assert.equal(sql, 'SELECT lov.d::text AS d, lov.r::text AS r FROM (select description d, cd r, display_order, updated from app.s) '
+    + 'lov(d, r, o1, o2) ORDER BY lov.o1, lov.o2::text COLLATE "C" DESC');
+  assert.throws(() => lovSql({ source: 'x', sql: 'select 1, 2', orderBy: 'o' }), /order columns/);
+});
+
+test('converted RAISE_APPLICATION_ERROR (P0001 + DETAIL ORA-20nnn) keeps its Oracle number', () => {
+  const { mapDatabaseError } = require('@apex2next/runtime-api');
+  const e = Object.assign(new Error('Start date must be before end date'), { code: 'P0001', detail: 'ORA-20001' });
+  const mapped = mapDatabaseError(e, { oracleSchema: 'WKSP_X' });
+  assert.equal(mapped.code, 'DB_APPLICATION_ERROR');
+  assert.equal(mapped.message, 'ORA-20001: Start date must be before end date');
+  assert.equal(mapped.oracleCode, -20001);
+  assert.equal(mapDatabaseError(Object.assign(new Error('x'), { code: 'P0001' }), { oracleSchema: 'WKSP_X' }), null);
+});

@@ -46,6 +46,7 @@ from .sql_expression import (
 from .source_overrides import apply_overrides, load_overrides
 from .sql_tokens import Statement, identifier_name, significant, split_script
 from .trigger_analysis import TRIGGER_RULES, parse_trigger
+from .trigger_conversion import APP_USER_SQL, TRIGGER_CONVERSION_RULES, convert_trigger
 from .view_conversion import VIEW_RULES, convert_view, parse_view, view_design, view_sql
 
 PLAN_FORMAT = "apex2next.schema-plan.v1"
@@ -63,7 +64,7 @@ CONSTRAINT_CODES = {"PRIMARY KEY": "p", "UNIQUE": "u", "CHECK": "c", "FOREIGN KE
 
 def rule_registry() -> dict[str, Any]:
     rules: dict[str, dict[str, str]] = {}
-    for registry in (SCHEMA_RULES, EXPRESSION_RULES, VIEW_RULES, TRIGGER_RULES, PLAN_RULES):
+    for registry in (SCHEMA_RULES, EXPRESSION_RULES, VIEW_RULES, TRIGGER_RULES, TRIGGER_CONVERSION_RULES, PLAN_RULES):
         for code, (disposition, message) in registry.items():
             rules[code] = {"disposition": disposition, "message": message}
     digest = hashlib.sha256(json.dumps(rules, sort_keys=True).encode()).hexdigest()
@@ -124,7 +125,11 @@ def build_schema_plan(source: str, *, source_name: str = "install.sql", target_s
                       apex_references: list[dict[str, Any]] | None = None,
                       overrides: dict[str, Any] | None = None,
                       function_mappings: dict[str, Any] | None = None,
-                      transaction_wrapper: bool = True) -> dict[str, Any]:
+                      transaction_wrapper: bool = True,
+                      convert_triggers: bool = False) -> dict[str, Any]:
+    """``convert_triggers`` (R4a): emit PL/pgSQL triggers for triggers in the converted subset
+    (trigger_conversion); off by default, so plans of applications whose trigger logic was rebuilt by hand
+    (pilot WP9.4) stay unchanged."""
     if not target_schema.isidentifier() or target_schema.lower() != target_schema or len(target_schema) > 63:
         raise ValueError("target_schema must be a lower-case PostgreSQL identifier.")
     source_hash = "sha256:" + hashlib.sha256(source.encode("utf-8")).hexdigest()
@@ -543,6 +548,18 @@ def build_schema_plan(source: str, *, source_name: str = "install.sql", target_s
     for stmt in trigger_stmts:
         trg = parse_trigger(stmt, known_tables=set(tables), known_packages=packages)
         triggers.append(trg)
+        if convert_triggers:
+            conv = convert_trigger(stmt, trg, schema=target_schema, table=tables.get(trg["table"] or ""),
+                                   sequences={n for n, sq in sequences.items() if not sq.get("blocked")},
+                                   known_objects=set(tables) | set(views))
+            trg["emit"] = conv["converted"]
+            if conv["converted"]:
+                trg["targetSql"] = conv["sql"]
+                trg["usesAppUser"] = conv["usesAppUser"]
+                # converted: the TRG001 "re-implement by hand" finding is replaced by the conversion findings
+                trg["findings"] = [f for f in trg["findings"] if f["code"] != "TRG001"]
+            trg["findings"] = trg["findings"] + [
+                {**f, "object": trg["name"], "line": trg["line"]} for f in conv["findings"]]
         t = tables.get(trg["table"] or "")
         if t is None:
             target_failures.append(f"TRIGGER {trg['name']}: table {trg['table']} not defined")
@@ -667,7 +684,7 @@ def build_schema_plan(source: str, *, source_name: str = "install.sql", target_s
         add_object("VIEW", v["name"], v["line"], v["findings"], v["emit"], blockedBy=v["blockedBy"],
                    dependencyOrder=v["dependencyOrder"])
     for trg in triggers:
-        add_object("TRIGGER", trg["name"], trg["line"], trg["findings"], False, table=trg["table"])
+        add_object("TRIGGER", trg["name"], trg["line"], trg["findings"], bool(trg.get("emit")), table=trg["table"])
     for u in plsql_units:
         add_object(u["kind"], u["name"], u["line"], u["findings"], False)
     for s in sequences.values():
@@ -721,7 +738,8 @@ def build_schema_plan(source: str, *, source_name: str = "install.sql", target_s
             if f"{o['type']} {o['name']}" == rec["object"]:
                 o["definitionSource"] = "dictionary override"
     sql = _emit_sql(tables, indexes, views, order, comments, sequences, target_schema,
-                    source_name, source_hash, objects, override_records, transaction_wrapper)
+                    source_name, source_hash, objects, override_records, transaction_wrapper,
+                    [trg for trg in triggers if trg.get("emit")])
     deferred_sql = _emit_deferred_sql(views, order, target_schema, source_name, source_hash,
                                       mapping_records, transaction_wrapper, comments)
     post_load = _emit_post_load(tables, sequences, target_schema)
@@ -743,6 +761,8 @@ def build_schema_plan(source: str, *, source_name: str = "install.sql", target_s
         "tables": {"source": len(tables), "emitted": sum(t["emit"] for t in tables.values())},
         "views": {"source": len(views), "emitted": sum(v["emit"] for v in views.values())},
         "indexes": {"source": len(indexes), "emitted": sum(ix["emit"] for ix in indexes)},
+        **({"triggers": {"source": len(triggers), "emitted": sum(bool(t.get("emit")) for t in triggers)}}
+           if convert_triggers else {}),
         "validationPassed": all(c["status"] != "FAIL" for c in checks),
     }
     return {
@@ -777,7 +797,9 @@ def build_schema_plan(source: str, *, source_name: str = "install.sql", target_s
         "postLoadSql": post_load,
         "limitations": [
             "Static conversion of a source script; it does not prove the objects are installed, valid, or granted in Oracle. Oracle dictionary reconciliation is a separate WP9.3 step.",
-            "Business logic in triggers and PL/SQL packages is inventoried, not converted (WP9.4).",
+            ("Triggers in the converted subset are emitted as PL/pgSQL triggers (R4a); other triggers and PL/SQL packages are inventoried, not converted (WP9.4)."
+             if convert_triggers else
+             "Business logic in triggers and PL/SQL packages is inventoried, not converted (WP9.4)."),
             "Seed/configuration DML is inventoried, not migrated (WP9.6).",
             "Views calling PL/SQL functions are not emitted until target functions/services exist.",
             "Generated SQL is a reviewed draft; it is not approved for any shared environment.",
@@ -870,7 +892,7 @@ def _emit_deferred_sql(views, order, schema, source_name, source_hash, mapping_r
 
 
 def _emit_sql(tables, indexes, views, order, comments, sequences, schema, source_name, source_hash,
-              objects, override_records=(), transaction_wrapper=True) -> str:
+              objects, override_records=(), transaction_wrapper=True, triggers=()) -> str:
     s = pg_ident(schema)
     out = [
         "-- APEX2NEXT WP9.3 PostgreSQL schema migration (generated DRAFT; review required)",
@@ -894,10 +916,10 @@ def _emit_sql(tables, indexes, views, order, comments, sequences, schema, source
             options = clause.strip()[1:-1] if clause else ""
             out.append(f"CREATE SEQUENCE {s}.{pg_ident(seq['name'])} AS bigint{' ' + options if options else ''};")
     if any("guid_number()" in ((c.get("default") or {}).get("target") or "") for t in tables.values() if t["emit"]
-           for c in t["columns"]):
+           for c in t["columns"]) or any("guid_number()" in trg["targetSql"] for trg in triggers):
         out += ["", "-- Helper for Oracle TO_NUMBER(SYS_GUID(), 'X...X') key defaults (EXP022): random 128-bit integer",
                 "CREATE OR REPLACE FUNCTION guid_number() RETURNS numeric LANGUAGE sql VOLATILE PARALLEL SAFE AS $$",
-                "  SELECT sum(get_byte(b, i)::numeric * (256::numeric ^ (15 - i)))",
+                "  SELECT round(sum(get_byte(b, i)::numeric * (256::numeric ^ (15 - i))))  -- scale 0: an integer key",
                 "    FROM (SELECT uuid_send(gen_random_uuid()) AS b) g, generate_series(0, 15) AS i",
                 "$$;"]
     out += ["", "-- Tables"]
@@ -941,6 +963,15 @@ def _emit_sql(tables, indexes, views, order, comments, sequences, schema, source
         unique = "UNIQUE " if ix["unique"] else ""
         out.append(f"CREATE {unique}INDEX {pg_ident(ix['targetName'])} ON {s}.{pg_ident(ix['table'])} "
                    f"(" + ", ".join(ix["targetElements"]) + ");")
+    if triggers:
+        out += ["", "-- Triggers converted from Oracle (R4a; review required). Skipped while apex2next.loading = 'on'."]
+        if any(trg.get("usesAppUser") for trg in triggers):
+            out += ["-- APEX APP_USER: the runtime sets app.username per transaction (set_config(..., true)).",
+                    f"CREATE OR REPLACE FUNCTION {APP_USER_SQL[:-2]}() RETURNS text LANGUAGE sql STABLE PARALLEL SAFE AS $$",
+                    "  SELECT nullif(current_setting('app.username', true), '')",
+                    "$$;"]
+        for trg in triggers:
+            out.append(trg["targetSql"])
     emitted_views = [views[n] for n in order if views[n]["emit"] and views[n].get("phase") != "deferred"]
     if emitted_views:
         out += ["", "-- Views (dependency order)"]
@@ -1039,6 +1070,8 @@ def main() -> int:
     parser.add_argument("--overrides", type=Path, help="Dictionary overrides JSON (apex2next.dictionary-overrides.v1)")
     parser.add_argument("--function-mappings", type=Path, help="Reviewed PL/SQL -> PostgreSQL function mappings JSON")
     parser.add_argument("--deferred-sql-output", type=Path, help="Generated deferred view migration SQL")
+    parser.add_argument("--convert-triggers", action="store_true",
+                        help="R4a: emit PL/pgSQL triggers for triggers in the converted subset")
     parser.add_argument("--runner-format", action="store_true",
                         help="Omit BEGIN/COMMIT (the migration runner wraps each file in a transaction)")
     parser.add_argument("--source-name", default=None)
@@ -1053,7 +1086,8 @@ def main() -> int:
                              overrides=load_overrides(args.overrides) if args.overrides else None,
                              function_mappings=(json.loads(args.function_mappings.read_text(encoding="utf-8"))
                                                 if args.function_mappings else None),
-                             transaction_wrapper=not args.runner_format)
+                             transaction_wrapper=not args.runner_format,
+                             convert_triggers=args.convert_triggers)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(plan, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     if args.sql_output:

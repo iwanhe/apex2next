@@ -122,6 +122,41 @@ Across the 27 applications: 7 of 28 generated forms run on native DML (the rest 
 next step), and 14 of 18 authorization schemes get a rule. Pages: 196 of 740; composed pages that compute their
 content before display are now honestly left manual. Table: [r4a/scoreboard-step2.md](r4a/scoreboard-step2.md).
 
+## Step 3: trigger conversion (2026-11-12)
+
+All 60 triggers in the 27 applications are BEFORE ROW insert/update triggers. Most of them stamp audit columns,
+fill a key, count a row version or upper-case a code. `schema-plan --convert-triggers` now writes those as
+PL/pgSQL trigger functions in the schema migration (module `trigger_conversion`); the switch is off by default, so
+an application whose trigger logic was rebuilt by hand (the pilot, WP9.4) keeps its plan unchanged.
+
+| Part | Rule |
+|---|---|
+| Converted subset | `BEFORE ... FOR EACH ROW [WHEN (...)]`, body `BEGIN ... END` without DECLARE/EXCEPTION, made of `:NEW.col := expr`, `SELECT expr INTO :NEW.col FROM [SYS.]DUAL`, `IF/ELSIF/ELSE`, `NULL`, `RETURN`, `RAISE_APPLICATION_ERROR(-20nnn, msg)`. Expressions go through the registered expression rewrites; any MANUAL finding (package call, Oracle-only function, other bind, package variable) keeps the whole trigger manual (`TRC006` with the reason) |
+| APEX user | `V('APP_USER')`, `SYS_CONTEXT('APEX$SESSION','APP_USER')`, `APEX_APPLICATION.G_USER`, `WWV_FLOW.G_USER`, `:APP_USER` -> `apex_app_user()`, which reads `app.username`, set by the runtime per transaction (`TRC002`). Oracle `USER` -> `upper(current_user)` (`TRC003`) |
+| Errors | `RAISE_APPLICATION_ERROR` -> `RAISE EXCEPTION` (SQLSTATE P0001, DETAIL `ORA-20nnn`); the runtime shows `ORA-20nnn: message` (`TRC005`; the exact APEX text is to be confirmed in the parity journeys) |
+| Data migration | Every generated trigger returns at once while `apex2next.loading` is `on`; `load-data` / the snapshot loader set it, so migrated rows keep their source keys and audit values |
+| Native form DML | Only tables with an unconverted trigger block it; converted tables are written by the runtime and the trigger does the rest |
+
+Result: 45 of 60 triggers converted (15 stay manual: package calls such as `DBMS_LOB`, `APEX_MARKDOWN`,
+`DBMS_RANDOM`, `TO_CHAR` with Oracle formats, a DECLARE block, sequences of objects that are not emitted). Every
+generated migration still applies on PostgreSQL 16 (27/27), and each converted trigger was fired once on a scratch
+copy (40 ran; 5 inserts hit CHECK constraints of the synthetic test row, not the trigger). Forms on native DML:
+**17 of 28** (was 7).
+
+Found and fixed while running **Sample Master Detail** (7860) end to end:
+- `guid_number()` returned a numeric with 16 decimal places (`...178.0000000000000000`); it now returns scale 0,
+  so keys look like the Oracle NUMBER keys.
+- LOVs ordered by a column they do not show (`order by display_order`) were manual (`RGN011`); with the target
+  catalog they are now generated (`orderBy: 'o'`, the order columns carried in the derived table). LOVs 86/125.
+- A form page with a select item whose LOV is still manual crashed when opened; it is now left manual (`GEN025`)
+  and not linked to. Pages 192/740: the four pages that would have failed are no longer counted.
+- `apex2next new` reports a migration copy that differs from the current schema plan instead of silently keeping it.
+
+Sample Master Detail on PostgreSQL: `apex2next smoke` 14/14 (all generated pages open); through the API a project
+and a task are created, the project edited and deleted (its tasks cascade), with keys, `CREATED_BY` / `UPDATED_BY`
+and upper-cased status codes set by the converted triggers; the STATUS LOV lists in `display_order`.
+Forms Patterns stays at smoke 9/9. Table: [r4a/scoreboard-step3.md](r4a/scoreboard-step3.md).
+
 ## Applications chosen for installation and full conversion
 
 | Application | Pages | Why |

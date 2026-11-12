@@ -42,6 +42,13 @@ export function mapDatabaseError(error: unknown, options: ErrorMappingOptions): 
     case '23502':
       return errors.database('DB_NOT_NULL_VIOLATION',
         `ORA-01400: cannot insert NULL into ("${OWNER}"."${(e.table ?? '').toUpperCase()}"."${(e.column ?? '').toUpperCase()}")`, -1400);
+    case 'P0001': {
+      // RAISE_APPLICATION_ERROR converted by schema-plan --convert-triggers: DETAIL carries the Oracle error number.
+      const m = /^ORA-(20\d{3})$/.exec(e.detail ?? '');
+      if (!m) return null;
+      const message = String((error as Error).message ?? '');
+      return errors.database('DB_APPLICATION_ERROR', `ORA-${m[1]}: ${message}`, -Number(m[1]));
+    }
     case '22001':
       return errors.database('DB_VALUE_TOO_LARGE', 'ORA-12899: value too large for column', -12899);
     case '22P02':

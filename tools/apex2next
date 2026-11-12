@@ -150,6 +150,8 @@ def cmd_schema_plan(a: argparse.Namespace) -> int:
         args += ["--function-mappings", a.function_mappings]
     if a.runner_format:
         args += ["--runner-format"]
+    if a.convert_triggers:
+        args += ["--convert-triggers"]
     rc = run("apex2next_schema_analyzer.schema_plan", *args)
     plan_file = d / "schema-plan.json"
     if not plan_file.exists():
@@ -159,7 +161,8 @@ def cmd_schema_plan(a: argparse.Namespace) -> int:
     disp = s.get("dispositions", {})
     say(f"Tables {s.get('tables', {}).get('emitted', '?')}/{s.get('tables', {}).get('source', '?')}, "
         f"views {s.get('views', {}).get('emitted', '?')}/{s.get('views', {}).get('source', '?')}, "
-        f"indexes {s.get('indexes', {}).get('emitted', '?')}/{s.get('indexes', {}).get('source', '?')}",
+        f"indexes {s.get('indexes', {}).get('emitted', '?')}/{s.get('indexes', {}).get('source', '?')}"
+        + (f", triggers converted {s['triggers']['emitted']}/{s['triggers']['source']}" if "triggers" in s else ""),
         f"Objects: {disp.get('AUTOMATIC', 0)} automatic, {disp.get('ASSISTED', 0)} assisted (review), {disp.get('MANUAL', 0)} manual",
         f"Validation passed: {s.get('validationPassed')}",
         f"Read first: {d / 'schema-conversion-report.md'}")
@@ -352,6 +355,9 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--function-mappings", help="reviewed PL/SQL -> PostgreSQL function mappings (views that call PL/SQL)")
     p.add_argument("--runner-format", action="store_true",
                    help="no BEGIN/COMMIT in the SQL files (for the target project's migration runner, which adds them)")
+    p.add_argument("--convert-triggers", action="store_true",
+                   help="emit PL/pgSQL triggers for Oracle triggers in the converted subset (audit stamps, keys, "
+                        "normalization, simple guards); the others stay manual")
     p.add_argument("--out", required=True)
     p.set_defaults(fn=cmd_schema_plan)
     p = sub.add_parser("dictionary-check", help="compare the plan with the installed Oracle objects")

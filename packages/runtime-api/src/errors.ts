@@ -32,7 +32,8 @@ export type BusinessErrorCode =
   | 'DB_FOREIGN_KEY_VIOLATION'
   | 'DB_CHECK_VIOLATION'
   | 'DB_NOT_NULL_VIOLATION'
-  | 'DB_VALUE_TOO_LARGE';
+  | 'DB_VALUE_TOO_LARGE'
+  | 'DB_APPLICATION_ERROR';
 
 const HTTP_STATUS: Record<BusinessErrorCode, number> = {
   UNKNOWN_DOC_TYPE: 422,
@@ -62,6 +63,7 @@ const HTTP_STATUS: Record<BusinessErrorCode, number> = {
   DB_CHECK_VIOLATION: 422,
   DB_NOT_NULL_VIOLATION: 422,
   DB_VALUE_TOO_LARGE: 422,
+  DB_APPLICATION_ERROR: 422,
 };
 
 /** One APEX inline error, attached to a page item (field) or shown on the page (field null). */
@@ -153,6 +155,6 @@ export const errors = {
   actionNotAvailable: (action: string, reason: string) =>
     new BusinessRuleError('ACTION_NOT_AVAILABLE', `Aksi ${action} tidak tersedia: ${reason}`, null, 'UI-BTN-01'),
   database: (code: 'DB_UNIQUE_VIOLATION' | 'DB_FOREIGN_KEY_VIOLATION' | 'DB_CHECK_VIOLATION' | 'DB_NOT_NULL_VIOLATION'
-    | 'DB_VALUE_TOO_LARGE', message: string, oracleCode: number) =>
+    | 'DB_VALUE_TOO_LARGE' | 'DB_APPLICATION_ERROR', message: string, oracleCode: number) =>
     new BusinessRuleError(code, message, oracleCode, 'UI-DB-01'),
 };
