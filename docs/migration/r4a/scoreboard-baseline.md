@@ -1,0 +1,30 @@
+| Application | Tables | Views | Pages generated | Regions generated | LOVs generated | Open: manual / review |
+|---|---|---|---|---|---|---|
+| forms-patterns | 4/4 | 0/0 | 5/11 (45%) | 2/7 | 0/0 | 35 / 6 |
+| faceted-search-pattern | 11/11 | 1/2 | 4/12 (33%) | 3/14 | 1/1 | 25 / 2 |
+| image-support-rte | 2/2 | 0/1 | 2/6 (33%) | 0/4 | 0/0 | 16 / 3 |
+| sample-document-generator | 2/2 | 0/1 | 1/3 (33%) | 0/4 | 0/0 | 16 / 0 |
+| sample-master-detail | 8/8 | 0/0 | 11/33 (33%) | 8/49 | 5/11 | 163 / 41 |
+| sample-directory-search | 4/4 | 1/1 | 2/7 (29%) | 1/7 | 2/5 | 16 / 3 |
+| json-duality-views | 4/4 | 0/0 | 2/11 (18%) | 1/12 | 1/2 | 56 / 10 |
+| json-sample-sources | 5/5 | 0/0 | 5/32 (16%) | 1/45 | 3/12 | 146 / 35 |
+| sample-approvals | 8/8 | 0/0 | 5/33 (15%) | 0/53 | 7/17 | 199 / 77 |
+| sample-cards | 4/4 | 0/0 | 3/24 (12%) | 3/35 | 1/3 | 68 / 3 |
+| sample-trees | 8/8 | 0/1 | 1/11 (9%) | 0/10 | 4/4 | 41 / 5 |
+| brookstrut-sample-app | 8/8 | 0/0 | 4/48 (8%) | 13/63 | 13/17 | 162 / 19 |
+| sample-file-upload-download | 2/2 | 0/0 | 1/12 (8%) | 0/12 | 0/0 | 41 / 0 |
+| sample-rest-services | 14/14 | 2/5 | 3/36 (8%) | 1/37 | 2/5 | 128 / 17 |
+| sample-calendar | 3/3 | 0/0 | 3/37 (8%) | 3/38 | 3/4 | 88 / 55 |
+| sample-collections | 1/1 | 0/0 | 1/14 (7%) | 1/11 | 3/3 | 53 / 2 |
+| sample-application-search | 6/6 | 2/5 | 2/30 (7%) | 2/27 | 1/2 | 99 / 23 |
+| sample-email-authentication | 3/3 | 0/0 | 1/15 (7%) | 0/13 | 1/2 | 69 / 8 |
+| sample-maps | 0/3 | 0/0 | 1/16 (6%) | 1/24 | 1/2 | 63 / 18 |
+| apextogo | 5/5 | 0/0 | 1/17 (6%) | 10/22 | 0/0 | 45 / 13 |
+| sample-data-loading | 3/3 | 0/0 | 1/18 (6%) | 0/29 | 7/7 | 115 / 12 |
+| sample-vector-search | 1/3 | 0/0 | 1/26 (4%) | 3/36 | 0/0 | 120 / 8 |
+| sample-dynamic-actions | 2/2 | 0/0 | 1/27 (4%) | 0/21 | 18/18 | 100 / 23 |
+| sample-reporting | 3/3 | 0/0 | 1/42 (2%) | 17/89 | 3/3 | 151 / 9 |
+| sample-charts | 14/14 | 0/0 | 1/49 (2%) | 2/142 | 2/2 | 193 / 47 |
+| sample-interactive-grids | 3/3 | 0/0 | 1/49 (2%) | 0/50 | 3/3 | 125 / 11 |
+| universal-theme-reference | 3/4 | 0/0 | 1/121 (1%) | 20/281 | 1/2 | 406 / 43 |
+| **Total (27)** | | | **65/740 (9%)** | **92/1135 (8%)** | **82/125** | **2739 / 493** |

@@ -23,6 +23,7 @@
 - [WP9.4 Business logic migration (170134)](migration/wp9.4-business-logic-f170134.md)
 - [WP9.5 Pages & features (170134)](migration/wp9.5-ui-f170134.md)
 - [WP9.6 Data migration & functional parity (170134)](migration/wp9.6-data-parity-f170134.md)
+- [R4a Toolkit breadth test on the Oracle APEX 26.2 sample applications](migration/r4a-oracle-sample-apps.md)
 - [WP9.7 Rehearsal, performance, operations & qualification gates (170134)](migration/wp9.7-qualification-f170134.md)
 - [WP9-009 Local accounts (170134)](migration/wp9-009-local-accounts-f170134.md)
 - [WP9 pilot closure: proof, template and next application (170134)](migration/wp9-pilot-closure-f170134.md)

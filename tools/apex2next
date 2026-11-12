@@ -8,6 +8,8 @@ Nothing here connects to Oracle; only `load-data` writes, and only to the Postgr
   apex2next doctor                                  check the tools on this machine
   apex2next queries      --out DIR [--plan F]       SQL Workshop queries to run on the APEX schema
   apex2next inventory    EXPORT_DIR --out DIR       pages and components of an APEX SQL export (split files)
+  apex2next supporting-objects EXPORT_DIR --out DIR
+                                                    DDL and data scripts carried by the export, as install.sql
   apex2next schema-plan  INSTALL_SQL --out DIR      Oracle DDL -> PostgreSQL migration + conversion report
   apex2next dictionary-check --plan F --install F --dictionary CSV --out DIR
                                                     compare the plan with the installed Oracle objects
@@ -16,6 +18,7 @@ Nothing here connects to Oracle; only `load-data` writes, and only to the Postgr
                                                     load a data snapshot into PostgreSQL and verify it
   apex2next catalog      --database-url URL --out FILE
                                                     column types of the migrated schema (input of generate)
+  apex2next scoreboard   APP_DIR... [--out FILE]   coverage table over several applications
   apex2next generate     APP_DIR [--init-map|--check]
                                                     region and LOV SQL, routes and pages of the common patterns,
                                                     with a report of what is left to do by hand
@@ -101,6 +104,16 @@ def cmd_queries(a: argparse.Namespace) -> int:
     else:
         say("Add --plan work/schema/schema-plan.json to get the data snapshot query of your application.")
     say("The queries only read. Run them on a non-production copy whenever possible.")
+    return rc
+
+
+def cmd_supporting_objects(a: argparse.Namespace) -> int:
+    d = out_dir(a.out)
+    rc = run("apex2next_extractor.supporting_objects", a.export_dir, "--output", str(d / "install.sql"),
+             "--manifest", str(d / "supporting-objects.json"))
+    if rc == 0:
+        say(f"Written: {d / 'install.sql'} (input of schema-plan) and {d / 'supporting-objects.json'}",
+            "The scripts were only decoded, not run. Data and PL/SQL in them are reported by schema-plan and plsql.")
     return rc
 
 
@@ -230,6 +243,52 @@ def cmd_generate(a: argparse.Namespace) -> int:
     return rc
 
 
+def cmd_scoreboard(a: argparse.Namespace) -> int:
+    """One table over several application directories: schema and generator coverage side by side."""
+    rows = []
+    totals: Counter = Counter()
+    for app in sorted(Path(p) for p in a.apps):
+        report_path, plan_path = app / "ui/generation-report.json", app / "db/schema-plan.json"
+        if not report_path.exists():
+            say(f"skipped {app}: no ui/generation-report.json (run generate first)")
+            continue
+        s = json.loads(report_path.read_text(encoding="utf-8"))["summary"]
+        plan = json.loads(plan_path.read_text(encoding="utf-8"))["summary"] if plan_path.exists() else None
+        pages = {k: v for k, v in s["pages"].items() if k != "NOT_APPLICABLE"}
+        row = {
+            "app": app.name,
+            "tables": f"{plan['tables']['emitted']}/{plan['tables']['source']}" if plan else "-",
+            "views": f"{plan['views']['emitted']}/{plan['views']['source']}" if plan else "-",
+            "pages": sum(pages.values()), "pagesGenerated": pages.get("GENERATED", 0) + pages.get("PROVIDED", 0),
+            "regions": sum(s["regions"].values()), "regionsGenerated": s["regions"].get("GENERATED", 0),
+            "lovs": sum(s["lovs"].values()), "lovsGenerated": s["lovs"].get("GENERATED", 0) + s["lovs"].get("PROVIDED", 0),
+            "manual": s["todo"].get("MANUAL", 0), "review": s["todo"].get("ASSISTED", 0),
+        }
+        for k in ("pages", "pagesGenerated", "regions", "regionsGenerated", "lovs", "lovsGenerated", "manual", "review"):
+            totals[k] += row[k]
+        rows.append(row)
+    if not rows:
+        return 2
+    pct = lambda n, d: f"{100 * n / d:.0f}%" if d else "-"  # noqa: E731
+    lines = ["| Application | Tables | Views | Pages generated | Regions generated | LOVs generated | Open: manual / review |",
+             "|---|---|---|---|---|---|---|"]
+    for r in sorted(rows, key=lambda r: (-r["pagesGenerated"] / max(r["pages"], 1), r["app"])):
+        lines.append(f"| {r['app']} | {r['tables']} | {r['views']} | {r['pagesGenerated']}/{r['pages']} "
+                     f"({pct(r['pagesGenerated'], r['pages'])}) | {r['regionsGenerated']}/{r['regions']} | "
+                     f"{r['lovsGenerated']}/{r['lovs']} | {r['manual']} / {r['review']} |")
+    t = totals
+    lines.append(f"| **Total ({len(rows)})** | | | **{t['pagesGenerated']}/{t['pages']} ({pct(t['pagesGenerated'], t['pages'])})** "
+                 f"| **{t['regionsGenerated']}/{t['regions']} ({pct(t['regionsGenerated'], t['regions'])})** | "
+                 f"**{t['lovsGenerated']}/{t['lovs']}** | **{t['manual']} / {t['review']}** |")
+    text = "\n".join(lines) + "\n"
+    if a.out:
+        Path(a.out).write_text(text, encoding="utf-8")
+        say(f"Written: {a.out}")
+    else:
+        print(text, end="")
+    return 0
+
+
 def cmd_assess(a: argparse.Namespace) -> int:
     return run("apex2next_schema_analyzer.pilot_qualification", a.manifest, "--output", a.out)
 
@@ -249,6 +308,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("export_dir", help="unpacked SQL export (split files), e.g. f123/")
     p.add_argument("--out", required=True)
     p.set_defaults(fn=cmd_inventory)
+    p = sub.add_parser("supporting-objects", help="install scripts of the export's supporting objects as install.sql")
+    p.add_argument("export_dir", help="unpacked SQL export (split files), e.g. f123/")
+    p.add_argument("--out", required=True)
+    p.set_defaults(fn=cmd_supporting_objects)
     p = sub.add_parser("schema-plan", help="Oracle DDL -> PostgreSQL migration and report")
     p.add_argument("install_sql", help="DDL / supporting-objects install script of the application schema")
     p.add_argument("--apex-export", help="unpacked SQL export: records which objects the pages use")
@@ -286,6 +349,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--init-map", action="store_true", help="propose ui/app-map.json (routes and names) for review")
     p.add_argument("--check", action="store_true", help="fail when a generated file is stale; write nothing")
     p.set_defaults(fn=cmd_generate)
+    p = sub.add_parser("scoreboard", help="coverage table over several application directories")
+    p.add_argument("apps", nargs="+", help="application directories (after schema-plan and generate)")
+    p.add_argument("--out", help="write the Markdown table to this file")
+    p.set_defaults(fn=cmd_scoreboard)
     p = sub.add_parser("assess", help="twelve-gate qualification assessment")
     p.add_argument("manifest", help="apex2next.wp9-pilot-input.v1 JSON")
     p.add_argument("--out", required=True)

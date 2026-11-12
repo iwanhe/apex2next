@@ -723,7 +723,7 @@ def build_schema_plan(source: str, *, source_name: str = "install.sql", target_s
     sql = _emit_sql(tables, indexes, views, order, comments, sequences, target_schema,
                     source_name, source_hash, objects, override_records, transaction_wrapper)
     deferred_sql = _emit_deferred_sql(views, order, target_schema, source_name, source_hash,
-                                      mapping_records, transaction_wrapper)
+                                      mapping_records, transaction_wrapper, comments)
     post_load = _emit_post_load(tables, sequences, target_schema)
     expected_catalog = _expected_catalog(tables, indexes, views, sequences)
     load_plan = {t["targetName"]: {
@@ -827,8 +827,26 @@ def _validate_function_mappings(spec: dict[str, Any] | None) -> list[dict[str, A
     return sorted(out, key=lambda x: x["source"])
 
 
+def _comment_sql(cm, views, schema) -> str:
+    target = f"{pg_ident(schema)}.{pg_ident(cm['table'])}" + (f".{pg_ident(cm['column'])}" if cm["column"] else "")
+    kind = "COLUMN" if cm["column"] else ("VIEW" if cm["table"] in views else "TABLE")
+    return f"COMMENT ON {kind} {target} IS '" + cm["text"].replace("'", "''") + "';"
+
+
+def _comment_phase(cm, views) -> str | None:
+    """Migration that creates the commented object: 'schema', 'deferred', or None when it is not emitted."""
+    if not cm.get("emit"):
+        return None
+    view = views.get(cm["table"])
+    if view is None:
+        return "schema"
+    if not view["emit"]:
+        return None
+    return "deferred" if view.get("phase") == "deferred" else "schema"
+
+
 def _emit_deferred_sql(views, order, schema, source_name, source_hash, mapping_records,
-                       transaction_wrapper) -> str:
+                       transaction_wrapper, comments=()) -> str:
     deferred = [views[n] for n in order if views[n]["emit"] and views[n].get("phase") == "deferred"]
     if not deferred:
         return ""
@@ -842,6 +860,9 @@ def _emit_deferred_sql(views, order, schema, source_name, source_hash, mapping_r
         out.append("BEGIN;")
     out.append(f"SET LOCAL search_path TO {s};")
     out += [""] + [view_sql(v, schema) for v in deferred]
+    deferred_comments = [c for c in comments if _comment_phase(c, views) == "deferred"]
+    if deferred_comments:
+        out += ["", "-- Comments"] + [_comment_sql(c, views, schema) for c in deferred_comments]
     if transaction_wrapper:
         out += ["", "COMMIT;"]
     out.append("")
@@ -918,13 +939,12 @@ def _emit_sql(tables, indexes, views, order, comments, sequences, schema, source
         out += ["", "-- Views (dependency order)"]
     for v in emitted_views:
         out.append(view_sql(v, schema))
-    emitted_comments = [c for c in comments if c.get("emit")]
+    # a comment goes with the migration that creates its object; none for a view that is not emitted
+    emitted_comments = [c for c in comments if _comment_phase(c, views) == "schema"]
     if emitted_comments:
         out += ["", "-- Comments"]
     for cm in emitted_comments:
-        target = f"{s}.{pg_ident(cm['table'])}" + (f".{pg_ident(cm['column'])}" if cm["column"] else "")
-        kind = "COLUMN" if cm["column"] else ("VIEW" if cm["table"] in views else "TABLE")
-        out.append(f"COMMENT ON {kind} {target} IS '" + cm["text"].replace("'", "''") + "';")
+        out.append(_comment_sql(cm, views, schema))
     not_emitted = [o for o in objects if not o["emitted"] and o["type"] in
                    {"TABLE", "VIEW", "INDEX", "FOREIGN KEY", "CHECK", "PRIMARY KEY", "UNIQUE", "SEQUENCE"}
                    and not o.get("covered")]
