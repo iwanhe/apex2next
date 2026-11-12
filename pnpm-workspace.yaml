@@ -1,0 +1,5 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+  # runtime packages are built and tested inside the target workspaces that use them (examples/*)
+  - "!packages/runtime-*"

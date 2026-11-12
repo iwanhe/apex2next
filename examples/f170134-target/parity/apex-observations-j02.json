@@ -1,0 +1,85 @@
+{
+  "journey": "J-02",
+  "source": "oracleapex.com, workspace KCSI, app 170134 (DEMO), APEX 26.2.1",
+  "executed": "2026-11-09 10:40-10:47 UTC by Claude in the built-in browser (users DEMO_WH, DEMO_ADMIN signed in by the owner)",
+  "clockStart": "2026-11-09T09:40:00Z",
+  "method": "APEX client API inside the dialog iframe; texts read from the DOM",
+  "steps": [
+    {
+      "step": "J2A dept create",
+      "messages": [
+        "Row created."
+      ]
+    },
+    {
+      "step": "J2A dept duplicate",
+      "messages": [
+        "1 error has occurred",
+        "ORA-00001: unique constraint (WKSP_KCSI.APX_DEMO_DEPARTMENTS_U1) violated on table WKSP_KCSI.APX_DEMO_DEPARTMENTS columns (DEPT_CODE)"
+      ]
+    },
+    {
+      "step": "J2A item price -5",
+      "messages": [
+        "1 error has occurred",
+        "Harga Standar must be a number greater than or equal to 0."
+      ]
+    },
+    {
+      "step": "J2A item create",
+      "messages": [
+        "Row created."
+      ]
+    },
+    {
+      "step": "J2A item update",
+      "messages": [
+        "Row updated."
+      ]
+    },
+    {
+      "step": "J2A item delete",
+      "messages": [
+        "Row deleted."
+      ]
+    },
+    {
+      "step": "J2A dept delete",
+      "messages": [
+        "Row deleted."
+      ]
+    },
+    {
+      "step": "J2B user role default",
+      "messages": [
+        "P501_USERNAME=DEMO_ADMIN"
+      ]
+    },
+    {
+      "step": "J2B user role create",
+      "messages": [
+        "Row created."
+      ]
+    },
+    {
+      "step": "J2B user role delete",
+      "messages": [
+        "Row deleted."
+      ]
+    },
+    {
+      "step": "J2B doc type unchanged",
+      "messages": []
+    }
+  ],
+  "not_executed": [
+    "Delete of department OPS (expected ORA-02292) was refused by the session safety check: it would delete a real record if the FK did not hold. Covered on the target only (pages.integration.test.js)."
+  ],
+  "other_observations": [
+    "Codes are normalized to upper case by the source triggers: dept 'wp96' -> WP96, item 'wp96-01' -> WP96-01, UOM 'pcs' -> PCS, username 'wp96.user' -> WP96.USER.",
+    "The number range check on P211_STD_PRICE runs in the browser (no page submit).",
+    "Page 200 and 500 IRs refresh after the dialog closes (dynamic action); page 210 cards do not.",
+    "Navigation for DEMO_ADMIN includes Administration; for DEMO_REQ/DEMO_WH it does not.",
+    "Page 511: no Delete button; null texts '- Tanpa approval -' / '- Tidak ada -'; Apply Changes without a change closes the dialog with no message."
+  ]
+}

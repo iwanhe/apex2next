@@ -1,0 +1,27 @@
+begin
+wwv_flow_imp_shared.create_list_of_values(
+ p_id=>wwv_flow_imp.id(30)
+,p_lov_name=>'YES_NO'
+,p_lov_query=>'.'||wwv_flow_imp.id(30)||'.'
+,p_location=>'STATIC'
+);
+wwv_flow_imp_shared.create_static_lov_data(
+ p_id=>wwv_flow_imp.id(32)
+,p_lov_disp_sequence=>20
+,p_lov_disp_value=>'Tidak'
+,p_lov_return_value=>'N'
+);
+wwv_flow_imp_shared.create_static_lov_data(
+ p_id=>wwv_flow_imp.id(31)
+,p_lov_disp_sequence=>10
+,p_lov_disp_value=>'Ya'
+,p_lov_return_value=>'Y'
+);
+wwv_flow_imp_shared.create_list_of_values(
+ p_id=>wwv_flow_imp.id(33)
+,p_lov_name=>'THINGS'
+,p_lov_query=>'select name d, id r from things order by 1'
+,p_location=>'LOCAL'
+);
+end;
+/

@@ -1,0 +1,154 @@
+"""R3 snapshot query generator: the read-only Oracle data snapshot of WP9.6, written from the schema plan.
+
+The query is one SELECT for APEX SQL Workshop (SQL Commands, then Download as CSV): one statement is one
+read-consistent snapshot, nothing is written, no bind variables. ``snapshot_migration`` loads the CSV and
+verifies every document against the SHA-256 computed in Oracle.
+
+Names the plan cannot decide are given in a small reviewed config (JSON):
+
+    {"appUserExpr": "my_pkg.app_user",              optional: how the source packages see the user
+     "viewKeys": {"MY_VIEW": ["COL_A", "COL_B"]}}   optional: row key of a view (default: its first column)
+
+A view key that is not unique is reported by the loader (check SNP-003), not silently accepted.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import re
+from pathlib import Path
+from typing import Any
+
+DATE_MASK = "'YYYY-MM-DD\"T\"HH24:MI:SS'"
+_NAME = re.compile(r"[A-Z][A-Z0-9_$#]*")
+_EXPR = re.compile(r"[A-Za-z][A-Za-z0-9_$#.]*")
+
+
+def _safe(name: str) -> str:
+    if not _NAME.fullmatch(name):
+        raise ValueError(f"object or column name needs quoting and is not supported: {name!r}")
+    return name
+
+
+def _family(pg_type: str | None) -> str:
+    t = (pg_type or "").lower()
+    if t.startswith(("smallint", "integer", "bigint", "numeric", "real", "double", "decimal")):
+        return "number"
+    if t.startswith(("date", "timestamp")):
+        return "date"
+    return "text" if t else "unknown"
+
+
+def _key_expr(columns: list[tuple[str, str]]) -> str:
+    """Text key of a row: text columns as they are, numbers through TO_CHAR, dates in a fixed mask."""
+    parts = []
+    for name, family in columns:
+        col = _safe(name).lower()
+        parts.append(col if family == "text" else f"to_char({col}, {DATE_MASK})" if family == "date" else f"to_char({col})")
+    return " || '|' || ".join(parts)
+
+
+def build_snapshot_query(plan: dict[str, Any], *, catalog: dict[str, Any] | None = None,
+                         config: dict[str, Any] | None = None, title: str | None = None) -> str:
+    config = config or {}
+    relations = (catalog or {}).get("relations", {})
+    tables = [t for t in plan["tables"] if t.get("emit", True)]
+    views = [v for v in plan["views"] if v.get("emit", True)]
+    app_user = config.get("appUserExpr")
+    if app_user is not None and not _EXPR.fullmatch(app_user):
+        raise ValueError(f"appUserExpr must be a function name such as my_pkg.app_user: {app_user!r}")
+    unknown = sorted(set(config.get("viewKeys", {})) - {v["name"] for v in views})
+    if unknown:
+        raise ValueError(f"viewKeys names views that are not in the plan: {', '.join(unknown)}")
+
+    table_keys: dict[str, str] = {}
+    for t in tables:
+        pk = next((c for c in t["constraints"] if c.get("kind") == "PRIMARY KEY"), None)
+        if pk is None:
+            raise ValueError(f"table {t['name']} has no primary key; a snapshot row needs a key")
+        families = {c["name"]: ("number" if c["typeFamily"] in {"integer", "numeric"} else
+                                "date" if c["typeFamily"] in {"timestamp", "date"} else "text") for c in t["columns"]}
+        table_keys[t["name"]] = _key_expr([(c, families[c]) for c in pk["columns"]])
+    view_keys: dict[str, str] = {}
+    for v in views:
+        names = config.get("viewKeys", {}).get(v["name"]) or (v.get("columns") or v.get("outputColumns") or [None])[:1]
+        if not names or names[0] is None:
+            raise ValueError(f"view {v['name']}: output columns unknown; give its key in viewKeys")
+        types = relations.get(v["name"].lower(), {})
+        view_keys[v["name"]] = _key_expr([(n, _family(types.get(n.lower()))) for n in names])
+
+    session = [
+        ("db_user", "user"),
+        ("apex_app_user", "sys_context('APEX$SESSION', 'APP_USER')"),
+        *([("pkg_app_user", app_user)] if app_user else []),
+        ("sysdate", f"to_char(sysdate, {DATE_MASK})"),
+        ("systimestamp", "to_char(systimestamp, 'YYYY-MM-DD\"T\"HH24:MI:SS.FF6TZH:TZM')"),
+        ("dbtimezone", "dbtimezone"),
+        ("sessiontimezone", "sessiontimezone"),
+        ("nls_date_format", "(select value from nls_session_parameters where parameter = 'NLS_DATE_FORMAT')"),
+        ("nls_numeric_chars", "(select value from nls_session_parameters where parameter = 'NLS_NUMERIC_CHARACTERS')"),
+        ("nls_sort", "(select value from nls_session_parameters where parameter = 'NLS_SORT')"),
+        ("nls_language", "(select value from nls_session_parameters where parameter = 'NLS_LANGUAGE')"),
+        ("db_charset", "(select value from nls_database_parameters where parameter = 'NLS_CHARACTERSET')"),
+    ]
+    width = max(len(k) for k, _ in session) + 2
+    doc = "json_object(* null on null returning varchar2(4000))"
+    out = [
+        f"-- APEX2NEXT read-only data snapshot{f' of {title}' if title else ''}",
+        "-- GENERATED by `apex2next queries --plan` from the schema plan. Do not edit; change the plan or the config.",
+        "-- Run in APEX SQL Workshop > SQL Commands as the parsing schema, then Download as CSV.",
+        "-- One SELECT = one read-consistent snapshot. Nothing is written. No bind variables or substitutions.",
+        "-- A row whose JSON document is longer than 4000 bytes makes the query fail; such tables need a split query.",
+        "--",
+        "-- Columns: SECTION, OBJ, PK, DOC (JSON text), SHA256 (of DOC, computed in Oracle to detect transport damage)",
+        "--   SNAPSHOT  session/NLS/time facts" + (", APP_USER as the source packages see it" if app_user else ""),
+        "--   COUNT     row count per table and view",
+        "--   IDENTITY  identity sequence state (high-water mark for post-load alignment)",
+        f"--   ROW       every row of the {len(tables)} tables (JSON_OBJECT(*), NULL ON NULL)",
+        f"--   VIEW      every row of the {len(views)} views, for parity of view logic on the migrated data",
+        "select section, obj, pk, doc, lower(rawtohex(standard_hash(doc, 'SHA256'))) sha256",
+        "  from (",
+        "select 'SNAPSHOT' section, 'SESSION' obj, '-' pk,",
+        "       json_object(",
+        *[f"         {(chr(39) + k + chr(39)).ljust(width)} value {e}{',' if n < len(session) - 1 else ''}"
+          for n, (k, e) in enumerate(session)],
+        "         null on null returning varchar2(4000)) doc",
+        "  from dual",
+        "-- row counts",
+        *[f"union all select 'COUNT', '{_safe(o['name'])}', '-', to_char(count(*)) from {o['name'].lower()}" for o in tables + views],
+        "-- identity sequences",
+        "union all",
+        "select 'IDENTITY', c.table_name, c.column_name,",
+        "       json_object('sequence' value c.sequence_name, 'last_number' value s.last_number,",
+        "                   'increment_by' value s.increment_by, 'cache_size' value s.cache_size,",
+        "                   'generation_type' value c.generation_type null on null returning varchar2(4000))",
+        "  from user_tab_identity_cols c",
+        "  join user_sequences s on s.sequence_name = c.sequence_name",
+        " where c.table_name in (" + ", ".join(f"'{_safe(t['name'])}'" for t in tables) + ")",
+        "-- table rows",
+        *[f"union all select 'ROW', '{t['name']}', {table_keys[t['name']]}, {doc} from {t['name'].lower()}" for t in tables],
+        "-- view rows (as seen by the APP_USER in SNAPSHOT)",
+        *[f"union all select 'VIEW', '{v['name']}', {view_keys[v['name']]}, {doc} from {v['name'].lower()}" for v in views],
+        ")",
+        " order by section, obj, pk",
+    ]
+    return "\n".join(out) + "\n"
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Write the SQL Workshop data snapshot query from a schema plan (R3)")
+    parser.add_argument("--plan", type=Path, required=True)
+    parser.add_argument("--catalog", type=Path, help="db/target-catalog.json (types of view key columns)")
+    parser.add_argument("--config", type=Path, help="reviewed JSON: appUserExpr, viewKeys")
+    parser.add_argument("--title")
+    parser.add_argument("--output", type=Path, required=True)
+    args = parser.parse_args()
+    load = lambda p: json.loads(p.read_text(encoding="utf-8")) if p else None  # noqa: E731
+    args.output.write_text(build_snapshot_query(load(args.plan), catalog=load(args.catalog), config=load(args.config),
+                                                title=args.title), encoding="utf-8")
+    print(f"snapshot query -> {args.output}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

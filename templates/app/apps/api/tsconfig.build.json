@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "incremental": false,
+    "noEmit": false
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "test"
+  ],
+  "extends": "./tsconfig.json"
+}

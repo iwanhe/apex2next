@@ -1,0 +1,16 @@
+{
+  "name": "__APP_SLUG__",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.0.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "db:migrate": "pnpm --filter @__APP_SLUG__/api db:migrate",
+    "spec": "node scripts/generate-ui-spec.mjs",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm --filter @apex2next/runtime-api build && pnpm -r typecheck"
+  }
+}

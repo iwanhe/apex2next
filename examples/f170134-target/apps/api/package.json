@@ -1,0 +1,28 @@
+{
+  "name": "@f170134/api",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "db:migrate": "node scripts/migrate.mjs",
+    "db:seed-dev": "node scripts/seed-dev.mjs",
+    "start": "node dist/main.js",
+    "test": "pnpm build && node --test --test-concurrency=1 test/*.test.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@apex2next/runtime-api": "workspace:*",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/platform-express": "^11.0.0",
+    "pg": "^8.16.3",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5",
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.15.5",
+    "typescript": "^5.7.2"
+  }
+}

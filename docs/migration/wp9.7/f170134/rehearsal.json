@@ -1,0 +1,149 @@
+{
+  "format": "apex2next.wp97-rehearsal.v1",
+  "snapshot": {
+    "name": "snapshot-s4.csv",
+    "sha256": "9fe1721fa1d5b83d259681a9b6a3e89367e8dbc4b75ca949fbe3805036f079a7",
+    "sourceSysdate": "2026-11-10T08:03:33"
+  },
+  "target": {
+    "database": "f170134_pilot",
+    "postgres": "16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)"
+  },
+  "startedAt": "2026-11-10T13:42:28+00:00",
+  "steps": [
+    {
+      "id": "R1",
+      "title": "Clean target and apply the reviewed migrations",
+      "result": "PASS",
+      "ms": 260
+    },
+    {
+      "id": "R2",
+      "title": "Load the snapshot (single transaction, all checks)",
+      "result": "PASS",
+      "ms": 44,
+      "checks": {
+        "SNP-001": "PASS",
+        "SNP-002": "PASS",
+        "SNP-003": "PASS",
+        "LOD-001": "PASS",
+        "LOD-002": "PASS",
+        "IDN-001": "PASS",
+        "TBL-001": "PASS",
+        "VIW-001": "PASS"
+      },
+      "committed": true,
+      "rows": 38
+    },
+    {
+      "id": "R3",
+      "title": "Rerun on the loaded target fails closed and changes nothing",
+      "result": "PASS",
+      "ms": 53,
+      "checks": {
+        "SNP-001": "PASS",
+        "SNP-002": "PASS",
+        "SNP-003": "PASS",
+        "LOD-001": "FAIL",
+        "LOD-002": "PASS",
+        "IDN-001": "FAIL",
+        "TBL-001": "FAIL",
+        "VIW-001": "FAIL"
+      },
+      "committed": false,
+      "unchanged": true
+    },
+    {
+      "id": "R4",
+      "title": "Injected mid-load failure rolls the whole load back",
+      "result": "PASS",
+      "ms": 167,
+      "checks": {
+        "LOD-002": "FAIL"
+      },
+      "committed": false,
+      "problem": "load failed: insert or update on table \"apx_demo_request_lines\" violates foreign key constraint \"apx_demo_request_lines_fk2\" (Key (item_id)=(999999) is not pres",
+      "rowsLeft": 0
+    },
+    {
+      "id": "R5",
+      "title": "Retry after the failure loads with every check PASS (+ local account DEMO_ADMIN)",
+      "result": "PASS",
+      "ms": 409,
+      "checks": {
+        "SNP-001": "PASS",
+        "SNP-002": "PASS",
+        "SNP-003": "PASS",
+        "LOD-001": "PASS",
+        "LOD-002": "PASS",
+        "IDN-001": "PASS",
+        "TBL-001": "PASS",
+        "VIW-001": "PASS"
+      },
+      "committed": true,
+      "localAccount": "DEMO_ADMIN"
+    },
+    {
+      "id": "R6",
+      "title": "Backup (pg_dump custom format, schemas app and iam)",
+      "result": "PASS",
+      "ms": 115,
+      "bytes": 40360,
+      "sha256": "17a0cf7333d37cf869c0f3a95dc09771a9fcdfb781804e36d7999a6259d830a5",
+      "takenAt": "2026-11-10T13:42:29+00:00"
+    },
+    {
+      "id": "R7",
+      "title": "Simulated loss: schemas app and iam dropped",
+      "result": "PASS",
+      "ms": 24
+    },
+    {
+      "id": "R8",
+      "title": "Restore and verify (tables, views, identities, API smoke)",
+      "result": "PASS",
+      "ms": 1593,
+      "comparison": {
+        "tables": "9/9",
+        "views": "10/10"
+      },
+      "identities": {
+        "apx_demo_items": {
+          "next": 41,
+          "maxKey": 5
+        },
+        "apx_demo_user_roles": {
+          "next": 81,
+          "maxKey": 47
+        },
+        "apx_demo_departments": {
+          "next": 41,
+          "maxKey": 3
+        },
+        "apx_demo_requests": {
+          "next": 81,
+          "maxKey": 61
+        },
+        "apx_demo_request_lines": {
+          "next": 61,
+          "maxKey": 41
+        },
+        "apx_demo_approvals": {
+          "next": 41,
+          "maxKey": 23
+        }
+      },
+      "apiSmoke": {
+        "ready": "ready",
+        "authMode": "local",
+        "forcedPasswordChange": true,
+        "requestLines": 7,
+        "requestSummary": 5,
+        "ok": true
+      }
+    }
+  ],
+  "rtoMeasuredMs": 1616,
+  "result": "PASS",
+  "note": "Rehearsal by the engineer on a disposable database; not witnessed. Backup file kept outside Git."
+}

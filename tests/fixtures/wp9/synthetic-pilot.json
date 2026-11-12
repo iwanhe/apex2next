@@ -1,0 +1,24 @@
+{
+  "manifestVersion": "apex2next.wp9-pilot-input.v1",
+  "project": {"id": "synthetic-orders-pilot", "name": "Synthetic Orders fixture"},
+  "source": {
+    "format": "APEX_SQL_EXPORT", "sanitized": true, "applicationId": "100",
+    "apexRuntimeVersion": "24.2", "snapshotId": "fixture:oracle-scn-123",
+    "artifacts": [{"path": "f100.sql", "sizeBytes": 1024, "sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}]
+  },
+  "gates": {
+    "WP9-001":{"status":"PASS","evidenceRef":"fixture:intake"},
+    "WP9-002":{"status":"PASS","evidenceRef":"fixture:version"},
+    "WP9-003":{"status":"PASS","evidenceRef":"fixture:ir"},
+    "WP9-004":{"status":"PASS","evidenceRef":"fixture:metadata"},
+    "WP9-005":{"status":"PASS","evidenceRef":"fixture:plsql"},
+    "WP9-006":{"status":"PASS","evidenceRef":"fixture:target"},
+    "WP9-007":{"status":"PASS","evidenceRef":"fixture:data"},
+    "WP9-008":{"status":"PASS","evidenceRef":"fixture:parity"},
+    "WP9-009":{"status":"PASS","evidenceRef":"fixture:security"},
+    "WP9-010":{"status":"PASS","evidenceRef":"fixture:performance"},
+    "WP9-011":{"status":"PASS","evidenceRef":"fixture:rollback"},
+    "WP9-012":{"status":"PASS","evidenceRef":"fixture:approval"}
+  },
+  "acceptance":{"maxCriticalDefects":0,"maxHighDefects":0,"rtoMinutes":60,"rpoMinutes":15}
+}

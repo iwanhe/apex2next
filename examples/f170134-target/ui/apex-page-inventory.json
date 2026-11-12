@@ -1,0 +1,4233 @@
+{
+  "format": "apex2next.apex-page-inventory.v1",
+  "application": {
+    "name": "Demo Permintaan Barang",
+    "alias": "DEMO",
+    "logoText": "DEMO",
+    "dateFormat": "DD-MON-YYYY",
+    "homeLink": "f?p=&APP_ID.:100:&SESSION.::&DEBUG.",
+    "timestampFormat": "DS",
+    "version": "Release 1.0",
+    "language": "en",
+    "securityScheme": "APP_USERS",
+    "authentication": "Oracle APEX Accounts"
+  },
+  "authorizations": [
+    {
+      "name": "ADMIN_RIGHTS",
+      "type": "NATIVE_FUNCTION_BODY",
+      "expression": "plsql_function_body\nreturn apx_demo_sec_pkg.has_role('ADMIN');",
+      "errorMessage": "Akses ditolak: hanya untuk role ADMIN."
+    },
+    {
+      "name": "APP_USERS",
+      "type": "NATIVE_FUNCTION_BODY",
+      "expression": "plsql_function_body\nreturn apx_demo_sec_pkg.has_any_role;",
+      "errorMessage": "Akses ditolak: akun &APP_USER. belum punya role di aplikasi ini. Admin mendaftarkannya di Administration > Users & Roles (atau tabel ..._USER_ROLES)."
+    },
+    {
+      "name": "MASTER_DATA",
+      "type": "NATIVE_FUNCTION_BODY",
+      "expression": "plsql_function_body\nreturn apx_demo_sec_pkg.has_role('WAREHOUSE');",
+      "errorMessage": "Akses ditolak: hanya untuk role WAREHOUSE."
+    },
+    {
+      "name": "REQUESTER",
+      "type": "NATIVE_FUNCTION_BODY",
+      "expression": "plsql_function_body\nreturn apx_demo_sec_pkg.has_role('REQUESTER') or apx_demo_sec_pkg.has_role('MANAGER');",
+      "errorMessage": "Akses ditolak: hanya untuk role REQUESTER/MANAGER."
+    },
+    {
+      "name": "WAREHOUSE",
+      "type": "NATIVE_FUNCTION_BODY",
+      "expression": "plsql_function_body\nreturn apx_demo_sec_pkg.has_role('WAREHOUSE');",
+      "errorMessage": "Akses ditolak: hanya untuk role WAREHOUSE."
+    }
+  ],
+  "lovs": [
+    {
+      "name": "APX_DEMO_DEPARTMENTS",
+      "location": "LOCAL",
+      "query": "select dept_code || ' - ' || dept_name d, department_id r\n  from apx_demo_departments\n where active_yn = 'Y'\n order by 1",
+      "values": []
+    },
+    {
+      "name": "APX_DEMO_ITEMS",
+      "location": "LOCAL",
+      "query": "select item_code || ' - ' || item_name || ' (' || uom || ')' d, item_id r\n  from apx_demo_items\n where active_yn = 'Y'\n order by 1",
+      "values": []
+    },
+    {
+      "name": "APX_DEMO_REQUESTS",
+      "location": "LOCAL",
+      "query": "select request_no || ' - ' || purpose d, request_id r\n  from apx_demo_requests\n where status in ('DRAFT', 'REJECTED')\n order by 1",
+      "values": []
+    },
+    {
+      "name": "APX_DEMO_REQUEST_LINES",
+      "location": "LOCAL",
+      "query": "select line_id d, line_id r\n  from apx_demo_request_lines\n order by 1",
+      "values": []
+    },
+    {
+      "name": "DEMO_ROLES",
+      "location": "LOCAL",
+      "query": "select role_code || ' - ' || role_name d, role_code r\n  from apx_demo_roles\n order by role_code",
+      "values": []
+    },
+    {
+      "name": "ITEMS_CATEGORY",
+      "location": "STATIC",
+      "query": null,
+      "values": [
+        {
+          "seq": 10,
+          "display": "Alat Tulis Kantor",
+          "return": "ATK"
+        },
+        {
+          "seq": 20,
+          "display": "Perangkat IT",
+          "return": "IT"
+        },
+        {
+          "seq": 30,
+          "display": "Consumables",
+          "return": "CONSUMABLE"
+        }
+      ]
+    },
+    {
+      "name": "REQUESTS_STATUS",
+      "location": "STATIC",
+      "query": null,
+      "values": [
+        {
+          "seq": 10,
+          "display": "Draft",
+          "return": "DRAFT"
+        },
+        {
+          "seq": 20,
+          "display": "Submitted",
+          "return": "SUBMITTED"
+        },
+        {
+          "seq": 30,
+          "display": "Approved",
+          "return": "APPROVED"
+        },
+        {
+          "seq": 40,
+          "display": "Rejected",
+          "return": "REJECTED"
+        },
+        {
+          "seq": 50,
+          "display": "Cancelled",
+          "return": "CANCELLED"
+        },
+        {
+          "seq": 60,
+          "display": "Fulfilled",
+          "return": "FULFILLED"
+        },
+        {
+          "seq": 70,
+          "display": "Closed",
+          "return": "CLOSED"
+        }
+      ]
+    },
+    {
+      "name": "YES_NO",
+      "location": "STATIC",
+      "query": null,
+      "values": [
+        {
+          "seq": 10,
+          "display": "Ya",
+          "return": "Y"
+        },
+        {
+          "seq": 20,
+          "display": "Tidak",
+          "return": "N"
+        }
+      ]
+    }
+  ],
+  "navigation": [
+    {
+      "label": "Home",
+      "page": 100,
+      "sequence": 10,
+      "icon": "fa-home",
+      "parent": null,
+      "scheme": null
+    },
+    {
+      "label": "Approval Inbox",
+      "page": 190,
+      "sequence": 20,
+      "icon": "fa-check-square-o",
+      "parent": null,
+      "scheme": null
+    },
+    {
+      "label": "Master Data",
+      "page": 200,
+      "sequence": 30,
+      "icon": "fa-table",
+      "parent": null,
+      "scheme": null
+    },
+    {
+      "label": "Departments",
+      "page": 200,
+      "sequence": 40,
+      "icon": "fa-building-o",
+      "parent": "Master Data",
+      "scheme": null
+    },
+    {
+      "label": "Items",
+      "page": 210,
+      "sequence": 50,
+      "icon": "fa-tag",
+      "parent": "Master Data",
+      "scheme": null
+    },
+    {
+      "label": "Transaksi",
+      "page": 300,
+      "sequence": 60,
+      "icon": "fa-exchange",
+      "parent": null,
+      "scheme": null
+    },
+    {
+      "label": "Permintaan Barang",
+      "page": 300,
+      "sequence": 70,
+      "icon": "fa-file-text-o",
+      "parent": "Transaksi",
+      "scheme": null
+    },
+    {
+      "label": "Detail Permintaan",
+      "page": 302,
+      "sequence": 80,
+      "icon": "fa-columns",
+      "parent": "Transaksi",
+      "scheme": null
+    },
+    {
+      "label": "Baris Permintaan",
+      "page": 310,
+      "sequence": 90,
+      "icon": "fa-list",
+      "parent": "Transaksi",
+      "scheme": null
+    },
+    {
+      "label": "Reports",
+      "page": 400,
+      "sequence": 100,
+      "icon": "fa-bar-chart",
+      "parent": null,
+      "scheme": null
+    },
+    {
+      "label": "Rekap Permintaan",
+      "page": 400,
+      "sequence": 110,
+      "icon": "fa-bar-chart",
+      "parent": "Reports",
+      "scheme": null
+    },
+    {
+      "label": "Administration",
+      "page": 500,
+      "sequence": 120,
+      "icon": "fa-gear",
+      "parent": null,
+      "scheme": "ADMIN_RIGHTS"
+    },
+    {
+      "label": "Users & Roles",
+      "page": 500,
+      "sequence": 130,
+      "icon": "fa-user-secret",
+      "parent": "Administration",
+      "scheme": "ADMIN_RIGHTS"
+    },
+    {
+      "label": "Document Types & Approval",
+      "page": 510,
+      "sequence": 140,
+      "icon": "fa-sliders",
+      "parent": "Administration",
+      "scheme": "ADMIN_RIGHTS"
+    }
+  ],
+  "navigationBar": [
+    {
+      "label": "&APP_USER.",
+      "target": "#",
+      "sequence": 10,
+      "parent": null
+    },
+    {
+      "label": "---",
+      "target": "separator",
+      "sequence": 20,
+      "parent": "&APP_USER."
+    },
+    {
+      "label": "Sign Out",
+      "target": "&LOGOUT_URL.",
+      "sequence": 30,
+      "parent": "&APP_USER."
+    }
+  ],
+  "breadcrumbs": [
+    {
+      "label": "Home",
+      "page": 100,
+      "parent": null
+    },
+    {
+      "label": "Approval Inbox",
+      "page": 190,
+      "parent": "Home"
+    },
+    {
+      "label": "Departments",
+      "page": 200,
+      "parent": "Home"
+    },
+    {
+      "label": "Items",
+      "page": 210,
+      "parent": "Home"
+    },
+    {
+      "label": "Permintaan Barang",
+      "page": 300,
+      "parent": "Home"
+    },
+    {
+      "label": "Detail Permintaan",
+      "page": 302,
+      "parent": "Home"
+    },
+    {
+      "label": "Baris Permintaan",
+      "page": 310,
+      "parent": "Home"
+    },
+    {
+      "label": "Rekap Permintaan",
+      "page": 400,
+      "parent": "Home"
+    },
+    {
+      "label": "Users & Roles",
+      "page": 500,
+      "parent": "Home"
+    },
+    {
+      "label": "Document Types & Approval",
+      "page": 510,
+      "parent": "Home"
+    }
+  ],
+  "lists": [
+    {
+      "name": "Navigation Bar",
+      "items": [
+        {
+          "label": "&APP_USER.",
+          "target": "#",
+          "sequence": 10,
+          "icon": "fa-user",
+          "description": null,
+          "parent": null,
+          "scheme": null
+        },
+        {
+          "label": "---",
+          "target": "separator",
+          "sequence": 20,
+          "icon": null,
+          "description": null,
+          "parent": "&APP_USER.",
+          "scheme": null
+        },
+        {
+          "label": "Sign Out",
+          "target": "&LOGOUT_URL.",
+          "sequence": 30,
+          "icon": "fa-sign-out",
+          "description": null,
+          "parent": "&APP_USER.",
+          "scheme": null
+        }
+      ]
+    },
+    {
+      "name": "Navigation Menu",
+      "items": [
+        {
+          "label": "Home",
+          "target": "f?p=&APP_ID.:100:&SESSION.::&DEBUG.",
+          "sequence": 10,
+          "icon": "fa-home",
+          "description": null,
+          "parent": null,
+          "scheme": null
+        },
+        {
+          "label": "Approval Inbox",
+          "target": "f?p=&APP_ID.:190:&SESSION.::&DEBUG.",
+          "sequence": 20,
+          "icon": "fa-check-square-o",
+          "description": null,
+          "parent": null,
+          "scheme": null
+        },
+        {
+          "label": "Master Data",
+          "target": "f?p=&APP_ID.:200:&SESSION.::&DEBUG.",
+          "sequence": 30,
+          "icon": "fa-table",
+          "description": null,
+          "parent": null,
+          "scheme": null
+        },
+        {
+          "label": "Departments",
+          "target": "f?p=&APP_ID.:200:&SESSION.::&DEBUG.",
+          "sequence": 40,
+          "icon": "fa-building-o",
+          "description": null,
+          "parent": "Master Data",
+          "scheme": null
+        },
+        {
+          "label": "Items",
+          "target": "f?p=&APP_ID.:210:&SESSION.::&DEBUG.",
+          "sequence": 50,
+          "icon": "fa-tag",
+          "description": null,
+          "parent": "Master Data",
+          "scheme": null
+        },
+        {
+          "label": "Transaksi",
+          "target": "f?p=&APP_ID.:300:&SESSION.::&DEBUG.",
+          "sequence": 60,
+          "icon": "fa-exchange",
+          "description": null,
+          "parent": null,
+          "scheme": null
+        },
+        {
+          "label": "Permintaan Barang",
+          "target": "f?p=&APP_ID.:300:&SESSION.::&DEBUG.",
+          "sequence": 70,
+          "icon": "fa-file-text-o",
+          "description": null,
+          "parent": "Transaksi",
+          "scheme": null
+        },
+        {
+          "label": "Detail Permintaan",
+          "target": "f?p=&APP_ID.:302:&SESSION.::&DEBUG.",
+          "sequence": 80,
+          "icon": "fa-columns",
+          "description": null,
+          "parent": "Transaksi",
+          "scheme": null
+        },
+        {
+          "label": "Baris Permintaan",
+          "target": "f?p=&APP_ID.:310:&SESSION.::&DEBUG.",
+          "sequence": 90,
+          "icon": "fa-list",
+          "description": null,
+          "parent": "Transaksi",
+          "scheme": null
+        },
+        {
+          "label": "Reports",
+          "target": "f?p=&APP_ID.:400:&SESSION.::&DEBUG.",
+          "sequence": 100,
+          "icon": "fa-bar-chart",
+          "description": null,
+          "parent": null,
+          "scheme": null
+        },
+        {
+          "label": "Rekap Permintaan",
+          "target": "f?p=&APP_ID.:400:&SESSION.::&DEBUG.",
+          "sequence": 110,
+          "icon": "fa-bar-chart",
+          "description": null,
+          "parent": "Reports",
+          "scheme": null
+        },
+        {
+          "label": "Administration",
+          "target": "f?p=&APP_ID.:500:&SESSION.::&DEBUG.",
+          "sequence": 120,
+          "icon": "fa-gear",
+          "description": null,
+          "parent": null,
+          "scheme": "ADMIN_RIGHTS"
+        },
+        {
+          "label": "Users & Roles",
+          "target": "f?p=&APP_ID.:500:&SESSION.::&DEBUG.",
+          "sequence": 130,
+          "icon": "fa-user-secret",
+          "description": null,
+          "parent": "Administration",
+          "scheme": "ADMIN_RIGHTS"
+        },
+        {
+          "label": "Document Types & Approval",
+          "target": "f?p=&APP_ID.:510:&SESSION.::&DEBUG.",
+          "sequence": 140,
+          "icon": "fa-sliders",
+          "description": null,
+          "parent": "Administration",
+          "scheme": "ADMIN_RIGHTS"
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "id": 0,
+      "name": "Global Page",
+      "alias": null,
+      "title": null,
+      "mode": "NORMAL",
+      "scheme": null,
+      "file": "application/pages/page_00000.sql",
+      "components": []
+    },
+    {
+      "id": 100,
+      "name": "Home",
+      "alias": "HOME",
+      "title": "Home",
+      "mode": "NORMAL",
+      "scheme": "APP_USERS",
+      "file": "application/pages/page_00100.sql",
+      "components": [
+        {
+          "key": "P100:CHART:Nilai per Department",
+          "kind": "CHART",
+          "name": "Nilai per Department",
+          "props": {
+            "chart_type": "bar",
+            "orientation": "vertical",
+            "legend_rendered": "off"
+          }
+        },
+        {
+          "key": "P100:CHART:Permintaan per Status",
+          "kind": "CHART",
+          "name": "Permintaan per Status",
+          "props": {
+            "chart_type": "pie",
+            "value_format_type": "decimal",
+            "legend_rendered": "off"
+          }
+        },
+        {
+          "key": "P100:CHART_SERIES:Nilai per Department.Total",
+          "kind": "CHART_SERIES",
+          "name": "Nilai per Department.Total",
+          "props": {
+            "data_source": "select label, value\n  from apx_demo_dash_c2_s1_v",
+            "items_value_column_name": "VALUE",
+            "items_label_column_name": "LABEL"
+          }
+        },
+        {
+          "key": "P100:CHART_SERIES:Permintaan per Status.Permintaan",
+          "kind": "CHART_SERIES",
+          "name": "Permintaan per Status.Permintaan",
+          "props": {
+            "data_source": "select label, value\n  from apx_demo_dash_c1_s1_v",
+            "items_value_column_name": "VALUE",
+            "items_label_column_name": "LABEL"
+          }
+        },
+        {
+          "key": "P100:REGION:Home",
+          "kind": "REGION",
+          "name": "Home",
+          "props": {
+            "plug_source": "Template Pandawa APEXlang - data dummy.",
+            "plug_display_point": "REGION_POSITION_01",
+            "plug_display_sequence": 10
+          }
+        },
+        {
+          "key": "P100:REGION:Nilai per Department",
+          "kind": "REGION",
+          "name": "Nilai per Department",
+          "props": {
+            "plug_source_type": "NATIVE_JET_CHART",
+            "plug_display_sequence": 50
+          }
+        },
+        {
+          "key": "P100:REGION:Permintaan per Status",
+          "kind": "REGION",
+          "name": "Permintaan per Status",
+          "props": {
+            "plug_source_type": "NATIVE_JET_CHART",
+            "plug_display_sequence": 40
+          }
+        },
+        {
+          "key": "P100:REGION:Ringkasan",
+          "kind": "REGION",
+          "name": "Ringkasan",
+          "props": {
+            "plug_source_type": "TMPL_THEME_42$METRIC_CARD",
+            "query_type": "SQL",
+            "plug_source": "select seq, icon, label, metric_value\n  from apx_demo_dash_kpi_v",
+            "query_order_by": "SEQ",
+            "show_total_row_count": false,
+            "plug_query_num_rows_type": "SET",
+            "plug_display_sequence": 20
+          }
+        },
+        {
+          "key": "P100:REGION_COLUMN:Ringkasan.ICON",
+          "kind": "REGION_COLUMN",
+          "name": "Ringkasan.ICON",
+          "props": {
+            "source_expression": "ICON",
+            "data_type": "VARCHAR2"
+          }
+        },
+        {
+          "key": "P100:REGION_COLUMN:Ringkasan.LABEL",
+          "kind": "REGION_COLUMN",
+          "name": "Ringkasan.LABEL",
+          "props": {
+            "source_expression": "LABEL",
+            "data_type": "VARCHAR2"
+          }
+        },
+        {
+          "key": "P100:REGION_COLUMN:Ringkasan.METRIC_VALUE",
+          "kind": "REGION_COLUMN",
+          "name": "Ringkasan.METRIC_VALUE",
+          "props": {
+            "source_expression": "METRIC_VALUE",
+            "data_type": "NUMBER"
+          }
+        },
+        {
+          "key": "P100:REGION_COLUMN:Ringkasan.SEQ",
+          "kind": "REGION_COLUMN",
+          "name": "Ringkasan.SEQ",
+          "props": {
+            "source_expression": "SEQ",
+            "data_type": "NUMBER"
+          }
+        }
+      ]
+    },
+    {
+      "id": 190,
+      "name": "Approval Inbox",
+      "alias": "APPROVAL-INBOX",
+      "title": "Approval Inbox",
+      "mode": "NORMAL",
+      "scheme": "APP_USERS",
+      "file": "application/pages/page_00190.sql",
+      "components": [
+        {
+          "key": "P190:DYNAMIC_ACTION:ON_DIALOG_CLOSED_REFRESH_REPORT",
+          "kind": "DYNAMIC_ACTION",
+          "name": "ON_DIALOG_CLOSED_REFRESH_REPORT",
+          "props": {
+            "triggering_element_type": "REGION",
+            "bind_event_type": "apexafterclosedialog",
+            "event_sequence": 10,
+            "triggering_region": "Approval Inbox",
+            "actions": [
+              {
+                "action": "NATIVE_REFRESH",
+                "result": "TRUE",
+                "region": "Approval Inbox"
+              }
+            ]
+          }
+        },
+        {
+          "key": "P190:IR:Approval Inbox",
+          "kind": "IR",
+          "name": "Approval Inbox",
+          "props": {
+            "download_formats": "CSV:HTML:XLSX:PDF",
+            "detail_link": "f?p=&APP_ID.:191:&SESSION.::&DEBUG.:191:P191_APPROVAL_ID:\\#APPROVAL_ID#\\",
+            "detail_link_text": "<span aria-label=\"Edit\"><span class=\"fa fa-edit\" aria-hidden=\"true\" title=\"Edit\"></span></span>",
+            "no_data_found_message": "Tidak ada data.",
+            "pagination_type": "ROWS_X_TO_Y",
+            "show_detail_link": "C"
+          }
+        },
+        {
+          "key": "P190:IR_COLUMN:Approval Inbox.ACTED_BY",
+          "kind": "IR_COLUMN",
+          "name": "Approval Inbox.ACTED_BY",
+          "props": {
+            "column_label": "Diproses Oleh",
+            "column_type": "STRING",
+            "display_order": 11
+          }
+        },
+        {
+          "key": "P190:IR_COLUMN:Approval Inbox.ACTED_ON",
+          "kind": "IR_COLUMN",
+          "name": "Approval Inbox.ACTED_ON",
+          "props": {
+            "column_label": "Diproses",
+            "column_type": "DATE",
+            "display_order": 12
+          }
+        },
+        {
+          "key": "P190:IR_COLUMN:Approval Inbox.AMOUNT",
+          "kind": "IR_COLUMN",
+          "name": "Approval Inbox.AMOUNT",
+          "props": {
+            "column_label": "Nilai",
+            "column_type": "NUMBER",
+            "format_mask": "999G999G999G999G990",
+            "display_order": 6,
+            "column_alignment": "RIGHT"
+          }
+        },
+        {
+          "key": "P190:IR_COLUMN:Approval Inbox.APPROVAL_ID",
+          "kind": "IR_COLUMN",
+          "name": "Approval Inbox.APPROVAL_ID",
+          "props": {
+            "column_label": "ID",
+            "column_type": "NUMBER",
+            "display_text_as": "HIDDEN_ESCAPE_SC",
+            "display_order": 1
+          }
+        },
+        {
+          "key": "P190:IR_COLUMN:Approval Inbox.APPROVAL_LEVEL",
+          "kind": "IR_COLUMN",
+          "name": "Approval Inbox.APPROVAL_LEVEL",
+          "props": {
+            "column_label": "Level",
+            "column_type": "NUMBER",
+            "display_order": 4,
+            "column_alignment": "RIGHT"
+          }
+        },
+        {
+          "key": "P190:IR_COLUMN:Approval Inbox.APPROVER_ROLE",
+          "kind": "IR_COLUMN",
+          "name": "Approval Inbox.APPROVER_ROLE",
+          "props": {
+            "column_label": "Role Approver",
+            "column_type": "STRING",
+            "display_order": 5
+          }
+        },
+        {
+          "key": "P190:IR_COLUMN:Approval Inbox.CAN_ACT_YN",
+          "kind": "IR_COLUMN",
+          "name": "Approval Inbox.CAN_ACT_YN",
+          "props": {
+            "column_label": "Bisa Saya Proses?",
+            "column_type": "STRING",
+            "display_order": 10
+          }
+        },
+        {
+          "key": "P190:IR_COLUMN:Approval Inbox.DOC_NAME",
+          "kind": "IR_COLUMN",
+          "name": "Approval Inbox.DOC_NAME",
+          "props": {
+            "column_label": "Jenis Dokumen",
+            "column_type": "STRING",
+            "display_order": 2
+          }
+        },
+        {
+          "key": "P190:IR_COLUMN:Approval Inbox.DOC_NO",
+          "kind": "IR_COLUMN",
+          "name": "Approval Inbox.DOC_NO",
+          "props": {
+            "column_label": "No. Dokumen",
+            "column_type": "STRING",
+            "display_order": 3
+          }
+        },
+        {
+          "key": "P190:IR_COLUMN:Approval Inbox.NOTE",
+          "kind": "IR_COLUMN",
+          "name": "Approval Inbox.NOTE",
+          "props": {
+            "column_label": "Catatan",
+            "column_type": "STRING",
+            "display_order": 13
+          }
+        },
+        {
+          "key": "P190:IR_COLUMN:Approval Inbox.REQUESTED_BY",
+          "kind": "IR_COLUMN",
+          "name": "Approval Inbox.REQUESTED_BY",
+          "props": {
+            "column_label": "Diajukan Oleh",
+            "column_type": "STRING",
+            "display_order": 7
+          }
+        },
+        {
+          "key": "P190:IR_COLUMN:Approval Inbox.REQUESTED_ON",
+          "kind": "IR_COLUMN",
+          "name": "Approval Inbox.REQUESTED_ON",
+          "props": {
+            "column_label": "Diajukan",
+            "column_type": "DATE",
+            "display_order": 8
+          }
+        },
+        {
+          "key": "P190:IR_COLUMN:Approval Inbox.STATUS",
+          "kind": "IR_COLUMN",
+          "name": "Approval Inbox.STATUS",
+          "props": {
+            "column_label": "Status",
+            "column_type": "STRING",
+            "display_order": 9
+          }
+        },
+        {
+          "key": "P190:IR_REPORT:Approval Inbox.190001",
+          "kind": "IR_REPORT",
+          "name": "Approval Inbox.190001",
+          "props": {
+            "report_columns": "DOC_NAME:DOC_NO:APPROVAL_LEVEL:APPROVER_ROLE:AMOUNT:REQUESTED_BY:REQUESTED_ON:STATUS:CAN_ACT_YN:ACTED_BY:ACTED_ON:NOTE",
+            "sort_column_1": "APPROVAL_ID",
+            "sort_direction_1": "DESC"
+          }
+        },
+        {
+          "key": "P190:REGION:Approval Inbox",
+          "kind": "REGION",
+          "name": "Approval Inbox",
+          "props": {
+            "plug_source_type": "NATIVE_IR",
+            "query_type": "SQL",
+            "plug_source": "select approval_id, doc_name, doc_no, approval_level, approver_role, amount, requested_by, requested_on,\n       status, can_act_yn, acted_by, acted_on, note\n  from apx_demo_approvals_v",
+            "plug_display_sequence": 20
+          }
+        },
+        {
+          "key": "P190:REGION:Breadcrumb",
+          "kind": "REGION",
+          "name": "Breadcrumb",
+          "props": {
+            "plug_source_type": "NATIVE_BREADCRUMB",
+            "plug_display_point": "REGION_POSITION_01",
+            "plug_display_sequence": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": 191,
+      "name": "Approval",
+      "alias": "APPROVAL",
+      "title": "Approval",
+      "mode": "MODAL",
+      "scheme": "APP_USERS",
+      "file": "application/pages/page_00191.sql",
+      "components": [
+        {
+          "key": "P191:BUTTON:APPROVE",
+          "kind": "BUTTON",
+          "name": "APPROVE",
+          "props": {
+            "button_image_alt": "Approve",
+            "button_sequence": 30,
+            "button_is_hot": "Y",
+            "button_action": "SUBMIT",
+            "button_condition": "apx_demo_approval_pkg.can_act_yn(:P191_APPROVAL_ID) = 'Y'",
+            "button_condition_type": "EXPRESSION",
+            "button_position": "NEXT"
+          }
+        },
+        {
+          "key": "P191:BUTTON:CANCEL",
+          "kind": "BUTTON",
+          "name": "CANCEL",
+          "props": {
+            "button_image_alt": "Close",
+            "button_sequence": 10,
+            "button_action": "DEFINED_BY_DA",
+            "button_position": "CLOSE"
+          }
+        },
+        {
+          "key": "P191:BUTTON:REJECT",
+          "kind": "BUTTON",
+          "name": "REJECT",
+          "props": {
+            "button_image_alt": "Reject",
+            "button_sequence": 20,
+            "button_action": "SUBMIT",
+            "button_condition": "apx_demo_approval_pkg.can_act_yn(:P191_APPROVAL_ID) = 'Y'",
+            "button_condition_type": "EXPRESSION",
+            "confirm_message": "Tolak dokumen ini?",
+            "button_position": "NEXT"
+          }
+        },
+        {
+          "key": "P191:DYNAMIC_ACTION:ON_CLICK_CANCEL_CLOSE_DIALOG",
+          "kind": "DYNAMIC_ACTION",
+          "name": "ON_CLICK_CANCEL_CLOSE_DIALOG",
+          "props": {
+            "triggering_element_type": "BUTTON",
+            "bind_event_type": "click",
+            "event_sequence": 10,
+            "triggering_button": "CANCEL",
+            "actions": [
+              {
+                "action": "NATIVE_DIALOG_CANCEL",
+                "result": "TRUE",
+                "region": null
+              }
+            ]
+          }
+        },
+        {
+          "key": "P191:ITEM:P191_AMOUNT",
+          "kind": "ITEM",
+          "name": "P191_AMOUNT",
+          "props": {
+            "prompt": "Nilai",
+            "display_as": "NATIVE_DISPLAY_ONLY",
+            "source": "AMOUNT",
+            "source_data_type": "NUMBER",
+            "item_sequence": 50,
+            "attributes": {
+              "based_on": "VALUE",
+              "format": "PLAIN",
+              "send_on_page_submit": "N",
+              "show_line_breaks": "Y"
+            }
+          }
+        },
+        {
+          "key": "P191:ITEM:P191_APPROVAL_ID",
+          "kind": "ITEM",
+          "name": "P191_APPROVAL_ID",
+          "props": {
+            "display_as": "NATIVE_HIDDEN",
+            "source": "APPROVAL_ID",
+            "is_primary_key": true,
+            "protection_level": "S",
+            "source_data_type": "NUMBER",
+            "item_sequence": 5,
+            "attributes": {
+              "value_protected": "Y"
+            }
+          }
+        },
+        {
+          "key": "P191:ITEM:P191_APPROVAL_LEVEL",
+          "kind": "ITEM",
+          "name": "P191_APPROVAL_LEVEL",
+          "props": {
+            "prompt": "Level",
+            "display_as": "NATIVE_DISPLAY_ONLY",
+            "source": "APPROVAL_LEVEL",
+            "source_data_type": "NUMBER",
+            "item_sequence": 30,
+            "attributes": {
+              "based_on": "VALUE",
+              "format": "PLAIN",
+              "send_on_page_submit": "N",
+              "show_line_breaks": "Y"
+            }
+          }
+        },
+        {
+          "key": "P191:ITEM:P191_APPROVER_ROLE",
+          "kind": "ITEM",
+          "name": "P191_APPROVER_ROLE",
+          "props": {
+            "prompt": "Role Approver",
+            "display_as": "NATIVE_DISPLAY_ONLY",
+            "source": "APPROVER_ROLE",
+            "source_data_type": "VARCHAR2",
+            "item_sequence": 40,
+            "attributes": {
+              "based_on": "VALUE",
+              "format": "PLAIN",
+              "send_on_page_submit": "N",
+              "show_line_breaks": "Y"
+            }
+          }
+        },
+        {
+          "key": "P191:ITEM:P191_CAN_ACT_YN",
+          "kind": "ITEM",
+          "name": "P191_CAN_ACT_YN",
+          "props": {
+            "prompt": "Bisa Saya Proses",
+            "display_as": "NATIVE_DISPLAY_ONLY",
+            "source": "CAN_ACT_YN",
+            "source_data_type": "VARCHAR2",
+            "item_sequence": 80,
+            "attributes": {
+              "based_on": "VALUE",
+              "format": "PLAIN",
+              "send_on_page_submit": "N",
+              "show_line_breaks": "Y"
+            }
+          }
+        },
+        {
+          "key": "P191:ITEM:P191_DOC_NAME",
+          "kind": "ITEM",
+          "name": "P191_DOC_NAME",
+          "props": {
+            "prompt": "Jenis Dokumen",
+            "display_as": "NATIVE_DISPLAY_ONLY",
+            "source": "DOC_NAME",
+            "source_data_type": "VARCHAR2",
+            "item_sequence": 10,
+            "attributes": {
+              "based_on": "VALUE",
+              "format": "PLAIN",
+              "send_on_page_submit": "N",
+              "show_line_breaks": "Y"
+            }
+          }
+        },
+        {
+          "key": "P191:ITEM:P191_DOC_NO",
+          "kind": "ITEM",
+          "name": "P191_DOC_NO",
+          "props": {
+            "prompt": "No. Dokumen",
+            "display_as": "NATIVE_DISPLAY_ONLY",
+            "source": "DOC_NO",
+            "source_data_type": "VARCHAR2",
+            "item_sequence": 20,
+            "attributes": {
+              "based_on": "VALUE",
+              "format": "PLAIN",
+              "send_on_page_submit": "N",
+              "show_line_breaks": "Y"
+            }
+          }
+        },
+        {
+          "key": "P191:ITEM:P191_NOTE",
+          "kind": "ITEM",
+          "name": "P191_NOTE",
+          "props": {
+            "prompt": "Catatan (wajib bila Reject)",
+            "display_as": "NATIVE_TEXTAREA",
+            "source_type": "ALWAYS_NULL",
+            "item_sequence": 200,
+            "attributes": {
+              "auto_height": "N",
+              "character_counter": "N",
+              "resizable": "Y",
+              "trim_spaces": "BOTH"
+            }
+          }
+        },
+        {
+          "key": "P191:ITEM:P191_REQUESTED_BY",
+          "kind": "ITEM",
+          "name": "P191_REQUESTED_BY",
+          "props": {
+            "prompt": "Diajukan Oleh",
+            "display_as": "NATIVE_DISPLAY_ONLY",
+            "source": "REQUESTED_BY",
+            "source_data_type": "VARCHAR2",
+            "item_sequence": 60,
+            "attributes": {
+              "based_on": "VALUE",
+              "format": "PLAIN",
+              "send_on_page_submit": "N",
+              "show_line_breaks": "Y"
+            }
+          }
+        },
+        {
+          "key": "P191:ITEM:P191_STATUS",
+          "kind": "ITEM",
+          "name": "P191_STATUS",
+          "props": {
+            "prompt": "Status",
+            "display_as": "NATIVE_DISPLAY_ONLY",
+            "source": "STATUS",
+            "source_data_type": "VARCHAR2",
+            "item_sequence": 70,
+            "attributes": {
+              "based_on": "VALUE",
+              "format": "PLAIN",
+              "send_on_page_submit": "N",
+              "show_line_breaks": "Y"
+            }
+          }
+        },
+        {
+          "key": "P191:PROCESS:CALL_APPROVE",
+          "kind": "PROCESS",
+          "name": "CALL_APPROVE",
+          "props": {
+            "process_point": "AFTER_SUBMIT",
+            "process_type": "NATIVE_PLSQL",
+            "process_sql_clob": "apx_demo_approval_pkg.approve(p_approval_id => :P191_APPROVAL_ID, p_note => :P191_NOTE);",
+            "process_success_message": "Dokumen disetujui.",
+            "process_sequence": 10,
+            "when_button": "APPROVE"
+          }
+        },
+        {
+          "key": "P191:PROCESS:CALL_REJECT",
+          "kind": "PROCESS",
+          "name": "CALL_REJECT",
+          "props": {
+            "process_point": "AFTER_SUBMIT",
+            "process_type": "NATIVE_PLSQL",
+            "process_sql_clob": "apx_demo_approval_pkg.reject(p_approval_id => :P191_APPROVAL_ID, p_note => :P191_NOTE);",
+            "process_success_message": "Dokumen ditolak.",
+            "process_sequence": 20,
+            "when_button": "REJECT"
+          }
+        },
+        {
+          "key": "P191:PROCESS:CLOSE_DIALOG",
+          "kind": "PROCESS",
+          "name": "CLOSE_DIALOG",
+          "props": {
+            "process_point": "AFTER_SUBMIT",
+            "process_type": "NATIVE_CLOSE_WINDOW",
+            "process_when": "APPROVE,REJECT",
+            "process_when_type": "REQUEST_IN_CONDITION",
+            "process_sequence": 50
+          }
+        },
+        {
+          "key": "P191:PROCESS:INIT_APPROVAL_FORM",
+          "kind": "PROCESS",
+          "name": "INIT_APPROVAL_FORM",
+          "props": {
+            "process_point": "BEFORE_HEADER",
+            "process_type": "NATIVE_FORM_INIT",
+            "process_sequence": 10
+          }
+        },
+        {
+          "key": "P191:REGION:Approval",
+          "kind": "REGION",
+          "name": "Approval",
+          "props": {
+            "plug_source_type": "NATIVE_FORM",
+            "query_type": "TABLE",
+            "query_table": "APX_DEMO_APPROVALS_V",
+            "is_editable": false,
+            "plug_display_sequence": 10
+          }
+        },
+        {
+          "key": "P191:REGION:Buttons",
+          "kind": "REGION",
+          "name": "Buttons",
+          "props": {
+            "plug_display_point": "REGION_POSITION_03",
+            "plug_display_sequence": 20
+          }
+        }
+      ]
+    },
+    {
+      "id": 200,
+      "name": "Departments",
+      "alias": "DEPARTMENTS",
+      "title": "Departments",
+      "mode": "NORMAL",
+      "scheme": "APP_USERS",
+      "file": "application/pages/page_00200.sql",
+      "components": [
+        {
+          "key": "P200:BUTTON:CREATE",
+          "kind": "BUTTON",
+          "name": "CREATE",
+          "props": {
+            "button_image_alt": "Create",
+            "button_sequence": 10,
+            "button_is_hot": "Y",
+            "button_action": "REDIRECT_PAGE",
+            "button_redirect_url": "f?p=&APP_ID.:201:&SESSION.::&DEBUG.:201",
+            "button_position": "RIGHT_OF_IR_SEARCH_BAR",
+            "security_scheme": "MASTER_DATA"
+          }
+        },
+        {
+          "key": "P200:DYNAMIC_ACTION:ON_DIALOG_CLOSED_REFRESH_REPORT",
+          "kind": "DYNAMIC_ACTION",
+          "name": "ON_DIALOG_CLOSED_REFRESH_REPORT",
+          "props": {
+            "triggering_element_type": "REGION",
+            "bind_event_type": "apexafterclosedialog",
+            "event_sequence": 10,
+            "triggering_region": "Departments",
+            "actions": [
+              {
+                "action": "NATIVE_REFRESH",
+                "result": "TRUE",
+                "region": "Departments"
+              }
+            ]
+          }
+        },
+        {
+          "key": "P200:IR:Departments",
+          "kind": "IR",
+          "name": "Departments",
+          "props": {
+            "download_formats": "CSV:HTML:XLSX:PDF",
+            "detail_link": "f?p=&APP_ID.:201:&SESSION.::&DEBUG.:201:P201_DEPARTMENT_ID:\\#DEPARTMENT_ID#\\",
+            "detail_link_text": "<span aria-label=\"Edit\"><span class=\"fa fa-edit\" aria-hidden=\"true\" title=\"Edit\"></span></span>",
+            "no_data_found_message": "Tidak ada data.",
+            "pagination_type": "ROWS_X_TO_Y",
+            "show_detail_link": "C"
+          }
+        },
+        {
+          "key": "P200:IR_COLUMN:Departments.ACTIVE_YN",
+          "kind": "IR_COLUMN",
+          "name": "Departments.ACTIVE_YN",
+          "props": {
+            "column_label": "Aktif",
+            "column_type": "STRING",
+            "display_order": 4
+          }
+        },
+        {
+          "key": "P200:IR_COLUMN:Departments.DEPARTMENT_ID",
+          "kind": "IR_COLUMN",
+          "name": "Departments.DEPARTMENT_ID",
+          "props": {
+            "column_label": "ID",
+            "column_type": "NUMBER",
+            "display_text_as": "HIDDEN_ESCAPE_SC",
+            "display_order": 1
+          }
+        },
+        {
+          "key": "P200:IR_COLUMN:Departments.DEPT_CODE",
+          "kind": "IR_COLUMN",
+          "name": "Departments.DEPT_CODE",
+          "props": {
+            "column_label": "Kode",
+            "column_type": "STRING",
+            "display_order": 2
+          }
+        },
+        {
+          "key": "P200:IR_COLUMN:Departments.DEPT_NAME",
+          "kind": "IR_COLUMN",
+          "name": "Departments.DEPT_NAME",
+          "props": {
+            "column_label": "Nama Department",
+            "column_type": "STRING",
+            "display_order": 3
+          }
+        },
+        {
+          "key": "P200:IR_COLUMN:Departments.UPDATED_BY",
+          "kind": "IR_COLUMN",
+          "name": "Departments.UPDATED_BY",
+          "props": {
+            "column_label": "Diubah Oleh",
+            "column_type": "STRING",
+            "display_order": 5
+          }
+        },
+        {
+          "key": "P200:IR_COLUMN:Departments.UPDATED_ON",
+          "kind": "IR_COLUMN",
+          "name": "Departments.UPDATED_ON",
+          "props": {
+            "column_label": "Diubah",
+            "column_type": "DATE",
+            "display_order": 6
+          }
+        },
+        {
+          "key": "P200:IR_REPORT:Departments.200001",
+          "kind": "IR_REPORT",
+          "name": "Departments.200001",
+          "props": {
+            "report_columns": "DEPT_CODE:DEPT_NAME:ACTIVE_YN:UPDATED_BY:UPDATED_ON",
+            "sort_column_1": "DEPT_CODE",
+            "sort_direction_1": "ASC"
+          }
+        },
+        {
+          "key": "P200:REGION:Breadcrumb",
+          "kind": "REGION",
+          "name": "Breadcrumb",
+          "props": {
+            "plug_source_type": "NATIVE_BREADCRUMB",
+            "plug_display_point": "REGION_POSITION_01",
+            "plug_display_sequence": 10
+          }
+        },
+        {
+          "key": "P200:REGION:Departments",
+          "kind": "REGION",
+          "name": "Departments",
+          "props": {
+            "plug_source_type": "NATIVE_IR",
+            "query_type": "SQL",
+            "plug_source": "select department_id, dept_code, dept_name, active_yn, updated_by, updated_on\n  from apx_demo_departments_v",
+            "plug_display_sequence": 20
+          }
+        }
+      ]
+    },
+    {
+      "id": 201,
+      "name": "Department",
+      "alias": "DEPARTMENT",
+      "title": "Department",
+      "mode": "MODAL",
+      "scheme": "MASTER_DATA",
+      "file": "application/pages/page_00201.sql",
+      "components": [
+        {
+          "key": "P201:BUTTON:CANCEL",
+          "kind": "BUTTON",
+          "name": "CANCEL",
+          "props": {
+            "button_image_alt": "Cancel",
+            "button_sequence": 10,
+            "button_action": "DEFINED_BY_DA",
+            "button_position": "CLOSE"
+          }
+        },
+        {
+          "key": "P201:BUTTON:CREATE",
+          "kind": "BUTTON",
+          "name": "CREATE",
+          "props": {
+            "button_image_alt": "Create",
+            "button_sequence": 40,
+            "button_is_hot": "Y",
+            "button_action": "SUBMIT",
+            "button_condition": ":P201_DEPARTMENT_ID is null",
+            "button_condition_type": "EXPRESSION",
+            "database_action": "INSERT",
+            "button_position": "NEXT"
+          }
+        },
+        {
+          "key": "P201:BUTTON:DELETE",
+          "kind": "BUTTON",
+          "name": "DELETE",
+          "props": {
+            "button_image_alt": "Delete",
+            "button_sequence": 20,
+            "button_action": "SUBMIT",
+            "button_condition": ":P201_DEPARTMENT_ID is not null",
+            "button_condition_type": "EXPRESSION",
+            "database_action": "DELETE",
+            "confirm_message": "&APP_TEXT$DELETE_MSG!RAW.",
+            "button_execute_validations": "N",
+            "button_position": "DELETE"
+          }
+        },
+        {
+          "key": "P201:BUTTON:SAVE",
+          "kind": "BUTTON",
+          "name": "SAVE",
+          "props": {
+            "button_image_alt": "Apply Changes",
+            "button_sequence": 30,
+            "button_is_hot": "Y",
+            "button_action": "SUBMIT",
+            "button_condition": ":P201_DEPARTMENT_ID is not null",
+            "button_condition_type": "EXPRESSION",
+            "database_action": "UPDATE",
+            "button_position": "NEXT"
+          }
+        },
+        {
+          "key": "P201:DYNAMIC_ACTION:ON_CLICK_CANCEL_CLOSE_DIALOG",
+          "kind": "DYNAMIC_ACTION",
+          "name": "ON_CLICK_CANCEL_CLOSE_DIALOG",
+          "props": {
+            "triggering_element_type": "BUTTON",
+            "bind_event_type": "click",
+            "event_sequence": 10,
+            "triggering_button": "CANCEL",
+            "actions": [
+              {
+                "action": "NATIVE_DIALOG_CANCEL",
+                "result": "TRUE",
+                "region": null
+              }
+            ]
+          }
+        },
+        {
+          "key": "P201:ITEM:P201_ACTIVE_YN",
+          "kind": "ITEM",
+          "name": "P201_ACTIVE_YN",
+          "props": {
+            "prompt": "Aktif",
+            "display_as": "NATIVE_SELECT_LIST",
+            "source": "ACTIVE_YN",
+            "named_lov": "YES_NO",
+            "lov_display_null": "YES",
+            "lov_null_text": "- Pilih -",
+            "item_default": "Y",
+            "source_data_type": "VARCHAR2",
+            "lov_display_extra": "YES",
+            "item_sequence": 35,
+            "attributes": {
+              "page_action_on_selection": "NONE"
+            }
+          }
+        },
+        {
+          "key": "P201:ITEM:P201_DEPARTMENT_ID",
+          "kind": "ITEM",
+          "name": "P201_DEPARTMENT_ID",
+          "props": {
+            "display_as": "NATIVE_HIDDEN",
+            "source": "DEPARTMENT_ID",
+            "is_primary_key": true,
+            "protection_level": "S",
+            "source_data_type": "NUMBER",
+            "item_sequence": 5,
+            "attributes": {
+              "value_protected": "Y"
+            }
+          }
+        },
+        {
+          "key": "P201:ITEM:P201_DEPT_CODE",
+          "kind": "ITEM",
+          "name": "P201_DEPT_CODE",
+          "props": {
+            "prompt": "Kode",
+            "display_as": "NATIVE_TEXT_FIELD",
+            "source": "DEPT_CODE",
+            "is_required": true,
+            "source_data_type": "VARCHAR2",
+            "item_sequence": 15,
+            "attributes": {
+              "disabled": "N",
+              "submit_when_enter_pressed": "N",
+              "subtype": "TEXT",
+              "trim_spaces": "BOTH"
+            }
+          }
+        },
+        {
+          "key": "P201:ITEM:P201_DEPT_NAME",
+          "kind": "ITEM",
+          "name": "P201_DEPT_NAME",
+          "props": {
+            "prompt": "Nama Department",
+            "display_as": "NATIVE_TEXT_FIELD",
+            "source": "DEPT_NAME",
+            "is_required": true,
+            "source_data_type": "VARCHAR2",
+            "item_sequence": 25,
+            "attributes": {
+              "disabled": "N",
+              "submit_when_enter_pressed": "N",
+              "subtype": "TEXT",
+              "trim_spaces": "BOTH"
+            }
+          }
+        },
+        {
+          "key": "P201:PROCESS:CLOSE_DIALOG",
+          "kind": "PROCESS",
+          "name": "CLOSE_DIALOG",
+          "props": {
+            "process_point": "AFTER_SUBMIT",
+            "process_type": "NATIVE_CLOSE_WINDOW",
+            "process_when": "DELETE,SAVE,CREATE",
+            "process_when_type": "REQUEST_IN_CONDITION",
+            "process_sequence": 50
+          }
+        },
+        {
+          "key": "P201:PROCESS:INIT_DEPARTMENTS_FORM",
+          "kind": "PROCESS",
+          "name": "INIT_DEPARTMENTS_FORM",
+          "props": {
+            "process_point": "BEFORE_HEADER",
+            "process_type": "NATIVE_FORM_INIT",
+            "process_sequence": 10
+          }
+        },
+        {
+          "key": "P201:PROCESS:SAVE_DEPARTMENTS",
+          "kind": "PROCESS",
+          "name": "SAVE_DEPARTMENTS",
+          "props": {
+            "process_point": "AFTER_SUBMIT",
+            "process_type": "NATIVE_FORM_DML",
+            "process_sequence": 10
+          }
+        },
+        {
+          "key": "P201:REGION:Buttons",
+          "kind": "REGION",
+          "name": "Buttons",
+          "props": {
+            "plug_display_point": "REGION_POSITION_03",
+            "plug_display_sequence": 20
+          }
+        },
+        {
+          "key": "P201:REGION:Department",
+          "kind": "REGION",
+          "name": "Department",
+          "props": {
+            "plug_source_type": "NATIVE_FORM",
+            "query_type": "TABLE",
+            "query_table": "APX_DEMO_DEPARTMENTS",
+            "edit_operations": "i:u:d",
+            "is_editable": true,
+            "lost_update_check_type": "VALUES",
+            "plug_display_sequence": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": 210,
+      "name": "Items",
+      "alias": "ITEMS",
+      "title": "Items",
+      "mode": "NORMAL",
+      "scheme": "APP_USERS",
+      "file": "application/pages/page_00210.sql",
+      "components": [
+        {
+          "key": "P210:BUTTON:CREATE",
+          "kind": "BUTTON",
+          "name": "CREATE",
+          "props": {
+            "button_image_alt": "Create",
+            "button_sequence": 10,
+            "button_is_hot": "Y",
+            "button_action": "REDIRECT_PAGE",
+            "button_redirect_url": "f?p=&APP_ID.:211:&SESSION.::&DEBUG.:211",
+            "button_position": "NEXT",
+            "security_scheme": "MASTER_DATA"
+          }
+        },
+        {
+          "key": "P210:CARDS:Hasil Items",
+          "kind": "CARDS",
+          "name": "Hasil Items",
+          "props": {
+            "layout_type": "GRID",
+            "title_column_name": "ITEM_CODE",
+            "sub_title_column_name": "ITEM_NAME",
+            "body_column_name": "CATEGORY",
+            "icon_css_classes": "fa fa-tag"
+          }
+        },
+        {
+          "key": "P210:CARD_ACTION:Hasil Items.TITLE",
+          "kind": "CARD_ACTION",
+          "name": "Hasil Items.TITLE",
+          "props": {
+            "action_type": "TITLE",
+            "link_target": "f?p=&APP_ID.:211:&SESSION.::&DEBUG.:211:P211_ITEM_ID:&ITEM_ID."
+          }
+        },
+        {
+          "key": "P210:DYNAMIC_ACTION:ON_DIALOG_CLOSED_REFRESH_REPORT",
+          "kind": "DYNAMIC_ACTION",
+          "name": "ON_DIALOG_CLOSED_REFRESH_REPORT",
+          "props": {
+            "triggering_element_type": "REGION",
+            "bind_event_type": "apexafterclosedialog",
+            "event_sequence": 10,
+            "triggering_region": "Hasil Items",
+            "actions": [
+              {
+                "action": "NATIVE_REFRESH",
+                "result": "TRUE",
+                "region": "Hasil Items"
+              }
+            ]
+          }
+        },
+        {
+          "key": "P210:ITEM:P210_ACTIVE_YN",
+          "kind": "ITEM",
+          "name": "P210_ACTIVE_YN",
+          "props": {
+            "prompt": "Aktif",
+            "display_as": "NATIVE_CHECKBOX",
+            "source": "ACTIVE_YN",
+            "source_type": "FACET_COLUMN",
+            "named_lov": "YES_NO",
+            "source_data_type": "VARCHAR2",
+            "item_sequence": 30
+          }
+        },
+        {
+          "key": "P210:ITEM:P210_CATEGORY",
+          "kind": "ITEM",
+          "name": "P210_CATEGORY",
+          "props": {
+            "prompt": "Kategori",
+            "display_as": "NATIVE_CHECKBOX",
+            "source": "CATEGORY",
+            "source_type": "FACET_COLUMN",
+            "named_lov": "ITEMS_CATEGORY",
+            "source_data_type": "VARCHAR2",
+            "item_sequence": 20
+          }
+        },
+        {
+          "key": "P210:ITEM:P210_SEARCH",
+          "kind": "ITEM",
+          "name": "P210_SEARCH",
+          "props": {
+            "prompt": "Cari",
+            "display_as": "NATIVE_SEARCH",
+            "source_type": "FACET_COLUMN",
+            "item_sequence": 10,
+            "attributes": {
+              "input_field": "FACET",
+              "search_type": "ROW"
+            }
+          }
+        },
+        {
+          "key": "P210:REGION:Filter",
+          "kind": "REGION",
+          "name": "Filter",
+          "props": {
+            "plug_source_type": "NATIVE_FACETED_SEARCH",
+            "plug_display_point": "REGION_POSITION_02",
+            "plug_display_sequence": 10
+          }
+        },
+        {
+          "key": "P210:REGION:Hasil Items",
+          "kind": "REGION",
+          "name": "Hasil Items",
+          "props": {
+            "plug_source_type": "NATIVE_CARDS",
+            "query_type": "SQL",
+            "plug_source": "select item_id\n      ,item_code\n      ,item_name\n      ,category\n      ,uom\n      ,std_price\n      ,active_yn\n      ,updated_by\n      ,updated_on\n  from apx_demo_items_v",
+            "query_order_by": "ITEM_CODE",
+            "show_total_row_count": false,
+            "plug_query_num_rows_type": "SCROLL",
+            "plug_query_no_data_found": "Tidak ada data.",
+            "plug_display_sequence": 20
+          }
+        },
+        {
+          "key": "P210:REGION:Items",
+          "kind": "REGION",
+          "name": "Items",
+          "props": {
+            "plug_source": "<span class=\"u-text-body-sm u-text-muted-color\"><span id=\"total_row_count\">-</span> baris</span>",
+            "plug_display_point": "REGION_POSITION_01",
+            "plug_display_sequence": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": 211,
+      "name": "Item",
+      "alias": "ITEM",
+      "title": "Item",
+      "mode": "MODAL",
+      "scheme": "MASTER_DATA",
+      "file": "application/pages/page_00211.sql",
+      "components": [
+        {
+          "key": "P211:BUTTON:CANCEL",
+          "kind": "BUTTON",
+          "name": "CANCEL",
+          "props": {
+            "button_image_alt": "Cancel",
+            "button_sequence": 10,
+            "button_action": "DEFINED_BY_DA",
+            "button_position": "CLOSE"
+          }
+        },
+        {
+          "key": "P211:BUTTON:CREATE",
+          "kind": "BUTTON",
+          "name": "CREATE",
+          "props": {
+            "button_image_alt": "Create",
+            "button_sequence": 40,
+            "button_is_hot": "Y",
+            "button_action": "SUBMIT",
+            "button_condition": ":P211_ITEM_ID is null",
+            "button_condition_type": "EXPRESSION",
+            "database_action": "INSERT",
+            "button_position": "NEXT"
+          }
+        },
+        {
+          "key": "P211:BUTTON:DELETE",
+          "kind": "BUTTON",
+          "name": "DELETE",
+          "props": {
+            "button_image_alt": "Delete",
+            "button_sequence": 20,
+            "button_action": "SUBMIT",
+            "button_condition": ":P211_ITEM_ID is not null",
+            "button_condition_type": "EXPRESSION",
+            "database_action": "DELETE",
+            "confirm_message": "&APP_TEXT$DELETE_MSG!RAW.",
+            "button_execute_validations": "N",
+            "button_position": "DELETE"
+          }
+        },
+        {
+          "key": "P211:BUTTON:SAVE",
+          "kind": "BUTTON",
+          "name": "SAVE",
+          "props": {
+            "button_image_alt": "Apply Changes",
+            "button_sequence": 30,
+            "button_is_hot": "Y",
+            "button_action": "SUBMIT",
+            "button_condition": ":P211_ITEM_ID is not null",
+            "button_condition_type": "EXPRESSION",
+            "database_action": "UPDATE",
+            "button_position": "NEXT"
+          }
+        },
+        {
+          "key": "P211:DYNAMIC_ACTION:ON_CLICK_CANCEL_CLOSE_DIALOG",
+          "kind": "DYNAMIC_ACTION",
+          "name": "ON_CLICK_CANCEL_CLOSE_DIALOG",
+          "props": {
+            "triggering_element_type": "BUTTON",
+            "bind_event_type": "click",
+            "event_sequence": 10,
+            "triggering_button": "CANCEL",
+            "actions": [
+              {
+                "action": "NATIVE_DIALOG_CANCEL",
+                "result": "TRUE",
+                "region": null
+              }
+            ]
+          }
+        },
+        {
+          "key": "P211:ITEM:P211_ACTIVE_YN",
+          "kind": "ITEM",
+          "name": "P211_ACTIVE_YN",
+          "props": {
+            "prompt": "Aktif",
+            "display_as": "NATIVE_SELECT_LIST",
+            "source": "ACTIVE_YN",
+            "named_lov": "YES_NO",
+            "lov_display_null": "YES",
+            "lov_null_text": "- Pilih -",
+            "item_default": "Y",
+            "source_data_type": "VARCHAR2",
+            "lov_display_extra": "YES",
+            "item_sequence": 65,
+            "attributes": {
+              "page_action_on_selection": "NONE"
+            }
+          }
+        },
+        {
+          "key": "P211:ITEM:P211_CATEGORY",
+          "kind": "ITEM",
+          "name": "P211_CATEGORY",
+          "props": {
+            "prompt": "Kategori",
+            "display_as": "NATIVE_SELECT_LIST",
+            "source": "CATEGORY",
+            "is_required": true,
+            "named_lov": "ITEMS_CATEGORY",
+            "lov_display_null": "YES",
+            "lov_null_text": "- Pilih -",
+            "source_data_type": "VARCHAR2",
+            "lov_display_extra": "YES",
+            "item_sequence": 35,
+            "attributes": {
+              "page_action_on_selection": "NONE"
+            }
+          }
+        },
+        {
+          "key": "P211:ITEM:P211_ITEM_CODE",
+          "kind": "ITEM",
+          "name": "P211_ITEM_CODE",
+          "props": {
+            "prompt": "Kode Item",
+            "display_as": "NATIVE_TEXT_FIELD",
+            "source": "ITEM_CODE",
+            "is_required": true,
+            "source_data_type": "VARCHAR2",
+            "item_sequence": 15,
+            "attributes": {
+              "disabled": "N",
+              "submit_when_enter_pressed": "N",
+              "subtype": "TEXT",
+              "trim_spaces": "BOTH"
+            }
+          }
+        },
+        {
+          "key": "P211:ITEM:P211_ITEM_ID",
+          "kind": "ITEM",
+          "name": "P211_ITEM_ID",
+          "props": {
+            "display_as": "NATIVE_HIDDEN",
+            "source": "ITEM_ID",
+            "is_primary_key": true,
+            "protection_level": "S",
+            "source_data_type": "NUMBER",
+            "item_sequence": 5,
+            "attributes": {
+              "value_protected": "Y"
+            }
+          }
+        },
+        {
+          "key": "P211:ITEM:P211_ITEM_NAME",
+          "kind": "ITEM",
+          "name": "P211_ITEM_NAME",
+          "props": {
+            "prompt": "Nama Item",
+            "display_as": "NATIVE_TEXT_FIELD",
+            "source": "ITEM_NAME",
+            "is_required": true,
+            "source_data_type": "VARCHAR2",
+            "item_sequence": 25,
+            "attributes": {
+              "disabled": "N",
+              "submit_when_enter_pressed": "N",
+              "subtype": "TEXT",
+              "trim_spaces": "BOTH"
+            }
+          }
+        },
+        {
+          "key": "P211:ITEM:P211_STD_PRICE",
+          "kind": "ITEM",
+          "name": "P211_STD_PRICE",
+          "props": {
+            "prompt": "Harga Standar",
+            "display_as": "NATIVE_NUMBER_FIELD",
+            "source": "STD_PRICE",
+            "is_required": true,
+            "item_default": "0",
+            "source_data_type": "NUMBER",
+            "item_sequence": 55,
+            "attributes": {
+              "min_value": "0",
+              "number_alignment": "right",
+              "virtual_keyboard": "decimal"
+            }
+          }
+        },
+        {
+          "key": "P211:ITEM:P211_UOM",
+          "kind": "ITEM",
+          "name": "P211_UOM",
+          "props": {
+            "prompt": "Satuan",
+            "display_as": "NATIVE_TEXT_FIELD",
+            "source": "UOM",
+            "is_required": true,
+            "source_data_type": "VARCHAR2",
+            "item_sequence": 45,
+            "attributes": {
+              "disabled": "N",
+              "submit_when_enter_pressed": "N",
+              "subtype": "TEXT",
+              "trim_spaces": "BOTH"
+            }
+          }
+        },
+        {
+          "key": "P211:PROCESS:CLOSE_DIALOG",
+          "kind": "PROCESS",
+          "name": "CLOSE_DIALOG",
+          "props": {
+            "process_point": "AFTER_SUBMIT",
+            "process_type": "NATIVE_CLOSE_WINDOW",
+            "process_when": "DELETE,SAVE,CREATE",
+            "process_when_type": "REQUEST_IN_CONDITION",
+            "process_sequence": 50
+          }
+        },
+        {
+          "key": "P211:PROCESS:INIT_ITEMS_FORM",
+          "kind": "PROCESS",
+          "name": "INIT_ITEMS_FORM",
+          "props": {
+            "process_point": "BEFORE_HEADER",
+            "process_type": "NATIVE_FORM_INIT",
+            "process_sequence": 10
+          }
+        },
+        {
+          "key": "P211:PROCESS:SAVE_ITEMS",
+          "kind": "PROCESS",
+          "name": "SAVE_ITEMS",
+          "props": {
+            "process_point": "AFTER_SUBMIT",
+            "process_type": "NATIVE_FORM_DML",
+            "process_sequence": 10
+          }
+        },
+        {
+          "key": "P211:REGION:Buttons",
+          "kind": "REGION",
+          "name": "Buttons",
+          "props": {
+            "plug_display_point": "REGION_POSITION_03",
+            "plug_display_sequence": 20
+          }
+        },
+        {
+          "key": "P211:REGION:Item",
+          "kind": "REGION",
+          "name": "Item",
+          "props": {
+            "plug_source_type": "NATIVE_FORM",
+            "query_type": "TABLE",
+            "query_table": "APX_DEMO_ITEMS",
+            "edit_operations": "i:u:d",
+            "is_editable": true,
+            "lost_update_check_type": "VALUES",
+            "plug_display_sequence": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": 300,
+      "name": "Permintaan Barang",
+      "alias": "REQUESTS",
+      "title": "Permintaan Barang",
+      "mode": "NORMAL",
+      "scheme": "APP_USERS",
+      "file": "application/pages/page_00300.sql",
+      "components": [
+        {
+          "key": "P300:BUTTON:CREATE",
+          "kind": "BUTTON",
+          "name": "CREATE",
+          "props": {
+            "button_image_alt": "Create",
+            "button_sequence": 10,
+            "button_is_hot": "Y",
+            "button_action": "REDIRECT_PAGE",
+            "button_redirect_url": "f?p=&APP_ID.:301:&SESSION.::&DEBUG.:301",
+            "button_position": "NEXT",
+            "security_scheme": "REQUESTER"
+          }
+        },
+        {
+          "key": "P300:DYNAMIC_ACTION:ON_DIALOG_CLOSED_REFRESH_REPORT",
+          "kind": "DYNAMIC_ACTION",
+          "name": "ON_DIALOG_CLOSED_REFRESH_REPORT",
+          "props": {
+            "triggering_element_type": "REGION",
+            "bind_event_type": "apexafterclosedialog",
+            "event_sequence": 10,
+            "triggering_region": "Hasil Permintaan Barang",
+            "actions": [
+              {
+                "action": "NATIVE_REFRESH",
+                "result": "TRUE",
+                "region": "Hasil Permintaan Barang"
+              }
+            ]
+          }
+        },
+        {
+          "key": "P300:ITEM:P300_DEPARTMENT_ID_DSP",
+          "kind": "ITEM",
+          "name": "P300_DEPARTMENT_ID_DSP",
+          "props": {
+            "prompt": "Department",
+            "display_as": "NATIVE_CHECKBOX",
+            "source": "DEPARTMENT_ID_DSP",
+            "source_type": "FACET_COLUMN",
+            "source_data_type": "VARCHAR2",
+            "item_sequence": 30
+          }
+        },
+        {
+          "key": "P300:ITEM:P300_SEARCH",
+          "kind": "ITEM",
+          "name": "P300_SEARCH",
+          "props": {
+            "prompt": "Cari",
+            "display_as": "NATIVE_SEARCH",
+            "source_type": "FACET_COLUMN",
+            "item_sequence": 10,
+            "attributes": {
+              "input_field": "FACET",
+              "search_type": "ROW"
+            }
+          }
+        },
+        {
+          "key": "P300:ITEM:P300_STATUS",
+          "kind": "ITEM",
+          "name": "P300_STATUS",
+          "props": {
+            "prompt": "Status",
+            "display_as": "NATIVE_CHECKBOX",
+            "source": "STATUS",
+            "source_type": "FACET_COLUMN",
+            "source_data_type": "VARCHAR2",
+            "item_sequence": 20
+          }
+        },
+        {
+          "key": "P300:REGION:Filter",
+          "kind": "REGION",
+          "name": "Filter",
+          "props": {
+            "plug_source_type": "NATIVE_FACETED_SEARCH",
+            "plug_display_point": "REGION_POSITION_02",
+            "plug_display_sequence": 10
+          }
+        },
+        {
+          "key": "P300:REGION:Permintaan Barang",
+          "kind": "REGION",
+          "name": "Permintaan Barang",
+          "props": {
+            "plug_source": "<span class=\"u-text-body-sm u-text-muted-color\"><span id=\"total_row_count\">-</span> baris</span>",
+            "plug_display_point": "REGION_POSITION_01",
+            "plug_display_sequence": 10
+          }
+        },
+        {
+          "key": "P300:REPORT_COLUMN:Hasil Permintaan Barang.DEPARTMENT_ID_DSP",
+          "kind": "REPORT_COLUMN",
+          "name": "Hasil Permintaan Barang.DEPARTMENT_ID_DSP",
+          "props": {
+            "column_heading": "Department",
+            "column_display_sequence": 30,
+            "derived_column": "N"
+          }
+        },
+        {
+          "key": "P300:REPORT_COLUMN:Hasil Permintaan Barang.NEED_DATE",
+          "kind": "REPORT_COLUMN",
+          "name": "Hasil Permintaan Barang.NEED_DATE",
+          "props": {
+            "column_heading": "Dibutuhkan Tanggal",
+            "column_display_sequence": 50,
+            "derived_column": "N"
+          }
+        },
+        {
+          "key": "P300:REPORT_COLUMN:Hasil Permintaan Barang.PURPOSE",
+          "kind": "REPORT_COLUMN",
+          "name": "Hasil Permintaan Barang.PURPOSE",
+          "props": {
+            "column_heading": "Keperluan",
+            "column_display_sequence": 60,
+            "derived_column": "N"
+          }
+        },
+        {
+          "key": "P300:REPORT_COLUMN:Hasil Permintaan Barang.REQUEST_DATE",
+          "kind": "REPORT_COLUMN",
+          "name": "Hasil Permintaan Barang.REQUEST_DATE",
+          "props": {
+            "column_heading": "Tanggal",
+            "column_display_sequence": 40,
+            "derived_column": "N"
+          }
+        },
+        {
+          "key": "P300:REPORT_COLUMN:Hasil Permintaan Barang.REQUEST_ID",
+          "kind": "REPORT_COLUMN",
+          "name": "Hasil Permintaan Barang.REQUEST_ID",
+          "props": {
+            "hidden_column": "Y",
+            "column_display_sequence": 10,
+            "derived_column": "N"
+          }
+        },
+        {
+          "key": "P300:REPORT_COLUMN:Hasil Permintaan Barang.REQUEST_NO",
+          "kind": "REPORT_COLUMN",
+          "name": "Hasil Permintaan Barang.REQUEST_NO",
+          "props": {
+            "column_heading": "No. Permintaan Barang",
+            "column_link": "f?p=&APP_ID.:301:&SESSION.::&DEBUG.:301:P301_REQUEST_ID:#REQUEST_ID#",
+            "column_linktext": "#REQUEST_NO#",
+            "column_display_sequence": 20,
+            "derived_column": "N"
+          }
+        },
+        {
+          "key": "P300:REPORT_COLUMN:Hasil Permintaan Barang.STATUS",
+          "kind": "REPORT_COLUMN",
+          "name": "Hasil Permintaan Barang.STATUS",
+          "props": {
+            "column_heading": "Status",
+            "column_display_sequence": 70,
+            "derived_column": "N"
+          }
+        },
+        {
+          "key": "P300:REPORT_COLUMN:Hasil Permintaan Barang.UPDATED_BY",
+          "kind": "REPORT_COLUMN",
+          "name": "Hasil Permintaan Barang.UPDATED_BY",
+          "props": {
+            "column_heading": "Diubah Oleh",
+            "column_display_sequence": 80,
+            "derived_column": "N"
+          }
+        },
+        {
+          "key": "P300:REPORT_COLUMN:Hasil Permintaan Barang.UPDATED_ON",
+          "kind": "REPORT_COLUMN",
+          "name": "Hasil Permintaan Barang.UPDATED_ON",
+          "props": {
+            "column_heading": "Diubah",
+            "column_display_sequence": 90,
+            "derived_column": "N"
+          }
+        },
+        {
+          "key": "P300:REPORT_REGION:Hasil Permintaan Barang",
+          "kind": "REPORT_REGION",
+          "name": "Hasil Permintaan Barang",
+          "props": {
+            "source": "select request_id\n      ,request_no\n      ,department_id_dsp\n      ,request_date\n      ,need_date\n      ,purpose\n      ,status\n      ,updated_by\n      ,updated_on\n  from apx_demo_requests_v",
+            "query_type": "SQL",
+            "query_order_by": "REQUEST_NO DESC",
+            "query_num_rows": 15,
+            "query_no_data_found": "Tidak ada data.",
+            "display_sequence": 20
+          }
+        }
+      ]
+    },
+    {
+      "id": 301,
+      "name": "Permintaan Barang",
+      "alias": "REQUEST",
+      "title": "Permintaan Barang",
+      "mode": "MODAL",
+      "scheme": "REQUESTER",
+      "file": "application/pages/page_00301.sql",
+      "components": [
+        {
+          "key": "P301:BUTTON:CANCEL",
+          "kind": "BUTTON",
+          "name": "CANCEL",
+          "props": {
+            "button_image_alt": "Cancel",
+            "button_sequence": 10,
+            "button_action": "DEFINED_BY_DA",
+            "button_position": "CLOSE"
+          }
+        },
+        {
+          "key": "P301:BUTTON:CREATE",
+          "kind": "BUTTON",
+          "name": "CREATE",
+          "props": {
+            "button_image_alt": "Create",
+            "button_sequence": 40,
+            "button_is_hot": "Y",
+            "button_action": "SUBMIT",
+            "button_condition": ":P301_REQUEST_ID is null",
+            "button_condition_type": "EXPRESSION",
+            "database_action": "INSERT",
+            "button_position": "NEXT"
+          }
+        },
+        {
+          "key": "P301:BUTTON:DELETE",
+          "kind": "BUTTON",
+          "name": "DELETE",
+          "props": {
+            "button_image_alt": "Delete",
+            "button_sequence": 20,
+            "button_action": "SUBMIT",
+            "button_condition": ":P301_REQUEST_ID is not null and nvl(:P301_STATUS,'DRAFT') = 'DRAFT'",
+            "button_condition_type": "EXPRESSION",
+            "database_action": "DELETE",
+            "confirm_message": "&APP_TEXT$DELETE_MSG!RAW.",
+            "button_execute_validations": "N",
+            "button_position": "DELETE"
+          }
+        },
+        {
+          "key": "P301:BUTTON:SAVE",
+          "kind": "BUTTON",
+          "name": "SAVE",
+          "props": {
+            "button_image_alt": "Apply Changes",
+            "button_sequence": 30,
+            "button_is_hot": "Y",
+            "button_action": "SUBMIT",
+            "button_condition": ":P301_REQUEST_ID is not null and nvl(:P301_STATUS,'DRAFT') not in ('SUBMITTED','CANCELLED','CLOSED')",
+            "button_condition_type": "EXPRESSION",
+            "database_action": "UPDATE",
+            "button_position": "NEXT"
+          }
+        },
+        {
+          "key": "P301:BUTTON:SUBMIT",
+          "kind": "BUTTON",
+          "name": "SUBMIT",
+          "props": {
+            "button_image_alt": "Submit for Approval",
+            "button_sequence": 50,
+            "button_is_hot": "Y",
+            "button_action": "SUBMIT",
+            "button_condition": ":P301_REQUEST_ID is not null and nvl(:P301_STATUS,'DRAFT') in ('DRAFT','REJECTED')",
+            "button_condition_type": "EXPRESSION",
+            "database_action": "UPDATE",
+            "confirm_message": "Ajukan dokumen ini untuk approval? Setelah diajukan dokumen terkunci.",
+            "button_position": "NEXT"
+          }
+        },
+        {
+          "key": "P301:DYNAMIC_ACTION:ON_CLICK_CANCEL_CLOSE_DIALOG",
+          "kind": "DYNAMIC_ACTION",
+          "name": "ON_CLICK_CANCEL_CLOSE_DIALOG",
+          "props": {
+            "triggering_element_type": "BUTTON",
+            "bind_event_type": "click",
+            "event_sequence": 10,
+            "triggering_button": "CANCEL",
+            "actions": [
+              {
+                "action": "NATIVE_DIALOG_CANCEL",
+                "result": "TRUE",
+                "region": null
+              }
+            ]
+          }
+        },
+        {
+          "key": "P301:ITEM:P301_DEPARTMENT_ID",
+          "kind": "ITEM",
+          "name": "P301_DEPARTMENT_ID",
+          "props": {
+            "prompt": "Department",
+            "display_as": "NATIVE_SELECT_LIST",
+            "source": "DEPARTMENT_ID",
+            "is_required": true,
+            "named_lov": "APX_DEMO_DEPARTMENTS",
+            "lov_display_null": "YES",
+            "lov_null_text": "- Pilih -",
+            "read_only_when": "not (nvl(:P301_STATUS,'DRAFT') in ('DRAFT','REJECTED'))",
+            "read_only_when_type": "EXPRESSION",
+            "source_data_type": "NUMBER",
+            "lov_display_extra": "YES",
+            "item_sequence": 25,
+            "attributes": {
+              "page_action_on_selection": "NONE"
+            }
+          }
+        },
+        {
+          "key": "P301:ITEM:P301_NEED_DATE",
+          "kind": "ITEM",
+          "name": "P301_NEED_DATE",
+          "props": {
+            "prompt": "Dibutuhkan Tanggal",
+            "display_as": "NATIVE_DATE_PICKER_APEX",
+            "source": "NEED_DATE",
+            "read_only_when": "not (nvl(:P301_STATUS,'DRAFT') in ('DRAFT','REJECTED'))",
+            "read_only_when_type": "EXPRESSION",
+            "source_data_type": "DATE",
+            "item_sequence": 45,
+            "attributes": {
+              "display_as": "POPUP",
+              "max_date": "NONE",
+              "min_date": "NONE",
+              "multiple_months": "N",
+              "show_time": "N",
+              "use_defaults": "Y"
+            }
+          }
+        },
+        {
+          "key": "P301:ITEM:P301_NOTES",
+          "kind": "ITEM",
+          "name": "P301_NOTES",
+          "props": {
+            "prompt": "Catatan",
+            "display_as": "NATIVE_TEXTAREA",
+            "source": "NOTES",
+            "source_data_type": "VARCHAR2",
+            "item_sequence": 65,
+            "attributes": {
+              "auto_height": "N",
+              "character_counter": "N",
+              "resizable": "Y",
+              "trim_spaces": "BOTH"
+            }
+          }
+        },
+        {
+          "key": "P301:ITEM:P301_PURPOSE",
+          "kind": "ITEM",
+          "name": "P301_PURPOSE",
+          "props": {
+            "prompt": "Keperluan",
+            "display_as": "NATIVE_TEXT_FIELD",
+            "source": "PURPOSE",
+            "is_required": true,
+            "read_only_when": "not (nvl(:P301_STATUS,'DRAFT') in ('DRAFT','REJECTED'))",
+            "read_only_when_type": "EXPRESSION",
+            "source_data_type": "VARCHAR2",
+            "item_sequence": 55,
+            "attributes": {
+              "disabled": "N",
+              "submit_when_enter_pressed": "N",
+              "subtype": "TEXT",
+              "trim_spaces": "BOTH"
+            }
+          }
+        },
+        {
+          "key": "P301:ITEM:P301_REQUEST_DATE",
+          "kind": "ITEM",
+          "name": "P301_REQUEST_DATE",
+          "props": {
+            "prompt": "Tanggal",
+            "display_as": "NATIVE_DATE_PICKER_APEX",
+            "source": "REQUEST_DATE",
+            "is_required": true,
+            "item_default": "select trunc(sysdate) from dual",
+            "source_data_type": "DATE",
+            "item_sequence": 35,
+            "attributes": {
+              "display_as": "POPUP",
+              "max_date": "NONE",
+              "min_date": "NONE",
+              "multiple_months": "N",
+              "show_time": "N",
+              "use_defaults": "Y"
+            }
+          }
+        },
+        {
+          "key": "P301:ITEM:P301_REQUEST_ID",
+          "kind": "ITEM",
+          "name": "P301_REQUEST_ID",
+          "props": {
+            "display_as": "NATIVE_HIDDEN",
+            "source": "REQUEST_ID",
+            "is_primary_key": true,
+            "protection_level": "S",
+            "source_data_type": "NUMBER",
+            "item_sequence": 5,
+            "attributes": {
+              "value_protected": "Y"
+            }
+          }
+        },
+        {
+          "key": "P301:ITEM:P301_REQUEST_NO",
+          "kind": "ITEM",
+          "name": "P301_REQUEST_NO",
+          "props": {
+            "prompt": "No. Permintaan Barang",
+            "display_as": "NATIVE_DISPLAY_ONLY",
+            "source": "REQUEST_NO",
+            "is_query_only": true,
+            "source_data_type": "VARCHAR2",
+            "item_sequence": 10,
+            "attributes": {
+              "based_on": "VALUE",
+              "format": "PLAIN",
+              "send_on_page_submit": "N",
+              "show_line_breaks": "Y"
+            }
+          }
+        },
+        {
+          "key": "P301:ITEM:P301_STATUS",
+          "kind": "ITEM",
+          "name": "P301_STATUS",
+          "props": {
+            "prompt": "Status",
+            "display_as": "NATIVE_SELECT_LIST",
+            "source": "STATUS",
+            "named_lov": "REQUESTS_STATUS",
+            "lov_display_null": "YES",
+            "lov_null_text": "- Pilih -",
+            "item_default": "DRAFT",
+            "read_only_when": "nvl(:P301_STATUS,'DRAFT') not in ('APPROVED','FULFILLED','CLOSED')",
+            "read_only_when_type": "EXPRESSION",
+            "inline_help_text": "Status operasional setelah approved. Approval lewat Submit for Approval.",
+            "source_data_type": "VARCHAR2",
+            "lov_display_extra": "YES",
+            "item_sequence": 15,
+            "attributes": {
+              "page_action_on_selection": "NONE"
+            }
+          }
+        },
+        {
+          "key": "P301:PROCESS:CALL_SUBMIT_REQUESTS",
+          "kind": "PROCESS",
+          "name": "CALL_SUBMIT_REQUESTS",
+          "props": {
+            "process_point": "AFTER_SUBMIT",
+            "process_type": "NATIVE_PLSQL",
+            "process_sql_clob": "apx_demo_approval_pkg.submit(p_doc_type => 'REQ', p_doc_id => :P301_REQUEST_ID);",
+            "process_success_message": "Dokumen diajukan untuk approval.",
+            "process_sequence": 20,
+            "when_button": "SUBMIT"
+          }
+        },
+        {
+          "key": "P301:PROCESS:CLOSE_DIALOG",
+          "kind": "PROCESS",
+          "name": "CLOSE_DIALOG",
+          "props": {
+            "process_point": "AFTER_SUBMIT",
+            "process_type": "NATIVE_CLOSE_WINDOW",
+            "process_when": "DELETE,SAVE,CREATE,SUBMIT",
+            "process_when_type": "REQUEST_IN_CONDITION",
+            "process_sequence": 50
+          }
+        },
+        {
+          "key": "P301:PROCESS:INIT_REQUESTS_FORM",
+          "kind": "PROCESS",
+          "name": "INIT_REQUESTS_FORM",
+          "props": {
+            "process_point": "BEFORE_HEADER",
+            "process_type": "NATIVE_FORM_INIT",
+            "process_sequence": 10
+          }
+        },
+        {
+          "key": "P301:PROCESS:SAVE_REQUESTS",
+          "kind": "PROCESS",
+          "name": "SAVE_REQUESTS",
+          "props": {
+            "process_point": "AFTER_SUBMIT",
+            "process_type": "NATIVE_FORM_DML",
+            "process_sequence": 10
+          }
+        },
+        {
+          "key": "P301:REGION:Buttons",
+          "kind": "REGION",
+          "name": "Buttons",
+          "props": {
+            "plug_display_point": "REGION_POSITION_03",
+            "plug_display_sequence": 20
+          }
+        },
+        {
+          "key": "P301:REGION:Permintaan Barang",
+          "kind": "REGION",
+          "name": "Permintaan Barang",
+          "props": {
+            "plug_source_type": "NATIVE_FORM",
+            "query_type": "TABLE",
+            "query_table": "APX_DEMO_REQUESTS",
+            "edit_operations": "i:u:d",
+            "is_editable": true,
+            "lost_update_check_type": "VALUES",
+            "plug_display_sequence": 10
+          }
+        },
+        {
+          "key": "P301:VALIDATION:NEED_DATE_AFTER_REQUEST_DATE",
+          "kind": "VALIDATION",
+          "name": "NEED_DATE_AFTER_REQUEST_DATE",
+          "props": {
+            "validation": ":P301_NEED_DATE is null or :P301_NEED_DATE >= :P301_REQUEST_DATE",
+            "validation2": "PLSQL",
+            "validation_type": "EXPRESSION",
+            "error_message": "Tanggal dibutuhkan tidak boleh sebelum tanggal permintaan.",
+            "validation_condition": "SAVE,CREATE,SUBMIT",
+            "validation_condition_type": "REQUEST_IN_CONDITION",
+            "associated_item": "P301_NEED_DATE"
+          }
+        }
+      ]
+    },
+    {
+      "id": 302,
+      "name": "Detail Permintaan",
+      "alias": "PERMINTAAN-BARANG-DETAIL",
+      "title": "Detail Permintaan",
+      "mode": "NORMAL",
+      "scheme": "APP_USERS",
+      "file": "application/pages/page_00302.sql",
+      "components": [
+        {
+          "key": "P302:BUTTON:CREATE_REQUEST_LINES",
+          "kind": "BUTTON",
+          "name": "CREATE_REQUEST_LINES",
+          "props": {
+            "button_image_alt": "Tambah",
+            "button_sequence": 10,
+            "button_is_hot": "Y",
+            "button_action": "REDIRECT_PAGE",
+            "button_redirect_url": "f?p=&APP_ID.:311:&SESSION.::&DEBUG.:311:P311_REQUEST_ID:&P302_REQUEST_ID.",
+            "button_condition": "select 1\n  from apx_demo_requests\n where request_id = to_number(:P302_REQUEST_ID)\n   and status in ('DRAFT', 'REJECTED')",
+            "button_condition_type": "EXISTS",
+            "button_position": "EDIT",
+            "security_scheme": "REQUESTER"
+          }
+        },
+        {
+          "key": "P302:BUTTON:EDIT_HEADER",
+          "kind": "BUTTON",
+          "name": "EDIT_HEADER",
+          "props": {
+            "button_image_alt": "Edit",
+            "button_sequence": 10,
+            "button_action": "REDIRECT_PAGE",
+            "button_redirect_url": "f?p=&APP_ID.:301:&SESSION.::&DEBUG.:301:P301_REQUEST_ID:&P302_REQUEST_ID.",
+            "button_position": "EDIT",
+            "security_scheme": "REQUESTER"
+          }
+        },
+        {
+          "key": "P302:DYNAMIC_ACTION:ON_DIALOG_CLOSED_REFRESH_HEADER",
+          "kind": "DYNAMIC_ACTION",
+          "name": "ON_DIALOG_CLOSED_REFRESH_HEADER",
+          "props": {
+            "triggering_element_type": "BUTTON",
+            "bind_event_type": "apexafterclosedialog",
+            "event_sequence": 10,
+            "triggering_button": "EDIT_HEADER",
+            "actions": [
+              {
+                "action": "NATIVE_REFRESH",
+                "result": "TRUE",
+                "region": "Permintaan Barang"
+              }
+            ]
+          }
+        },
+        {
+          "key": "P302:DYNAMIC_ACTION:ON_DIALOG_CLOSED_REFRESH_REQUEST_LINES",
+          "kind": "DYNAMIC_ACTION",
+          "name": "ON_DIALOG_CLOSED_REFRESH_REQUEST_LINES",
+          "props": {
+            "triggering_element_type": "BUTTON",
+            "bind_event_type": "apexafterclosedialog",
+            "event_sequence": 30,
+            "triggering_button": "CREATE_REQUEST_LINES",
+            "actions": [
+              {
+                "action": "NATIVE_REFRESH",
+                "result": "TRUE",
+                "region": "Baris Permintaan"
+              }
+            ]
+          }
+        },
+        {
+          "key": "P302:DYNAMIC_ACTION:ON_DIALOG_CLOSED_REQUEST_LINES",
+          "kind": "DYNAMIC_ACTION",
+          "name": "ON_DIALOG_CLOSED_REQUEST_LINES",
+          "props": {
+            "triggering_element_type": "REGION",
+            "bind_event_type": "apexafterclosedialog",
+            "event_sequence": 35,
+            "triggering_region": "Baris Permintaan",
+            "actions": [
+              {
+                "action": "NATIVE_REFRESH",
+                "result": "TRUE",
+                "region": "Baris Permintaan"
+              }
+            ]
+          }
+        },
+        {
+          "key": "P302:ITEM:P302_REQUEST_ID",
+          "kind": "ITEM",
+          "name": "P302_REQUEST_ID",
+          "props": {
+            "display_as": "NATIVE_HIDDEN",
+            "source_type": "ALWAYS_NULL",
+            "item_sequence": 5,
+            "attributes": {
+              "value_protected": "Y"
+            }
+          }
+        },
+        {
+          "key": "P302:REGION:Belum dipilih",
+          "kind": "REGION",
+          "name": "Belum dipilih",
+          "props": {
+            "plug_source": "<p class=\"u-text-muted-color\">Pilih Permintaan Barang di daftar kiri untuk melihat detailnya.</p>",
+            "plug_display_condition_type": "ITEM_IS_NULL",
+            "plug_display_when_condition": "P302_REQUEST_ID",
+            "plug_display_sequence": 20
+          }
+        },
+        {
+          "key": "P302:REGION:Breadcrumb",
+          "kind": "REGION",
+          "name": "Breadcrumb",
+          "props": {
+            "plug_source_type": "NATIVE_BREADCRUMB",
+            "plug_display_point": "REGION_POSITION_01",
+            "plug_display_sequence": 10
+          }
+        },
+        {
+          "key": "P302:REGION:Permintaan Barang",
+          "kind": "REGION",
+          "name": "Permintaan Barang",
+          "props": {
+            "plug_display_condition_type": "ITEM_IS_NOT_NULL",
+            "plug_display_when_condition": "P302_REQUEST_ID",
+            "plug_display_sequence": 30
+          }
+        },
+        {
+          "key": "P302:REPORT_COLUMN:Baris Permintaan.ITEM_ID_DSP",
+          "kind": "REPORT_COLUMN",
+          "name": "Baris Permintaan.ITEM_ID_DSP",
+          "props": {
+            "column_heading": "Item",
+            "column_link": "f?p=&APP_ID.:311:&SESSION.::&DEBUG.:311:P311_LINE_ID:#LINE_ID#",
+            "column_linktext": "#ITEM_ID_DSP#",
+            "column_display_sequence": 20,
+            "derived_column": "N"
+          }
+        },
+        {
+          "key": "P302:REPORT_COLUMN:Baris Permintaan.LINE_AMOUNT",
+          "kind": "REPORT_COLUMN",
+          "name": "Baris Permintaan.LINE_AMOUNT",
+          "props": {
+            "column_heading": "Jumlah",
+            "column_format": "999G999G999G999G990",
+            "column_display_sequence": 50,
+            "column_alignment": "RIGHT",
+            "derived_column": "N"
+          }
+        },
+        {
+          "key": "P302:REPORT_COLUMN:Baris Permintaan.LINE_ID",
+          "kind": "REPORT_COLUMN",
+          "name": "Baris Permintaan.LINE_ID",
+          "props": {
+            "hidden_column": "Y",
+            "column_display_sequence": 10,
+            "derived_column": "N"
+          }
+        },
+        {
+          "key": "P302:REPORT_COLUMN:Baris Permintaan.QTY",
+          "kind": "REPORT_COLUMN",
+          "name": "Baris Permintaan.QTY",
+          "props": {
+            "column_heading": "Qty",
+            "column_format": "999G999G999G990D99",
+            "column_display_sequence": 30,
+            "column_alignment": "RIGHT",
+            "derived_column": "N"
+          }
+        },
+        {
+          "key": "P302:REPORT_COLUMN:Baris Permintaan.UNIT_PRICE",
+          "kind": "REPORT_COLUMN",
+          "name": "Baris Permintaan.UNIT_PRICE",
+          "props": {
+            "column_heading": "Harga Satuan",
+            "column_format": "999G999G999G999G990",
+            "column_display_sequence": 40,
+            "column_alignment": "RIGHT",
+            "derived_column": "N"
+          }
+        },
+        {
+          "key": "P302:REPORT_COLUMN:Daftar Permintaan Barang.DEPARTMENT_ID_DSP",
+          "kind": "REPORT_COLUMN",
+          "name": "Daftar Permintaan Barang.DEPARTMENT_ID_DSP",
+          "props": {
+            "column_heading": "Department",
+            "column_display_sequence": 30,
+            "derived_column": "N"
+          }
+        },
+        {
+          "key": "P302:REPORT_COLUMN:Daftar Permintaan Barang.REQUEST_ID",
+          "kind": "REPORT_COLUMN",
+          "name": "Daftar Permintaan Barang.REQUEST_ID",
+          "props": {
+            "hidden_column": "Y",
+            "column_display_sequence": 10,
+            "derived_column": "N"
+          }
+        },
+        {
+          "key": "P302:REPORT_COLUMN:Daftar Permintaan Barang.REQUEST_NO",
+          "kind": "REPORT_COLUMN",
+          "name": "Daftar Permintaan Barang.REQUEST_NO",
+          "props": {
+            "column_heading": "Permintaan Barang",
+            "column_link": "f?p=&APP_ID.:302:&SESSION.::&DEBUG.::P302_REQUEST_ID:#REQUEST_ID#",
+            "column_linktext": "#REQUEST_NO#",
+            "column_display_sequence": 20,
+            "derived_column": "N"
+          }
+        },
+        {
+          "key": "P302:REPORT_COLUMN:Daftar Permintaan Barang.STATUS",
+          "kind": "REPORT_COLUMN",
+          "name": "Daftar Permintaan Barang.STATUS",
+          "props": {
+            "column_heading": "Status",
+            "column_display_sequence": 40,
+            "derived_column": "N"
+          }
+        },
+        {
+          "key": "P302:REPORT_COLUMN:Permintaan Barang.DEPARTMENT_ID_DSP",
+          "kind": "REPORT_COLUMN",
+          "name": "Permintaan Barang.DEPARTMENT_ID_DSP",
+          "props": {
+            "column_heading": "Department",
+            "column_display_sequence": 30,
+            "derived_column": "N"
+          }
+        },
+        {
+          "key": "P302:REPORT_COLUMN:Permintaan Barang.NEED_DATE",
+          "kind": "REPORT_COLUMN",
+          "name": "Permintaan Barang.NEED_DATE",
+          "props": {
+            "column_heading": "Dibutuhkan Tanggal",
+            "column_display_sequence": 50,
+            "derived_column": "N"
+          }
+        },
+        {
+          "key": "P302:REPORT_COLUMN:Permintaan Barang.PURPOSE",
+          "kind": "REPORT_COLUMN",
+          "name": "Permintaan Barang.PURPOSE",
+          "props": {
+            "column_heading": "Keperluan",
+            "column_display_sequence": 60,
+            "derived_column": "N"
+          }
+        },
+        {
+          "key": "P302:REPORT_COLUMN:Permintaan Barang.REQUEST_DATE",
+          "kind": "REPORT_COLUMN",
+          "name": "Permintaan Barang.REQUEST_DATE",
+          "props": {
+            "column_heading": "Tanggal",
+            "column_display_sequence": 40,
+            "derived_column": "N"
+          }
+        },
+        {
+          "key": "P302:REPORT_COLUMN:Permintaan Barang.REQUEST_ID",
+          "kind": "REPORT_COLUMN",
+          "name": "Permintaan Barang.REQUEST_ID",
+          "props": {
+            "hidden_column": "Y",
+            "column_display_sequence": 10,
+            "derived_column": "N"
+          }
+        },
+        {
+          "key": "P302:REPORT_COLUMN:Permintaan Barang.REQUEST_NO",
+          "kind": "REPORT_COLUMN",
+          "name": "Permintaan Barang.REQUEST_NO",
+          "props": {
+            "column_heading": "No. Permintaan Barang",
+            "column_display_sequence": 20,
+            "derived_column": "N"
+          }
+        },
+        {
+          "key": "P302:REPORT_COLUMN:Permintaan Barang.STATUS",
+          "kind": "REPORT_COLUMN",
+          "name": "Permintaan Barang.STATUS",
+          "props": {
+            "column_heading": "Status",
+            "column_display_sequence": 70,
+            "derived_column": "N"
+          }
+        },
+        {
+          "key": "P302:REPORT_REGION:Baris Permintaan",
+          "kind": "REPORT_REGION",
+          "name": "Baris Permintaan",
+          "props": {
+            "source": "select line_id\n      ,item_id_dsp\n      ,qty\n      ,unit_price\n      ,line_amount\n  from apx_demo_request_lines_v\n where request_id = to_number(:P302_REQUEST_ID)",
+            "query_type": "SQL",
+            "query_order_by": "LINE_ID",
+            "query_num_rows": 15,
+            "query_no_data_found": "Belum ada Baris Permintaan.",
+            "display_sequence": 20,
+            "display_point": "SUB_REGIONS",
+            "ajax_items_to_submit": "P302_REQUEST_ID"
+          }
+        },
+        {
+          "key": "P302:REPORT_REGION:Daftar Permintaan Barang",
+          "kind": "REPORT_REGION",
+          "name": "Daftar Permintaan Barang",
+          "props": {
+            "source": "select request_id\n      ,request_no\n      ,department_id_dsp\n      ,status\n  from apx_demo_requests_v",
+            "query_type": "SQL",
+            "query_order_by": "REQUEST_NO DESC",
+            "query_num_rows": 15,
+            "query_no_data_found": "Belum ada Permintaan Barang.",
+            "display_sequence": 10
+          }
+        },
+        {
+          "key": "P302:REPORT_REGION:Permintaan Barang",
+          "kind": "REPORT_REGION",
+          "name": "Permintaan Barang",
+          "props": {
+            "source": "select request_id\n      ,request_no\n      ,department_id_dsp\n      ,request_date\n      ,need_date\n      ,purpose\n      ,status\n  from apx_demo_requests_v\n where request_id = to_number(:P302_REQUEST_ID)",
+            "query_type": "SQL",
+            "query_num_rows": 15,
+            "display_sequence": 10,
+            "display_point": "SUB_REGIONS",
+            "ajax_items_to_submit": "P302_REQUEST_ID"
+          }
+        }
+      ]
+    },
+    {
+      "id": 310,
+      "name": "Baris Permintaan",
+      "alias": "REQUEST-LINES",
+      "title": "Baris Permintaan",
+      "mode": "NORMAL",
+      "scheme": "APP_USERS",
+      "file": "application/pages/page_00310.sql",
+      "components": [
+        {
+          "key": "P310:BUTTON:CREATE",
+          "kind": "BUTTON",
+          "name": "CREATE",
+          "props": {
+            "button_image_alt": "Create",
+            "button_sequence": 10,
+            "button_is_hot": "Y",
+            "button_action": "REDIRECT_PAGE",
+            "button_redirect_url": "f?p=&APP_ID.:311:&SESSION.::&DEBUG.:311",
+            "button_position": "RIGHT_OF_IR_SEARCH_BAR",
+            "security_scheme": "REQUESTER"
+          }
+        },
+        {
+          "key": "P310:DYNAMIC_ACTION:ON_DIALOG_CLOSED_REFRESH_REPORT",
+          "kind": "DYNAMIC_ACTION",
+          "name": "ON_DIALOG_CLOSED_REFRESH_REPORT",
+          "props": {
+            "triggering_element_type": "REGION",
+            "bind_event_type": "apexafterclosedialog",
+            "event_sequence": 10,
+            "triggering_region": "Baris Permintaan",
+            "actions": [
+              {
+                "action": "NATIVE_REFRESH",
+                "result": "TRUE",
+                "region": "Baris Permintaan"
+              }
+            ]
+          }
+        },
+        {
+          "key": "P310:IR:Baris Permintaan",
+          "kind": "IR",
+          "name": "Baris Permintaan",
+          "props": {
+            "download_formats": "CSV:HTML:XLSX:PDF",
+            "detail_link": "f?p=&APP_ID.:311:&SESSION.::&DEBUG.:311:P311_LINE_ID:\\#LINE_ID#\\",
+            "detail_link_text": "<span aria-label=\"Edit\"><span class=\"fa fa-edit\" aria-hidden=\"true\" title=\"Edit\"></span></span>",
+            "no_data_found_message": "Tidak ada data.",
+            "pagination_type": "ROWS_X_TO_Y",
+            "show_detail_link": "C"
+          }
+        },
+        {
+          "key": "P310:IR_COLUMN:Baris Permintaan.ITEM_ID_DSP",
+          "kind": "IR_COLUMN",
+          "name": "Baris Permintaan.ITEM_ID_DSP",
+          "props": {
+            "column_label": "Item",
+            "column_type": "STRING",
+            "display_order": 3
+          }
+        },
+        {
+          "key": "P310:IR_COLUMN:Baris Permintaan.LINE_AMOUNT",
+          "kind": "IR_COLUMN",
+          "name": "Baris Permintaan.LINE_AMOUNT",
+          "props": {
+            "column_label": "Jumlah",
+            "column_type": "NUMBER",
+            "format_mask": "999G999G999G999G990",
+            "display_order": 6,
+            "column_alignment": "RIGHT"
+          }
+        },
+        {
+          "key": "P310:IR_COLUMN:Baris Permintaan.LINE_ID",
+          "kind": "IR_COLUMN",
+          "name": "Baris Permintaan.LINE_ID",
+          "props": {
+            "column_label": "ID",
+            "column_type": "NUMBER",
+            "display_text_as": "HIDDEN_ESCAPE_SC",
+            "display_order": 1
+          }
+        },
+        {
+          "key": "P310:IR_COLUMN:Baris Permintaan.QTY",
+          "kind": "IR_COLUMN",
+          "name": "Baris Permintaan.QTY",
+          "props": {
+            "column_label": "Qty",
+            "column_type": "NUMBER",
+            "format_mask": "999G999G999G990D99",
+            "display_order": 4,
+            "column_alignment": "RIGHT"
+          }
+        },
+        {
+          "key": "P310:IR_COLUMN:Baris Permintaan.REQUEST_ID_DSP",
+          "kind": "IR_COLUMN",
+          "name": "Baris Permintaan.REQUEST_ID_DSP",
+          "props": {
+            "column_label": "No. Permintaan",
+            "column_type": "STRING",
+            "display_order": 2
+          }
+        },
+        {
+          "key": "P310:IR_COLUMN:Baris Permintaan.UNIT_PRICE",
+          "kind": "IR_COLUMN",
+          "name": "Baris Permintaan.UNIT_PRICE",
+          "props": {
+            "column_label": "Harga Satuan",
+            "column_type": "NUMBER",
+            "format_mask": "999G999G999G999G990",
+            "display_order": 5,
+            "column_alignment": "RIGHT"
+          }
+        },
+        {
+          "key": "P310:IR_COLUMN:Baris Permintaan.UPDATED_BY",
+          "kind": "IR_COLUMN",
+          "name": "Baris Permintaan.UPDATED_BY",
+          "props": {
+            "column_label": "Diubah Oleh",
+            "column_type": "STRING",
+            "display_order": 7
+          }
+        },
+        {
+          "key": "P310:IR_COLUMN:Baris Permintaan.UPDATED_ON",
+          "kind": "IR_COLUMN",
+          "name": "Baris Permintaan.UPDATED_ON",
+          "props": {
+            "column_label": "Diubah",
+            "column_type": "DATE",
+            "display_order": 8
+          }
+        },
+        {
+          "key": "P310:IR_REPORT:Baris Permintaan.310001",
+          "kind": "IR_REPORT",
+          "name": "Baris Permintaan.310001",
+          "props": {
+            "report_columns": "REQUEST_ID_DSP:ITEM_ID_DSP:QTY:UNIT_PRICE:LINE_AMOUNT:UPDATED_BY:UPDATED_ON",
+            "sort_column_1": "LINE_ID",
+            "sort_direction_1": "ASC"
+          }
+        },
+        {
+          "key": "P310:REGION:Baris Permintaan",
+          "kind": "REGION",
+          "name": "Baris Permintaan",
+          "props": {
+            "plug_source_type": "NATIVE_IR",
+            "query_type": "SQL",
+            "plug_source": "select line_id, request_id_dsp, item_id_dsp, qty, unit_price, line_amount, updated_by, updated_on\n  from apx_demo_request_lines_v",
+            "plug_display_sequence": 20
+          }
+        },
+        {
+          "key": "P310:REGION:Breadcrumb",
+          "kind": "REGION",
+          "name": "Breadcrumb",
+          "props": {
+            "plug_source_type": "NATIVE_BREADCRUMB",
+            "plug_display_point": "REGION_POSITION_01",
+            "plug_display_sequence": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": 311,
+      "name": "Baris Permintaan",
+      "alias": "REQUEST-LINE",
+      "title": "Baris Permintaan",
+      "mode": "MODAL",
+      "scheme": "REQUESTER",
+      "file": "application/pages/page_00311.sql",
+      "components": [
+        {
+          "key": "P311:BUTTON:CANCEL",
+          "kind": "BUTTON",
+          "name": "CANCEL",
+          "props": {
+            "button_image_alt": "Cancel",
+            "button_sequence": 10,
+            "button_action": "DEFINED_BY_DA",
+            "button_position": "CLOSE"
+          }
+        },
+        {
+          "key": "P311:BUTTON:CREATE",
+          "kind": "BUTTON",
+          "name": "CREATE",
+          "props": {
+            "button_image_alt": "Create",
+            "button_sequence": 40,
+            "button_is_hot": "Y",
+            "button_action": "SUBMIT",
+            "button_condition": ":P311_LINE_ID is null",
+            "button_condition_type": "EXPRESSION",
+            "database_action": "INSERT",
+            "button_position": "NEXT"
+          }
+        },
+        {
+          "key": "P311:BUTTON:DELETE",
+          "kind": "BUTTON",
+          "name": "DELETE",
+          "props": {
+            "button_image_alt": "Delete",
+            "button_sequence": 20,
+            "button_action": "SUBMIT",
+            "button_condition": ":P311_LINE_ID is not null",
+            "button_condition_type": "EXPRESSION",
+            "database_action": "DELETE",
+            "confirm_message": "&APP_TEXT$DELETE_MSG!RAW.",
+            "button_execute_validations": "N",
+            "button_position": "DELETE"
+          }
+        },
+        {
+          "key": "P311:BUTTON:SAVE",
+          "kind": "BUTTON",
+          "name": "SAVE",
+          "props": {
+            "button_image_alt": "Apply Changes",
+            "button_sequence": 30,
+            "button_is_hot": "Y",
+            "button_action": "SUBMIT",
+            "button_condition": ":P311_LINE_ID is not null",
+            "button_condition_type": "EXPRESSION",
+            "database_action": "UPDATE",
+            "button_position": "NEXT"
+          }
+        },
+        {
+          "key": "P311:DYNAMIC_ACTION:ON_CLICK_CANCEL_CLOSE_DIALOG",
+          "kind": "DYNAMIC_ACTION",
+          "name": "ON_CLICK_CANCEL_CLOSE_DIALOG",
+          "props": {
+            "triggering_element_type": "BUTTON",
+            "bind_event_type": "click",
+            "event_sequence": 10,
+            "triggering_button": "CANCEL",
+            "actions": [
+              {
+                "action": "NATIVE_DIALOG_CANCEL",
+                "result": "TRUE",
+                "region": null
+              }
+            ]
+          }
+        },
+        {
+          "key": "P311:ITEM:P311_ITEM_ID",
+          "kind": "ITEM",
+          "name": "P311_ITEM_ID",
+          "props": {
+            "prompt": "Item",
+            "display_as": "NATIVE_SELECT_LIST",
+            "source": "ITEM_ID",
+            "is_required": true,
+            "named_lov": "APX_DEMO_ITEMS",
+            "lov_display_null": "YES",
+            "lov_null_text": "- Pilih -",
+            "source_data_type": "NUMBER",
+            "lov_display_extra": "YES",
+            "item_sequence": 25,
+            "attributes": {
+              "page_action_on_selection": "NONE"
+            }
+          }
+        },
+        {
+          "key": "P311:ITEM:P311_LINE_AMOUNT",
+          "kind": "ITEM",
+          "name": "P311_LINE_AMOUNT",
+          "props": {
+            "prompt": "Jumlah",
+            "display_as": "NATIVE_DISPLAY_ONLY",
+            "source": "LINE_AMOUNT",
+            "is_query_only": true,
+            "source_data_type": "NUMBER",
+            "item_sequence": 55,
+            "attributes": {
+              "based_on": "VALUE",
+              "format": "PLAIN",
+              "send_on_page_submit": "N",
+              "show_line_breaks": "Y"
+            }
+          }
+        },
+        {
+          "key": "P311:ITEM:P311_LINE_ID",
+          "kind": "ITEM",
+          "name": "P311_LINE_ID",
+          "props": {
+            "display_as": "NATIVE_HIDDEN",
+            "source": "LINE_ID",
+            "is_primary_key": true,
+            "protection_level": "S",
+            "source_data_type": "NUMBER",
+            "item_sequence": 5,
+            "attributes": {
+              "value_protected": "Y"
+            }
+          }
+        },
+        {
+          "key": "P311:ITEM:P311_QTY",
+          "kind": "ITEM",
+          "name": "P311_QTY",
+          "props": {
+            "prompt": "Qty",
+            "display_as": "NATIVE_NUMBER_FIELD",
+            "source": "QTY",
+            "is_required": true,
+            "source_data_type": "NUMBER",
+            "item_sequence": 35,
+            "attributes": {
+              "min_value": "0",
+              "number_alignment": "right",
+              "virtual_keyboard": "decimal"
+            }
+          }
+        },
+        {
+          "key": "P311:ITEM:P311_REQUEST_ID",
+          "kind": "ITEM",
+          "name": "P311_REQUEST_ID",
+          "props": {
+            "prompt": "No. Permintaan",
+            "display_as": "NATIVE_SELECT_LIST",
+            "source": "REQUEST_ID",
+            "is_required": true,
+            "named_lov": "APX_DEMO_REQUESTS",
+            "lov_display_null": "YES",
+            "lov_null_text": "- Pilih -",
+            "source_data_type": "NUMBER",
+            "lov_display_extra": "YES",
+            "item_sequence": 15,
+            "attributes": {
+              "page_action_on_selection": "NONE"
+            }
+          }
+        },
+        {
+          "key": "P311:ITEM:P311_UNIT_PRICE",
+          "kind": "ITEM",
+          "name": "P311_UNIT_PRICE",
+          "props": {
+            "prompt": "Harga Satuan",
+            "display_as": "NATIVE_NUMBER_FIELD",
+            "source": "UNIT_PRICE",
+            "is_required": true,
+            "item_default": "0",
+            "source_data_type": "NUMBER",
+            "item_sequence": 45,
+            "attributes": {
+              "min_value": "0",
+              "number_alignment": "right",
+              "virtual_keyboard": "decimal"
+            }
+          }
+        },
+        {
+          "key": "P311:PROCESS:CLOSE_DIALOG",
+          "kind": "PROCESS",
+          "name": "CLOSE_DIALOG",
+          "props": {
+            "process_point": "AFTER_SUBMIT",
+            "process_type": "NATIVE_CLOSE_WINDOW",
+            "process_when": "DELETE,SAVE,CREATE",
+            "process_when_type": "REQUEST_IN_CONDITION",
+            "process_sequence": 50
+          }
+        },
+        {
+          "key": "P311:PROCESS:INIT_REQUEST_LINES_FORM",
+          "kind": "PROCESS",
+          "name": "INIT_REQUEST_LINES_FORM",
+          "props": {
+            "process_point": "BEFORE_HEADER",
+            "process_type": "NATIVE_FORM_INIT",
+            "process_sequence": 10
+          }
+        },
+        {
+          "key": "P311:PROCESS:SAVE_REQUEST_LINES",
+          "kind": "PROCESS",
+          "name": "SAVE_REQUEST_LINES",
+          "props": {
+            "process_point": "AFTER_SUBMIT",
+            "process_type": "NATIVE_FORM_DML",
+            "process_sequence": 10
+          }
+        },
+        {
+          "key": "P311:REGION:Baris Permintaan",
+          "kind": "REGION",
+          "name": "Baris Permintaan",
+          "props": {
+            "plug_source_type": "NATIVE_FORM",
+            "query_type": "TABLE",
+            "query_table": "APX_DEMO_REQUEST_LINES",
+            "edit_operations": "i:u:d",
+            "is_editable": true,
+            "lost_update_check_type": "VALUES",
+            "plug_display_sequence": 10
+          }
+        },
+        {
+          "key": "P311:REGION:Buttons",
+          "kind": "REGION",
+          "name": "Buttons",
+          "props": {
+            "plug_display_point": "REGION_POSITION_03",
+            "plug_display_sequence": 20
+          }
+        }
+      ]
+    },
+    {
+      "id": 400,
+      "name": "Rekap Permintaan",
+      "alias": "REKAP-PERMINTAAN",
+      "title": "Rekap Permintaan",
+      "mode": "NORMAL",
+      "scheme": "APP_USERS",
+      "file": "application/pages/page_00400.sql",
+      "components": [
+        {
+          "key": "P400:IR:Rekap Permintaan",
+          "kind": "IR",
+          "name": "Rekap Permintaan",
+          "props": {
+            "download_formats": "CSV:HTML:XLSX:PDF",
+            "no_data_found_message": "Tidak ada data.",
+            "pagination_type": "ROWS_X_TO_Y",
+            "show_detail_link": "N"
+          }
+        },
+        {
+          "key": "P400:IR_COLUMN:Rekap Permintaan.DEPT_NAME",
+          "kind": "IR_COLUMN",
+          "name": "Rekap Permintaan.DEPT_NAME",
+          "props": {
+            "column_label": "Department",
+            "column_type": "STRING",
+            "display_order": 2
+          }
+        },
+        {
+          "key": "P400:IR_COLUMN:Rekap Permintaan.LINE_COUNT",
+          "kind": "IR_COLUMN",
+          "name": "Rekap Permintaan.LINE_COUNT",
+          "props": {
+            "column_label": "Jml Baris",
+            "column_type": "NUMBER",
+            "display_order": 5,
+            "column_alignment": "RIGHT"
+          }
+        },
+        {
+          "key": "P400:IR_COLUMN:Rekap Permintaan.PURPOSE",
+          "kind": "IR_COLUMN",
+          "name": "Rekap Permintaan.PURPOSE",
+          "props": {
+            "column_label": "Keperluan",
+            "column_type": "STRING",
+            "display_order": 4
+          }
+        },
+        {
+          "key": "P400:IR_COLUMN:Rekap Permintaan.REQUEST_DATE",
+          "kind": "IR_COLUMN",
+          "name": "Rekap Permintaan.REQUEST_DATE",
+          "props": {
+            "column_label": "Tanggal",
+            "column_type": "DATE",
+            "display_order": 3
+          }
+        },
+        {
+          "key": "P400:IR_COLUMN:Rekap Permintaan.REQUEST_NO",
+          "kind": "IR_COLUMN",
+          "name": "Rekap Permintaan.REQUEST_NO",
+          "props": {
+            "column_label": "No. Permintaan",
+            "column_type": "STRING",
+            "display_order": 1
+          }
+        },
+        {
+          "key": "P400:IR_COLUMN:Rekap Permintaan.STATUS",
+          "kind": "IR_COLUMN",
+          "name": "Rekap Permintaan.STATUS",
+          "props": {
+            "column_label": "Status",
+            "column_type": "STRING",
+            "display_order": 7
+          }
+        },
+        {
+          "key": "P400:IR_COLUMN:Rekap Permintaan.TOTAL_AMOUNT",
+          "kind": "IR_COLUMN",
+          "name": "Rekap Permintaan.TOTAL_AMOUNT",
+          "props": {
+            "column_label": "Total",
+            "column_type": "NUMBER",
+            "format_mask": "999G999G999G999G990",
+            "display_order": 6,
+            "column_alignment": "RIGHT"
+          }
+        },
+        {
+          "key": "P400:IR_REPORT:Rekap Permintaan.400001",
+          "kind": "IR_REPORT",
+          "name": "Rekap Permintaan.400001",
+          "props": {
+            "report_columns": "REQUEST_NO:DEPT_NAME:REQUEST_DATE:PURPOSE:LINE_COUNT:TOTAL_AMOUNT:STATUS",
+            "sort_column_1": "REQUEST_NO",
+            "sort_direction_1": "ASC"
+          }
+        },
+        {
+          "key": "P400:REGION:Breadcrumb",
+          "kind": "REGION",
+          "name": "Breadcrumb",
+          "props": {
+            "plug_source_type": "NATIVE_BREADCRUMB",
+            "plug_display_point": "REGION_POSITION_01",
+            "plug_display_sequence": 10
+          }
+        },
+        {
+          "key": "P400:REGION:Rekap Permintaan",
+          "kind": "REGION",
+          "name": "Rekap Permintaan",
+          "props": {
+            "plug_source_type": "NATIVE_IR",
+            "query_type": "SQL",
+            "plug_source": "select request_no, dept_name, request_date, purpose, line_count, total_amount, status\n  from apx_demo_request_summary_v",
+            "plug_display_sequence": 20
+          }
+        }
+      ]
+    },
+    {
+      "id": 500,
+      "name": "Users & Roles",
+      "alias": "USERS-ROLES",
+      "title": "Users & Roles",
+      "mode": "NORMAL",
+      "scheme": "ADMIN_RIGHTS",
+      "file": "application/pages/page_00500.sql",
+      "components": [
+        {
+          "key": "P500:BUTTON:CREATE",
+          "kind": "BUTTON",
+          "name": "CREATE",
+          "props": {
+            "button_image_alt": "Create",
+            "button_sequence": 10,
+            "button_is_hot": "Y",
+            "button_action": "REDIRECT_PAGE",
+            "button_redirect_url": "f?p=&APP_ID.:501:&SESSION.::&DEBUG.:501",
+            "button_position": "RIGHT_OF_IR_SEARCH_BAR"
+          }
+        },
+        {
+          "key": "P500:DYNAMIC_ACTION:ON_DIALOG_CLOSED_REFRESH_REPORT",
+          "kind": "DYNAMIC_ACTION",
+          "name": "ON_DIALOG_CLOSED_REFRESH_REPORT",
+          "props": {
+            "triggering_element_type": "REGION",
+            "bind_event_type": "apexafterclosedialog",
+            "event_sequence": 10,
+            "triggering_region": "Users & Roles",
+            "actions": [
+              {
+                "action": "NATIVE_REFRESH",
+                "result": "TRUE",
+                "region": "Users & Roles"
+              }
+            ]
+          }
+        },
+        {
+          "key": "P500:IR:Users & Roles",
+          "kind": "IR",
+          "name": "Users & Roles",
+          "props": {
+            "download_formats": "CSV:HTML:XLSX:PDF",
+            "detail_link": "f?p=&APP_ID.:501:&SESSION.::&DEBUG.:501:P501_USER_ROLE_ID:\\#USER_ROLE_ID#\\",
+            "detail_link_text": "<span aria-label=\"Edit\"><span class=\"fa fa-edit\" aria-hidden=\"true\" title=\"Edit\"></span></span>",
+            "no_data_found_message": "Tidak ada data.",
+            "pagination_type": "ROWS_X_TO_Y",
+            "show_detail_link": "C"
+          }
+        },
+        {
+          "key": "P500:IR_COLUMN:Users & Roles.CREATED_BY",
+          "kind": "IR_COLUMN",
+          "name": "Users & Roles.CREATED_BY",
+          "props": {
+            "column_label": "Dibuat Oleh",
+            "column_type": "STRING",
+            "display_order": 5
+          }
+        },
+        {
+          "key": "P500:IR_COLUMN:Users & Roles.CREATED_ON",
+          "kind": "IR_COLUMN",
+          "name": "Users & Roles.CREATED_ON",
+          "props": {
+            "column_label": "Dibuat",
+            "column_type": "DATE",
+            "display_order": 6
+          }
+        },
+        {
+          "key": "P500:IR_COLUMN:Users & Roles.ROLE_CODE",
+          "kind": "IR_COLUMN",
+          "name": "Users & Roles.ROLE_CODE",
+          "props": {
+            "column_label": "Role",
+            "column_type": "STRING",
+            "display_order": 3
+          }
+        },
+        {
+          "key": "P500:IR_COLUMN:Users & Roles.ROLE_NAME",
+          "kind": "IR_COLUMN",
+          "name": "Users & Roles.ROLE_NAME",
+          "props": {
+            "column_label": "Nama Role",
+            "column_type": "STRING",
+            "display_order": 4
+          }
+        },
+        {
+          "key": "P500:IR_COLUMN:Users & Roles.USERNAME",
+          "kind": "IR_COLUMN",
+          "name": "Users & Roles.USERNAME",
+          "props": {
+            "column_label": "Username",
+            "column_type": "STRING",
+            "display_order": 2
+          }
+        },
+        {
+          "key": "P500:IR_COLUMN:Users & Roles.USER_ROLE_ID",
+          "kind": "IR_COLUMN",
+          "name": "Users & Roles.USER_ROLE_ID",
+          "props": {
+            "column_label": "ID",
+            "column_type": "NUMBER",
+            "display_text_as": "HIDDEN_ESCAPE_SC",
+            "display_order": 1
+          }
+        },
+        {
+          "key": "P500:IR_REPORT:Users & Roles.500001",
+          "kind": "IR_REPORT",
+          "name": "Users & Roles.500001",
+          "props": {
+            "report_columns": "USERNAME:ROLE_CODE:ROLE_NAME:CREATED_BY:CREATED_ON",
+            "sort_column_1": "USERNAME",
+            "sort_direction_1": "ASC"
+          }
+        },
+        {
+          "key": "P500:REGION:Breadcrumb",
+          "kind": "REGION",
+          "name": "Breadcrumb",
+          "props": {
+            "plug_source_type": "NATIVE_BREADCRUMB",
+            "plug_display_point": "REGION_POSITION_01",
+            "plug_display_sequence": 10
+          }
+        },
+        {
+          "key": "P500:REGION:Users & Roles",
+          "kind": "REGION",
+          "name": "Users & Roles",
+          "props": {
+            "plug_source_type": "NATIVE_IR",
+            "query_type": "SQL",
+            "plug_source": "select user_role_id, username, role_code, role_name, created_by, created_on\n  from apx_demo_user_roles_v",
+            "plug_display_sequence": 20
+          }
+        }
+      ]
+    },
+    {
+      "id": 501,
+      "name": "User Role",
+      "alias": "USER-ROLE",
+      "title": "User Role",
+      "mode": "MODAL",
+      "scheme": "ADMIN_RIGHTS",
+      "file": "application/pages/page_00501.sql",
+      "components": [
+        {
+          "key": "P501:BUTTON:CANCEL",
+          "kind": "BUTTON",
+          "name": "CANCEL",
+          "props": {
+            "button_image_alt": "Cancel",
+            "button_sequence": 10,
+            "button_action": "DEFINED_BY_DA",
+            "button_position": "CLOSE"
+          }
+        },
+        {
+          "key": "P501:BUTTON:CREATE",
+          "kind": "BUTTON",
+          "name": "CREATE",
+          "props": {
+            "button_image_alt": "Create",
+            "button_sequence": 40,
+            "button_is_hot": "Y",
+            "button_action": "SUBMIT",
+            "button_condition": ":P501_USER_ROLE_ID is null",
+            "button_condition_type": "EXPRESSION",
+            "database_action": "INSERT",
+            "button_position": "NEXT"
+          }
+        },
+        {
+          "key": "P501:BUTTON:DELETE",
+          "kind": "BUTTON",
+          "name": "DELETE",
+          "props": {
+            "button_image_alt": "Delete",
+            "button_sequence": 20,
+            "button_action": "SUBMIT",
+            "button_condition": ":P501_USER_ROLE_ID is not null",
+            "button_condition_type": "EXPRESSION",
+            "database_action": "DELETE",
+            "confirm_message": "&APP_TEXT$DELETE_MSG!RAW.",
+            "button_execute_validations": "N",
+            "button_position": "DELETE"
+          }
+        },
+        {
+          "key": "P501:BUTTON:SAVE",
+          "kind": "BUTTON",
+          "name": "SAVE",
+          "props": {
+            "button_image_alt": "Apply Changes",
+            "button_sequence": 30,
+            "button_is_hot": "Y",
+            "button_action": "SUBMIT",
+            "button_condition": ":P501_USER_ROLE_ID is not null",
+            "button_condition_type": "EXPRESSION",
+            "database_action": "UPDATE",
+            "button_position": "NEXT"
+          }
+        },
+        {
+          "key": "P501:DYNAMIC_ACTION:ON_CLICK_CANCEL_CLOSE_DIALOG",
+          "kind": "DYNAMIC_ACTION",
+          "name": "ON_CLICK_CANCEL_CLOSE_DIALOG",
+          "props": {
+            "triggering_element_type": "BUTTON",
+            "bind_event_type": "click",
+            "event_sequence": 10,
+            "triggering_button": "CANCEL",
+            "actions": [
+              {
+                "action": "NATIVE_DIALOG_CANCEL",
+                "result": "TRUE",
+                "region": null
+              }
+            ]
+          }
+        },
+        {
+          "key": "P501:ITEM:P501_ROLE_CODE",
+          "kind": "ITEM",
+          "name": "P501_ROLE_CODE",
+          "props": {
+            "prompt": "Role",
+            "display_as": "NATIVE_SELECT_LIST",
+            "source": "ROLE_CODE",
+            "is_required": true,
+            "named_lov": "DEMO_ROLES",
+            "lov_display_null": "YES",
+            "lov_null_text": "- Pilih -",
+            "source_data_type": "VARCHAR2",
+            "lov_display_extra": "YES",
+            "item_sequence": 20,
+            "attributes": {
+              "page_action_on_selection": "NONE"
+            }
+          }
+        },
+        {
+          "key": "P501:ITEM:P501_USERNAME",
+          "kind": "ITEM",
+          "name": "P501_USERNAME",
+          "props": {
+            "prompt": "Username (APEX)",
+            "display_as": "NATIVE_TEXT_FIELD",
+            "source": "USERNAME",
+            "is_required": true,
+            "item_default": "select :APP_USER from dual",
+            "source_data_type": "VARCHAR2",
+            "item_sequence": 10,
+            "attributes": {
+              "disabled": "N",
+              "submit_when_enter_pressed": "N",
+              "subtype": "TEXT",
+              "trim_spaces": "BOTH"
+            }
+          }
+        },
+        {
+          "key": "P501:ITEM:P501_USER_ROLE_ID",
+          "kind": "ITEM",
+          "name": "P501_USER_ROLE_ID",
+          "props": {
+            "display_as": "NATIVE_HIDDEN",
+            "source": "USER_ROLE_ID",
+            "is_primary_key": true,
+            "protection_level": "S",
+            "source_data_type": "NUMBER",
+            "item_sequence": 5,
+            "attributes": {
+              "value_protected": "Y"
+            }
+          }
+        },
+        {
+          "key": "P501:PROCESS:CLOSE_DIALOG",
+          "kind": "PROCESS",
+          "name": "CLOSE_DIALOG",
+          "props": {
+            "process_point": "AFTER_SUBMIT",
+            "process_type": "NATIVE_CLOSE_WINDOW",
+            "process_when": "DELETE,SAVE,CREATE",
+            "process_when_type": "REQUEST_IN_CONDITION",
+            "process_sequence": 50
+          }
+        },
+        {
+          "key": "P501:PROCESS:INIT_USER_ROLE_FORM",
+          "kind": "PROCESS",
+          "name": "INIT_USER_ROLE_FORM",
+          "props": {
+            "process_point": "BEFORE_HEADER",
+            "process_type": "NATIVE_FORM_INIT",
+            "process_sequence": 10
+          }
+        },
+        {
+          "key": "P501:PROCESS:SAVE_USER_ROLE",
+          "kind": "PROCESS",
+          "name": "SAVE_USER_ROLE",
+          "props": {
+            "process_point": "AFTER_SUBMIT",
+            "process_type": "NATIVE_FORM_DML",
+            "process_sequence": 10
+          }
+        },
+        {
+          "key": "P501:REGION:Buttons",
+          "kind": "REGION",
+          "name": "Buttons",
+          "props": {
+            "plug_display_point": "REGION_POSITION_03",
+            "plug_display_sequence": 20
+          }
+        },
+        {
+          "key": "P501:REGION:User Role",
+          "kind": "REGION",
+          "name": "User Role",
+          "props": {
+            "plug_source_type": "NATIVE_FORM",
+            "query_type": "TABLE",
+            "query_table": "APX_DEMO_USER_ROLES",
+            "edit_operations": "i:u:d",
+            "is_editable": true,
+            "lost_update_check_type": "VALUES",
+            "plug_display_sequence": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": 510,
+      "name": "Document Types & Approval",
+      "alias": "DOCUMENT-TYPES",
+      "title": "Document Types & Approval",
+      "mode": "NORMAL",
+      "scheme": "ADMIN_RIGHTS",
+      "file": "application/pages/page_00510.sql",
+      "components": [
+        {
+          "key": "P510:DYNAMIC_ACTION:ON_DIALOG_CLOSED_REFRESH_REPORT",
+          "kind": "DYNAMIC_ACTION",
+          "name": "ON_DIALOG_CLOSED_REFRESH_REPORT",
+          "props": {
+            "triggering_element_type": "REGION",
+            "bind_event_type": "apexafterclosedialog",
+            "event_sequence": 10,
+            "triggering_region": "Document Types & Approval",
+            "actions": [
+              {
+                "action": "NATIVE_REFRESH",
+                "result": "TRUE",
+                "region": "Document Types & Approval"
+              }
+            ]
+          }
+        },
+        {
+          "key": "P510:IR:Document Types & Approval",
+          "kind": "IR",
+          "name": "Document Types & Approval",
+          "props": {
+            "download_formats": "CSV:HTML:XLSX:PDF",
+            "detail_link": "f?p=&APP_ID.:511:&SESSION.::&DEBUG.:511:P511_DOC_TYPE:\\#DOC_TYPE#\\",
+            "detail_link_text": "<span aria-label=\"Edit\"><span class=\"fa fa-edit\" aria-hidden=\"true\" title=\"Edit\"></span></span>",
+            "no_data_found_message": "Tidak ada data.",
+            "pagination_type": "ROWS_X_TO_Y",
+            "show_detail_link": "C"
+          }
+        },
+        {
+          "key": "P510:IR_COLUMN:Document Types & Approval.APPROVER1_ROLE",
+          "kind": "IR_COLUMN",
+          "name": "Document Types & Approval.APPROVER1_ROLE",
+          "props": {
+            "column_label": "Approver 1",
+            "column_type": "STRING",
+            "display_order": 4
+          }
+        },
+        {
+          "key": "P510:IR_COLUMN:Document Types & Approval.APPROVER2_ROLE",
+          "kind": "IR_COLUMN",
+          "name": "Document Types & Approval.APPROVER2_ROLE",
+          "props": {
+            "column_label": "Approver 2",
+            "column_type": "STRING",
+            "display_order": 5
+          }
+        },
+        {
+          "key": "P510:IR_COLUMN:Document Types & Approval.DOC_NAME",
+          "kind": "IR_COLUMN",
+          "name": "Document Types & Approval.DOC_NAME",
+          "props": {
+            "column_label": "Dokumen",
+            "column_type": "STRING",
+            "display_order": 2
+          }
+        },
+        {
+          "key": "P510:IR_COLUMN:Document Types & Approval.DOC_TYPE",
+          "kind": "IR_COLUMN",
+          "name": "Document Types & Approval.DOC_TYPE",
+          "props": {
+            "column_label": "Kode",
+            "column_type": "STRING",
+            "display_order": 1
+          }
+        },
+        {
+          "key": "P510:IR_COLUMN:Document Types & Approval.LEVEL2_LIMIT",
+          "kind": "IR_COLUMN",
+          "name": "Document Types & Approval.LEVEL2_LIMIT",
+          "props": {
+            "column_label": "Approver 2 bila nilai >",
+            "column_type": "NUMBER",
+            "format_mask": "999G999G999G999G990",
+            "display_order": 6,
+            "column_alignment": "RIGHT"
+          }
+        },
+        {
+          "key": "P510:IR_COLUMN:Document Types & Approval.PREFIX",
+          "kind": "IR_COLUMN",
+          "name": "Document Types & Approval.PREFIX",
+          "props": {
+            "column_label": "Prefix Nomor",
+            "column_type": "STRING",
+            "display_order": 3
+          }
+        },
+        {
+          "key": "P510:IR_REPORT:Document Types & Approval.510001",
+          "kind": "IR_REPORT",
+          "name": "Document Types & Approval.510001",
+          "props": {
+            "report_columns": "DOC_TYPE:DOC_NAME:PREFIX:APPROVER1_ROLE:APPROVER2_ROLE:LEVEL2_LIMIT",
+            "sort_column_1": "DOC_TYPE",
+            "sort_direction_1": "ASC"
+          }
+        },
+        {
+          "key": "P510:REGION:Breadcrumb",
+          "kind": "REGION",
+          "name": "Breadcrumb",
+          "props": {
+            "plug_source_type": "NATIVE_BREADCRUMB",
+            "plug_display_point": "REGION_POSITION_01",
+            "plug_display_sequence": 10
+          }
+        },
+        {
+          "key": "P510:REGION:Document Types & Approval",
+          "kind": "REGION",
+          "name": "Document Types & Approval",
+          "props": {
+            "plug_source_type": "NATIVE_IR",
+            "query_type": "SQL",
+            "plug_source": "select doc_type, doc_name, prefix, approver1_role, approver2_role, level2_limit\n  from apx_demo_doc_types",
+            "plug_display_sequence": 20
+          }
+        }
+      ]
+    },
+    {
+      "id": 511,
+      "name": "Document Type",
+      "alias": "DOCUMENT-TYPE",
+      "title": "Document Type",
+      "mode": "MODAL",
+      "scheme": "ADMIN_RIGHTS",
+      "file": "application/pages/page_00511.sql",
+      "components": [
+        {
+          "key": "P511:BUTTON:CANCEL",
+          "kind": "BUTTON",
+          "name": "CANCEL",
+          "props": {
+            "button_image_alt": "Cancel",
+            "button_sequence": 10,
+            "button_action": "DEFINED_BY_DA",
+            "button_position": "CLOSE"
+          }
+        },
+        {
+          "key": "P511:BUTTON:SAVE",
+          "kind": "BUTTON",
+          "name": "SAVE",
+          "props": {
+            "button_image_alt": "Apply Changes",
+            "button_sequence": 30,
+            "button_is_hot": "Y",
+            "button_action": "SUBMIT",
+            "button_condition": ":P511_DOC_TYPE is not null",
+            "button_condition_type": "EXPRESSION",
+            "database_action": "UPDATE",
+            "button_position": "NEXT"
+          }
+        },
+        {
+          "key": "P511:DYNAMIC_ACTION:ON_CLICK_CANCEL_CLOSE_DIALOG",
+          "kind": "DYNAMIC_ACTION",
+          "name": "ON_CLICK_CANCEL_CLOSE_DIALOG",
+          "props": {
+            "triggering_element_type": "BUTTON",
+            "bind_event_type": "click",
+            "event_sequence": 10,
+            "triggering_button": "CANCEL",
+            "actions": [
+              {
+                "action": "NATIVE_DIALOG_CANCEL",
+                "result": "TRUE",
+                "region": null
+              }
+            ]
+          }
+        },
+        {
+          "key": "P511:ITEM:P511_APPROVER1_ROLE",
+          "kind": "ITEM",
+          "name": "P511_APPROVER1_ROLE",
+          "props": {
+            "prompt": "Approver Level 1",
+            "display_as": "NATIVE_SELECT_LIST",
+            "source": "APPROVER1_ROLE",
+            "named_lov": "DEMO_ROLES",
+            "lov_display_null": "YES",
+            "lov_null_text": "- Tanpa approval -",
+            "source_data_type": "VARCHAR2",
+            "lov_display_extra": "YES",
+            "item_sequence": 30,
+            "attributes": {
+              "page_action_on_selection": "NONE"
+            }
+          }
+        },
+        {
+          "key": "P511:ITEM:P511_APPROVER2_ROLE",
+          "kind": "ITEM",
+          "name": "P511_APPROVER2_ROLE",
+          "props": {
+            "prompt": "Approver Level 2",
+            "display_as": "NATIVE_SELECT_LIST",
+            "source": "APPROVER2_ROLE",
+            "named_lov": "DEMO_ROLES",
+            "lov_display_null": "YES",
+            "lov_null_text": "- Tidak ada -",
+            "source_data_type": "VARCHAR2",
+            "lov_display_extra": "YES",
+            "item_sequence": 40,
+            "attributes": {
+              "page_action_on_selection": "NONE"
+            }
+          }
+        },
+        {
+          "key": "P511:ITEM:P511_DOC_NAME",
+          "kind": "ITEM",
+          "name": "P511_DOC_NAME",
+          "props": {
+            "prompt": "Nama Dokumen",
+            "display_as": "NATIVE_TEXT_FIELD",
+            "source": "DOC_NAME",
+            "is_required": true,
+            "source_data_type": "VARCHAR2",
+            "item_sequence": 10,
+            "attributes": {
+              "disabled": "N",
+              "submit_when_enter_pressed": "N",
+              "subtype": "TEXT",
+              "trim_spaces": "BOTH"
+            }
+          }
+        },
+        {
+          "key": "P511:ITEM:P511_DOC_TYPE",
+          "kind": "ITEM",
+          "name": "P511_DOC_TYPE",
+          "props": {
+            "display_as": "NATIVE_HIDDEN",
+            "source": "DOC_TYPE",
+            "is_primary_key": true,
+            "protection_level": "S",
+            "source_data_type": "VARCHAR2",
+            "item_sequence": 5,
+            "attributes": {
+              "value_protected": "Y"
+            }
+          }
+        },
+        {
+          "key": "P511:ITEM:P511_LEVEL2_LIMIT",
+          "kind": "ITEM",
+          "name": "P511_LEVEL2_LIMIT",
+          "props": {
+            "prompt": "Level 2 bila nilai melebihi",
+            "display_as": "NATIVE_NUMBER_FIELD",
+            "source": "LEVEL2_LIMIT",
+            "is_required": true,
+            "source_data_type": "NUMBER",
+            "item_sequence": 50,
+            "attributes": {
+              "min_value": "0",
+              "number_alignment": "right",
+              "virtual_keyboard": "decimal"
+            }
+          }
+        },
+        {
+          "key": "P511:ITEM:P511_PREFIX",
+          "kind": "ITEM",
+          "name": "P511_PREFIX",
+          "props": {
+            "prompt": "Prefix Nomor",
+            "display_as": "NATIVE_TEXT_FIELD",
+            "source": "PREFIX",
+            "is_required": true,
+            "source_data_type": "VARCHAR2",
+            "item_sequence": 20,
+            "attributes": {
+              "disabled": "N",
+              "submit_when_enter_pressed": "N",
+              "subtype": "TEXT",
+              "trim_spaces": "BOTH"
+            }
+          }
+        },
+        {
+          "key": "P511:PROCESS:CLOSE_DIALOG",
+          "kind": "PROCESS",
+          "name": "CLOSE_DIALOG",
+          "props": {
+            "process_point": "AFTER_SUBMIT",
+            "process_type": "NATIVE_CLOSE_WINDOW",
+            "process_when": "SAVE",
+            "process_when_type": "REQUEST_IN_CONDITION",
+            "process_sequence": 50
+          }
+        },
+        {
+          "key": "P511:PROCESS:INIT_DOCUMENT_TYPE_FORM",
+          "kind": "PROCESS",
+          "name": "INIT_DOCUMENT_TYPE_FORM",
+          "props": {
+            "process_point": "BEFORE_HEADER",
+            "process_type": "NATIVE_FORM_INIT",
+            "process_sequence": 10
+          }
+        },
+        {
+          "key": "P511:PROCESS:SAVE_DOCUMENT_TYPE",
+          "kind": "PROCESS",
+          "name": "SAVE_DOCUMENT_TYPE",
+          "props": {
+            "process_point": "AFTER_SUBMIT",
+            "process_type": "NATIVE_FORM_DML",
+            "process_sequence": 10
+          }
+        },
+        {
+          "key": "P511:REGION:Buttons",
+          "kind": "REGION",
+          "name": "Buttons",
+          "props": {
+            "plug_display_point": "REGION_POSITION_03",
+            "plug_display_sequence": 20
+          }
+        },
+        {
+          "key": "P511:REGION:Document Type",
+          "kind": "REGION",
+          "name": "Document Type",
+          "props": {
+            "plug_source_type": "NATIVE_FORM",
+            "query_type": "TABLE",
+            "query_table": "APX_DEMO_DOC_TYPES",
+            "edit_operations": "u",
+            "is_editable": true,
+            "lost_update_check_type": "VALUES",
+            "plug_display_sequence": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": 9999,
+      "name": "Login Page",
+      "alias": "LOGIN",
+      "title": "&APP_TITLE. - Log In",
+      "mode": "NORMAL",
+      "scheme": null,
+      "file": "application/pages/page_09999.sql",
+      "components": [
+        {
+          "key": "P9999:BUTTON:LOGIN",
+          "kind": "BUTTON",
+          "name": "LOGIN",
+          "props": {
+            "button_image_alt": "Sign In",
+            "button_sequence": 40,
+            "button_is_hot": "Y",
+            "button_action": "SUBMIT",
+            "button_position": "NEXT"
+          }
+        },
+        {
+          "key": "P9999:ITEM:P9999_PASSWORD",
+          "kind": "ITEM",
+          "name": "P9999_PASSWORD",
+          "props": {
+            "prompt": "Password",
+            "display_as": "NATIVE_PASSWORD",
+            "source_type": "ALWAYS_NULL",
+            "item_sequence": 20,
+            "attributes": {
+              "submit_when_enter_pressed": "Y"
+            }
+          }
+        },
+        {
+          "key": "P9999:ITEM:P9999_REMEMBER",
+          "kind": "ITEM",
+          "name": "P9999_REMEMBER",
+          "props": {
+            "prompt": "Remember username",
+            "display_as": "NATIVE_SINGLE_CHECKBOX",
+            "source_type": "ALWAYS_NULL",
+            "display_when": "apex_authentication.persistent_cookies_enabled",
+            "display_when_type": "EXPRESSION",
+            "item_sequence": 30,
+            "display_when2": "PLSQL",
+            "attributes": {
+              "use_defaults": "Y"
+            }
+          }
+        },
+        {
+          "key": "P9999:ITEM:P9999_USERNAME",
+          "kind": "ITEM",
+          "name": "P9999_USERNAME",
+          "props": {
+            "prompt": "Username",
+            "display_as": "NATIVE_TEXT_FIELD",
+            "source_type": "ALWAYS_NULL",
+            "item_sequence": 10,
+            "attributes": {
+              "disabled": "N",
+              "submit_when_enter_pressed": "N",
+              "subtype": "TEXT",
+              "trim_spaces": "BOTH"
+            }
+          }
+        },
+        {
+          "key": "P9999:PROCESS:Clear Page(s) Cache",
+          "kind": "PROCESS",
+          "name": "Clear Page(s) Cache",
+          "props": {
+            "process_point": "AFTER_SUBMIT",
+            "process_type": "NATIVE_SESSION_STATE",
+            "process_sequence": 30
+          }
+        },
+        {
+          "key": "P9999:PROCESS:Get Username Cookie",
+          "kind": "PROCESS",
+          "name": "Get Username Cookie",
+          "props": {
+            "process_point": "BEFORE_HEADER",
+            "process_type": "NATIVE_PLSQL",
+            "process_sql_clob": ":P9999_USERNAME := apex_authentication.get_login_username_cookie;\n:P9999_REMEMBER := case when :P9999_USERNAME is not null then 'Y' end;",
+            "process_sequence": 10
+          }
+        },
+        {
+          "key": "P9999:PROCESS:Login",
+          "kind": "PROCESS",
+          "name": "Login",
+          "props": {
+            "process_point": "AFTER_SUBMIT",
+            "process_type": "NATIVE_INVOKE_API",
+            "process_sequence": 20
+          }
+        },
+        {
+          "key": "P9999:PROCESS:Set Username Cookie",
+          "kind": "PROCESS",
+          "name": "Set Username Cookie",
+          "props": {
+            "process_point": "AFTER_SUBMIT",
+            "process_type": "NATIVE_INVOKE_API",
+            "process_sequence": 10
+          }
+        },
+        {
+          "key": "P9999:REGION:Login",
+          "kind": "REGION",
+          "name": "Login",
+          "props": {
+            "plug_display_sequence": 10
+          }
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "pages": 19,
+    "components": 269
+  },
+  "sha256": "e81a873c8409e457c6523aacc0ad12a53053109764d32a5c8d2bcdf13c24e637"
+}

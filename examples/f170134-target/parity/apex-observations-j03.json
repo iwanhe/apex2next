@@ -1,0 +1,58 @@
+{
+  "journey": "J-03",
+  "source": "oracleapex.com, workspace KCSI, app 170134 (DEMO), APEX 26.2.1",
+  "executed": "2026-11-09 10:58-11:09 UTC by Claude in the built-in browser (users DEMO_REQ, DEMO_MGR, DEMO_DIR signed in by the owner)",
+  "clockStart": "2026-11-09T10:58:00Z",
+  "method": "APEX client API inside the dialog iframe; texts read from the DOM; button lists are the visible submit buttons of page 191 (the Close button is not a submit button)",
+  "start_snapshot": "snapshot-s2.csv",
+  "end_snapshot": "snapshot-s3.csv",
+  "steps": [
+    {
+      "step": "J3A create",
+      "messages": [
+        "Row created."
+      ]
+    },
+    {
+      "step": "J3A line",
+      "messages": [
+        "Row created."
+      ]
+    },
+    {
+      "step": "J3A submit",
+      "messages": [
+        "Dokumen diajukan untuk approval."
+      ]
+    },
+    {
+      "step": "J3B approve level 1",
+      "messages": [
+        "Dokumen disetujui."
+      ]
+    },
+    {
+      "step": "J3B level 2 as manager",
+      "messages": [
+        "buttons=-"
+      ]
+    },
+    {
+      "step": "J3C level 2 as director",
+      "messages": [
+        "buttons=Approve,Reject"
+      ]
+    },
+    {
+      "step": "J3C approve level 2",
+      "messages": [
+        "Dokumen disetujui."
+      ]
+    }
+  ],
+  "notes": [
+    "Submit confirmation text: 'Ajukan dokumen ini untuk approval? Setelah diajukan dokumen terkunci.'; Approve has no confirmation.",
+    "After Submit the page-302 'Tambah' button stays visible until the page is reloaded: the dialog-closed dynamic action refreshes the header region only, while the button condition (status DRAFT/REJECTED) is evaluated at page render. The target re-renders the page after the dialog, so the button disappears immediately.",
+    "Level 1 approval created the level-2 DIRECTOR step with REQUESTED_ON equal to the level-1 ACTED_ON."
+  ]
+}

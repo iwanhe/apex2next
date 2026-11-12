@@ -1,0 +1,278 @@
+{
+  "journey": "J-01",
+  "s0": {
+    "name": "snapshot-s0.csv",
+    "sha256": "3b847e22b21c69da6a32882eb3c7ae4bb2c03faf3458234d611bf71fc5727b81"
+  },
+  "s1": {
+    "name": "snapshot-s1.csv",
+    "sha256": "8ee82921b06e83918b8e459db6fd6f243a4e621c02cca1579f256cf6d6e21352",
+    "session": {
+      "db_user": "APEX_PUBLIC_USER",
+      "apex_app_user": "IWAN.HERDIAN@KCSI-ID.COM",
+      "pkg_app_user": "IWAN.HERDIAN@KCSI-ID.COM",
+      "sysdate": "2026-11-09T09:36:31",
+      "systimestamp": "2026-11-09T09:36:31.973204+00:00",
+      "dbtimezone": "-05:00",
+      "sessiontimezone": "+00:00",
+      "nls_date_format": "DS",
+      "nls_numeric_chars": ".,",
+      "nls_sort": "BINARY",
+      "nls_language": "AMERICAN",
+      "db_charset": "AL32UTF8"
+    }
+  },
+  "load": {
+    "SNP-001": "PASS",
+    "SNP-002": "PASS",
+    "SNP-003": "PASS",
+    "LOD-001": "PASS",
+    "LOD-002": "PASS",
+    "IDN-001": "PASS",
+    "TBL-001": "PASS",
+    "VIW-001": "PASS"
+  },
+  "state": {
+    "apx_demo_roles": {
+      "source": 5,
+      "target": 5,
+      "differences": {}
+    },
+    "apx_demo_user_roles": {
+      "source": 7,
+      "target": 7,
+      "differences": {}
+    },
+    "apx_demo_doc_types": {
+      "source": 1,
+      "target": 1,
+      "differences": {}
+    },
+    "apx_demo_doc_seq": {
+      "source": 1,
+      "target": 1,
+      "differences": {}
+    },
+    "apx_demo_departments": {
+      "source": 3,
+      "target": 3,
+      "differences": {}
+    },
+    "apx_demo_items": {
+      "source": 5,
+      "target": 5,
+      "differences": {}
+    },
+    "apx_demo_requests": {
+      "source": 3,
+      "target": 3,
+      "differences": {}
+    },
+    "apx_demo_approvals": {
+      "source": 2,
+      "target": 2,
+      "differences": {}
+    },
+    "apx_demo_request_lines": {
+      "source": 6,
+      "target": 6,
+      "differences": {}
+    }
+  },
+  "views": {
+    "principal": "IWAN.HERDIAN@KCSI-ID.COM",
+    "views": {
+      "apx_demo_user_roles_v": {
+        "source": 7,
+        "target": 7,
+        "differences": {}
+      },
+      "apx_demo_departments_v": {
+        "source": 3,
+        "target": 3,
+        "differences": {}
+      },
+      "apx_demo_items_v": {
+        "source": 5,
+        "target": 5,
+        "differences": {}
+      },
+      "apx_demo_requests_v": {
+        "source": 3,
+        "target": 3,
+        "differences": {}
+      },
+      "apx_demo_request_lines_v": {
+        "source": 6,
+        "target": 6,
+        "differences": {}
+      },
+      "apx_demo_request_summary_v": {
+        "source": 3,
+        "target": 3,
+        "differences": {}
+      },
+      "apx_demo_approvals_v": {
+        "source": 2,
+        "target": 2,
+        "differences": {}
+      },
+      "apx_demo_dash_c1_s1_v": {
+        "source": 2,
+        "target": 2,
+        "differences": {}
+      },
+      "apx_demo_dash_c2_s1_v": {
+        "source": 2,
+        "target": 2,
+        "differences": {}
+      },
+      "apx_demo_dash_kpi_v": {
+        "source": 3,
+        "target": 3,
+        "differences": {}
+      }
+    }
+  },
+  "messages": [
+    {
+      "step": "J1 create, need date before request date",
+      "url": "requests/new",
+      "target": [
+        "1 error has occurred",
+        "Tanggal dibutuhkan tidak boleh sebelum tanggal permintaan."
+      ],
+      "apex": [
+        "1 error has occurred",
+        "Tanggal dibutuhkan tidak boleh sebelum tanggal permintaan."
+      ],
+      "equal": true
+    },
+    {
+      "step": "J1 create",
+      "url": "requests?msg=DML%3ACREATED",
+      "target": [
+        "Row created."
+      ],
+      "apex": [
+        "Row created."
+      ],
+      "equal": true
+    },
+    {
+      "step": "J2 line ATK-001 - Kertas A4 80gsm (RIM) qty abc",
+      "url": "request-lines/new?request_id=21&return=%2Frequests%2Fdetail%3Fid%3D21",
+      "target": [
+        "1 error has occurred",
+        "Qty must be a number greater than or equal to 0."
+      ],
+      "apex": [
+        "1 error has occurred",
+        "Qty must be a number greater than or equal to 0."
+      ],
+      "equal": true
+    },
+    {
+      "step": "J2 line ATK-001 - Kertas A4 80gsm (RIM)",
+      "url": "requests/detail?id=21&msg=DML%3ACREATED",
+      "target": [
+        "Row created."
+      ],
+      "apex": [
+        "Row created."
+      ],
+      "equal": true
+    },
+    {
+      "step": "J2 line IT-002 - Mouse Wireless (UNIT)",
+      "url": "requests/detail?id=21&msg=DML%3ACREATED",
+      "target": [
+        "Row created."
+      ],
+      "apex": [
+        "Row created."
+      ],
+      "equal": true
+    },
+    {
+      "step": "J3 submit",
+      "url": "requests/detail?id=21&msg=301%3ACALL_SUBMIT_REQUESTS",
+      "target": [
+        "Dokumen diajukan untuk approval."
+      ],
+      "apex": [
+        "Dokumen diajukan untuk approval."
+      ],
+      "equal": true
+    },
+    {
+      "step": "J4 delete draft",
+      "url": "requests?msg=DML%3ADELETED",
+      "target": [
+        "Row deleted."
+      ],
+      "apex": [
+        "Row deleted."
+      ],
+      "equal": true
+    },
+    {
+      "step": "J5 reject without note",
+      "url": "approvals/1?return=%2Fapprovals",
+      "target": [
+        "1 error has occurred",
+        "ORA-20108: Alasan penolakan wajib diisi."
+      ],
+      "apex": [
+        "1 error has occurred",
+        "ORA-20108: Alasan penolakan wajib diisi."
+      ],
+      "equal": true
+    },
+    {
+      "step": "J5 reject",
+      "url": "approvals?msg=191%3ACALL_REJECT",
+      "target": [
+        "Dokumen ditolak."
+      ],
+      "apex": [
+        "Dokumen ditolak."
+      ],
+      "equal": true
+    },
+    {
+      "step": "J6 resubmit",
+      "url": "requests?msg=DML%3AUPDATED%2C301%3ACALL_SUBMIT_REQUESTS",
+      "target": [
+        "Row updated. Dokumen diajukan untuk approval."
+      ],
+      "apex": [
+        "Row updated. Dokumen diajukan untuk approval."
+      ],
+      "equal": true
+    },
+    {
+      "step": "J7 approve",
+      "url": "approvals?msg=191%3ACALL_APPROVE",
+      "target": [
+        "Dokumen disetujui."
+      ],
+      "apex": [
+        "Dokumen disetujui."
+      ],
+      "equal": true
+    },
+    {
+      "step": "J8 fulfilled",
+      "url": "requests?msg=DML%3AUPDATED",
+      "target": [
+        "Row updated."
+      ],
+      "apex": [
+        "Row updated."
+      ],
+      "equal": true
+    }
+  ],
+  "result": "PASS"
+}

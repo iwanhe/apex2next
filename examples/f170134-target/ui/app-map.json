@@ -1,0 +1,85 @@
+{
+  "format": "apex2next.app-map.v1",
+  "sourceSchemas": [
+    "WKSP_KCSI"
+  ],
+  "pages": {
+    "100": {
+      "route": "/",
+      "manual": true
+    },
+    "190": {
+      "route": "/approvals"
+    },
+    "191": {
+      "route": "/approvals",
+      "form": "approval"
+    },
+    "200": {
+      "route": "/departments"
+    },
+    "201": {
+      "route": "/departments",
+      "form": "department"
+    },
+    "210": {
+      "route": "/items"
+    },
+    "211": {
+      "route": "/items",
+      "form": "item"
+    },
+    "300": {
+      "route": "/requests"
+    },
+    "301": {
+      "route": "/requests",
+      "form": "request"
+    },
+    "302": {
+      "route": "/requests/detail",
+      "manual": true
+    },
+    "310": {
+      "route": "/request-lines"
+    },
+    "311": {
+      "route": "/request-lines",
+      "form": "requestLine"
+    },
+    "400": {
+      "route": "/reports/requests"
+    },
+    "500": {
+      "route": "/admin/users"
+    },
+    "501": {
+      "route": "/admin/users",
+      "form": "userRole"
+    },
+    "510": {
+      "route": "/admin/document-types"
+    },
+    "511": {
+      "route": "/admin/document-types",
+      "form": "docType",
+      "param": "docType"
+    },
+    "9999": {
+      "route": "/login"
+    }
+  },
+  "regions": {
+    "190:Approval Inbox": "approvalInbox",
+    "200:Departments": "departments",
+    "210:Hasil Items": "items",
+    "300:Hasil Permintaan Barang": "requests",
+    "302:Daftar Permintaan Barang": "requestMasterList",
+    "302:Permintaan Barang": "requestHeader",
+    "302:Baris Permintaan": "requestDetailLines",
+    "310:Baris Permintaan": "requestLines",
+    "400:Rekap Permintaan": "requestSummary",
+    "500:Users & Roles": "userRoles",
+    "510:Document Types & Approval": "docTypes"
+  }
+}

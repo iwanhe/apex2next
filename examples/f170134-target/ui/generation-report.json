@@ -1,0 +1,1100 @@
+{
+  "format": "apex2next.generation-report.v1",
+  "inventorySha256": "e81a873c8409e457c6523aacc0ad12a53053109764d32a5c8d2bcdf13c24e637",
+  "application": "Demo Permintaan Barang",
+  "summary": {
+    "pages": {
+      "GENERATED": 15,
+      "MANUAL": 2,
+      "NOT_APPLICABLE": 1,
+      "PROVIDED": 1
+    },
+    "regions": {
+      "GENERATED": 11,
+      "MANUAL": 3
+    },
+    "lovs": {
+      "GENERATED": 5,
+      "PROVIDED": 3
+    },
+    "files": 23,
+    "todo": {
+      "ASSISTED": 19,
+      "MANUAL": 31
+    }
+  },
+  "pages": [
+    {
+      "id": 0,
+      "name": "Global Page",
+      "pattern": "GLOBAL",
+      "status": "NOT_APPLICABLE",
+      "files": [],
+      "todo": []
+    },
+    {
+      "id": 100,
+      "name": "Home",
+      "pattern": "MANUAL",
+      "status": "MANUAL",
+      "files": [],
+      "todo": [
+        {
+          "code": "GEN001",
+          "disposition": "MANUAL",
+          "message": "Page matches no supported pattern; write the page by hand.",
+          "detail": "regions: NATIVE_JET_CHART, TMPL_THEME_42$METRIC_CARD"
+        }
+      ]
+    },
+    {
+      "id": 190,
+      "name": "Approval Inbox",
+      "pattern": "IR_PAGE",
+      "status": "GENERATED",
+      "files": [
+        "apps/web/app/(app)/approvals/page.tsx"
+      ],
+      "todo": [
+        {
+          "code": "GEN011",
+          "disposition": "ASSISTED",
+          "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+          "detail": "ON_DIALOG_CLOSED_REFRESH_REPORT"
+        }
+      ]
+    },
+    {
+      "id": 191,
+      "name": "Approval",
+      "pattern": "FORM_DIALOG",
+      "status": "GENERATED",
+      "files": [
+        "apps/web/app/(app)/approvals/[id]/page.tsx"
+      ],
+      "todo": [
+        {
+          "code": "GEN008",
+          "disposition": "MANUAL",
+          "message": "Server-side condition (button, read-only, display) to implement in a page service.",
+          "detail": "button APPROVE"
+        },
+        {
+          "code": "GEN008",
+          "disposition": "MANUAL",
+          "message": "Server-side condition (button, read-only, display) to implement in a page service.",
+          "detail": "button REJECT"
+        },
+        {
+          "code": "GEN011",
+          "disposition": "ASSISTED",
+          "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+          "detail": "ON_CLICK_CANCEL_CLOSE_DIALOG"
+        },
+        {
+          "code": "GEN006",
+          "disposition": "MANUAL",
+          "message": "Business logic: PL/SQL process to implement in a page service.",
+          "detail": "CALL_APPROVE"
+        },
+        {
+          "code": "GEN006",
+          "disposition": "MANUAL",
+          "message": "Business logic: PL/SQL process to implement in a page service.",
+          "detail": "CALL_REJECT"
+        }
+      ]
+    },
+    {
+      "id": 200,
+      "name": "Departments",
+      "pattern": "IR_PAGE",
+      "status": "GENERATED",
+      "files": [
+        "apps/web/app/(app)/departments/page.tsx"
+      ],
+      "todo": [
+        {
+          "code": "GEN011",
+          "disposition": "ASSISTED",
+          "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+          "detail": "ON_DIALOG_CLOSED_REFRESH_REPORT"
+        }
+      ]
+    },
+    {
+      "id": 201,
+      "name": "Department",
+      "pattern": "FORM_DIALOG",
+      "status": "GENERATED",
+      "files": [
+        "apps/web/app/(app)/departments/[id]/page.tsx",
+        "apps/web/app/(app)/departments/new/page.tsx"
+      ],
+      "todo": [
+        {
+          "code": "GEN011",
+          "disposition": "ASSISTED",
+          "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+          "detail": "ON_CLICK_CANCEL_CLOSE_DIALOG"
+        },
+        {
+          "code": "GEN009",
+          "disposition": "MANUAL",
+          "message": "Form DML to wire to a business service (create, update, delete).",
+          "detail": "SAVE_DEPARTMENTS (table APX_DEMO_DEPARTMENTS has triggers that are not converted)"
+        }
+      ]
+    },
+    {
+      "id": 210,
+      "name": "Items",
+      "pattern": "FACETED_CARDS",
+      "status": "GENERATED",
+      "files": [
+        "apps/web/app/(app)/items/page.tsx"
+      ],
+      "todo": [
+        {
+          "code": "GEN011",
+          "disposition": "ASSISTED",
+          "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+          "detail": "ON_DIALOG_CLOSED_REFRESH_REPORT"
+        },
+        {
+          "code": "GEN012",
+          "disposition": "ASSISTED",
+          "message": "Static content region is not rendered by the generated page.",
+          "detail": "Items"
+        }
+      ]
+    },
+    {
+      "id": 211,
+      "name": "Item",
+      "pattern": "FORM_DIALOG",
+      "status": "GENERATED",
+      "files": [
+        "apps/web/app/(app)/items/[id]/page.tsx",
+        "apps/web/app/(app)/items/new/page.tsx"
+      ],
+      "todo": [
+        {
+          "code": "GEN011",
+          "disposition": "ASSISTED",
+          "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+          "detail": "ON_CLICK_CANCEL_CLOSE_DIALOG"
+        },
+        {
+          "code": "GEN009",
+          "disposition": "MANUAL",
+          "message": "Form DML to wire to a business service (create, update, delete).",
+          "detail": "SAVE_ITEMS (table APX_DEMO_ITEMS has triggers that are not converted)"
+        }
+      ]
+    },
+    {
+      "id": 300,
+      "name": "Permintaan Barang",
+      "pattern": "FACETED_REPORT",
+      "status": "GENERATED",
+      "files": [
+        "apps/web/app/(app)/requests/page.tsx"
+      ],
+      "todo": [
+        {
+          "code": "GEN011",
+          "disposition": "ASSISTED",
+          "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+          "detail": "ON_DIALOG_CLOSED_REFRESH_REPORT"
+        },
+        {
+          "code": "GEN012",
+          "disposition": "ASSISTED",
+          "message": "Static content region is not rendered by the generated page.",
+          "detail": "Permintaan Barang"
+        }
+      ]
+    },
+    {
+      "id": 301,
+      "name": "Permintaan Barang",
+      "pattern": "FORM_DIALOG",
+      "status": "GENERATED",
+      "files": [
+        "apps/web/app/(app)/requests/[id]/page.tsx",
+        "apps/web/app/(app)/requests/new/page.tsx"
+      ],
+      "todo": [
+        {
+          "code": "GEN008",
+          "disposition": "MANUAL",
+          "message": "Server-side condition (button, read-only, display) to implement in a page service.",
+          "detail": "button DELETE"
+        },
+        {
+          "code": "GEN008",
+          "disposition": "MANUAL",
+          "message": "Server-side condition (button, read-only, display) to implement in a page service.",
+          "detail": "button SAVE"
+        },
+        {
+          "code": "GEN008",
+          "disposition": "MANUAL",
+          "message": "Server-side condition (button, read-only, display) to implement in a page service.",
+          "detail": "button SUBMIT"
+        },
+        {
+          "code": "GEN011",
+          "disposition": "ASSISTED",
+          "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+          "detail": "ON_CLICK_CANCEL_CLOSE_DIALOG"
+        },
+        {
+          "code": "GEN008",
+          "disposition": "MANUAL",
+          "message": "Server-side condition (button, read-only, display) to implement in a page service.",
+          "detail": "read-only P301_DEPARTMENT_ID"
+        },
+        {
+          "code": "GEN008",
+          "disposition": "MANUAL",
+          "message": "Server-side condition (button, read-only, display) to implement in a page service.",
+          "detail": "read-only P301_NEED_DATE"
+        },
+        {
+          "code": "GEN008",
+          "disposition": "MANUAL",
+          "message": "Server-side condition (button, read-only, display) to implement in a page service.",
+          "detail": "read-only P301_PURPOSE"
+        },
+        {
+          "code": "GEN008",
+          "disposition": "MANUAL",
+          "message": "Server-side condition (button, read-only, display) to implement in a page service.",
+          "detail": "read-only P301_STATUS"
+        },
+        {
+          "code": "GEN006",
+          "disposition": "MANUAL",
+          "message": "Business logic: PL/SQL process to implement in a page service.",
+          "detail": "CALL_SUBMIT_REQUESTS"
+        },
+        {
+          "code": "GEN009",
+          "disposition": "MANUAL",
+          "message": "Form DML to wire to a business service (create, update, delete).",
+          "detail": "SAVE_REQUESTS (table APX_DEMO_REQUESTS has triggers that are not converted)"
+        },
+        {
+          "code": "GEN007",
+          "disposition": "MANUAL",
+          "message": "Validation to implement in a page service.",
+          "detail": "NEED_DATE_AFTER_REQUEST_DATE"
+        }
+      ]
+    },
+    {
+      "id": 302,
+      "name": "Detail Permintaan",
+      "pattern": "COMPOSED",
+      "status": "MANUAL",
+      "files": [],
+      "todo": [
+        {
+          "code": "GEN022",
+          "disposition": "MANUAL",
+          "message": "Page is marked manual in app-map.json; the generator does not write it."
+        },
+        {
+          "code": "GEN008",
+          "disposition": "MANUAL",
+          "message": "Server-side condition (button, read-only, display) to implement in a page service.",
+          "detail": "button CREATE_REQUEST_LINES"
+        },
+        {
+          "code": "GEN011",
+          "disposition": "ASSISTED",
+          "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+          "detail": "ON_DIALOG_CLOSED_REFRESH_HEADER"
+        },
+        {
+          "code": "GEN011",
+          "disposition": "ASSISTED",
+          "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+          "detail": "ON_DIALOG_CLOSED_REFRESH_REQUEST_LINES"
+        },
+        {
+          "code": "GEN011",
+          "disposition": "ASSISTED",
+          "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+          "detail": "ON_DIALOG_CLOSED_REQUEST_LINES"
+        },
+        {
+          "code": "GEN008",
+          "disposition": "MANUAL",
+          "message": "Server-side condition (button, read-only, display) to implement in a page service.",
+          "detail": "display condition Belum dipilih"
+        },
+        {
+          "code": "GEN008",
+          "disposition": "MANUAL",
+          "message": "Server-side condition (button, read-only, display) to implement in a page service.",
+          "detail": "display condition Permintaan Barang"
+        }
+      ]
+    },
+    {
+      "id": 310,
+      "name": "Baris Permintaan",
+      "pattern": "IR_PAGE",
+      "status": "GENERATED",
+      "files": [
+        "apps/web/app/(app)/request-lines/page.tsx"
+      ],
+      "todo": [
+        {
+          "code": "GEN011",
+          "disposition": "ASSISTED",
+          "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+          "detail": "ON_DIALOG_CLOSED_REFRESH_REPORT"
+        }
+      ]
+    },
+    {
+      "id": 311,
+      "name": "Baris Permintaan",
+      "pattern": "FORM_DIALOG",
+      "status": "GENERATED",
+      "files": [
+        "apps/web/app/(app)/request-lines/[id]/page.tsx",
+        "apps/web/app/(app)/request-lines/new/page.tsx"
+      ],
+      "todo": [
+        {
+          "code": "GEN011",
+          "disposition": "ASSISTED",
+          "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+          "detail": "ON_CLICK_CANCEL_CLOSE_DIALOG"
+        },
+        {
+          "code": "GEN009",
+          "disposition": "MANUAL",
+          "message": "Form DML to wire to a business service (create, update, delete).",
+          "detail": "SAVE_REQUEST_LINES (table APX_DEMO_REQUEST_LINES has triggers that are not converted)"
+        }
+      ]
+    },
+    {
+      "id": 400,
+      "name": "Rekap Permintaan",
+      "pattern": "IR_PAGE",
+      "status": "GENERATED",
+      "files": [
+        "apps/web/app/(app)/reports/requests/page.tsx"
+      ],
+      "todo": []
+    },
+    {
+      "id": 500,
+      "name": "Users & Roles",
+      "pattern": "IR_PAGE",
+      "status": "GENERATED",
+      "files": [
+        "apps/web/app/(app)/admin/users/page.tsx"
+      ],
+      "todo": [
+        {
+          "code": "GEN011",
+          "disposition": "ASSISTED",
+          "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+          "detail": "ON_DIALOG_CLOSED_REFRESH_REPORT"
+        }
+      ]
+    },
+    {
+      "id": 501,
+      "name": "User Role",
+      "pattern": "FORM_DIALOG",
+      "status": "GENERATED",
+      "files": [
+        "apps/web/app/(app)/admin/users/[id]/page.tsx",
+        "apps/web/app/(app)/admin/users/new/page.tsx"
+      ],
+      "todo": [
+        {
+          "code": "GEN011",
+          "disposition": "ASSISTED",
+          "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+          "detail": "ON_CLICK_CANCEL_CLOSE_DIALOG"
+        },
+        {
+          "code": "GEN009",
+          "disposition": "MANUAL",
+          "message": "Form DML to wire to a business service (create, update, delete).",
+          "detail": "SAVE_USER_ROLE (table APX_DEMO_USER_ROLES has triggers that are not converted)"
+        }
+      ]
+    },
+    {
+      "id": 510,
+      "name": "Document Types & Approval",
+      "pattern": "IR_PAGE",
+      "status": "GENERATED",
+      "files": [
+        "apps/web/app/(app)/admin/document-types/page.tsx"
+      ],
+      "todo": [
+        {
+          "code": "GEN011",
+          "disposition": "ASSISTED",
+          "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+          "detail": "ON_DIALOG_CLOSED_REFRESH_REPORT"
+        }
+      ]
+    },
+    {
+      "id": 511,
+      "name": "Document Type",
+      "pattern": "FORM_DIALOG",
+      "status": "GENERATED",
+      "files": [
+        "apps/web/app/(app)/admin/document-types/[docType]/page.tsx"
+      ],
+      "todo": [
+        {
+          "code": "GEN011",
+          "disposition": "ASSISTED",
+          "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+          "detail": "ON_CLICK_CANCEL_CLOSE_DIALOG"
+        }
+      ]
+    },
+    {
+      "id": 9999,
+      "name": "Login Page",
+      "pattern": "LOGIN",
+      "status": "PROVIDED",
+      "files": [],
+      "todo": [],
+      "note": "sign-in pages are part of the application shell (runtime accounts)"
+    }
+  ],
+  "regions": [
+    {
+      "page": 100,
+      "region": "Nilai per Department",
+      "kind": "NATIVE_JET_CHART",
+      "status": "MANUAL",
+      "findings": [
+        "GEN002"
+      ]
+    },
+    {
+      "page": 100,
+      "region": "Permintaan per Status",
+      "kind": "NATIVE_JET_CHART",
+      "status": "MANUAL",
+      "findings": [
+        "GEN002"
+      ]
+    },
+    {
+      "page": 100,
+      "region": "Ringkasan",
+      "kind": "TMPL_THEME_42$METRIC_CARD",
+      "status": "MANUAL",
+      "findings": [
+        "GEN002"
+      ]
+    },
+    {
+      "page": 190,
+      "region": "Approval Inbox",
+      "kind": "IR",
+      "key": "approvalInbox",
+      "findings": [
+        "RGN006"
+      ],
+      "sourceSha256": "e9ed7e2455d3dbe37d19fb317fa34e3eb72cd165f92a2efbd0855f70d62cda0d",
+      "orderBy": null,
+      "disposition": "AUTOMATIC",
+      "status": "GENERATED"
+    },
+    {
+      "page": 200,
+      "region": "Departments",
+      "kind": "IR",
+      "key": "departments",
+      "findings": [
+        "RGN006"
+      ],
+      "sourceSha256": "324f70a7565dc6f8e270ba1097629fcb5547a15b9f8c3c9361c96c123fefb26f",
+      "orderBy": null,
+      "disposition": "AUTOMATIC",
+      "status": "GENERATED"
+    },
+    {
+      "page": 210,
+      "region": "Hasil Items",
+      "kind": "CARDS",
+      "key": "items",
+      "findings": [
+        "RGN006"
+      ],
+      "sourceSha256": "8b04aa0637210a109e35042f6d2dcbe94200eff9d09dd5e24dbbae69f2cc5399",
+      "orderBy": null,
+      "disposition": "AUTOMATIC",
+      "status": "GENERATED"
+    },
+    {
+      "page": 300,
+      "region": "Hasil Permintaan Barang",
+      "kind": "CLASSIC",
+      "key": "requests",
+      "findings": [
+        "RGN006"
+      ],
+      "sourceSha256": "cb98aa0bb4aa351b37571028c0122086292c3d394d3dc8cb509196e758bcf569",
+      "orderBy": null,
+      "disposition": "AUTOMATIC",
+      "status": "GENERATED"
+    },
+    {
+      "page": 302,
+      "region": "Baris Permintaan",
+      "kind": "CLASSIC",
+      "key": "requestDetailLines",
+      "findings": [
+        "RGN002",
+        "RGN006"
+      ],
+      "sourceSha256": "705357f01bd32ad132278e90dfe75875b082068ffe269ede427f9d5d010398d6",
+      "orderBy": null,
+      "disposition": "ASSISTED",
+      "status": "GENERATED"
+    },
+    {
+      "page": 302,
+      "region": "Daftar Permintaan Barang",
+      "kind": "CLASSIC",
+      "key": "requestMasterList",
+      "findings": [
+        "RGN006"
+      ],
+      "sourceSha256": "f5bd67a0e2d8bd989c1cf49a04b111275562e9e7d67c074d9fd6a498103ef479",
+      "orderBy": null,
+      "disposition": "AUTOMATIC",
+      "status": "GENERATED"
+    },
+    {
+      "page": 302,
+      "region": "Permintaan Barang",
+      "kind": "CLASSIC",
+      "key": "requestHeader",
+      "findings": [
+        "RGN002",
+        "RGN006"
+      ],
+      "sourceSha256": "e37ec79f9871e6e1c2157fb908320d52b7935bec750595583b74040e4a38bc53",
+      "orderBy": null,
+      "disposition": "ASSISTED",
+      "status": "GENERATED"
+    },
+    {
+      "page": 310,
+      "region": "Baris Permintaan",
+      "kind": "IR",
+      "key": "requestLines",
+      "findings": [
+        "RGN006"
+      ],
+      "sourceSha256": "3be64a0210efcc37c12c4ce46061a819df40f770ab515a0e3386f1a1a87ebd10",
+      "orderBy": null,
+      "disposition": "AUTOMATIC",
+      "status": "GENERATED"
+    },
+    {
+      "page": 400,
+      "region": "Rekap Permintaan",
+      "kind": "IR",
+      "key": "requestSummary",
+      "findings": [
+        "RGN006"
+      ],
+      "sourceSha256": "b17ed0f22d09feb511a9d98b888cfe17963e4bc6dbe1b16bab84bcf6c238dc17",
+      "orderBy": null,
+      "disposition": "AUTOMATIC",
+      "status": "GENERATED"
+    },
+    {
+      "page": 500,
+      "region": "Users & Roles",
+      "kind": "IR",
+      "key": "userRoles",
+      "findings": [
+        "RGN006"
+      ],
+      "sourceSha256": "9bb870315fc4b9a97fcad7e959d2ae1adaa340a6093acdc168fb93bc212ac9f0",
+      "orderBy": null,
+      "disposition": "AUTOMATIC",
+      "status": "GENERATED"
+    },
+    {
+      "page": 510,
+      "region": "Document Types & Approval",
+      "kind": "IR",
+      "key": "docTypes",
+      "findings": [
+        "RGN006"
+      ],
+      "sourceSha256": "6b40ec0daba74ad392a18bf1377d5fb82985821ed368b60ee83143762a7102a3",
+      "orderBy": null,
+      "disposition": "AUTOMATIC",
+      "status": "GENERATED"
+    }
+  ],
+  "lovs": [
+    {
+      "name": "APX_DEMO_DEPARTMENTS",
+      "findings": [
+        "EXP005",
+        "RGN006"
+      ],
+      "disposition": "ASSISTED",
+      "status": "GENERATED"
+    },
+    {
+      "name": "APX_DEMO_ITEMS",
+      "findings": [
+        "EXP005",
+        "RGN006"
+      ],
+      "disposition": "ASSISTED",
+      "status": "GENERATED"
+    },
+    {
+      "name": "APX_DEMO_REQUESTS",
+      "findings": [
+        "EXP005",
+        "RGN006"
+      ],
+      "disposition": "ASSISTED",
+      "status": "GENERATED"
+    },
+    {
+      "name": "APX_DEMO_REQUEST_LINES",
+      "findings": [
+        "RGN006"
+      ],
+      "disposition": "AUTOMATIC",
+      "status": "GENERATED"
+    },
+    {
+      "name": "DEMO_ROLES",
+      "findings": [
+        "EXP005",
+        "RGN006"
+      ],
+      "disposition": "ASSISTED",
+      "status": "GENERATED"
+    },
+    {
+      "name": "ITEMS_CATEGORY",
+      "status": "PROVIDED",
+      "findings": [],
+      "note": "static values are read from the UI spec"
+    },
+    {
+      "name": "REQUESTS_STATUS",
+      "status": "PROVIDED",
+      "findings": [],
+      "note": "static values are read from the UI spec"
+    },
+    {
+      "name": "YES_NO",
+      "status": "PROVIDED",
+      "findings": [],
+      "note": "static values are read from the UI spec"
+    }
+  ],
+  "todo": [
+    {
+      "page": 100,
+      "code": "GEN001",
+      "disposition": "MANUAL",
+      "message": "Page matches no supported pattern; write the page by hand.",
+      "detail": "regions: NATIVE_JET_CHART, TMPL_THEME_42$METRIC_CARD"
+    },
+    {
+      "page": 190,
+      "code": "GEN011",
+      "disposition": "ASSISTED",
+      "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+      "detail": "ON_DIALOG_CLOSED_REFRESH_REPORT"
+    },
+    {
+      "page": 191,
+      "code": "GEN008",
+      "disposition": "MANUAL",
+      "message": "Server-side condition (button, read-only, display) to implement in a page service.",
+      "detail": "button APPROVE"
+    },
+    {
+      "page": 191,
+      "code": "GEN008",
+      "disposition": "MANUAL",
+      "message": "Server-side condition (button, read-only, display) to implement in a page service.",
+      "detail": "button REJECT"
+    },
+    {
+      "page": 191,
+      "code": "GEN011",
+      "disposition": "ASSISTED",
+      "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+      "detail": "ON_CLICK_CANCEL_CLOSE_DIALOG"
+    },
+    {
+      "page": 191,
+      "code": "GEN006",
+      "disposition": "MANUAL",
+      "message": "Business logic: PL/SQL process to implement in a page service.",
+      "detail": "CALL_APPROVE"
+    },
+    {
+      "page": 191,
+      "code": "GEN006",
+      "disposition": "MANUAL",
+      "message": "Business logic: PL/SQL process to implement in a page service.",
+      "detail": "CALL_REJECT"
+    },
+    {
+      "page": 200,
+      "code": "GEN011",
+      "disposition": "ASSISTED",
+      "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+      "detail": "ON_DIALOG_CLOSED_REFRESH_REPORT"
+    },
+    {
+      "page": 201,
+      "code": "GEN011",
+      "disposition": "ASSISTED",
+      "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+      "detail": "ON_CLICK_CANCEL_CLOSE_DIALOG"
+    },
+    {
+      "page": 201,
+      "code": "GEN009",
+      "disposition": "MANUAL",
+      "message": "Form DML to wire to a business service (create, update, delete).",
+      "detail": "SAVE_DEPARTMENTS (table APX_DEMO_DEPARTMENTS has triggers that are not converted)"
+    },
+    {
+      "page": 210,
+      "code": "GEN011",
+      "disposition": "ASSISTED",
+      "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+      "detail": "ON_DIALOG_CLOSED_REFRESH_REPORT"
+    },
+    {
+      "page": 210,
+      "code": "GEN012",
+      "disposition": "ASSISTED",
+      "message": "Static content region is not rendered by the generated page.",
+      "detail": "Items"
+    },
+    {
+      "page": 211,
+      "code": "GEN011",
+      "disposition": "ASSISTED",
+      "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+      "detail": "ON_CLICK_CANCEL_CLOSE_DIALOG"
+    },
+    {
+      "page": 211,
+      "code": "GEN009",
+      "disposition": "MANUAL",
+      "message": "Form DML to wire to a business service (create, update, delete).",
+      "detail": "SAVE_ITEMS (table APX_DEMO_ITEMS has triggers that are not converted)"
+    },
+    {
+      "page": 300,
+      "code": "GEN011",
+      "disposition": "ASSISTED",
+      "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+      "detail": "ON_DIALOG_CLOSED_REFRESH_REPORT"
+    },
+    {
+      "page": 300,
+      "code": "GEN012",
+      "disposition": "ASSISTED",
+      "message": "Static content region is not rendered by the generated page.",
+      "detail": "Permintaan Barang"
+    },
+    {
+      "page": 301,
+      "code": "GEN008",
+      "disposition": "MANUAL",
+      "message": "Server-side condition (button, read-only, display) to implement in a page service.",
+      "detail": "button DELETE"
+    },
+    {
+      "page": 301,
+      "code": "GEN008",
+      "disposition": "MANUAL",
+      "message": "Server-side condition (button, read-only, display) to implement in a page service.",
+      "detail": "button SAVE"
+    },
+    {
+      "page": 301,
+      "code": "GEN008",
+      "disposition": "MANUAL",
+      "message": "Server-side condition (button, read-only, display) to implement in a page service.",
+      "detail": "button SUBMIT"
+    },
+    {
+      "page": 301,
+      "code": "GEN011",
+      "disposition": "ASSISTED",
+      "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+      "detail": "ON_CLICK_CANCEL_CLOSE_DIALOG"
+    },
+    {
+      "page": 301,
+      "code": "GEN008",
+      "disposition": "MANUAL",
+      "message": "Server-side condition (button, read-only, display) to implement in a page service.",
+      "detail": "read-only P301_DEPARTMENT_ID"
+    },
+    {
+      "page": 301,
+      "code": "GEN008",
+      "disposition": "MANUAL",
+      "message": "Server-side condition (button, read-only, display) to implement in a page service.",
+      "detail": "read-only P301_NEED_DATE"
+    },
+    {
+      "page": 301,
+      "code": "GEN008",
+      "disposition": "MANUAL",
+      "message": "Server-side condition (button, read-only, display) to implement in a page service.",
+      "detail": "read-only P301_PURPOSE"
+    },
+    {
+      "page": 301,
+      "code": "GEN008",
+      "disposition": "MANUAL",
+      "message": "Server-side condition (button, read-only, display) to implement in a page service.",
+      "detail": "read-only P301_STATUS"
+    },
+    {
+      "page": 301,
+      "code": "GEN006",
+      "disposition": "MANUAL",
+      "message": "Business logic: PL/SQL process to implement in a page service.",
+      "detail": "CALL_SUBMIT_REQUESTS"
+    },
+    {
+      "page": 301,
+      "code": "GEN009",
+      "disposition": "MANUAL",
+      "message": "Form DML to wire to a business service (create, update, delete).",
+      "detail": "SAVE_REQUESTS (table APX_DEMO_REQUESTS has triggers that are not converted)"
+    },
+    {
+      "page": 301,
+      "code": "GEN007",
+      "disposition": "MANUAL",
+      "message": "Validation to implement in a page service.",
+      "detail": "NEED_DATE_AFTER_REQUEST_DATE"
+    },
+    {
+      "page": 302,
+      "code": "GEN022",
+      "disposition": "MANUAL",
+      "message": "Page is marked manual in app-map.json; the generator does not write it."
+    },
+    {
+      "page": 302,
+      "code": "GEN008",
+      "disposition": "MANUAL",
+      "message": "Server-side condition (button, read-only, display) to implement in a page service.",
+      "detail": "button CREATE_REQUEST_LINES"
+    },
+    {
+      "page": 302,
+      "code": "GEN011",
+      "disposition": "ASSISTED",
+      "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+      "detail": "ON_DIALOG_CLOSED_REFRESH_HEADER"
+    },
+    {
+      "page": 302,
+      "code": "GEN011",
+      "disposition": "ASSISTED",
+      "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+      "detail": "ON_DIALOG_CLOSED_REFRESH_REQUEST_LINES"
+    },
+    {
+      "page": 302,
+      "code": "GEN011",
+      "disposition": "ASSISTED",
+      "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+      "detail": "ON_DIALOG_CLOSED_REQUEST_LINES"
+    },
+    {
+      "page": 302,
+      "code": "GEN008",
+      "disposition": "MANUAL",
+      "message": "Server-side condition (button, read-only, display) to implement in a page service.",
+      "detail": "display condition Belum dipilih"
+    },
+    {
+      "page": 302,
+      "code": "GEN008",
+      "disposition": "MANUAL",
+      "message": "Server-side condition (button, read-only, display) to implement in a page service.",
+      "detail": "display condition Permintaan Barang"
+    },
+    {
+      "page": 310,
+      "code": "GEN011",
+      "disposition": "ASSISTED",
+      "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+      "detail": "ON_DIALOG_CLOSED_REFRESH_REPORT"
+    },
+    {
+      "page": 311,
+      "code": "GEN011",
+      "disposition": "ASSISTED",
+      "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+      "detail": "ON_CLICK_CANCEL_CLOSE_DIALOG"
+    },
+    {
+      "page": 311,
+      "code": "GEN009",
+      "disposition": "MANUAL",
+      "message": "Form DML to wire to a business service (create, update, delete).",
+      "detail": "SAVE_REQUEST_LINES (table APX_DEMO_REQUEST_LINES has triggers that are not converted)"
+    },
+    {
+      "page": 500,
+      "code": "GEN011",
+      "disposition": "ASSISTED",
+      "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+      "detail": "ON_DIALOG_CLOSED_REFRESH_REPORT"
+    },
+    {
+      "page": 501,
+      "code": "GEN011",
+      "disposition": "ASSISTED",
+      "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+      "detail": "ON_CLICK_CANCEL_CLOSE_DIALOG"
+    },
+    {
+      "page": 501,
+      "code": "GEN009",
+      "disposition": "MANUAL",
+      "message": "Form DML to wire to a business service (create, update, delete).",
+      "detail": "SAVE_USER_ROLE (table APX_DEMO_USER_ROLES has triggers that are not converted)"
+    },
+    {
+      "page": 510,
+      "code": "GEN011",
+      "disposition": "ASSISTED",
+      "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+      "detail": "ON_DIALOG_CLOSED_REFRESH_REPORT"
+    },
+    {
+      "page": 511,
+      "code": "GEN011",
+      "disposition": "ASSISTED",
+      "message": "Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others.",
+      "detail": "ON_CLICK_CANCEL_CLOSE_DIALOG"
+    },
+    {
+      "page": 100,
+      "region": "Nilai per Department",
+      "code": "GEN002",
+      "disposition": "MANUAL",
+      "message": "Region type has no generator; write the region by hand.",
+      "detail": "NATIVE_JET_CHART"
+    },
+    {
+      "page": 100,
+      "region": "Permintaan per Status",
+      "code": "GEN002",
+      "disposition": "MANUAL",
+      "message": "Region type has no generator; write the region by hand.",
+      "detail": "NATIVE_JET_CHART"
+    },
+    {
+      "page": 100,
+      "region": "Ringkasan",
+      "code": "GEN002",
+      "disposition": "MANUAL",
+      "message": "Region type has no generator; write the region by hand.",
+      "detail": "TMPL_THEME_42$METRIC_CARD"
+    },
+    {
+      "shared": "authorization",
+      "code": "GEN010",
+      "disposition": "MANUAL",
+      "message": "Authorization scheme to implement in the security service.",
+      "detail": "ADMIN_RIGHTS"
+    },
+    {
+      "shared": "authorization",
+      "code": "GEN010",
+      "disposition": "MANUAL",
+      "message": "Authorization scheme to implement in the security service.",
+      "detail": "APP_USERS"
+    },
+    {
+      "shared": "authorization",
+      "code": "GEN010",
+      "disposition": "MANUAL",
+      "message": "Authorization scheme to implement in the security service.",
+      "detail": "MASTER_DATA"
+    },
+    {
+      "shared": "authorization",
+      "code": "GEN010",
+      "disposition": "MANUAL",
+      "message": "Authorization scheme to implement in the security service.",
+      "detail": "REQUESTER"
+    },
+    {
+      "shared": "authorization",
+      "code": "GEN010",
+      "disposition": "MANUAL",
+      "message": "Authorization scheme to implement in the security service.",
+      "detail": "WAREHOUSE"
+    }
+  ],
+  "files": [
+    "apps/api/src/business/security-schemes.generated.ts",
+    "apps/api/src/pages/app-sources.generated.ts",
+    "apps/web/app/(app)/admin/document-types/[docType]/page.tsx",
+    "apps/web/app/(app)/admin/document-types/page.tsx",
+    "apps/web/app/(app)/admin/users/[id]/page.tsx",
+    "apps/web/app/(app)/admin/users/new/page.tsx",
+    "apps/web/app/(app)/admin/users/page.tsx",
+    "apps/web/app/(app)/approvals/[id]/page.tsx",
+    "apps/web/app/(app)/approvals/page.tsx",
+    "apps/web/app/(app)/departments/[id]/page.tsx",
+    "apps/web/app/(app)/departments/new/page.tsx",
+    "apps/web/app/(app)/departments/page.tsx",
+    "apps/web/app/(app)/items/[id]/page.tsx",
+    "apps/web/app/(app)/items/new/page.tsx",
+    "apps/web/app/(app)/items/page.tsx",
+    "apps/web/app/(app)/reports/requests/page.tsx",
+    "apps/web/app/(app)/request-lines/[id]/page.tsx",
+    "apps/web/app/(app)/request-lines/new/page.tsx",
+    "apps/web/app/(app)/request-lines/page.tsx",
+    "apps/web/app/(app)/requests/[id]/page.tsx",
+    "apps/web/app/(app)/requests/new/page.tsx",
+    "apps/web/app/(app)/requests/page.tsx",
+    "apps/web/lib/app-routes.generated.ts"
+  ]
+}

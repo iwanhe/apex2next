@@ -1,0 +1,12 @@
+page 10 (
+    name: 'Orders'
+    region grid (
+        name: Orders
+    )
+    process save (
+        source: 'page fake ('
+    )
+    security {
+        authorizationScheme: @requester
+    }
+)

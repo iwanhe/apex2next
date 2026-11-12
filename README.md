@@ -6,6 +6,25 @@ APEX2NEXT is a migration platform intended to inventory, analyze, convert, migra
 
 > **Important:** Full automation is the engineering goal, not a guarantee that every Oracle/APEX construct can be translated without review. The platform must never silently discard data or behavior. Every source object must receive an explicit disposition, diagnostics, and validation evidence.
 
+## Current status: assistive toolkit
+
+APEX2NEXT is currently used as an **assistive toolkit**, not a one-click converter. Inventory, schema conversion,
+dictionary reconciliation, PL/SQL triage, data loading with verification and readiness assessment are automated.
+Pages of the common patterns are generated; other pages and all business logic are built by developers and proven
+equal to APEX by parity tests. The pilot (app 170134) shows the full method end to end; see the [pilot closure](docs/migration/wp9-pilot-closure-f170134.md).
+
+- **User guide (Bahasa Indonesia):** [docs/panduan/README.md](docs/panduan/README.md): plain-language usage, capability scope and roadmap
+- **Shared runtime (R2):** [`packages/runtime-api`](packages/runtime-api/README.md) (NestJS) and [`packages/runtime-web`](packages/runtime-web/README.md) (Next.js), so a converted app only writes its own pages, report definitions and business logic
+- **Generators (R3):** `tools/apex2next generate` writes region and LOV SQL (Oracle → PostgreSQL), routes and the pages of the common APEX patterns, with a report of what is left to do by hand; see [R3 application generator](docs/architecture/r3-application-generator.md)
+- **Runnable project (R4a):** `tools/apex2next new` creates a Next.js + NestJS application around the generated sources; `tools/apex2next smoke` signs in and exercises it. Tested on the Oracle APEX 26.2 sample applications: see [R4a](docs/migration/r4a-oracle-sample-apps.md)
+- **One entry point:** `tools/apex2next` (`doctor`, `queries`, `inventory`, `supporting-objects`, `schema-plan`, `dictionary-check`, `plsql`, `load-data`, `catalog`, `new`, `generate`, `smoke`, `scoreboard`, `assess`)
+
+```bash
+tools/apex2next doctor
+tools/apex2next inventory path/to/f123 --out work/inventory
+tools/apex2next schema-plan path/to/install.sql --apex-export path/to/f123/application --out work/schema
+```
+
 ## Target architecture
 
 - **Frontend:** Next.js App Router + TypeScript
@@ -19,6 +38,10 @@ APEX2NEXT is a migration platform intended to inventory, analyze, convert, migra
 ## Repository status
 
 This repository is the foundation for the reusable converter and pilot migration. Detailed scope and design decisions are documented under [docs/](docs/).
+
+- [WP6 Semantic Analysis](docs/architecture/wp6-semantic-analysis.md)
+- [WP7 Target Code Generation](docs/architecture/wp7-target-code-generation.md)
+- [WP8 Functional Migration — Phase Plan](docs/migration/wp8-functional-migration.md)
 
 ## Documentation
 

@@ -1,0 +1,175 @@
+{
+  "checks": [
+    {
+      "id": "SRC-001",
+      "message": "Supported source format declared.",
+      "status": "PASS"
+    },
+    {
+      "id": "SRC-002",
+      "message": "Source package must be explicitly confirmed sanitized.",
+      "status": "NOT_VERIFIED"
+    },
+    {
+      "id": "SRC-003",
+      "message": "applicationId declared.",
+      "status": "PASS"
+    },
+    {
+      "id": "SRC-004",
+      "message": "apexRuntimeVersion declared.",
+      "status": "PASS"
+    },
+    {
+      "id": "SRC-005",
+      "message": "snapshotId declared.",
+      "status": "PASS"
+    },
+    {
+      "id": "SRC-006",
+      "message": "Artifact paths, sizes, and hash declarations are structurally valid.",
+      "status": "PASS"
+    },
+    {
+      "description": "Source package intake and integrity",
+      "diagnostic": "WP9006",
+      "evidenceRef": "docs/migration/wp9.1-pilot-intake-f170134.md",
+      "id": "WP9-001",
+      "message": "Gate not verified.",
+      "status": "NOT_VERIFIED"
+    },
+    {
+      "description": "APEX runtime/version and scope confirmed",
+      "diagnostic": null,
+      "evidenceRef": "docs/migration/wp9.6-data-parity-f170134.md#1-method",
+      "id": "WP9-002",
+      "message": "Evidence reference supplied.",
+      "status": "PASS"
+    },
+    {
+      "description": "Extraction and normalized IR reviewed",
+      "diagnostic": "WP9005",
+      "evidenceRef": "docs/migration/wp9.5-ui-f170134.md",
+      "id": "WP9-003",
+      "message": "Unresolved warning.",
+      "status": "WARN"
+    },
+    {
+      "description": "Oracle schema and metadata inventory reconciled",
+      "diagnostic": "WP9005",
+      "evidenceRef": "docs/migration/wp9.3-source-validation-schema-f170134.md",
+      "id": "WP9-004",
+      "message": "Unresolved warning.",
+      "status": "WARN"
+    },
+    {
+      "description": "PL/SQL and dependency dispositions reviewed",
+      "diagnostic": "WP9005",
+      "evidenceRef": "docs/migration/wp9.4-business-logic-f170134.md",
+      "id": "WP9-005",
+      "message": "Unresolved warning.",
+      "status": "WARN"
+    },
+    {
+      "description": "Target schema and generated runtime reviewed",
+      "diagnostic": null,
+      "evidenceRef": "https://github.com/iwanhe/apex2next/actions (branch feat/foundation-and-architecture-docs)",
+      "id": "WP9-006",
+      "message": "Evidence reference supplied.",
+      "status": "PASS"
+    },
+    {
+      "description": "Data migration rehearsal and reconciliation",
+      "diagnostic": null,
+      "evidenceRef": "docs/migration/wp9.7/f170134/rehearsal.json",
+      "id": "WP9-007",
+      "message": "Evidence reference supplied.",
+      "status": "PASS"
+    },
+    {
+      "description": "Critical journey functional parity",
+      "diagnostic": "WP9005",
+      "evidenceRef": "docs/migration/wp9.6-data-parity-f170134.md#3-journey-j-01-users-demo_req-demo_mgr",
+      "id": "WP9-008",
+      "message": "Unresolved warning.",
+      "status": "WARN"
+    },
+    {
+      "description": "Security and authorization parity",
+      "diagnostic": "WP9005",
+      "evidenceRef": "docs/migration/wp9-009-local-accounts-f170134.md",
+      "id": "WP9-009",
+      "message": "Unresolved warning.",
+      "status": "WARN"
+    },
+    {
+      "description": "Performance and operational acceptance",
+      "diagnostic": "WP9005",
+      "evidenceRef": "docs/migration/wp9.7/f170134/perf.json",
+      "id": "WP9-010",
+      "message": "Unresolved warning.",
+      "status": "WARN"
+    },
+    {
+      "description": "Backup restore and rollback rehearsal",
+      "diagnostic": "WP9005",
+      "evidenceRef": "docs/migration/wp9.7/f170134/rehearsal.json",
+      "id": "WP9-011",
+      "message": "Unresolved warning.",
+      "status": "WARN"
+    },
+    {
+      "description": "Business and technical owner acceptance",
+      "diagnostic": "WP9006",
+      "evidenceRef": null,
+      "id": "WP9-012",
+      "message": "Gate not verified.",
+      "status": "NOT_VERIFIED"
+    },
+    {
+      "id": "ACC-001",
+      "message": "maxCriticalDefects=0",
+      "status": "PASS"
+    },
+    {
+      "id": "ACC-002",
+      "message": "maxHighDefects=0",
+      "status": "PASS"
+    },
+    {
+      "id": "ACC-003",
+      "message": "rtoMinutes must be finite and non-negative.",
+      "status": "NOT_VERIFIED"
+    },
+    {
+      "id": "ACC-004",
+      "message": "rpoMinutes must be finite and non-negative.",
+      "status": "NOT_VERIFIED"
+    }
+  ],
+  "inputSha256": "sha256:f605cb67b26ee400399d3927c49aa1bdfba0da163e93b8a99f2869abc32d6740",
+  "limitations": [
+    "Artifact hashes are format-checked but not recomputed from files by this assessor.",
+    "Evidence references and gate statuses are supplied assertions, not independently witnessed evidence.",
+    "Synthetic fixtures validate the assessor contract only; they cannot qualify a real APEX application.",
+    "Real source exports, consistent Oracle snapshots, target pilot, witnessed rehearsals, and owner approvals are required."
+  ],
+  "productionQualification": {
+    "authorization": "Advisory evidence only; not production change approval or independent evidence verification.",
+    "eligible": false,
+    "rule": "All source intake checks, twelve WP9 gates, zero critical/high defects, and explicit RTO/RPO must PASS."
+  },
+  "project": {
+    "id": "f170134-demo-permintaan-barang",
+    "name": "Demo Permintaan Barang (APEX app 170134, workspace KCSI)"
+  },
+  "reportVersion": "apex2next.wp9-pilot-qualification.v1",
+  "status": "CONDITIONAL",
+  "summary": {
+    "FAIL": 0,
+    "NOT_VERIFIED": 5,
+    "PASS": 10,
+    "WARN": 7,
+    "total": 22
+  }
+}

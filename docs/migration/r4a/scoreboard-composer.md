@@ -1,0 +1,30 @@
+| Application | Tables | Views | Pages generated | Regions generated | LOVs generated | Open: manual / review |
+|---|---|---|---|---|---|---|
+| image-support-rte | 2/2 | 0/1 | 4/6 (67%) | 1/4 | 0/0 | 11 / 3 |
+| forms-patterns | 4/4 | 0/0 | 7/11 (64%) | 2/7 | 0/0 | 21 / 6 |
+| json-duality-views | 4/4 | 0/0 | 5/11 (45%) | 4/12 | 1/2 | 47 / 12 |
+| sample-directory-search | 4/4 | 1/1 | 3/7 (43%) | 2/7 | 2/5 | 14 / 3 |
+| faceted-search-pattern | 11/11 | 1/2 | 5/12 (42%) | 3/14 | 1/1 | 25 / 2 |
+| sample-charts | 14/14 | 0/0 | 19/49 (39%) | 21/142 | 2/2 | 155 / 47 |
+| sample-master-detail | 8/8 | 0/0 | 12/33 (36%) | 15/49 | 5/11 | 122 / 43 |
+| universal-theme-reference | 3/4 | 0/0 | 42/121 (35%) | 45/281 | 1/2 | 375 / 78 |
+| json-sample-sources | 5/5 | 0/0 | 11/32 (34%) | 8/45 | 3/12 | 123 / 35 |
+| sample-cards | 4/4 | 0/0 | 8/24 (33%) | 8/35 | 1/3 | 58 / 7 |
+| sample-document-generator | 2/2 | 0/1 | 1/3 (33%) | 0/4 | 0/0 | 16 / 0 |
+| apextogo | 5/5 | 0/0 | 5/17 (29%) | 9/22 | 0/0 | 44 / 14 |
+| sample-application-search | 6/6 | 2/5 | 8/30 (27%) | 8/27 | 1/2 | 84 / 23 |
+| sample-email-authentication | 3/3 | 0/0 | 4/15 (27%) | 1/13 | 1/2 | 61 / 8 |
+| sample-file-upload-download | 2/2 | 0/0 | 3/12 (25%) | 1/12 | 0/0 | 38 / 0 |
+| sample-rest-services | 14/14 | 2/5 | 9/36 (25%) | 8/37 | 2/5 | 112 / 17 |
+| sample-calendar | 3/3 | 0/0 | 9/37 (24%) | 9/38 | 3/4 | 77 / 55 |
+| sample-data-loading | 3/3 | 0/0 | 4/18 (22%) | 8/29 | 7/7 | 100 / 13 |
+| sample-collections | 1/1 | 0/0 | 3/14 (21%) | 2/11 | 3/3 | 50 / 2 |
+| brookstrut-sample-app | 8/8 | 0/0 | 10/48 (21%) | 17/63 | 13/17 | 152 / 27 |
+| sample-vector-search | 1/3 | 0/0 | 5/26 (19%) | 7/36 | 0/0 | 112 / 9 |
+| sample-approvals | 8/8 | 0/0 | 6/33 (18%) | 1/53 | 7/17 | 194 / 79 |
+| sample-trees | 8/8 | 0/1 | 2/11 (18%) | 1/10 | 4/4 | 40 / 5 |
+| sample-interactive-grids | 3/3 | 0/0 | 6/49 (12%) | 5/50 | 3/3 | 115 / 12 |
+| sample-reporting | 3/3 | 0/0 | 5/42 (12%) | 20/89 | 3/3 | 144 / 9 |
+| sample-dynamic-actions | 2/2 | 0/0 | 2/27 (7%) | 1/21 | 18/18 | 98 / 23 |
+| sample-maps | 0/3 | 0/0 | 1/16 (6%) | 1/24 | 1/2 | 63 / 18 |
+| **Total (27)** | | | **199/740 (27%)** | **208/1135 (18%)** | **82/125** | **2451 / 550** |

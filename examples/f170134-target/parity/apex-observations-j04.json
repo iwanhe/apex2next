@@ -1,0 +1,122 @@
+{
+  "journey": "J-04",
+  "source": "oracleapex.com, workspace KCSI, app 170134 (DEMO), APEX 26.2.1",
+  "executed": "2026-11-10 06:20-06:45 UTC by Claude in the built-in browser (user DEMO_ADMIN signed in by the owner); read-only, data = snapshot S3",
+  "method": "IR: search field + Enter, column header sort widget, CSV through the IR CSV request (fetch, not saved); faceted search: apex.item(facet).setValue; texts read from the DOM. Rows are the visible cells joined by '|' (the edit-link column is left out); facet values are 'display count' in display order; the 'Clear' control is not recorded.",
+  "facts": {
+    "A-01": "Interactive Reports show 50 rows per page (hidden *_row_select = 50; Actions > Rows Per Page radio 50 checked on pages 310 and 400).",
+    "csv": "text/csv; charset=UTF-8, no BOM, LF line ends, file name = region title, header = column labels, formatted values (number masks), CSV honours search and sort.",
+    "deep_link": "f?p=170134:400:<session>::NO:RR:: is refused with 'Session state protection violation' (page 310 accepts it)."
+  },
+  "start_snapshot": "snapshot-s3.csv",
+  "end_snapshot": "snapshot-s3.csv",
+  "steps": [
+    {
+      "step": "J4A lines default",
+      "messages": [
+        "rows=REQ-2026-0001 - ATK kantor bulan ini|ATK-001 - Kertas A4 80gsm (RIM)|20.00|55,000|1,100,000|IWAN.HERDIAN@KCSI-ID.COM|02-NOV-2026 ; REQ-2026-0001 - ATK kantor bulan ini|ATK-002 - Pulpen Hitam (BOX)|5.00|30,000|150,000|IWAN.HERDIAN@KCSI-ID.COM|02-NOV-2026 ; REQ-2026-0002 - Laptop karyawan baru|IT-001 - Laptop 14 inch (UNIT)|2.00|12,500,000|25,000,000|IWAN.HERDIAN@KCSI-ID.COM|02-NOV-2026 ; REQ-2026-0002 - Laptop karyawan baru|IT-002 - Mouse Wireless (UNIT)|2.00|150,000|300,000|IWAN.HERDIAN@KCSI-ID.COM|02-NOV-2026 ; REQ-2026-0003 - WP96 parity A rev|ATK-001 - Kertas A4 80gsm (RIM)|3.00|55,000|165,000|DEMO_REQ|09-NOV-2026 ; REQ-2026-0003 - WP96 parity A rev|IT-002 - Mouse Wireless (UNIT)|1.00|150,000|150,000|DEMO_REQ|09-NOV-2026 ; REQ-2026-0005 - WP96 parity C|IT-001 - Laptop 14 inch (UNIT)|1.00|12,500,000|12,500,000|DEMO_REQ|09-NOV-2026",
+        "range=1 - 7"
+      ]
+    },
+    {
+      "step": "J4A lines search laptop",
+      "messages": [
+        "rows=REQ-2026-0002 - Laptop karyawan baru|IT-001 - Laptop 14 inch (UNIT)|2.00|12,500,000|25,000,000|IWAN.HERDIAN@KCSI-ID.COM|02-NOV-2026 ; REQ-2026-0002 - Laptop karyawan baru|IT-002 - Mouse Wireless (UNIT)|2.00|150,000|300,000|IWAN.HERDIAN@KCSI-ID.COM|02-NOV-2026 ; REQ-2026-0005 - WP96 parity C|IT-001 - Laptop 14 inch (UNIT)|1.00|12,500,000|12,500,000|DEMO_REQ|09-NOV-2026",
+        "range=1 - 3"
+      ]
+    },
+    {
+      "step": "J4A lines search laptop, sort Jumlah desc",
+      "messages": [
+        "rows=REQ-2026-0002 - Laptop karyawan baru|IT-001 - Laptop 14 inch (UNIT)|2.00|12,500,000|25,000,000|IWAN.HERDIAN@KCSI-ID.COM|02-NOV-2026 ; REQ-2026-0005 - WP96 parity C|IT-001 - Laptop 14 inch (UNIT)|1.00|12,500,000|12,500,000|DEMO_REQ|09-NOV-2026 ; REQ-2026-0002 - Laptop karyawan baru|IT-002 - Mouse Wireless (UNIT)|2.00|150,000|300,000|IWAN.HERDIAN@KCSI-ID.COM|02-NOV-2026",
+        "range=1 - 3"
+      ]
+    },
+    {
+      "step": "J4A lines CSV",
+      "messages": [
+        "file=Baris Permintaan.csv",
+        "csv=No. Permintaan,Item,Qty,Harga Satuan,Jumlah,Diubah Oleh,Diubah\nREQ-2026-0002 - Laptop karyawan baru,IT-001 - Laptop 14 inch (UNIT),2.00,\"12,500,000\",\"25,000,000\",IWAN.HERDIAN@KCSI-ID.COM,02-NOV-2026\nREQ-2026-0005 - WP96 parity C,IT-001 - Laptop 14 inch (UNIT),1.00,\"12,500,000\",\"12,500,000\",DEMO_REQ,09-NOV-2026\nREQ-2026-0002 - Laptop karyawan baru,IT-002 - Mouse Wireless (UNIT),2.00,\"150,000\",\"300,000\",IWAN.HERDIAN@KCSI-ID.COM,02-NOV-2026\n"
+      ]
+    },
+    {
+      "step": "J4B summary default",
+      "messages": [
+        "rows=REQ-2026-0001|Operations|02-NOV-2026|ATK kantor bulan ini|2|1,250,000|DRAFT ; REQ-2026-0002|Information Technology|02-NOV-2026|Laptop karyawan baru|2|25,300,000|DRAFT ; REQ-2026-0003|Operations|09-NOV-2026|WP96 parity A rev|2|315,000|FULFILLED ; REQ-2026-0005|Information Technology|09-NOV-2026|WP96 parity C|1|12,500,000|APPROVED",
+        "range=1 - 4"
+      ]
+    },
+    {
+      "step": "J4B summary sort Total asc",
+      "messages": [
+        "rows=REQ-2026-0003|Operations|09-NOV-2026|WP96 parity A rev|2|315,000|FULFILLED ; REQ-2026-0001|Operations|02-NOV-2026|ATK kantor bulan ini|2|1,250,000|DRAFT ; REQ-2026-0005|Information Technology|09-NOV-2026|WP96 parity C|1|12,500,000|APPROVED ; REQ-2026-0002|Information Technology|02-NOV-2026|Laptop karyawan baru|2|25,300,000|DRAFT",
+        "range=1 - 4"
+      ]
+    },
+    {
+      "step": "J4B summary sort Total asc, search OPERATIONS",
+      "messages": [
+        "rows=REQ-2026-0003|Operations|09-NOV-2026|WP96 parity A rev|2|315,000|FULFILLED ; REQ-2026-0001|Operations|02-NOV-2026|ATK kantor bulan ini|2|1,250,000|DRAFT",
+        "range=1 - 2"
+      ]
+    },
+    {
+      "step": "J4B summary CSV",
+      "messages": [
+        "file=Rekap Permintaan.csv",
+        "csv=No. Permintaan,Department,Tanggal,Keperluan,Jml Baris,Total,Status\nREQ-2026-0003,Operations,09-NOV-2026,WP96 parity A rev,2,\"315,000\",FULFILLED\nREQ-2026-0001,Operations,02-NOV-2026,ATK kantor bulan ini,2,\"1,250,000\",DRAFT\n"
+      ]
+    },
+    {
+      "step": "J4C requests default",
+      "messages": [
+        "rows=REQ-2026-0005|IT - Information Technology|09-NOV-2026|30-NOV-2026|WP96 parity C|APPROVED|DEMO_DIR|09-NOV-2026 ; REQ-2026-0003|OPS - Operations|09-NOV-2026|30-NOV-2026|WP96 parity A rev|FULFILLED|DEMO_MGR|09-NOV-2026 ; REQ-2026-0002|IT - Information Technology|02-NOV-2026|16-NOV-2026|Laptop karyawan baru|DRAFT|IWAN.HERDIAN@KCSI-ID.COM|02-NOV-2026 ; REQ-2026-0001|OPS - Operations|02-NOV-2026|09-NOV-2026|ATK kantor bulan ini|DRAFT|IWAN.HERDIAN@KCSI-ID.COM|02-NOV-2026",
+        "range=row(s) 1 - 4 of 4",
+        "facet Status=DRAFT 2, APPROVED 1, FULFILLED 1",
+        "facet Department=IT - Information Technology 2, OPS - Operations 2"
+      ]
+    },
+    {
+      "step": "J4C requests Status DRAFT",
+      "messages": [
+        "rows=REQ-2026-0002|IT - Information Technology|02-NOV-2026|16-NOV-2026|Laptop karyawan baru|DRAFT|IWAN.HERDIAN@KCSI-ID.COM|02-NOV-2026 ; REQ-2026-0001|OPS - Operations|02-NOV-2026|09-NOV-2026|ATK kantor bulan ini|DRAFT|IWAN.HERDIAN@KCSI-ID.COM|02-NOV-2026",
+        "range=row(s) 1 - 2 of 2",
+        "facet Status=DRAFT 2, APPROVED 1, FULFILLED 1",
+        "facet Department=IT - Information Technology 1, OPS - Operations 1"
+      ]
+    },
+    {
+      "step": "J4C requests Status DRAFT, search laptop",
+      "messages": [
+        "rows=REQ-2026-0002|IT - Information Technology|02-NOV-2026|16-NOV-2026|Laptop karyawan baru|DRAFT|IWAN.HERDIAN@KCSI-ID.COM|02-NOV-2026",
+        "range=row(s) 1 - 1 of 1",
+        "facet Status=DRAFT 1",
+        "facet Department=IT - Information Technology 1"
+      ]
+    },
+    {
+      "step": "J4D items default",
+      "messages": [
+        "cards=ATK-001 | Kertas A4 80gsm | ATK ; ATK-002 | Pulpen Hitam | ATK ; CON-001 | Toner Printer | CONSUMABLE ; IT-001 | Laptop 14 inch | IT ; IT-002 | Mouse Wireless | IT",
+        "facet Kategori=Alat Tulis Kantor 2, Perangkat IT 2, Consumables 1",
+        "facet Aktif=Ya 5"
+      ]
+    },
+    {
+      "step": "J4D items Kategori IT",
+      "messages": [
+        "cards=IT-001 | Laptop 14 inch | IT ; IT-002 | Mouse Wireless | IT",
+        "facet Kategori=Alat Tulis Kantor 2, Perangkat IT 2, Consumables 1",
+        "facet Aktif=Ya 2"
+      ]
+    },
+    {
+      "step": "J4D items search toner",
+      "messages": [
+        "cards=CON-001 | Toner Printer | CONSUMABLE",
+        "facet Kategori=Consumables 1",
+        "facet Aktif=Ya 1"
+      ]
+    }
+  ]
+}

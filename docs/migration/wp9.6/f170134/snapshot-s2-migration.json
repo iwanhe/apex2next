@@ -1,0 +1,232 @@
+{
+  "format": "apex2next.snapshot-migration.v1",
+  "snapshot": {
+    "name": "snapshot-s2.csv",
+    "sha256": "eb1a21493a7e09efb69bcc23e4d89508006325d40f6f3cd1e2ae1a38e9c4f674",
+    "session": {
+      "db_user": "APEX_PUBLIC_USER",
+      "apex_app_user": "IWAN.HERDIAN@KCSI-ID.COM",
+      "pkg_app_user": "IWAN.HERDIAN@KCSI-ID.COM",
+      "sysdate": "2026-11-09T10:47:36",
+      "systimestamp": "2026-11-09T10:47:36.156160+00:00",
+      "dbtimezone": "-05:00",
+      "sessiontimezone": "+00:00",
+      "nls_date_format": "DS",
+      "nls_numeric_chars": ".,",
+      "nls_sort": "BINARY",
+      "nls_language": "AMERICAN",
+      "db_charset": "AL32UTF8"
+    },
+    "counts": {
+      "APX_DEMO_APPROVALS": 2,
+      "APX_DEMO_APPROVALS_V": 2,
+      "APX_DEMO_DASH_C1_S1_V": 2,
+      "APX_DEMO_DASH_C2_S1_V": 2,
+      "APX_DEMO_DASH_KPI_V": 3,
+      "APX_DEMO_DEPARTMENTS": 3,
+      "APX_DEMO_DEPARTMENTS_V": 3,
+      "APX_DEMO_DOC_SEQ": 1,
+      "APX_DEMO_DOC_TYPES": 1,
+      "APX_DEMO_ITEMS": 5,
+      "APX_DEMO_ITEMS_V": 5,
+      "APX_DEMO_REQUESTS": 3,
+      "APX_DEMO_REQUESTS_V": 3,
+      "APX_DEMO_REQUEST_LINES": 6,
+      "APX_DEMO_REQUEST_LINES_V": 6,
+      "APX_DEMO_REQUEST_SUMMARY_V": 3,
+      "APX_DEMO_ROLES": 5,
+      "APX_DEMO_USER_ROLES": 7,
+      "APX_DEMO_USER_ROLES_V": 7
+    }
+  },
+  "checks": {
+    "SNP-001": "PASS",
+    "SNP-002": "PASS",
+    "SNP-003": "PASS",
+    "LOD-001": "PASS",
+    "LOD-002": "PASS",
+    "IDN-001": "PASS",
+    "TBL-001": "PASS",
+    "VIW-001": "PASS"
+  },
+  "problems": [],
+  "load": {
+    "order": [
+      "apx_demo_departments",
+      "apx_demo_doc_seq",
+      "apx_demo_items",
+      "apx_demo_roles",
+      "apx_demo_doc_types",
+      "apx_demo_requests",
+      "apx_demo_user_roles",
+      "apx_demo_approvals",
+      "apx_demo_request_lines"
+    ],
+    "tables": {
+      "apx_demo_departments": {
+        "source": 3,
+        "loaded": 3
+      },
+      "apx_demo_doc_seq": {
+        "source": 1,
+        "loaded": 1
+      },
+      "apx_demo_items": {
+        "source": 5,
+        "loaded": 5
+      },
+      "apx_demo_roles": {
+        "source": 5,
+        "loaded": 5
+      },
+      "apx_demo_doc_types": {
+        "source": 1,
+        "loaded": 1
+      },
+      "apx_demo_requests": {
+        "source": 3,
+        "loaded": 3
+      },
+      "apx_demo_user_roles": {
+        "source": 7,
+        "loaded": 7
+      },
+      "apx_demo_approvals": {
+        "source": 2,
+        "loaded": 2
+      },
+      "apx_demo_request_lines": {
+        "source": 6,
+        "loaded": 6
+      }
+    }
+  },
+  "identity": [
+    {
+      "table": "apx_demo_user_roles",
+      "column": "user_role_id",
+      "maxKey": 47,
+      "oracleLastNumber": 81,
+      "next": 81
+    },
+    {
+      "table": "apx_demo_approvals",
+      "column": "approval_id",
+      "maxKey": 21,
+      "oracleLastNumber": 41,
+      "next": 41
+    },
+    {
+      "table": "apx_demo_departments",
+      "column": "department_id",
+      "maxKey": 3,
+      "oracleLastNumber": 41,
+      "next": 41
+    },
+    {
+      "table": "apx_demo_items",
+      "column": "item_id",
+      "maxKey": 5,
+      "oracleLastNumber": 41,
+      "next": 41
+    },
+    {
+      "table": "apx_demo_requests",
+      "column": "request_id",
+      "maxKey": 21,
+      "oracleLastNumber": 41,
+      "next": 41
+    },
+    {
+      "table": "apx_demo_request_lines",
+      "column": "line_id",
+      "maxKey": 22,
+      "oracleLastNumber": 41,
+      "next": 41
+    }
+  ],
+  "reconciliation": {
+    "principal": "IWAN.HERDIAN@KCSI-ID.COM",
+    "tables": {
+      "apx_demo_roles": {
+        "rows": 5,
+        "differences": {}
+      },
+      "apx_demo_user_roles": {
+        "rows": 7,
+        "differences": {}
+      },
+      "apx_demo_doc_types": {
+        "rows": 1,
+        "differences": {}
+      },
+      "apx_demo_doc_seq": {
+        "rows": 1,
+        "differences": {}
+      },
+      "apx_demo_approvals": {
+        "rows": 2,
+        "differences": {}
+      },
+      "apx_demo_departments": {
+        "rows": 3,
+        "differences": {}
+      },
+      "apx_demo_items": {
+        "rows": 5,
+        "differences": {}
+      },
+      "apx_demo_requests": {
+        "rows": 3,
+        "differences": {}
+      },
+      "apx_demo_request_lines": {
+        "rows": 6,
+        "differences": {}
+      }
+    },
+    "views": {
+      "apx_demo_user_roles_v": {
+        "rows": 7,
+        "differences": {}
+      },
+      "apx_demo_departments_v": {
+        "rows": 3,
+        "differences": {}
+      },
+      "apx_demo_items_v": {
+        "rows": 5,
+        "differences": {}
+      },
+      "apx_demo_requests_v": {
+        "rows": 3,
+        "differences": {}
+      },
+      "apx_demo_request_lines_v": {
+        "rows": 6,
+        "differences": {}
+      },
+      "apx_demo_request_summary_v": {
+        "rows": 3,
+        "differences": {}
+      },
+      "apx_demo_approvals_v": {
+        "rows": 2,
+        "differences": {}
+      },
+      "apx_demo_dash_c1_s1_v": {
+        "rows": 2,
+        "differences": {}
+      },
+      "apx_demo_dash_c2_s1_v": {
+        "rows": 2,
+        "differences": {}
+      },
+      "apx_demo_dash_kpi_v": {
+        "rows": 3,
+        "differences": {}
+      }
+    }
+  },
+  "committed": true
+}
