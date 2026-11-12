@@ -27,6 +27,26 @@ export interface FormItem {
   /** Number field attributes min_value / max_value (plug-in attributes in the export). */
   readonly minValue: string | null;
   readonly maxValue: string | null;
+  /** Text item attribute trim_spaces (BOTH is the APEX default; NONE keeps leading/trailing spaces). */
+  readonly trimSpaces: TrimSpaces;
+}
+
+export type TrimSpaces = 'BOTH' | 'LEADING' | 'TRAILING' | 'NONE';
+
+/**
+ * APEX session-state normalization of a submitted value: trim per trim_spaces (numbers and dates always both
+ * sides, they are parsed), then '' -> NULL as Oracle stores it.
+ */
+export function normalizeValue(raw: string | number | null | undefined, item: Pick<FormItem, 'dataType' | 'trimSpaces'>): string | null {
+  if (raw === undefined || raw === null) return null;
+  const text = String(raw);
+  const mode = item.dataType === 'VARCHAR2' ? item.trimSpaces : 'BOTH';
+  const value = mode === 'BOTH' ? text.trim() : mode === 'LEADING' ? text.trimStart() : mode === 'TRAILING' ? text.trimEnd() : text;
+  return value === '' ? null : value;
+}
+
+function trimMode(v: string | undefined): TrimSpaces {
+  return v === 'LEADING' || v === 'TRAILING' || v === 'NONE' ? v : 'BOTH';
 }
 
 export interface FormDef {
@@ -59,6 +79,7 @@ export function formDef(spec: UiSpecLike, page: number, region: string): FormDef
       primaryKey: i.isPrimaryKey === true, queryOnly: i.isQueryOnly === true, lov: i.namedLov ?? null,
       defaultValue: i.itemDefault ?? null,
       minValue: i.attributes?.min_value ?? null, maxValue: i.attributes?.max_value ?? null,
+      trimSpaces: trimMode(i.attributes?.trim_spaces),
     }));
   const pk = items.find((i) => i.primaryKey);
   if (!pk) throw new Error(`form ${page}:${region} has no primary key item`);
@@ -137,9 +158,7 @@ export function validateItems(form: FormDef, input: Record<string, unknown>, ski
       problems.push({ field: item.item, message: `${item.label} tidak valid.` });
       continue;
     }
-    const text = raw === undefined || raw === null ? null : String(raw);
-    // Text items have trim_spaces=BOTH in the export; Oracle stores '' as NULL.
-    const value = text === null || text.trim() === '' ? null : text.trim();
+    const value = normalizeValue(raw as string | number | null | undefined, item);
     if (value === null) {
       if (item.required) problems.push({ field: item.item, message: `${item.label} must have some value.` });
     } else if (item.dataType === 'NUMBER' && (!NUMBER.test(value) || !inRange(value, item))) {

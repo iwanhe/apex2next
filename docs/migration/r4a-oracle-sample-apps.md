@@ -133,4 +133,16 @@ Brookstrut (48 pages) was the first proposal but is mostly reports and charts. I
 performance test because it generates its own data.
 
 Object names do not clash with the pilot (`EBA_DEMO_MD_*`, `SFM_*` against `APX_DEMO_*`).
-Installation status: waiting for the browser connection, or for the owner to install them from the App Gallery.
+Installed 2026-11-12 from the App Gallery of oracleapex.com, workspace KCSI (schema WKSP_KCSI), with the
+supporting objects and sample data (checked read-only in SQL Commands):
+
+| Application | App ID in KCSI | Pages | Sample data |
+|---|---|---|---|
+| Oracle APEX Forms Patterns | 26200 | 12 | SFM_EXPENSE_CATEGORIES 6, SFM_EXPENSE_REPORTS 7, SFM_EXPENSE_REPORT_LINES 16, SFM_EXPENSE_RECEIPTS 4 |
+| Sample Master Detail | 204850 | 34 | EBA_DEMO_MD_PROJECTS 5, _TASKS 45, _MILESTONES 12, _TEAM_MEMBERS 12, _COMMENTS 11, _TASK_TODOS 9, _TASK_LINKS 7, _STATUS 3 |
+
+## Consolidation of draft PRs #2 and #3 (2026-11-12)
+
+The R2 shared-runtime and R3 UI-generator drafts were reviewed against this branch; the pieces it lacked
+(trim_spaces handling, safe report paging, hidden-column sort refusal, session issue-time and lifetime checks)
+are now in `@apex2next/runtime-api`. Details and what was not ported: [r4a/pr2-pr3-consolidation.md](r4a/pr2-pr3-consolidation.md).

@@ -28,8 +28,17 @@ export function signSession(secret: string, username: string, ttlSeconds: number
   return `${body}.${b64(mac(secret, body))}`;
 }
 
+/** Checks beyond the signature: tokens issued in the future or living longer than the configured TTL are refused. */
+export interface VerifyOptions {
+  /** Longest accepted exp - iat; tokens signed under an earlier, longer TTL stop working when the TTL shrinks. */
+  readonly maxLifetimeSeconds?: number;
+  /** Tolerated clock difference for iat (default 60 s). */
+  readonly clockSkewSeconds?: number;
+}
+
 /** Returns the payload of a valid, unexpired token, otherwise null. */
-export function verifySession(secret: string, token: string | undefined | null, nowSeconds = Math.floor(Date.now() / 1000)): SessionPayload | null {
+export function verifySession(secret: string, token: string | undefined | null, nowSeconds = Math.floor(Date.now() / 1000),
+  options: VerifyOptions = {}): SessionPayload | null {
   if (!token || token.length > 2048) return null;
   const parts = token.split('.');
   if (parts.length !== 2) return null;
@@ -48,6 +57,10 @@ export function verifySession(secret: string, token: string | undefined | null, 
   } catch {
     return null;
   }
-  if (typeof payload.sub !== 'string' || !payload.sub || typeof payload.exp !== 'number' || payload.exp <= nowSeconds) return null;
+  if (!payload || typeof payload.sub !== 'string' || !payload.sub) return null;
+  if (!Number.isSafeInteger(payload.exp) || !Number.isSafeInteger(payload.iat) || payload.exp <= nowSeconds) return null;
+  if (payload.iat > nowSeconds + (options.clockSkewSeconds ?? 60)) return null;
+  const lifetime = payload.exp - payload.iat;
+  if (lifetime <= 0 || (options.maxLifetimeSeconds !== undefined && lifetime > options.maxLifetimeSeconds)) return null;
   return payload;
 }

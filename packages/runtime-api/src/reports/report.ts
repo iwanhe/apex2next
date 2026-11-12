@@ -97,6 +97,10 @@ export async function runReport(tx: BusinessTx, def: ReportDef, query: ReportQue
   const sortName = (query.sort ?? def.defaultSort.column).toLowerCase();
   const sortCol = byName.get(sortName);
   if (!sortCol) throw errors.invalidInput(`Kolom urut tidak dikenal: ${query.sort}`);
+  // A hidden column is never a user sort choice (it would reveal the order of values the region does not show).
+  if (sortCol.hidden && query.sort !== undefined && sortName !== def.defaultSort.column.toLowerCase()) {
+    throw errors.invalidInput(`Kolom urut tidak dikenal: ${query.sort}`);
+  }
   const dir = (query.dir ?? def.defaultSort.dir).toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
   const search = (query.search ?? '').trim();
   if (search && !def.searchable) throw errors.invalidInput('Region ini tidak mendukung pencarian.');
@@ -125,6 +129,10 @@ export async function runReport(tx: BusinessTx, def: ReportDef, query: ReportQue
   const sortRef = `src.${ident(sortName)}`;
   const sortExpr = sortCol.type === 'STRING' && !def.untyped ? `${sortRef} COLLATE "C"` : sortRef;
   const page = Math.max(1, Math.floor(Number(query.page ?? 1)) || 1);
+  // Infinity or a huge page number would put a non-integer OFFSET into the SQL (500); refuse it instead.
+  if (!Number.isSafeInteger(page) || !Number.isSafeInteger((page - 1) * def.rowsPerPage)) {
+    throw errors.invalidInput('Nomor halaman tidak valid.');
+  }
   const limit = query.all ? '' : `LIMIT ${def.rowsPerPage} OFFSET ${(page - 1) * def.rowsPerPage}`;
   const rows = await tx.query(
     `SELECT ${def.columns.map(selectExpr).join(', ')} FROM ${def.from} AS src ${whereSql}

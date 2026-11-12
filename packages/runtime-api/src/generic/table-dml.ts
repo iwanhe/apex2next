@@ -1,6 +1,6 @@
 import { errors, type FieldError } from '../errors';
 import type { BusinessTx } from '../context';
-import { type FormDef, type FormItem, lockForChange, validateItems, writableItems } from '../forms/forms';
+import { type FormDef, type FormItem, lockForChange, normalizeValue, validateItems, writableItems } from '../forms/forms';
 
 /**
  * Native form DML on the form's source table (APEX NATIVE_FORM_DML), for forms that have no PL/SQL processes
@@ -28,7 +28,7 @@ export function validateForInsert(form: FormDef, input: Record<string, unknown>)
   if (key) {
     const raw = rest[key.column];
     delete rest[key.column];
-    keyValue = typeof raw === 'string' || typeof raw === 'number' ? String(raw).trim() || null : null;
+    keyValue = typeof raw === 'string' || typeof raw === 'number' ? normalizeValue(raw, key) : null;
     if (keyValue === null) problems.push({ field: key.item, message: `${key.label} must have some value.` });
   }
   const checked = validateItems(form, rest);

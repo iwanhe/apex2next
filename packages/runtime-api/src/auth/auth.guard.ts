@@ -33,7 +33,8 @@ export class SessionGuard implements CanActivate {
     const req = context.switchToHttp().getRequest<AuthedRequest>();
     const header = req.headers.authorization ?? '';
     const token = header.startsWith('Bearer ') ? header.slice(7) : null;
-    const session = verifySession(this.config.sessionSecret, token);
+    const session = verifySession(this.config.sessionSecret, token, undefined,
+      { maxLifetimeSeconds: this.config.sessionTtlSeconds });
     if (!session) throw errors.unauthenticated();
     if (this.config.mode === 'local') {
       if (!this.accounts || !(await this.accounts.sessionValid(session.sub, session.ver))) throw errors.unauthenticated();

@@ -78,3 +78,47 @@ test('APP_CLOCK_START: replay clock starts at the instant and runs forward; refu
   assert.throws(() => clockFromEnv({ APP_CLOCK_START: '2026-11-09T07:45:00Z', NODE_ENV: 'production' }), /refused/);
   assert.throws(() => clockFromEnv({ APP_CLOCK_START: '2026-11-09 07:45' }), /ISO instant/);
 });
+
+// Ported from PR #2 (R2 shared-runtime draft) into @apex2next/runtime-api, 2026-11-12.
+test('item normalization follows trim_spaces; numbers and dates are always trimmed; empty is NULL', () => {
+  const { normalizeValue } = require('@apex2next/runtime-api');
+  const text = (trimSpaces) => ({ dataType: 'VARCHAR2', trimSpaces });
+  assert.equal(normalizeValue('  a b  ', text('BOTH')), 'a b');
+  assert.equal(normalizeValue('  a  ', text('LEADING')), 'a  ');
+  assert.equal(normalizeValue('  a  ', text('TRAILING')), '  a');
+  assert.equal(normalizeValue('  a  ', text('NONE')), '  a  ');
+  assert.equal(normalizeValue('   ', text('NONE')), '   ');
+  assert.equal(normalizeValue('', text('NONE')), null);
+  assert.equal(normalizeValue('   ', text('BOTH')), null);
+  assert.equal(normalizeValue(' 12 ', { dataType: 'NUMBER', trimSpaces: 'NONE' }), '12');
+  assert.equal(normalizeValue(undefined, text('BOTH')), null);
+});
+
+test('session tokens issued in the future or longer than the TTL are refused', () => {
+  const { signSession, verifySession } = require('@apex2next/runtime-api');
+  const secret = 'unit-secret-unit-secret-unit-secret-00';
+  const now = 1_800_000_000;
+  const ok = signSession(secret, 'REQ1', 3600, now);
+  assert.equal(verifySession(secret, ok, now + 10, { maxLifetimeSeconds: 3600 }).sub, 'REQ1');
+  assert.equal(verifySession(secret, ok, now + 10, { maxLifetimeSeconds: 1800 }), null, 'TTL shrank after signing');
+  const future = signSession(secret, 'REQ1', 3600, now + 600);
+  assert.equal(verifySession(secret, future, now), null);
+  assert.equal(verifySession(secret, signSession(secret, 'REQ1', 3600, now + 30), now).sub, 'REQ1', 'within clock skew');
+});
+
+test('report paging refuses page numbers that overflow the OFFSET; hidden columns are no user sort choice', async () => {
+  const { runReport } = require('@apex2next/runtime-api');
+  const sql = [];
+  const tx = { query: async (text) => { sql.push(text); return { rows: [{ n: '0' }], rowCount: 0 }; } };
+  const def = { from: 'app.t', rowsPerPage: 15, searchable: false, defaultSort: { column: 'ID', dir: 'ASC' },
+    columns: [{ name: 'ID', type: 'NUMBER', hidden: true }, { name: 'NAME', type: 'STRING' }] };
+  for (const page of ['Infinity', '1e300', String(Number.MAX_SAFE_INTEGER)]) {
+    await assert.rejects(runReport(tx, def, { page }), (e) => e.code === 'INVALID_INPUT', page);
+  }
+  assert.equal(sql.length, 0);
+  await runReport(tx, def, { page: 'abc' });
+  assert.match(sql[0], /OFFSET 0/);
+  await runReport(tx, def, { sort: 'id' }); // the default sort column stays allowed even when hidden
+  await assert.rejects(runReport(tx, { ...def, defaultSort: { column: 'NAME', dir: 'ASC' } }, { sort: 'id' }),
+    (e) => e.code === 'INVALID_INPUT');
+});
