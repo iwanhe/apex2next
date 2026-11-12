@@ -41,6 +41,11 @@ export interface ReportDef {
   readonly where?: string;
   readonly facets?: readonly FacetDef[];
   readonly searchable: boolean;
+  /**
+   * Column types are not known (a derived query without a target catalog entry): text columns are then sorted
+   * with the database collation, because COLLATE "C" would fail on a column that is in fact a number.
+   */
+  readonly untyped?: boolean;
 }
 
 export interface ReportQuery {
@@ -118,7 +123,7 @@ export async function runReport(tx: BusinessTx, def: ReportDef, query: ReportQue
   // Sort on the source column (src.col), not on the text-cast output alias of the same name: numbers and dates
   // must sort by value as in APEX (J-04), strings byte-wise as NLS_SORT=BINARY.
   const sortRef = `src.${ident(sortName)}`;
-  const sortExpr = sortCol.type === 'STRING' ? `${sortRef} COLLATE "C"` : sortRef;
+  const sortExpr = sortCol.type === 'STRING' && !def.untyped ? `${sortRef} COLLATE "C"` : sortRef;
   const page = Math.max(1, Math.floor(Number(query.page ?? 1)) || 1);
   const limit = query.all ? '' : `LIMIT ${def.rowsPerPage} OFFSET ${(page - 1) * def.rowsPerPage}`;
   const rows = await tx.query(

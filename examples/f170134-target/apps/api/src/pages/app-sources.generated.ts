@@ -114,7 +114,7 @@ export const FORM_SOURCES = {
   request: { page: 301, region: 'Permintaan Barang' },
   requestLine: { page: 311, region: 'Baris Permintaan' },
   userRole: { page: 501, region: 'User Role' },
-  docType: { page: 511, region: 'Document Type' },
+  docType: { page: 511, region: 'Document Type', dml: ['u'] },
 } as const;
 
 export type FormName = keyof typeof FORM_SOURCES;

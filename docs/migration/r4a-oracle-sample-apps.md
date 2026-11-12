@@ -100,6 +100,28 @@ Rules that keep this safe:
 Full table: [r4a/scoreboard-composer.md](r4a/scoreboard-composer.md). The pilot is unchanged: tests 63/63,
 e2e 12/12, J-01…J-05 PASS.
 
+## Step 2: runnable project, native form DML, authorization rules (2026-11-12)
+
+| Addition | What it does |
+|---|---|
+| `apex2next new APP --oracle-schema S` | Copies `templates/app` (the pilot shell without anything of the pilot) into the application directory: sign-in with local accounts, generic page layer, components, migrations of the accounts schema. The runtime packages are packed into `vendor/` with a content hash in the file name, so the application depends on a fixed copy and not on this checkout. Existing files are never overwritten |
+| Native form DML | A form on a table with a native DML process, no PL/SQL process after submit and no unconverted trigger on its table is created, updated and deleted by the runtime (`insertRow`, `updateRow`, `deleteRow` with the lost-update checksum). Otherwise `GEN009` stays and says why |
+| Authorization schemes | `security-schemes.generated.ts` proposes a rule per scheme: `return true` -> allow; "is in role or group" -> roles in `iam.account_roles` (granted with `accounts.mjs grant`); "rows returned" with only `:APP_USER` -> translated SQL. Any other scheme denies access until a developer writes its rule in `security.ts` (`GEN010`) |
+| Login and home page | The login page items and button come from the export (`LOGIN_PAGE`); the home page is the application's home URL; when it is not generated, a placeholder lists the menu |
+| Key default `TO_NUMBER(SYS_GUID(), 'X...X')` | New rule `EXP022`: `guid_number()`, a random 128-bit integer, created by the migration that uses it (8 of the 27 applications) |
+| Yes/No, radio group, popup LOV items | Shown as select lists with the same values (`GEN024`, to review); file upload and other item types are reported (`GEN023`) |
+| `apex2next smoke APP --database-url URL` | Signs in with a fresh local account, changes the temporary password, opens every generated page and runs one create / edit / delete through a form |
+
+Result on **Forms Patterns** (7310), converted outside the repository with only toolkit commands: the four
+tables and their data model migrate automatically, 6 of 11 pages are generated (5 pages need their own work:
+the advanced form, the attachment form with its PL/SQL, the content-row report, the editable grid, the file page),
+and `apex2next smoke` passes 9 of 9 checks, including a category created, edited and deleted through the generated
+form.
+
+Across the 27 applications: 7 of 28 generated forms run on native DML (the rest wait on trigger conversion, the
+next step), and 14 of 18 authorization schemes get a rule. Pages: 196 of 740; composed pages that compute their
+content before display are now honestly left manual. Table: [r4a/scoreboard-step2.md](r4a/scoreboard-step2.md).
+
 ## Applications chosen for installation and full conversion
 
 | Application | Pages | Why |

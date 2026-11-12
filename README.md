@@ -16,7 +16,8 @@ equal to APEX by parity tests. The pilot (app 170134) shows the full method end 
 - **User guide (Bahasa Indonesia):** [docs/panduan/README.md](docs/panduan/README.md): plain-language usage, capability scope and roadmap
 - **Shared runtime (R2):** [`packages/runtime-api`](packages/runtime-api/README.md) (NestJS) and [`packages/runtime-web`](packages/runtime-web/README.md) (Next.js), so a converted app only writes its own pages, report definitions and business logic
 - **Generators (R3):** `tools/apex2next generate` writes region and LOV SQL (Oracle → PostgreSQL), routes and the pages of the common APEX patterns, with a report of what is left to do by hand; see [R3 application generator](docs/architecture/r3-application-generator.md)
-- **One entry point:** `tools/apex2next` (`doctor`, `queries`, `inventory`, `schema-plan`, `dictionary-check`, `plsql`, `load-data`, `catalog`, `generate`, `assess`)
+- **Runnable project (R4a):** `tools/apex2next new` creates a Next.js + NestJS application around the generated sources; `tools/apex2next smoke` signs in and exercises it. Tested on the Oracle APEX 26.2 sample applications: see [R4a](docs/migration/r4a-oracle-sample-apps.md)
+- **One entry point:** `tools/apex2next` (`doctor`, `queries`, `inventory`, `supporting-objects`, `schema-plan`, `dictionary-check`, `plsql`, `load-data`, `catalog`, `new`, `generate`, `smoke`, `scoreboard`, `assess`)
 
 ```bash
 tools/apex2next doctor

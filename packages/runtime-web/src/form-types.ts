@@ -8,6 +8,8 @@ export interface FormBinding {
   readonly returnTo: string;
   /** Columns posted for this render (read-only items are not submitted, like APEX). */
   readonly columns: string[];
+  /** Database action of each submit button (create_page_button p_database_action), for any button name. */
+  readonly dml?: Readonly<Record<string, 'INSERT' | 'UPDATE' | 'DELETE'>>;
 }
 
 export interface FormState {

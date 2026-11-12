@@ -27,15 +27,21 @@ export const DML_REQUESTS: RequestRoutes = {
  * Page submit: the pressed button is the APEX REQUEST; validations and DML run in the API.
  * `requests` adds the application's own requests (process buttons such as SUBMIT or APPROVE) to DML_REQUESTS.
  */
+/** A button's database action selects the native DML request when its name is not CREATE / SAVE / DELETE. */
+const BY_ACTION = { INSERT: 'CREATE', UPDATE: 'SAVE', DELETE: 'DELETE' } as const;
+
 export async function submitApexForm(requests: RequestRoutes, binding: FormBinding, prev: FormState, form: FormData): Promise<FormState> {
   const request = String(form.get('request') ?? '');
-  const target = ({ ...DML_REQUESTS, ...requests })[request]?.(binding);
+  const routes = { ...DML_REQUESTS, ...requests };
+  const action = binding.dml?.[request];
+  const target = (routes[request] ?? (action ? routes[BY_ACTION[action]] : undefined))?.(binding);
   const values: Record<string, string> = {};
   for (const c of binding.columns) values[c] = String(form.get(c) ?? '');
   if (!target) return { error: `Unknown request ${request}`, fieldErrors: [], values, version: prev.version + 1 };
   const body = target.body
     ? target.body(values)
-    : { checksum: String(form.get('checksum') ?? '') || undefined, values: request === 'DELETE' ? undefined : values };
+    : { checksum: String(form.get('checksum') ?? '') || undefined,
+        values: request === 'DELETE' || action === 'DELETE' ? undefined : values };
   let keys: string[] = [];
   try {
     const r = await apiSend<{ messageKeys?: string[] }>(target.method, target.path, body);

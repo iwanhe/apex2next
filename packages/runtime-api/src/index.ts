@@ -22,3 +22,5 @@ export * from './auth/auth.module';
 export * from './reports/report';
 export * from './reports/region-source';
 export * from './forms/forms';
+export * from './generic/table-dml';
+export * from './generic/schemes';

@@ -5,6 +5,7 @@
     "alias": "DEMO",
     "logoText": "DEMO",
     "dateFormat": "DD-MON-YYYY",
+    "homeLink": "f?p=&APP_ID.:100:&SESSION.::&DEBUG.",
     "timestampFormat": "DS",
     "version": "Release 1.0",
     "language": "en",
@@ -1153,6 +1154,7 @@
             "plug_source_type": "NATIVE_FORM",
             "query_type": "TABLE",
             "query_table": "APX_DEMO_APPROVALS_V",
+            "is_editable": false,
             "plug_display_sequence": 10
           }
         },
@@ -1523,6 +1525,7 @@
             "query_type": "TABLE",
             "query_table": "APX_DEMO_DEPARTMENTS",
             "edit_operations": "i:u:d",
+            "is_editable": true,
             "lost_update_check_type": "VALUES",
             "plug_display_sequence": 10
           }
@@ -1937,6 +1940,7 @@
             "query_type": "TABLE",
             "query_table": "APX_DEMO_ITEMS",
             "edit_operations": "i:u:d",
+            "is_editable": true,
             "lost_update_check_type": "VALUES",
             "plug_display_sequence": 10
           }
@@ -2478,6 +2482,7 @@
             "query_type": "TABLE",
             "query_table": "APX_DEMO_REQUESTS",
             "edit_operations": "i:u:d",
+            "is_editable": true,
             "lost_update_check_type": "VALUES",
             "plug_display_sequence": 10
           }
@@ -3258,6 +3263,7 @@
             "query_type": "TABLE",
             "query_table": "APX_DEMO_REQUEST_LINES",
             "edit_operations": "i:u:d",
+            "is_editable": true,
             "lost_update_check_type": "VALUES",
             "plug_display_sequence": 10
           }
@@ -3736,6 +3742,7 @@
             "query_type": "TABLE",
             "query_table": "APX_DEMO_USER_ROLES",
             "edit_operations": "i:u:d",
+            "is_editable": true,
             "lost_update_check_type": "VALUES",
             "plug_display_sequence": 10
           }
@@ -4090,6 +4097,7 @@
             "query_type": "TABLE",
             "query_table": "APX_DEMO_DOC_TYPES",
             "edit_operations": "u",
+            "is_editable": true,
             "lost_update_check_type": "VALUES",
             "plug_display_sequence": 10
           }
@@ -4221,5 +4229,5 @@
     "pages": 19,
     "components": 269
   },
-  "sha256": "f9d7a0053f5673f1f61d60e652ab4034fec3d5f49d057248d74d9fa1733e7a58"
+  "sha256": "e81a873c8409e457c6523aacc0ad12a53053109764d32a5c8d2bcdf13c24e637"
 }

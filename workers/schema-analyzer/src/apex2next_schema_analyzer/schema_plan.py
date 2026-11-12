@@ -893,6 +893,13 @@ def _emit_sql(tables, indexes, views, order, comments, sequences, schema, source
             clause, _ = identity_clause(seq["options"], "bigint")
             options = clause.strip()[1:-1] if clause else ""
             out.append(f"CREATE SEQUENCE {s}.{pg_ident(seq['name'])} AS bigint{' ' + options if options else ''};")
+    if any("guid_number()" in ((c.get("default") or {}).get("target") or "") for t in tables.values() if t["emit"]
+           for c in t["columns"]):
+        out += ["", "-- Helper for Oracle TO_NUMBER(SYS_GUID(), 'X...X') key defaults (EXP022): random 128-bit integer",
+                "CREATE OR REPLACE FUNCTION guid_number() RETURNS numeric LANGUAGE sql VOLATILE PARALLEL SAFE AS $$",
+                "  SELECT sum(get_byte(b, i)::numeric * (256::numeric ^ (15 - i)))",
+                "    FROM (SELECT uuid_send(gen_random_uuid()) AS b) g, generate_series(0, 15) AS i",
+                "$$;"]
     out += ["", "-- Tables"]
     for t in tables.values():
         if not t["emit"]:

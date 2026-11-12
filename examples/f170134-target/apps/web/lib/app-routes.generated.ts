@@ -25,3 +25,6 @@ export const IR_DOWNLOADS: Record<string, string> = {
   userRoles: 'Users & Roles',
   docTypes: 'Document Types & Approval',
 };
+
+/** The APEX login page: its items and sign-in button (labels come from the UI spec). */
+export const LOGIN_PAGE = { page: 9999, username: 'P9999_USERNAME', password: 'P9999_PASSWORD', remember: 'P9999_REMEMBER', button: 'LOGIN' } as const;

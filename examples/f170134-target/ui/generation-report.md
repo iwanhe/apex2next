@@ -10,7 +10,7 @@ Written by `apex2next generate`. It lists what the generator produced and what a
 | Regions | 11 | 0 | 3 | 0 |
 | Lovs | 5 | 3 | 0 | 0 |
 
-Generated files: 22. Open items: 19 ASSISTED, 32 MANUAL.
+Generated files: 23. Open items: 19 ASSISTED, 31 MANUAL.
 
 ## Pages
 
@@ -33,7 +33,7 @@ Generated files: 22. Open items: 19 ASSISTED, 32 MANUAL.
 | 500 | Users & Roles | IR_PAGE | GENERATED | 1 | GEN011×1 |
 | 501 | User Role | FORM_DIALOG | GENERATED | 2 | GEN009×1, GEN011×1 |
 | 510 | Document Types & Approval | IR_PAGE | GENERATED | 1 | GEN011×1 |
-| 511 | Document Type | FORM_DIALOG | GENERATED | 1 | GEN009×1, GEN011×1 |
+| 511 | Document Type | FORM_DIALOG | GENERATED | 1 | GEN011×1 |
 | 9999 | Login Page | LOGIN | PROVIDED | 0 | - |
 
 ## Regions
@@ -81,11 +81,11 @@ Generated files: 22. Open items: 19 ASSISTED, 32 MANUAL.
 | page 191 | GEN006 | MANUAL | Business logic: PL/SQL process to implement in a page service. | CALL_REJECT |
 | page 200 | GEN011 | ASSISTED | Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others. | ON_DIALOG_CLOSED_REFRESH_REPORT |
 | page 201 | GEN011 | ASSISTED | Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others. | ON_CLICK_CANCEL_CLOSE_DIALOG |
-| page 201 | GEN009 | MANUAL | Form DML to wire to a business service (create, update, delete). | SAVE_DEPARTMENTS |
+| page 201 | GEN009 | MANUAL | Form DML to wire to a business service (create, update, delete). | SAVE_DEPARTMENTS (table APX_DEMO_DEPARTMENTS has triggers that are not converted) |
 | page 210 | GEN011 | ASSISTED | Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others. | ON_DIALOG_CLOSED_REFRESH_REPORT |
 | page 210 | GEN012 | ASSISTED | Static content region is not rendered by the generated page. | Items |
 | page 211 | GEN011 | ASSISTED | Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others. | ON_CLICK_CANCEL_CLOSE_DIALOG |
-| page 211 | GEN009 | MANUAL | Form DML to wire to a business service (create, update, delete). | SAVE_ITEMS |
+| page 211 | GEN009 | MANUAL | Form DML to wire to a business service (create, update, delete). | SAVE_ITEMS (table APX_DEMO_ITEMS has triggers that are not converted) |
 | page 300 | GEN011 | ASSISTED | Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others. | ON_DIALOG_CLOSED_REFRESH_REPORT |
 | page 300 | GEN012 | ASSISTED | Static content region is not rendered by the generated page. | Permintaan Barang |
 | page 301 | GEN008 | MANUAL | Server-side condition (button, read-only, display) to implement in a page service. | button DELETE |
@@ -97,7 +97,7 @@ Generated files: 22. Open items: 19 ASSISTED, 32 MANUAL.
 | page 301 | GEN008 | MANUAL | Server-side condition (button, read-only, display) to implement in a page service. | read-only P301_PURPOSE |
 | page 301 | GEN008 | MANUAL | Server-side condition (button, read-only, display) to implement in a page service. | read-only P301_STATUS |
 | page 301 | GEN006 | MANUAL | Business logic: PL/SQL process to implement in a page service. | CALL_SUBMIT_REQUESTS |
-| page 301 | GEN009 | MANUAL | Form DML to wire to a business service (create, update, delete). | SAVE_REQUESTS |
+| page 301 | GEN009 | MANUAL | Form DML to wire to a business service (create, update, delete). | SAVE_REQUESTS (table APX_DEMO_REQUESTS has triggers that are not converted) |
 | page 301 | GEN007 | MANUAL | Validation to implement in a page service. | NEED_DATE_AFTER_REQUEST_DATE |
 | page 302 | GEN022 | MANUAL | Page is marked manual in app-map.json; the generator does not write it. |  |
 | page 302 | GEN008 | MANUAL | Server-side condition (button, read-only, display) to implement in a page service. | button CREATE_REQUEST_LINES |
@@ -108,13 +108,12 @@ Generated files: 22. Open items: 19 ASSISTED, 32 MANUAL.
 | page 302 | GEN008 | MANUAL | Server-side condition (button, read-only, display) to implement in a page service. | display condition Permintaan Barang |
 | page 310 | GEN011 | ASSISTED | Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others. | ON_DIALOG_CLOSED_REFRESH_REPORT |
 | page 311 | GEN011 | ASSISTED | Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others. | ON_CLICK_CANCEL_CLOSE_DIALOG |
-| page 311 | GEN009 | MANUAL | Form DML to wire to a business service (create, update, delete). | SAVE_REQUEST_LINES |
+| page 311 | GEN009 | MANUAL | Form DML to wire to a business service (create, update, delete). | SAVE_REQUEST_LINES (table APX_DEMO_REQUEST_LINES has triggers that are not converted) |
 | page 500 | GEN011 | ASSISTED | Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others. | ON_DIALOG_CLOSED_REFRESH_REPORT |
 | page 501 | GEN011 | ASSISTED | Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others. | ON_CLICK_CANCEL_CLOSE_DIALOG |
-| page 501 | GEN009 | MANUAL | Form DML to wire to a business service (create, update, delete). | SAVE_USER_ROLE |
+| page 501 | GEN009 | MANUAL | Form DML to wire to a business service (create, update, delete). | SAVE_USER_ROLE (table APX_DEMO_USER_ROLES has triggers that are not converted) |
 | page 510 | GEN011 | ASSISTED | Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others. | ON_DIALOG_CLOSED_REFRESH_REPORT |
 | page 511 | GEN011 | ASSISTED | Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others. | ON_CLICK_CANCEL_CLOSE_DIALOG |
-| page 511 | GEN009 | MANUAL | Form DML to wire to a business service (create, update, delete). | SAVE_DOCUMENT_TYPE |
 | page 100, Nilai per Department | GEN002 | MANUAL | Region type has no generator; write the region by hand. | NATIVE_JET_CHART |
 | page 100, Permintaan per Status | GEN002 | MANUAL | Region type has no generator; write the region by hand. | NATIVE_JET_CHART |
 | page 100, Ringkasan | GEN002 | MANUAL | Region type has no generator; write the region by hand. | TMPL_THEME_42$METRIC_CARD |

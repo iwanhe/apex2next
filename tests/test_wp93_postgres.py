@@ -171,3 +171,16 @@ def test_synthetic_dbms_metadata_migration_applies_and_matches_plan(conn):
                       (cid,)).fetchone()[0]
     assert total == Decimal("7.68")
     assert c.execute("select order_count, total_value from app.syn_order_totals_v").fetchone() == (1, Decimal("7.68"))
+
+
+def test_r4a_guid_key_default_generates_distinct_numeric_keys(conn):
+    """APEX key default TO_NUMBER(SYS_GUID(), 'X...X') (EXP022) becomes guid_number(), created with the schema."""
+    ddl = ("create table t (id number default on null to_number(sys_guid(),'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX') "
+           "primary key, name varchar2(10));\n")
+    plan = build_schema_plan(ddl, source_name="t.sql")
+    col = plan["tables"][0]["columns"][0]
+    assert col["default"]["target"] == "guid_number()"
+    assert "EXP022" in {f["code"] for f in col["findings"]}
+    conn.execute(plan["sql"])
+    ids = [conn.execute("insert into app.t (name) values ('x') returning id").fetchone()[0] for _ in range(20)]
+    assert len(set(ids)) == 20 and all(0 <= i < 2 ** 128 and i == int(i) for i in ids)

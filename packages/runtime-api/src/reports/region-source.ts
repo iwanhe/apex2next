@@ -27,6 +27,8 @@ export interface RegionSource {
   readonly searchable: boolean;
   readonly sortable: boolean;
   readonly rowsPerPage: number;
+  /** Column types unknown (derived query without catalog entry); see ReportDef.untyped. */
+  readonly untyped?: boolean;
 }
 
 /**
@@ -93,6 +95,7 @@ export function reportDef(spec: UiSpecLike, schema: string, src: RegionSource): 
     from: src.sql !== undefined ? `(${src.sql})` : `${schema}.${src.view}`, columns: regionColumns(spec, src),
     defaultSort: regionDefaultSort(spec, src), rowsPerPage: src.rowsPerPage,
     where: src.sql !== undefined ? undefined : src.where?.sql, facets: src.facets, searchable: src.searchable,
+    untyped: src.untyped,
   };
 }
 

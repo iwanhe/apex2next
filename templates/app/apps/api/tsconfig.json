@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "incremental": true,
+    "outDir": "./dist",
+    "sourceMap": true
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "test"
+  ],
+  "extends": "../../tsconfig.base.json",
+  "include": [
+    "src/**/*.ts"
+  ]
+}

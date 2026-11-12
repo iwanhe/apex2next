@@ -44,7 +44,7 @@ KEEP = {
                       "p_ajax_items_to_submit", "p_display_when_condition", "p_display_condition_type"],
     "REGION": ["p_plug_source_type", "p_query_type", "p_query_table", "p_query_where", "p_plug_source", "p_source",
                "p_query_order_by",
-               "p_edit_operations", "p_lost_update_check_type", "p_query_num_rows", "p_query_no_data_found",
+               "p_edit_operations", "p_is_editable", "p_lost_update_check_type", "p_query_num_rows", "p_query_no_data_found",
                "p_pagination_type", "p_show_total_row_count", "p_plug_query_num_rows_type", "p_plug_query_no_data_found",
                "p_plug_display_point", "p_plug_display_condition_type", "p_plug_display_when_condition",
                "p_plug_display_sequence"],
@@ -114,7 +114,7 @@ def build_page_inventory(files: dict[str, str]) -> dict[str, Any]:
         flow_lists = {"nav": ref.get("p_navigation_list_id"), "bar": ref.get("p_nav_bar_list_id")}
         inventory["application"] = {
             "name": lit.get("p_name"), "alias": lit.get("p_alias"), "logoText": lit.get("p_logo_text"),
-            "dateFormat": lit.get("p_date_format"),
+            "dateFormat": lit.get("p_date_format"), "homeLink": lit.get("p_home_url"),
             "timestampFormat": lit.get("p_timestamp_format"), "version": lit.get("p_flow_version"),
             "language": lit.get("p_flow_language"),
             "securityScheme": schemes.get(ref.get("p_security_scheme")),

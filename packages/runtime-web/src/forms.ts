@@ -7,7 +7,19 @@ import { DELETE_CONFIRM, type AppSpec } from './spec';
 const KIND: Record<string, FieldView['kind'] | null> = {
   NATIVE_TEXT_FIELD: 'text', NATIVE_TEXTAREA: 'textarea', NATIVE_NUMBER_FIELD: 'number',
   NATIVE_DATE_PICKER_APEX: 'date', NATIVE_SELECT_LIST: 'select', NATIVE_DISPLAY_ONLY: 'display', NATIVE_HIDDEN: null,
+  // R4a: shown as a select list with the same values (the look differs from APEX: switch, radio buttons, popup)
+  NATIVE_YES_NO: 'select', NATIVE_RADIOGROUP: 'select', NATIVE_POPUP_LOV: 'select',
 };
+
+/** Yes/No item: its two values and labels (APEX defaults Y/N, Yes/No). */
+function yesNoOptions(attributes: Record<string, string> | undefined) {
+  const a = attributes ?? {};
+  const custom = a.use_defaults === 'N';
+  return [
+    { display: custom ? a.on_label ?? 'Yes' : 'Yes', value: custom ? a.on_value ?? 'Y' : 'Y' },
+    { display: custom ? a.off_label ?? 'No' : 'No', value: custom ? a.off_value ?? 'N' : 'N' },
+  ];
+}
 
 async function lovOptions(spec: AppSpec, name: string): Promise<{ display: string; value: string }[]> {
   const lov = spec.lov(name) as { location: string; values: { display: string; return: string }[] } | undefined;
@@ -28,7 +40,8 @@ export async function formFields(spec: AppSpec, pageId: number, values: Record<s
     if (!kind) continue;
     const column = extra[name]?.column ?? (i.source ? String(i.source).toLowerCase() : null);
     if (!column) continue;
-    const options = kind === 'select' && i.namedLov ? await lovOptions(spec, i.namedLov) : undefined;
+    const options = i.displayAs === 'NATIVE_YES_NO' ? yesNoOptions(i.attributes)
+      : kind === 'select' && i.namedLov ? await lovOptions(spec, i.namedLov) : undefined;
     const ro = readOnly[column] === true;
     const raw = values[column] ?? null;
     let displayValue: string | undefined;

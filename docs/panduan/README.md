@@ -35,6 +35,10 @@ Bayangkan pindah rumah:
 | Fondasi web dan API (runtime bersama) | **Siap pakai** | paket `packages/runtime-api` dan `packages/runtime-web`: koneksi database, login akun lokal, pesan error gaya APEX, log akses, mesin laporan, form APEX, facet, grafik, kerangka halaman |
 | Query region dan LOV (Oracle → PostgreSQL) | **Otomatis / dibantu** | 11 dari 11 query laporan dan 5 dari 5 LOV dinamis pilot diterjemahkan; query yang tidak aman diterjemahkan dilaporkan, tidak dijalankan |
 | Halaman pola umum: Interactive Report, Faceted Search, form dialog | **Otomatis** | 15 dari 19 halaman pilot dibuat generator (1 halaman login disediakan runtime) |
+| Halaman yang tersusun dari region sederhana (konten statis, list, report, cards) | **Otomatis** | komposer halaman; region yang belum didukung membuat halamannya tetap manual |
+| Kerangka proyek siap jalan | **Otomatis** | `apex2next new`: login, lapisan halaman, komponen, runtime di `vendor/` |
+| Simpan/ubah/hapus form di tabel tanpa logika PL/SQL | **Otomatis** | form dengan proses DML bawaan APEX; tabel yang punya trigger belum dikonversi tetap manual |
+| Authorization scheme sederhana | **Otomatis** | `return true`, role/group, dan query yang hanya memakai `:APP_USER`; selain itu ditolak sampai developer menulis aturannya |
 | Halaman pola khusus dan logika bisnis | **Manual, dipandu** | 2 halaman pilot (dashboard, master-detail), service, validasi dan hak akses ditulis developer; daftar lengkapnya ada di laporan generator |
 | Query snapshot data | **Otomatis** | dibuat dari rencana schema; untuk pilot sama dengan query yang sudah terbukti (38 bagian) |
 | Uji kesamaan dengan APEX | **Manual per aplikasi** | metode dan contoh skrip tersedia (5 alur pilot identik) |
@@ -144,7 +148,15 @@ ulang sebagai service. Daftar ini dipakai untuk memperkirakan pekerjaan develope
 
 ### Langkah 6 — Bangun aplikasi target (generator + developer)
 
-Mulailah dari contoh `examples/f170134-target` sebagai kerangka proyek:
+Buat kerangka proyek dengan satu perintah (folder aplikasi berisi `ui/` dari langkah 2 dan `db/` dari langkah 3):
+
+```bash
+tools/apex2next new ../proyek --oracle-schema WKSP_NAMA_SCHEMA
+```
+
+Hasilnya proyek Next.js + NestJS yang siap dijalankan: login akun lokal, lapisan halaman generik (laporan, LOV,
+simpan/ubah/hapus form), komponen gaya APEX, dan salinan runtime bersama di `vendor/`. File yang sudah ada tidak
+pernah ditimpa. Contoh lengkap yang dikerjakan tangan tetap ada di `examples/f170134-target`:
 - `apps/api` (NestJS) dan `apps/web` (Next.js), keduanya memakai runtime bersama di `packages/`;
 - `db/migrations` (hasil langkah 3) dan `db/schema-plan.json`;
 - `ui/apex-page-inventory.json` (hasil langkah 2) dan `ui/coverage.json` (matriks cakupan).
@@ -179,6 +191,16 @@ Yang tetap dikerjakan developer (semuanya tercantum di laporan sebagai MANUAL):
 File berakhiran `.generated.ts` dan halaman berawalan komentar `GENERATED` **tidak boleh diedit tangan**. Ubah
 `app-map.json` atau sumbernya, lalu jalankan generator lagi. `tools/apex2next generate ../proyek --check` dipakai di
 CI untuk menolak file yang tidak sinkron.
+
+Untuk memeriksa hasilnya dengan cepat di database uji:
+
+```bash
+tools/apex2next smoke ../proyek --database-url postgresql://user:pass@localhost:5432/db_uji \
+  --crud '{"list": "/categories", "new": "/categories/new", "item": "P8_CATEGORY_NAME"}'
+```
+
+Perintah ini login dengan akun baru, mengganti password sementara, membuka semua halaman hasil generator, lalu
+membuat, mengubah dan menghapus satu baris lewat form.
 
 Terakhir, developer menandai setiap komponen di matriks cakupan. CI menolak kalau ada komponen yang belum diberi
 status.
@@ -258,6 +280,7 @@ dipakai pada aplikasi nyata.
 | **R1 — Alat bantu** (selesai) | Satu pintu untuk alat yang sudah ada | `tools/apex2next`, panduan ini | Langkah 0–5, 7 dan 9 bisa dijalankan dari satu perintah |
 | **R2 — Runtime bersama** (selesai 10 Nov 2026) | Fondasi aplikasi target tidak ditulis ulang per aplikasi | `packages/runtime-api` dan `packages/runtime-web`: form APEX, Interactive Report, facet, pesan dan error gaya APEX, hak akses tombol, cek versi data (lost update), login akun lokal | Tercapai: app 170134 berjalan di atas paket tersebut; 63 tes API, 3 tes runtime web, 12 tes e2e dan J-01…J-05 tetap lulus |
 | **R3 — Generator** (selesai 11 Nov 2026) | Mengurangi pekerjaan manual terbesar | `tools/apex2next generate` dan `catalog`: sumber region, LOV dan form, alamat halaman, halaman tiga pola umum, laporan "otomatis vs TODO"; penerjemah SQL Oracle → PostgreSQL untuk query region dan LOV; query snapshot dari rencana schema | Tercapai: 170134 di-generate ulang (15 dari 19 halaman, 11 query region, 5 LOV); 63 tes API, 12 tes e2e dan J-01…J-05 tetap lulus |
+| **R4a — Uji lebar dengan aplikasi contoh Oracle** (berjalan, mulai 12 Nov 2026) | Menemukan celah alat sebelum aplikasi nyata | 29 aplikasi contoh APEX 26.2: ambil DDL dari supporting objects, komposer halaman, kerangka proyek (`apex2next new`), DML form bawaan, aturan authorization, `apex2next smoke`; 2 aplikasi (Sample Master Detail, Forms Patterns) di-install di workspace KCSI untuk uji kesamaan | Forms Patterns berjalan di PostgreSQL dan lulus smoke 9/9; berikutnya trigger, Interactive Grid, uji kesamaan dengan APEX |
 | **R4 — Aplikasi nyata pertama** (usulan: FRITS) | Menguji alat pada aplikasi yang dipakai user | Komponen yang dibutuhkan FRITS ditambahkan; pemilahan PL/SQL menjadi template service; koneksi langsung ke database non-produksi; pemindahan data bertahap untuk volume besar | Alur kerja penting FRITS identik dengan APEX; gate WP9 lulus |
 | **R5 — Konverter** | Satu perintah dari export sampai aplikasi | `apex2next convert` dengan laporan "dibuat otomatis vs TODO"; template deploy (Docker, Cloudflare Tunnel); komponen lanjutan (Interactive Grid, upload, PDF, email, REST, job) sesuai kebutuhan; opsi login eksternal (Entra ID, Keycloak) | Aplikasi kedua (mis. SIPP) dikonversi dengan porsi manual yang terukur di laporan |
 

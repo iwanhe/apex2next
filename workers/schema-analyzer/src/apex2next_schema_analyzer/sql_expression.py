@@ -6,6 +6,8 @@ with a disposition. Unknown functions are never assumed to be portable.
 """
 from __future__ import annotations
 
+import re
+
 from dataclasses import dataclass, field
 
 from .sql_tokens import Token, identifier_name, pg_string_literal, string_value
@@ -35,7 +37,10 @@ EXPRESSION_RULES: dict[str, tuple[str, str]] = {
     "EXP019": ("ASSISTED", "TRUNC(SYSDATE) rewritten to CAST(CURRENT_DATE AS timestamp(0)); confirm timezone policy."),
     "EXP020": ("MANUAL", "Unresolved object reference after FROM/JOIN."),
     "EXP021": ("ASSISTED", "PL/SQL call mapped to a reviewed PostgreSQL function supplied by a hand-written migration; object is emitted in the deferred migration."),
+    "EXP022": ("ASSISTED", "TO_NUMBER(SYS_GUID(), 'X...X') (APEX key default) rewritten to guid_number(): a random 128-bit integer from gen_random_uuid(); keys are not ordered."),
 }
+
+GUID_NUMBER = "guid_number()"
 
 SQL_KEYWORDS = frozenset("""
 ALL AND ANY AS ASC BETWEEN BY CASE CAST CROSS CURRENT_DATE CURRENT_TIMESTAMP DESC DISTINCT
@@ -321,6 +326,15 @@ def convert_expression(tokens: list[Token], *, known_objects: frozenset[str] | s
             k += 1
             continue
         if nxt_paren and t.kind == "IDENT" and upper not in SQL_KEYWORDS:
+            if (upper == "TO_NUMBER" and word(k + 2) == "SYS_GUID" and is_op(k + 3, "(") and is_op(k + 4, ")")
+                    and is_op(k + 5, ",") and k + 7 < len(sig) and tokens[sig[k + 6]].kind == "STRING"
+                    and re.fullmatch(r"'[Xx]{32}'", tokens[sig[k + 6]].text) and is_op(k + 7, ")")):
+                out[sig[k]] = GUID_NUMBER
+                for idx in range(sig[k] + 1, sig[k + 7] + 1):
+                    out[idx] = ""
+                add("EXP022")
+                k += 8
+                continue
             if upper == "TRUNC" and word(k + 2) == "SYSDATE" and is_op(k + 3, ")"):
                 out[sig[k]] = "CAST(CURRENT_DATE AS timestamp(0))"
                 for j in (k + 1, k + 2, k + 3):

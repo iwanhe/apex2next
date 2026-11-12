@@ -16,7 +16,7 @@ def test_help_lists_every_command():
     r = run("-h")
     assert r.returncode == 0
     for cmd in ("doctor", "queries", "inventory", "schema-plan", "dictionary-check", "plsql", "load-data", "catalog",
-                "generate", "assess"):
+                "generate", "assess", "supporting-objects", "new", "smoke", "scoreboard"):
         assert cmd in r.stdout
 
 
@@ -86,4 +86,4 @@ def test_new_application_flow_inventory_plan_generate(tmp_path):
 def test_generate_check_passes_on_the_pilot():
     r = run("generate", ROOT / "examples/f170134-target", "--check")
     assert r.returncode == 0, r.stdout + r.stderr
-    assert "15 generated, 1 provided by the runtime, 2 to write by hand" in r.stdout
+    assert "15 generated, 0 generated with parts left out, 1 provided by the runtime, 2 to write by hand" in r.stdout

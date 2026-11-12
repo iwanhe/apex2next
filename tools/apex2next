@@ -16,8 +16,11 @@ Nothing here connects to Oracle; only `load-data` writes, and only to the Postgr
   apex2next plsql        SOURCE_SQL --out DIR       PL/SQL inventory: what converts, what needs hand work
   apex2next load-data    SNAPSHOT_CSV --plan F --database-url URL --out DIR
                                                     load a data snapshot into PostgreSQL and verify it
+  apex2next new          APP_DIR --oracle-schema S  runnable Next.js + NestJS skeleton (copy of templates/app)
   apex2next catalog      --database-url URL --out FILE
                                                     column types of the migrated schema (input of generate)
+  apex2next smoke        APP_DIR --database-url URL [--crud JSON]
+                                                    sign in, open every generated page, one form round trip
   apex2next scoreboard   APP_DIR... [--out FILE]   coverage table over several applications
   apex2next generate     APP_DIR [--init-map|--check]
                                                     region and LOV SQL, routes and pages of the common patterns,
@@ -216,6 +219,36 @@ def cmd_load_data(a: argparse.Namespace) -> int:
     return rc
 
 
+def cmd_new(a: argparse.Namespace) -> int:
+    app = Path(a.app)
+    for needed in ("ui/apex-page-inventory.json", "db/schema-plan.json", "db/0001_schema.sql"):
+        if not (app / needed).exists():
+            say(f"{app / needed} not found. Run inventory --out {app / 'ui'} and schema-plan --out {app / 'db'} first.")
+            return 2
+    rc = run("apex2next_schema_analyzer.project_new", str(app), "--oracle-schema", a.oracle_schema,
+             "--runtime", a.runtime, *(["--name", a.name] if a.name else []))
+    if rc == 0:
+        say("Next steps (from the application directory unless noted):",
+            f"  tools/apex2next catalog --database-url URL --out {app / 'db/target-catalog.json'}   (repository root;"
+            " after pnpm db:migrate on a disposable database)",
+            f"  tools/apex2next generate {app} --init-map ; review ui/app-map.json ; tools/apex2next generate {app}",
+            "  pnpm install ; pnpm spec ; pnpm typecheck ; pnpm build",
+            "  DATABASE_URL=... pnpm db:migrate ; DATABASE_URL=... node apps/api/scripts/accounts.mjs create <USER>",
+            "  AUTH_MODE=local DATABASE_URL=... node apps/api/dist/main.js ; API_URL=http://127.0.0.1:3001 pnpm --filter ./apps/web start")
+    return rc
+
+
+def cmd_smoke(a: argparse.Namespace) -> int:
+    if importlib.util.find_spec("playwright") is None:
+        say("smoke needs Playwright for Python: pip install playwright && python -m playwright install chromium")
+        return 2
+    cmd = [sys.executable, str(REPO / "tools/app_smoke.py"), a.app, "--database-url", a.database_url,
+           "--api-port", a.api_port, "--web-port", a.web_port]
+    if a.crud:
+        cmd += ["--crud", a.crud]
+    return subprocess.call(cmd)
+
+
 def cmd_catalog(a: argparse.Namespace) -> int:
     return run("apex2next_schema_analyzer.target_catalog", "--database-url", a.database_url, "--schema", a.schema,
                "--output", a.out)
@@ -234,8 +267,8 @@ def cmd_generate(a: argparse.Namespace) -> int:
     if not a.init_map and report.exists():
         s = json.loads(report.read_text(encoding="utf-8"))["summary"]
         pages = s["pages"]
-        say(f"Pages: {pages.get('GENERATED', 0)} generated, {pages.get('PROVIDED', 0)} provided by the runtime, "
-            f"{pages.get('MANUAL', 0)} to write by hand.",
+        say(f"Pages: {pages.get('GENERATED', 0)} generated, {pages.get('PARTIAL', 0)} generated with parts left out, "
+            f"{pages.get('PROVIDED', 0)} provided by the runtime, {pages.get('MANUAL', 0)} to write by hand.",
             f"Open items: {s['todo'].get('MANUAL', 0)} manual, {s['todo'].get('ASSISTED', 0)} to review.",
             f"Read: {app / 'ui/generation-report.md'}")
     if a.check and rc:
@@ -339,6 +372,20 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--database-url", required=True, help="PostgreSQL with the migrations applied; target tables must be empty")
     p.add_argument("--out", required=True)
     p.set_defaults(fn=cmd_load_data)
+    p = sub.add_parser("new", help="runnable Next.js + NestJS skeleton around the generated sources")
+    p.add_argument("app", help="application directory with ui/apex-page-inventory.json and db/ (schema plan)")
+    p.add_argument("--oracle-schema", required=True, help="parsing schema of the APEX application, e.g. WKSP_KCSI")
+    p.add_argument("--name", help="package name (default: the application alias)")
+    p.add_argument("--runtime", choices=["pack", "link"], default="pack",
+                   help="pack (default): copies of the runtime packages in vendor/; link: workspace link (in-repo apps)")
+    p.set_defaults(fn=cmd_new)
+    p = sub.add_parser("smoke", help="sign in, open every generated page and run one form create/edit/delete")
+    p.add_argument("app", help="built application directory (pnpm build)")
+    p.add_argument("--database-url", required=True, help="DISPOSABLE PostgreSQL database with the migrations applied")
+    p.add_argument("--api-port", default="3201")
+    p.add_argument("--web-port", default="3200")
+    p.add_argument("--crud", help='JSON, e.g. {"list": "/categories", "new": "/categories/new", "item": "P8_NAME"}')
+    p.set_defaults(fn=cmd_smoke)
     p = sub.add_parser("catalog", help="column types of the migrated PostgreSQL schema (input of generate)")
     p.add_argument("--database-url", required=True, help="PostgreSQL with the migrations applied")
     p.add_argument("--schema", default="app")

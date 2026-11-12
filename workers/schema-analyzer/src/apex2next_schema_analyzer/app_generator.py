@@ -66,7 +66,12 @@ GEN_RULES: dict[str, tuple[str, str]] = {
     "GEN020": ("MANUAL", "Button left out of the generated page: its action or condition needs server logic."),
     "GEN021": ("ASSISTED", "Static content markup was reduced to plain structure (tags or attributes dropped)."),
     "GEN022": ("MANUAL", "Page is marked manual in app-map.json; the generator does not write it."),
+    "GEN023": ("MANUAL", "Form item type is not rendered by the form runtime (file upload, rich text, multi-select, ...)."),
+    "GEN024": ("ASSISTED", "Form item is shown as a select list (switch, radio group or popup LOV in APEX)."),
 }
+FORM_ITEM_KINDS = {"NATIVE_TEXT_FIELD", "NATIVE_TEXTAREA", "NATIVE_NUMBER_FIELD", "NATIVE_DATE_PICKER_APEX",
+                   "NATIVE_SELECT_LIST", "NATIVE_DISPLAY_ONLY", "NATIVE_HIDDEN"}
+FORM_ITEM_AS_SELECT = {"NATIVE_YES_NO", "NATIVE_RADIOGROUP", "NATIVE_POPUP_LOV"}
 
 
 # ------------------------------------------------------------------------------------------- small helpers
@@ -157,6 +162,8 @@ class Inputs:
                 self.types[name] = dict(cols)
         self.numeric = {name.upper(): {c.upper() for c, t in cols.items() if column_kind(t) == "NUMBER"}
                         for name, cols in self.types.items()}
+        # tables whose source triggers are not converted: native form DML would skip their logic
+        self.triggered = {t["table"].upper() for t in self.plan.get("triggers", []) if not t.get("emit")}
 
     def translate(self, sql: str, source_schemas: list[str]):
         return translate_query(sql, known_objects=self.known, source_schemas=frozenset(s.upper() for s in source_schemas),
@@ -202,6 +209,25 @@ def classify(page: dict[str, Any]) -> tuple[str, str | None]:
     return "MANUAL", "regions: " + (", ".join(shape) if shape else "none")
 
 
+HOME_PLACEHOLDER = """import Link from 'next/link';
+import { PAGE_ROUTES } from '../../lib/routes';
+import { NAVIGATION } from '../../lib/spec';
+
+/** The application's home page is not generated (see the generation report); until it is, list the menu. */
+export default function Home() {
+  const entries = NAVIGATION.filter((n) => !n.parent && n.page !== null && PAGE_ROUTES[n.page] && PAGE_ROUTES[n.page] !== '/');
+  return (
+    <section className="region" aria-label="Home">
+      <h2 className="region-title">Home</h2>
+      <ul className="media-list">
+        {entries.map((n) => <li key={n.label}><div className="title"><Link href={PAGE_ROUTES[n.page!]}>{n.label}</Link></div></li>)}
+      </ul>
+    </section>
+  );
+}
+"""
+
+
 def table_query(page: dict[str, Any], region: dict[str, Any], kind: str) -> str:
     """SELECT that APEX runs for a region whose source is a table: its columns, WHERE and ORDER BY clauses."""
     props = region["props"]
@@ -235,7 +261,9 @@ def default_map(inp: Inputs) -> dict[str, Any]:
                 link = parse_link(c["props"].get(prop))
                 if link and link["page"] != page["id"]:
                     targets.setdefault(link["page"], page["id"])
-    home = next((p["id"] for p in inp.inventory["pages"] if (p.get("alias") or "").upper() == "HOME"), None)
+    home_link = parse_link(inp.inventory["application"].get("homeLink"))
+    home = home_link["page"] if home_link and home_link["page"] in inp.pages else next(
+        (p["id"] for p in inp.inventory["pages"] if (p.get("alias") or "").upper() == "HOME"), None)
     for page in inp.inventory["pages"]:
         pattern, _ = classify(page)
         if pattern == "GLOBAL":
@@ -308,10 +336,19 @@ class Generator:
             page = inp.pages[int(pid)]
             if "form" in entry and classify(page)[0] == "FORM_DIALOG":
                 region = form_region(page)
-                operations = (region["props"].get("edit_operations") or "").split(":")
+                # the export omits the default operations (all) of an editable form region
+                operations = (region["props"].get("edit_operations")
+                              or ("i:u:d" if region["props"].get("is_editable") is True else "")).split(":")
+                processes = components(page, "PROCESS")
+                standard = (region["props"].get("query_type") == "TABLE"
+                            and (region["props"].get("query_table") or "").upper() not in inp.triggered
+                            and any(x["props"].get("process_type") == "NATIVE_FORM_DML" for x in processes)
+                            and not any(x["props"].get("process_type") == "NATIVE_PLSQL"
+                                        and x["props"].get("process_point") == "AFTER_SUBMIT" for x in processes))
                 self.forms[int(pid)] = {
                     "name": entry["form"], "page": int(pid), "region": region["name"], "route": entry["route"],
-                    "param": entry.get("param", "id"), "pk": primary_key_item(page)["name"], "insert": "i" in operations}
+                    "param": entry.get("param", "id"), "pk": primary_key_item(page)["name"], "insert": "i" in operations,
+                    "operations": operations, "dml": standard}
 
     # ---------------------------------------------------------------- regions and LOVs
     def region_key(self, page_id: int, name: str) -> str | None:
@@ -379,6 +416,7 @@ class Generator:
                         cols = self.inp.types.get(src.get("view", ""))
                         if cols is None:
                             entry["findings"].append(finding("GEN004", src.get("view") or "derived query"))
+                            src["untyped"] = True
                         else:
                             types = {col: column_kind(cols[col]) for col in src["select"] if col in cols}
                             types = {col: t for col, t in types.items() if t != "STRING"}
@@ -450,7 +488,7 @@ class Generator:
                 lines.append("facets: [" + ", ".join(f"{{ item: {ts_str(f['item'])}, column: {ts_str(f['column'])} }}"
                                                      for f in s["facets"]) + "],")
             lines.append(f"searchable: {str(s['searchable']).lower()}, sortable: {str(s['sortable']).lower()}, "
-                         f"rowsPerPage: {s['rowsPerPage']},")
+                         f"rowsPerPage: {s['rowsPerPage']},{' untyped: true,' if s.get('untyped') else ''}")
             out.append(f"  {ts_key(r['key'])}: {{\n" + "".join(f"    {line}\n" for line in lines) + "  },\n")
         out.append("} as const satisfies Record<string, RegionSource>;\n\nexport type RegionName = keyof typeof REGION_SOURCES;\n\n")
         out.append("/** Dynamic LOVs of the shared components, translated to PostgreSQL (ORDER BY applied by the runtime). */\n")
@@ -464,7 +502,9 @@ class Generator:
         out.append("} as const satisfies Record<string, LovSource>;\n\nexport type DynamicLov = keyof typeof LOV_SOURCES;\n\n")
         out.append("/** Form regions (NATIVE_FORM) by form name: page and region of the UI spec. */\nexport const FORM_SOURCES = {\n")
         for f in sorted(self.forms.values(), key=lambda f: f["page"]):
-            out.append(f"  {ts_key(f['name'])}: {{ page: {f['page']}, region: {ts_str(f['region'])} }},\n")
+            ops = ", ".join(f"'{o}'" for o in f["operations"] if o in {"i", "u", "d"})
+            dml = f", dml: [{ops}]" if f["dml"] else ""
+            out.append(f"  {ts_key(f['name'])}: {{ page: {f['page']}, region: {ts_str(f['region'])}{dml} }},\n")
         out.append("} as const;\n\nexport type FormName = keyof typeof FORM_SOURCES;\n")
         self.files["apps/api/src/pages/app-sources.generated.ts"] = "".join(out)
 
@@ -759,6 +799,13 @@ class Generator:
         pid = page["id"]
         route = self.map["pages"][str(pid)]["route"]
         items = {i["name"] for i in components(page, "ITEM")}
+        before = [x["name"] for x in components(page, "PROCESS")
+                  if x["props"].get("process_point") in {"BEFORE_HEADER", "AFTER_HEADER", "BEFORE_BOX_BODY"}
+                  and x["props"].get("process_type") not in {"NATIVE_FORM_INIT", "NATIVE_SESSION_STATE"}]
+        if before:  # the page computes what it shows: a service must do that first
+            report["todo"].append(finding("GEN006", f"before display: {', '.join(before)}"))
+            report["status"] = "MANUAL"
+            return
         blocks: list[str] = []
         used: set[str] = set()
         regions = sorted((c for c in page["components"] if c["kind"] in {"REGION", "REPORT_REGION"}), key=region_sequence)
@@ -841,6 +888,42 @@ class Generator:
         report["files"].append(path)
         report["status"] = "PARTIAL" if report.pop("partial", False) else "GENERATED"
 
+    def scheme_rule(self, a: dict[str, Any]) -> tuple[str | None, list[dict[str, Any]]]:
+        """TS rule for an authorization scheme, or None (deny until implemented) with the reason."""
+        expr = " ".join((a.get("expression") or "").split())
+        kind = a.get("type")
+        if kind == "NATIVE_FUNCTION_BODY" and re.fullmatch(r"(plsql_function_body )?return true ?;?", expr, re.I):
+            return "{ allow: true }", []
+        if kind == "NATIVE_IS_IN_GROUP":
+            m = re.fullmatch(r"name (.+?)(?: type \w+)?", expr)
+            if m:
+                roles = [r.strip().upper() for r in m.group(1).split(",") if r.strip()]
+                return "{ roles: " + ts_list(roles) + " }", []
+        if kind in {"NATIVE_EXISTS", "NATIVE_NOT_EXISTS"} and expr.lower().startswith("sql_query "):
+            q = self.inp.translate(expr[len("sql_query "):], self.map.get("sourceSchemas", []))
+            if q.usable and set(q.binds) <= {"APP_USER"}:
+                negate = " negate: true," if kind == "NATIVE_NOT_EXISTS" else ""
+                return (f"{{ exists: {ts_str(collapse_sql(q.sql))},{negate}"
+                        f"{' appUser: true,' if q.binds else ''} }}"), q.findings
+            return None, q.findings
+        return None, []
+
+    def emit_schemes(self) -> list[dict[str, Any]]:
+        todo: list[dict[str, Any]] = []
+        out = [HEADER, "/* eslint-disable */\n", "import type { SchemeDef } from '@apex2next/runtime-api';\n\n",
+               "/**\n * Authorization schemes of the APEX export with a proposed rule. A null rule denies access until a\n"
+               " * developer implements the check (generation report GEN010). Override rules in security.ts.\n */\n",
+               "export const SCHEMES: Record<string, SchemeDef> = {\n"]
+        for a in self.inp.inventory.get("authorizations", []):
+            rule, findings = self.scheme_rule(a)
+            if rule is None:
+                todo.append(finding("GEN010", a["name"]))
+            out.append(f"  {ts_str(a['name'])}: {{ name: {ts_str(a['name'])}, errorMessage: "
+                       f"{ts_str(a['errorMessage']) if a.get('errorMessage') else 'null'}, rule: {rule or 'null'} }},\n")
+        out.append("};\n")
+        self.files["apps/api/src/business/security-schemes.generated.ts"] = "".join(out)
+        return todo
+
     def emit_routes(self) -> None:
         routes = {int(pid): e["route"] for pid, e in self.map["pages"].items()
                   if self.inp.pages[int(pid)]["mode"] == "NORMAL" and int(pid) not in self.forms}
@@ -858,6 +941,17 @@ class Generator:
                "/** Downloadable Interactive Reports: region key and region title (APEX names the file after the title). */\n",
                "export const IR_DOWNLOADS: Record<string, string> = {\n",
                "".join(f"  {ts_key(k)}: {ts_str(v)},\n" for k, v in downloads.items()), "};\n"]
+        login = next((p for p in self.inp.inventory["pages"] if classify(p)[0] == "LOGIN"), None)
+        if login is not None:
+            names = {i["name"] for i in components(login, "ITEM")}
+            pick = lambda suffix: next((n for n in sorted(names) if n.endswith("_" + suffix)), None)  # noqa: E731
+            submit = next((b["name"] for b in sorted(components(login, "BUTTON"), key=lambda b: b["name"] != "LOGIN")
+                           if b["props"].get("button_action") in {"SUBMIT", None}), None)
+            fields = {"page": str(login["id"]), "username": pick("USERNAME"), "password": pick("PASSWORD"),
+                      "remember": pick("REMEMBER"), "button": submit}
+            out.append("\n/** The APEX login page: its items and sign-in button (labels come from the UI spec). */\n")
+            out.append("export const LOGIN_PAGE = { " + ", ".join(
+                f"{k}: {v if k == 'page' else (ts_str(v) if v else 'null')}" for k, v in fields.items()) + " } as const;\n")
         self.files["apps/web/lib/app-routes.generated.ts"] = "".join(out)
 
     # ---------------------------------------------------------------- report
@@ -871,13 +965,21 @@ class Generator:
             props = c["props"]
             if c["kind"] == "PROCESS" and props.get("process_type") == "NATIVE_PLSQL":
                 todo.append(finding("GEN006", c["name"]))
-            elif c["kind"] == "PROCESS" and props.get("process_type") == "NATIVE_FORM_DML":
-                todo.append(finding("GEN009", c["name"]))
+            elif c["kind"] == "PROCESS" and props.get("process_type") == "NATIVE_FORM_DML" and not (
+                    page["id"] in self.forms and self.forms[page["id"]]["dml"]):
+                table = (form_region(page) or {"props": {}})["props"].get("query_table") or ""
+                todo.append(finding("GEN009", c["name"] + (f" (table {table} has triggers that are not converted)"
+                                                          if table.upper() in self.inp.triggered else "")))
             elif c["kind"] == "VALIDATION":
                 todo.append(finding("GEN007", c["name"]))
             elif c["kind"] == "BUTTON" and props.get("button_condition") and " ".join(props["button_condition"].lower().split()) not in standard \
                     and not (composed and props.get("button_condition_type") in ITEM_CONDITIONS):
                 todo.append(finding("GEN008", f"button {c['name']}"))
+            elif c["kind"] == "ITEM" and form_region(page) is not None and props.get("display_as") in FORM_ITEM_AS_SELECT:
+                todo.append(finding("GEN024", f"{c['name']} ({props['display_as']})"))
+            elif c["kind"] == "ITEM" and form_region(page) is not None and props.get("display_as") \
+                    and props["display_as"] not in FORM_ITEM_KINDS and props.get("source_type") != "FACET_COLUMN":
+                todo.append(finding("GEN023", f"{c['name']} ({props['display_as']})"))
             elif c["kind"] == "ITEM" and props.get("read_only_when"):
                 todo.append(finding("GEN008", f"read-only {c['name']}"))
             elif c["kind"] in {"REGION", "REPORT_REGION"} and props.get("plug_display_when_condition"):
@@ -890,6 +992,7 @@ class Generator:
         self.build_regions()
         self.build_lovs()
         self.emit_sources()
+        self.scheme_todo = self.emit_schemes()
         for page in self.inp.inventory["pages"]:
             pattern, reason = classify(page)
             report: dict[str, Any] = {"id": page["id"], "name": page["name"], "pattern": pattern, "status": "MANUAL",
@@ -921,6 +1024,9 @@ class Generator:
             if r["kind"] in {"NATIVE_LIST", "NATIVE_DISPLAY_SELECTOR"} and status.get(r["page"]) in {"GENERATED", "PARTIAL"}:
                 r["status"], r["findings"] = "GENERATED", []
         self.emit_routes()
+        home = [e for e in self.map["pages"].values() if e.get("route") == "/"]
+        if "apps/web/app/(app)/page.tsx" not in self.files and not any(e.get("manual") for e in home):
+            self.files["apps/web/app/(app)/page.tsx"] = HEADER + HOME_PLACEHOLDER
         return self.report()
 
     def report(self) -> dict[str, Any]:
@@ -930,7 +1036,7 @@ class Generator:
                 out[r["status"]] = out.get(r["status"], 0) + 1
             return dict(sorted(out.items()))
 
-        schemes = [finding("GEN010", a["name"]) for a in self.inp.inventory.get("authorizations", [])]
+        schemes = self.scheme_todo
         todo = [{"page": p["id"], **f} for p in self.page_reports for f in p["todo"]]
         todo += [{"page": r["page"], "region": r["region"], **f} for r in self.regions if r["status"] == "MANUAL"
                  for f in r["findings"] if f["disposition"] in {"MANUAL", "UNSUPPORTED"}]

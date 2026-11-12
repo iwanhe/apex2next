@@ -28,10 +28,13 @@ export async function FormDialog(props: {
     );
   }
   const fields = await formFields(spec, props.pageId, data.values, data.readOnly ?? {}, props.extraItems);
+  const dml = Object.fromEntries(Object.entries((p.button ?? {}) as Record<string, { databaseAction?: string }>)
+    .filter(([, b]) => b.databaseAction === 'INSERT' || b.databaseAction === 'UPDATE' || b.databaseAction === 'DELETE')
+    .map(([name, b]) => [name, b.databaseAction as 'INSERT' | 'UPDATE' | 'DELETE']));
   return (
     <Dialog page={props.pageId} title={p.title} closeHref={props.returnTo}>
       <ApexForm submit={props.app.submit}
-        binding={{ form: props.form, id: props.id, returnTo: props.returnTo, columns: postedColumns(fields) }}
+        binding={{ form: props.form, id: props.id, returnTo: props.returnTo, columns: postedColumns(fields), dml }}
         fields={fields} values={data.values} checksum={data.checksum} buttons={formButtons(spec, props.pageId, data.buttons)}
         cancelHref={props.returnTo} cancelLabel={cancelLabel(spec, props.pageId)} />
     </Dialog>
