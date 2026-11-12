@@ -110,3 +110,23 @@ export function bindRegionSources(spec: UiSpecLike, options: { readonly schema: 
     lovSql,
   };
 }
+
+/**
+ * Values of a region's binds in $n order. Page items come from the request as `item.<NAME>` (APEX sets them
+ * from the URL the same way); APP_USER is always the signed-in user and never taken from the request.
+ * Only the binds the generator allowlisted for the region are accepted; '' is NULL, as in APEX session state.
+ */
+export function regionBinds(src: RegionSource, query: Record<string, unknown>, username: string): (string | null)[] {
+  const binds = src.binds ?? [];
+  for (const key of Object.keys(query)) {
+    if (!key.startsWith('item.')) continue;
+    const name = key.slice(5);
+    if (name === 'APP_USER' || !binds.includes(name)) throw new Error(`item ${name} is not a bind of region ${src.page}:${src.region}`);
+  }
+  return binds.map((name) => {
+    if (name === 'APP_USER') return username;
+    const value = query[`item.${name}`];
+    if (Array.isArray(value)) throw new Error(`item ${name} given more than once`);
+    return typeof value === 'string' && value !== '' ? value : null;
+  });
+}

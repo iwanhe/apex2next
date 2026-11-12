@@ -342,6 +342,171 @@
       "parent": "Home"
     }
   ],
+  "lists": [
+    {
+      "name": "Navigation Bar",
+      "items": [
+        {
+          "label": "&APP_USER.",
+          "target": "#",
+          "sequence": 10,
+          "icon": "fa-user",
+          "description": null,
+          "parent": null,
+          "scheme": null
+        },
+        {
+          "label": "---",
+          "target": "separator",
+          "sequence": 20,
+          "icon": null,
+          "description": null,
+          "parent": "&APP_USER.",
+          "scheme": null
+        },
+        {
+          "label": "Sign Out",
+          "target": "&LOGOUT_URL.",
+          "sequence": 30,
+          "icon": "fa-sign-out",
+          "description": null,
+          "parent": "&APP_USER.",
+          "scheme": null
+        }
+      ]
+    },
+    {
+      "name": "Navigation Menu",
+      "items": [
+        {
+          "label": "Home",
+          "target": "f?p=&APP_ID.:100:&SESSION.::&DEBUG.",
+          "sequence": 10,
+          "icon": "fa-home",
+          "description": null,
+          "parent": null,
+          "scheme": null
+        },
+        {
+          "label": "Approval Inbox",
+          "target": "f?p=&APP_ID.:190:&SESSION.::&DEBUG.",
+          "sequence": 20,
+          "icon": "fa-check-square-o",
+          "description": null,
+          "parent": null,
+          "scheme": null
+        },
+        {
+          "label": "Master Data",
+          "target": "f?p=&APP_ID.:200:&SESSION.::&DEBUG.",
+          "sequence": 30,
+          "icon": "fa-table",
+          "description": null,
+          "parent": null,
+          "scheme": null
+        },
+        {
+          "label": "Departments",
+          "target": "f?p=&APP_ID.:200:&SESSION.::&DEBUG.",
+          "sequence": 40,
+          "icon": "fa-building-o",
+          "description": null,
+          "parent": "Master Data",
+          "scheme": null
+        },
+        {
+          "label": "Items",
+          "target": "f?p=&APP_ID.:210:&SESSION.::&DEBUG.",
+          "sequence": 50,
+          "icon": "fa-tag",
+          "description": null,
+          "parent": "Master Data",
+          "scheme": null
+        },
+        {
+          "label": "Transaksi",
+          "target": "f?p=&APP_ID.:300:&SESSION.::&DEBUG.",
+          "sequence": 60,
+          "icon": "fa-exchange",
+          "description": null,
+          "parent": null,
+          "scheme": null
+        },
+        {
+          "label": "Permintaan Barang",
+          "target": "f?p=&APP_ID.:300:&SESSION.::&DEBUG.",
+          "sequence": 70,
+          "icon": "fa-file-text-o",
+          "description": null,
+          "parent": "Transaksi",
+          "scheme": null
+        },
+        {
+          "label": "Detail Permintaan",
+          "target": "f?p=&APP_ID.:302:&SESSION.::&DEBUG.",
+          "sequence": 80,
+          "icon": "fa-columns",
+          "description": null,
+          "parent": "Transaksi",
+          "scheme": null
+        },
+        {
+          "label": "Baris Permintaan",
+          "target": "f?p=&APP_ID.:310:&SESSION.::&DEBUG.",
+          "sequence": 90,
+          "icon": "fa-list",
+          "description": null,
+          "parent": "Transaksi",
+          "scheme": null
+        },
+        {
+          "label": "Reports",
+          "target": "f?p=&APP_ID.:400:&SESSION.::&DEBUG.",
+          "sequence": 100,
+          "icon": "fa-bar-chart",
+          "description": null,
+          "parent": null,
+          "scheme": null
+        },
+        {
+          "label": "Rekap Permintaan",
+          "target": "f?p=&APP_ID.:400:&SESSION.::&DEBUG.",
+          "sequence": 110,
+          "icon": "fa-bar-chart",
+          "description": null,
+          "parent": "Reports",
+          "scheme": null
+        },
+        {
+          "label": "Administration",
+          "target": "f?p=&APP_ID.:500:&SESSION.::&DEBUG.",
+          "sequence": 120,
+          "icon": "fa-gear",
+          "description": null,
+          "parent": null,
+          "scheme": "ADMIN_RIGHTS"
+        },
+        {
+          "label": "Users & Roles",
+          "target": "f?p=&APP_ID.:500:&SESSION.::&DEBUG.",
+          "sequence": 130,
+          "icon": "fa-user-secret",
+          "description": null,
+          "parent": "Administration",
+          "scheme": "ADMIN_RIGHTS"
+        },
+        {
+          "label": "Document Types & Approval",
+          "target": "f?p=&APP_ID.:510:&SESSION.::&DEBUG.",
+          "sequence": 140,
+          "icon": "fa-sliders",
+          "description": null,
+          "parent": "Administration",
+          "scheme": "ADMIN_RIGHTS"
+        }
+      ]
+    }
+  ],
   "pages": [
     {
       "id": 0,
@@ -408,7 +573,8 @@
           "name": "Home",
           "props": {
             "plug_source": "Template Pandawa APEXlang - data dummy.",
-            "plug_display_point": "REGION_POSITION_01"
+            "plug_display_point": "REGION_POSITION_01",
+            "plug_display_sequence": 10
           }
         },
         {
@@ -416,7 +582,8 @@
           "kind": "REGION",
           "name": "Nilai per Department",
           "props": {
-            "plug_source_type": "NATIVE_JET_CHART"
+            "plug_source_type": "NATIVE_JET_CHART",
+            "plug_display_sequence": 50
           }
         },
         {
@@ -424,7 +591,8 @@
           "kind": "REGION",
           "name": "Permintaan per Status",
           "props": {
-            "plug_source_type": "NATIVE_JET_CHART"
+            "plug_source_type": "NATIVE_JET_CHART",
+            "plug_display_sequence": 40
           }
         },
         {
@@ -437,7 +605,8 @@
             "plug_source": "select seq, icon, label, metric_value\n  from apx_demo_dash_kpi_v",
             "query_order_by": "SEQ",
             "show_total_row_count": false,
-            "plug_query_num_rows_type": "SET"
+            "plug_query_num_rows_type": "SET",
+            "plug_display_sequence": 20
           }
         },
         {
@@ -669,7 +838,8 @@
           "props": {
             "plug_source_type": "NATIVE_IR",
             "query_type": "SQL",
-            "plug_source": "select approval_id, doc_name, doc_no, approval_level, approver_role, amount, requested_by, requested_on,\n       status, can_act_yn, acted_by, acted_on, note\n  from apx_demo_approvals_v"
+            "plug_source": "select approval_id, doc_name, doc_no, approval_level, approver_role, amount, requested_by, requested_on,\n       status, can_act_yn, acted_by, acted_on, note\n  from apx_demo_approvals_v",
+            "plug_display_sequence": 20
           }
         },
         {
@@ -678,7 +848,8 @@
           "name": "Breadcrumb",
           "props": {
             "plug_source_type": "NATIVE_BREADCRUMB",
-            "plug_display_point": "REGION_POSITION_01"
+            "plug_display_point": "REGION_POSITION_01",
+            "plug_display_sequence": 10
           }
         }
       ]
@@ -981,7 +1152,8 @@
           "props": {
             "plug_source_type": "NATIVE_FORM",
             "query_type": "TABLE",
-            "query_table": "APX_DEMO_APPROVALS_V"
+            "query_table": "APX_DEMO_APPROVALS_V",
+            "plug_display_sequence": 10
           }
         },
         {
@@ -989,7 +1161,8 @@
           "kind": "REGION",
           "name": "Buttons",
           "props": {
-            "plug_display_point": "REGION_POSITION_03"
+            "plug_display_point": "REGION_POSITION_03",
+            "plug_display_sequence": 20
           }
         }
       ]
@@ -1125,7 +1298,8 @@
           "name": "Breadcrumb",
           "props": {
             "plug_source_type": "NATIVE_BREADCRUMB",
-            "plug_display_point": "REGION_POSITION_01"
+            "plug_display_point": "REGION_POSITION_01",
+            "plug_display_sequence": 10
           }
         },
         {
@@ -1135,7 +1309,8 @@
           "props": {
             "plug_source_type": "NATIVE_IR",
             "query_type": "SQL",
-            "plug_source": "select department_id, dept_code, dept_name, active_yn, updated_by, updated_on\n  from apx_demo_departments_v"
+            "plug_source": "select department_id, dept_code, dept_name, active_yn, updated_by, updated_on\n  from apx_demo_departments_v",
+            "plug_display_sequence": 20
           }
         }
       ]
@@ -1335,7 +1510,8 @@
           "kind": "REGION",
           "name": "Buttons",
           "props": {
-            "plug_display_point": "REGION_POSITION_03"
+            "plug_display_point": "REGION_POSITION_03",
+            "plug_display_sequence": 20
           }
         },
         {
@@ -1347,7 +1523,8 @@
             "query_type": "TABLE",
             "query_table": "APX_DEMO_DEPARTMENTS",
             "edit_operations": "i:u:d",
-            "lost_update_check_type": "VALUES"
+            "lost_update_check_type": "VALUES",
+            "plug_display_sequence": 10
           }
         }
       ]
@@ -1463,7 +1640,8 @@
           "name": "Filter",
           "props": {
             "plug_source_type": "NATIVE_FACETED_SEARCH",
-            "plug_display_point": "REGION_POSITION_02"
+            "plug_display_point": "REGION_POSITION_02",
+            "plug_display_sequence": 10
           }
         },
         {
@@ -1477,7 +1655,8 @@
             "query_order_by": "ITEM_CODE",
             "show_total_row_count": false,
             "plug_query_num_rows_type": "SCROLL",
-            "plug_query_no_data_found": "Tidak ada data."
+            "plug_query_no_data_found": "Tidak ada data.",
+            "plug_display_sequence": 20
           }
         },
         {
@@ -1486,7 +1665,8 @@
           "name": "Items",
           "props": {
             "plug_source": "<span class=\"u-text-body-sm u-text-muted-color\"><span id=\"total_row_count\">-</span> baris</span>",
-            "plug_display_point": "REGION_POSITION_01"
+            "plug_display_point": "REGION_POSITION_01",
+            "plug_display_sequence": 10
           }
         }
       ]
@@ -1744,7 +1924,8 @@
           "kind": "REGION",
           "name": "Buttons",
           "props": {
-            "plug_display_point": "REGION_POSITION_03"
+            "plug_display_point": "REGION_POSITION_03",
+            "plug_display_sequence": 20
           }
         },
         {
@@ -1756,7 +1937,8 @@
             "query_type": "TABLE",
             "query_table": "APX_DEMO_ITEMS",
             "edit_operations": "i:u:d",
-            "lost_update_check_type": "VALUES"
+            "lost_update_check_type": "VALUES",
+            "plug_display_sequence": 10
           }
         }
       ]
@@ -1849,7 +2031,8 @@
           "name": "Filter",
           "props": {
             "plug_source_type": "NATIVE_FACETED_SEARCH",
-            "plug_display_point": "REGION_POSITION_02"
+            "plug_display_point": "REGION_POSITION_02",
+            "plug_display_sequence": 10
           }
         },
         {
@@ -1858,7 +2041,8 @@
           "name": "Permintaan Barang",
           "props": {
             "plug_source": "<span class=\"u-text-body-sm u-text-muted-color\"><span id=\"total_row_count\">-</span> baris</span>",
-            "plug_display_point": "REGION_POSITION_01"
+            "plug_display_point": "REGION_POSITION_01",
+            "plug_display_sequence": 10
           }
         },
         {
@@ -1962,7 +2146,8 @@
             "query_type": "SQL",
             "query_order_by": "REQUEST_NO DESC",
             "query_num_rows": 15,
-            "query_no_data_found": "Tidak ada data."
+            "query_no_data_found": "Tidak ada data.",
+            "display_sequence": 20
           }
         }
       ]
@@ -2280,7 +2465,8 @@
           "kind": "REGION",
           "name": "Buttons",
           "props": {
-            "plug_display_point": "REGION_POSITION_03"
+            "plug_display_point": "REGION_POSITION_03",
+            "plug_display_sequence": 20
           }
         },
         {
@@ -2292,7 +2478,8 @@
             "query_type": "TABLE",
             "query_table": "APX_DEMO_REQUESTS",
             "edit_operations": "i:u:d",
-            "lost_update_check_type": "VALUES"
+            "lost_update_check_type": "VALUES",
+            "plug_display_sequence": 10
           }
         },
         {
@@ -2423,7 +2610,8 @@
           "props": {
             "plug_source": "<p class=\"u-text-muted-color\">Pilih Permintaan Barang di daftar kiri untuk melihat detailnya.</p>",
             "plug_display_condition_type": "ITEM_IS_NULL",
-            "plug_display_when_condition": "P302_REQUEST_ID"
+            "plug_display_when_condition": "P302_REQUEST_ID",
+            "plug_display_sequence": 20
           }
         },
         {
@@ -2432,7 +2620,8 @@
           "name": "Breadcrumb",
           "props": {
             "plug_source_type": "NATIVE_BREADCRUMB",
-            "plug_display_point": "REGION_POSITION_01"
+            "plug_display_point": "REGION_POSITION_01",
+            "plug_display_sequence": 10
           }
         },
         {
@@ -2441,7 +2630,8 @@
           "name": "Permintaan Barang",
           "props": {
             "plug_display_condition_type": "ITEM_IS_NOT_NULL",
-            "plug_display_when_condition": "P302_REQUEST_ID"
+            "plug_display_when_condition": "P302_REQUEST_ID",
+            "plug_display_sequence": 30
           }
         },
         {
@@ -2624,6 +2814,8 @@
             "query_order_by": "LINE_ID",
             "query_num_rows": 15,
             "query_no_data_found": "Belum ada Baris Permintaan.",
+            "display_sequence": 20,
+            "display_point": "SUB_REGIONS",
             "ajax_items_to_submit": "P302_REQUEST_ID"
           }
         },
@@ -2636,7 +2828,8 @@
             "query_type": "SQL",
             "query_order_by": "REQUEST_NO DESC",
             "query_num_rows": 15,
-            "query_no_data_found": "Belum ada Permintaan Barang."
+            "query_no_data_found": "Belum ada Permintaan Barang.",
+            "display_sequence": 10
           }
         },
         {
@@ -2647,6 +2840,8 @@
             "source": "select request_id\n      ,request_no\n      ,department_id_dsp\n      ,request_date\n      ,need_date\n      ,purpose\n      ,status\n  from apx_demo_requests_v\n where request_id = to_number(:P302_REQUEST_ID)",
             "query_type": "SQL",
             "query_num_rows": 15,
+            "display_sequence": 10,
+            "display_point": "SUB_REGIONS",
             "ajax_items_to_submit": "P302_REQUEST_ID"
           }
         }
@@ -2810,7 +3005,8 @@
           "props": {
             "plug_source_type": "NATIVE_IR",
             "query_type": "SQL",
-            "plug_source": "select line_id, request_id_dsp, item_id_dsp, qty, unit_price, line_amount, updated_by, updated_on\n  from apx_demo_request_lines_v"
+            "plug_source": "select line_id, request_id_dsp, item_id_dsp, qty, unit_price, line_amount, updated_by, updated_on\n  from apx_demo_request_lines_v",
+            "plug_display_sequence": 20
           }
         },
         {
@@ -2819,7 +3015,8 @@
           "name": "Breadcrumb",
           "props": {
             "plug_source_type": "NATIVE_BREADCRUMB",
-            "plug_display_point": "REGION_POSITION_01"
+            "plug_display_point": "REGION_POSITION_01",
+            "plug_display_sequence": 10
           }
         }
       ]
@@ -3061,7 +3258,8 @@
             "query_type": "TABLE",
             "query_table": "APX_DEMO_REQUEST_LINES",
             "edit_operations": "i:u:d",
-            "lost_update_check_type": "VALUES"
+            "lost_update_check_type": "VALUES",
+            "plug_display_sequence": 10
           }
         },
         {
@@ -3069,7 +3267,8 @@
           "kind": "REGION",
           "name": "Buttons",
           "props": {
-            "plug_display_point": "REGION_POSITION_03"
+            "plug_display_point": "REGION_POSITION_03",
+            "plug_display_sequence": 20
           }
         }
       ]
@@ -3183,7 +3382,8 @@
           "name": "Breadcrumb",
           "props": {
             "plug_source_type": "NATIVE_BREADCRUMB",
-            "plug_display_point": "REGION_POSITION_01"
+            "plug_display_point": "REGION_POSITION_01",
+            "plug_display_sequence": 10
           }
         },
         {
@@ -3193,7 +3393,8 @@
           "props": {
             "plug_source_type": "NATIVE_IR",
             "query_type": "SQL",
-            "plug_source": "select request_no, dept_name, request_date, purpose, line_count, total_amount, status\n  from apx_demo_request_summary_v"
+            "plug_source": "select request_no, dept_name, request_date, purpose, line_count, total_amount, status\n  from apx_demo_request_summary_v",
+            "plug_display_sequence": 20
           }
         }
       ]
@@ -3328,7 +3529,8 @@
           "name": "Breadcrumb",
           "props": {
             "plug_source_type": "NATIVE_BREADCRUMB",
-            "plug_display_point": "REGION_POSITION_01"
+            "plug_display_point": "REGION_POSITION_01",
+            "plug_display_sequence": 10
           }
         },
         {
@@ -3338,7 +3540,8 @@
           "props": {
             "plug_source_type": "NATIVE_IR",
             "query_type": "SQL",
-            "plug_source": "select user_role_id, username, role_code, role_name, created_by, created_on\n  from apx_demo_user_roles_v"
+            "plug_source": "select user_role_id, username, role_code, role_name, created_by, created_on\n  from apx_demo_user_roles_v",
+            "plug_display_sequence": 20
           }
         }
       ]
@@ -3520,7 +3723,8 @@
           "kind": "REGION",
           "name": "Buttons",
           "props": {
-            "plug_display_point": "REGION_POSITION_03"
+            "plug_display_point": "REGION_POSITION_03",
+            "plug_display_sequence": 20
           }
         },
         {
@@ -3532,7 +3736,8 @@
             "query_type": "TABLE",
             "query_table": "APX_DEMO_USER_ROLES",
             "edit_operations": "i:u:d",
-            "lost_update_check_type": "VALUES"
+            "lost_update_check_type": "VALUES",
+            "plug_display_sequence": 10
           }
         }
       ]
@@ -3655,7 +3860,8 @@
           "name": "Breadcrumb",
           "props": {
             "plug_source_type": "NATIVE_BREADCRUMB",
-            "plug_display_point": "REGION_POSITION_01"
+            "plug_display_point": "REGION_POSITION_01",
+            "plug_display_sequence": 10
           }
         },
         {
@@ -3665,7 +3871,8 @@
           "props": {
             "plug_source_type": "NATIVE_IR",
             "query_type": "SQL",
-            "plug_source": "select doc_type, doc_name, prefix, approver1_role, approver2_role, level2_limit\n  from apx_demo_doc_types"
+            "plug_source": "select doc_type, doc_name, prefix, approver1_role, approver2_role, level2_limit\n  from apx_demo_doc_types",
+            "plug_display_sequence": 20
           }
         }
       ]
@@ -3870,7 +4077,8 @@
           "kind": "REGION",
           "name": "Buttons",
           "props": {
-            "plug_display_point": "REGION_POSITION_03"
+            "plug_display_point": "REGION_POSITION_03",
+            "plug_display_sequence": 20
           }
         },
         {
@@ -3882,7 +4090,8 @@
             "query_type": "TABLE",
             "query_table": "APX_DEMO_DOC_TYPES",
             "edit_operations": "u",
-            "lost_update_check_type": "VALUES"
+            "lost_update_check_type": "VALUES",
+            "plug_display_sequence": 10
           }
         }
       ]
@@ -4001,7 +4210,9 @@
           "key": "P9999:REGION:Login",
           "kind": "REGION",
           "name": "Login",
-          "props": {}
+          "props": {
+            "plug_display_sequence": 10
+          }
         }
       ]
     }
@@ -4010,5 +4221,5 @@
     "pages": 19,
     "components": 269
   },
-  "sha256": "ddcd262eda918f83d8a08aa0137b2774ba83fc47aaa4c83953acb7d31a50dac3"
+  "sha256": "f9d7a0053f5673f1f61d60e652ab4034fec3d5f49d057248d74d9fa1733e7a58"
 }

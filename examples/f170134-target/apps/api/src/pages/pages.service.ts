@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ApprovalService } from '../business/approval.service';
-import { BusinessDatabase, BusinessTx, errors, FieldError, Principal, ReportQuery, runReport } from '@apex2next/runtime-api';
+import { BusinessDatabase, BusinessTx, errors, FieldError, Principal, ReportQuery, regionBinds, runReport } from '@apex2next/runtime-api';
 import { MasterDataEntity, MasterDataService } from '../business/master-data.service';
 import { RequestService } from '../business/request.service';
 import { AUTHORIZATION_SCHEMES, AuthorizationScheme, SecurityService } from '../business/security.service';
@@ -134,11 +134,17 @@ export class PagesService {
     });
   }
 
-  report(actor: Principal, name: RegionName, query: ReportQuery) {
+  /** Any generated region; its binds are hidden page items from the request (item.NAME) or APP_USER (R4a). */
+  report(actor: Principal, name: RegionName, query: ReportQuery, raw: Record<string, unknown> = {}) {
     const src: RegionSource = REGION_SOURCES[name];
-    // regions with binds (master-detail) are served by their page method, which supplies the values
-    if (!src || src.binds?.length) throw errors.invalidInput(`Region ${name} tidak dikenal.`);
-    return this.run(actor, src.page, (tx) => runReport(tx, reportDef(src), query));
+    if (!src) throw errors.invalidInput(`Region ${name} tidak dikenal.`);
+    let binds: (string | null)[];
+    try {
+      binds = regionBinds(src, raw, actor.username);
+    } catch (e) {
+      throw errors.invalidInput((e as Error).message);
+    }
+    return this.run(actor, src.page, (tx) => runReport(tx, reportDef(src), query, binds));
   }
 
   lov(actor: Principal, name: string) {

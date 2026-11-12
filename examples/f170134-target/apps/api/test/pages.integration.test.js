@@ -284,7 +284,15 @@ test('WP9.5 page layer over HTTP', { skip }, async (t) => {
     assert.deepEqual(byAmount.body.rows.map((r) => r.line_amount), ['9', '10', '165000']);
     const byId = await req1.get('/regions/requestLines');
     assert.deepEqual(byId.body.rows.map((r) => Number(r.line_id)), byId.body.rows.map((r) => Number(r.line_id)).sort((x, y) => x - y), 'default LINE_ID ASC by value');
-    expectError(await req1.get('/regions/requestHeader'), 422, 'INVALID_INPUT', 'Region requestHeader tidak dikenal.');
+    // R4a: a region bound to a hidden page item is served generically; the value comes as item.<NAME>
+    const noHeader = await req1.get('/regions/requestHeader');
+    assert.equal(noHeader.status, 200, JSON.stringify(noHeader.body));
+    assert.equal(noHeader.body.rows.length, 0, 'P302_REQUEST_ID null: no header');
+    const header = await req1.get(`/regions/requestHeader?item.P302_REQUEST_ID=${draftId}`);
+    assert.equal(header.body.rows.length, 1);
+    expectError(await req1.get(`/regions/requestHeader?item.P999_X=1`), 422, 'INVALID_INPUT', 'item P999_X is not a bind of region 302:Permintaan Barang');
+    expectError(await req1.get(`/regions/requestHeader?item.APP_USER=DEMO_DIR`), 422, 'INVALID_INPUT');
+    expectError(await req1.get(`/regions/requestHeader?item.P302_REQUEST_ID=abc`), 422, 'INVALID_INPUT');
     expectError(await req1.get('/regions/nope'), 422, 'INVALID_INPUT');
 
     const items = await req1.get('/regions/items?facet=P210_CATEGORY:IT');

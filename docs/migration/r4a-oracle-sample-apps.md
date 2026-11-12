@@ -70,6 +70,36 @@ pessimistic for a business application. The order of the gaps is still the usefu
 | The DDL of an application inside its supporting objects could not be read | New `supporting-objects` command. It decodes the install scripts (string literals, `wwv_flow.LF`, `UNISTR(...)` over concatenations) without executing anything, in install order, with conditions and hashes |
 | `COMMENT ON VIEW` was written for a view that is not emitted, so the migration failed (`image-support-rte`) | A comment now goes with the migration that creates its object; none for a view that is not emitted |
 
+## Step 1: page composer (2026-11-12)
+
+The R3 generator only knew whole-page patterns. Most sample pages instead combine a few simple regions, so the
+generator now also **composes a page region by region**:
+
+| Region | Rendered as |
+|---|---|
+| Static content | Text and an allowlist of tags (paragraphs, lists, headings, tables, links). Scripts, frames, images and all attributes are dropped; links go only to generated pages or to `https://` |
+| List (shared component) | Linked list with descriptions; a link to a page that is not generated is shown as text |
+| Classic report, Interactive Report, Cards | The R3 region sources, now also for regions on a table (`query_type` TABLE) |
+| Display selector, breadcrumb | Not rendered (the shell shows the breadcrumb) |
+| Region condition "item is null / not null" | Rendered conditionally |
+| Button that opens a page | Link, with its condition and authorization scheme |
+
+Rules that keep this safe:
+- A region the composer cannot render, or with any other display condition, keeps the **whole page manual**.
+- A button that needs server logic is **left out and reported**; the page is then `PARTIAL`.
+- A query may bind only **hidden items of its own page** (sent as `item.<NAME>`, as APEX sets them from the URL) and
+  `APP_USER` (always the signed-in user). Any other bind keeps the region manual (`GEN016`).
+- The generator **never overwrites a hand-written page**. A page can be kept manual with `"manual": true` in
+  `ui/app-map.json`; the pilot marks pages 100 and 302 this way.
+
+| | Baseline | After step 1 |
+|---|---|---|
+| Pages generated or provided | 65 of 740 (9%) | 199 of 740 (27%) |
+| Report regions generated | 92 of 1,135 (8%) | 208 of 1,135 (18%) |
+
+Full table: [r4a/scoreboard-composer.md](r4a/scoreboard-composer.md). The pilot is unchanged: tests 63/63,
+e2e 12/12, J-01…J-05 PASS.
+
 ## Applications chosen for installation and full conversion
 
 | Application | Pages | Why |

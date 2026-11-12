@@ -39,12 +39,15 @@ COMPONENT_ROUTINES = {
     "create_jet_chart_series": ("CHART_SERIES", "p_name"),
 }
 KEEP = {
-    "REPORT_REGION": ["p_source", "p_query_type", "p_query_order_by", "p_query_num_rows", "p_query_no_data_found",
+    "REPORT_REGION": ["p_source", "p_query_type", "p_query_table", "p_query_where", "p_query_order_by",
+                      "p_query_num_rows", "p_query_no_data_found", "p_display_sequence", "p_display_point",
                       "p_ajax_items_to_submit", "p_display_when_condition", "p_display_condition_type"],
-    "REGION": ["p_plug_source_type", "p_query_type", "p_query_table", "p_plug_source", "p_source", "p_query_order_by",
+    "REGION": ["p_plug_source_type", "p_query_type", "p_query_table", "p_query_where", "p_plug_source", "p_source",
+               "p_query_order_by",
                "p_edit_operations", "p_lost_update_check_type", "p_query_num_rows", "p_query_no_data_found",
                "p_pagination_type", "p_show_total_row_count", "p_plug_query_num_rows_type", "p_plug_query_no_data_found",
-               "p_plug_display_point", "p_plug_display_condition_type", "p_plug_display_when_condition"],
+               "p_plug_display_point", "p_plug_display_condition_type", "p_plug_display_when_condition",
+               "p_plug_display_sequence"],
     "ITEM": ["p_prompt", "p_display_as", "p_source", "p_source_type", "p_is_primary_key", "p_is_required",
              "p_is_query_only", "p_named_lov", "p_lov_display_null", "p_lov_null_text", "p_item_default",
              "p_read_only_when", "p_read_only_when_type", "p_display_when", "p_display_when_type",
@@ -97,7 +100,7 @@ def build_page_inventory(files: dict[str, str]) -> dict[str, Any]:
         if c["routine"] == "create_security_scheme":
             schemes[_ref(c, "p_id")] = c["arguments"].get("p_name")
     inventory: dict[str, Any] = {"format": INVENTORY_FORMAT, "application": {}, "authorizations": [], "lovs": [],
-                                 "navigation": [], "navigationBar": [], "breadcrumbs": [], "pages": []}
+                                 "navigation": [], "navigationBar": [], "breadcrumbs": [], "lists": [], "pages": []}
     app_text = next((t for n, t in files.items() if n.endswith("create_application.sql")), "")
     flow = re.search(r"create_flow\((.*?)\n\);", app_text, re.S)
     if flow:  # create_flow mixes expressions the generic call parser does not decode; read its literals
@@ -108,6 +111,7 @@ def build_page_inventory(files: dict[str, str]) -> dict[str, Any]:
             if m:
                 lit[k] = m.group(1).replace("''", "'")
         ref = {k: _ID.search(v).group(1) for k, v in props.items() if _ID.search(v)}
+        flow_lists = {"nav": ref.get("p_navigation_list_id"), "bar": ref.get("p_nav_bar_list_id")}
         inventory["application"] = {
             "name": lit.get("p_name"), "alias": lit.get("p_alias"), "logoText": lit.get("p_logo_text"),
             "dateFormat": lit.get("p_date_format"),
@@ -141,17 +145,35 @@ def build_page_inventory(files: dict[str, str]) -> dict[str, Any]:
                 if c["routine"] == "create_list_item"}
     crumb_ids = {_ref(c, "p_id"): c["arguments"].get("p_short_name") for c in all_calls
                  if c["routine"] == "create_menu_option"}
+    list_names = {_ref(c, "p_id"): c["arguments"].get("p_name") for c in all_calls if c["routine"] == "create_list"}
+    # the application names its navigation menu and bar lists; older exports fall back to the default names
+    nav_name = list_names.get((flow_lists if flow else {}).get("nav")) or "Navigation Menu"
+    bar_name = list_names.get((flow_lists if flow else {}).get("bar")) or "Navigation Bar"
     nav_calls = []
     bar_calls = []
+    list_items: dict[str, list[dict[str, Any]]] = {}
     for calls in calls_by_file.values():  # list items follow their create_list in the same file
         current = None
         for c in calls:
             if c["routine"] == "create_list":
                 current = c["arguments"].get("p_name")
-            elif c["routine"] == "create_list_item" and current == "Navigation Menu":
-                nav_calls.append(c)
-            elif c["routine"] == "create_list_item" and current == "Navigation Bar":
-                bar_calls.append(c)
+                list_items.setdefault(current, [])
+            elif c["routine"] == "create_list_item":
+                list_items.setdefault(current, []).append(c)
+                if current == nav_name:
+                    nav_calls.append(c)
+                elif current == bar_name:
+                    bar_calls.append(c)
+    for name, items in sorted(list_items.items(), key=lambda kv: kv[0] or ""):
+        inventory["lists"].append({"name": name, "items": sorted(
+            ({"label": _text(c, "p_list_item_link_text"),
+              "target": _text(c, "p_list_item_link_target"),
+              "sequence": c["arguments"].get("p_list_item_display_sequence"),
+              "icon": _text(c, "p_list_item_icon"),
+              "description": _text(c, "p_list_text_01"),
+              "parent": item_ids.get(_ref(c, "p_parent_list_item_id")),
+              "scheme": schemes.get(_ref(c, "p_security_scheme"))} for c in items),
+            key=lambda x: x["sequence"] or 0)})
     inventory["navigationBar"] = sorted(
         ({"label": c["arguments"].get("p_list_item_link_text"),
           "target": c["arguments"].get("p_list_item_link_target"),
@@ -225,6 +247,8 @@ def build_page_inventory(files: dict[str, str]) -> dict[str, Any]:
                 props["when_button"] = buttons.get(_ref(c, "p_process_when_button_id"))
             if _ref(c, "p_security_scheme"):  # component authorization (e.g. a CREATE button for MASTER_DATA only)
                 props["security_scheme"] = schemes.get(_ref(c, "p_security_scheme"))
+            if kind == "REGION" and _ref(c, "p_list_id"):
+                props["list"] = list_names.get(_ref(c, "p_list_id"))
             if kind == "VALIDATION" and _ref(c, "p_associated_item"):
                 props["associated_item"] = page_items.get(_ref(c, "p_associated_item"))
             components.append({"key": f"P{page_id}:{kind}:{cname}", "kind": kind, "name": cname, "props": props})

@@ -34,7 +34,8 @@ def test_pilot_summary_and_what_stays_manual(pilot):
     assert s["regions"] == {"GENERATED": 11, "MANUAL": 3} and s["lovs"] == {"GENERATED": 5, "PROVIDED": 3}
     manual = {p["id"]: p for p in report["pages"] if p["status"] == "MANUAL"}
     assert set(manual) == {100, 302}  # dashboard (charts, metric cards) and master-detail
-    assert all(p["todo"][0]["code"] == "GEN001" for p in manual.values())
+    assert manual[100]["todo"][0]["code"] == "GEN001"
+    assert manual[302]["todo"][0]["code"] == "GEN022"  # composable since R4a, kept hand-written by the app map
     by_page = {p["id"]: [f["code"] for f in p["todo"]] for p in report["pages"]}
     assert by_page[191].count("GEN006") == 2 and by_page[301].count("GEN007") == 1  # approve/reject, need-date validation
     assert "GEN008" not in by_page[201], "CREATE/SAVE/DELETE by primary key are standard, not open items"
@@ -85,7 +86,7 @@ def test_link_parsing_and_page_patterns():
     assert parse_link("javascript:void(0)") is None and parse_link(None) is None
     pages = {p["id"]: classify(p)[0] for p in Inputs(PILOT).inventory["pages"]}
     assert pages == {0: "GLOBAL", 100: "MANUAL", 190: "IR_PAGE", 191: "FORM_DIALOG", 200: "IR_PAGE", 201: "FORM_DIALOG",
-                     210: "FACETED_CARDS", 211: "FORM_DIALOG", 300: "FACETED_REPORT", 301: "FORM_DIALOG", 302: "MANUAL",
+                     210: "FACETED_CARDS", 211: "FORM_DIALOG", 300: "FACETED_REPORT", 301: "FORM_DIALOG", 302: "COMPOSED",
                      310: "IR_PAGE", 311: "FORM_DIALOG", 400: "IR_PAGE", 500: "IR_PAGE", 501: "FORM_DIALOG",
                      510: "IR_PAGE", 511: "FORM_DIALOG", 9999: "LOGIN"}
 
@@ -141,7 +142,7 @@ def _app(tmp_path, region_sql, *, lov_sql="select ename d, empno r from emp orde
 
 
 JOIN = ("select e.empno, e.ename, d.dname from emp e join dept d on d.deptno = e.deptno "
-        "where e.mgr = :P1_MGR and nvl(e.active, 'Y') = 'Y'")
+        "where e.mgr = :APP_USER and nvl(e.active, 'Y') = 'Y'")
 
 
 def test_join_query_becomes_a_derived_table_with_binds(tmp_path):
@@ -149,7 +150,7 @@ def test_join_query_becomes_a_derived_table_with_binds(tmp_path):
     src = files["apps/api/src/pages/app-sources.generated.ts"]
     assert ("sql: 'select e.empno, e.ename, d.dname from app.emp e join app.dept d on d.deptno = e.deptno "
             "where e.mgr = $1 and COALESCE(e.active, \\'Y\\') = \\'Y\\'',") in src
-    assert "select: ['empno', 'ename', 'dname']," in src and "binds: ['P1_MGR']," in src
+    assert "select: ['empno', 'ename', 'dname']," in src and "binds: ['APP_USER']," in src
     assert report["summary"]["pages"] == {"GENERATED": 2} and report["summary"]["regions"] == {"GENERATED": 2}
     staff = re.search(r"staff: \{.*?\n  \},", src, re.S).group(0)
     assert "types: { empno: 'NUMBER' }" in staff and "searchable: true, sortable: false, rowsPerPage: 20" in staff

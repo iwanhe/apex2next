@@ -51,7 +51,7 @@ export class PagesController {
       dir: typeof q.dir === 'string' ? q.dir : undefined,
       page: q.page === undefined ? 1 : Number(q.page),
       facets, all: q.all === '1',
-    });
+    }, q);
   }
 
   @Get('lovs/:name')

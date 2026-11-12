@@ -26,7 +26,7 @@ Generated files: 22. Open items: 19 ASSISTED, 32 MANUAL.
 | 211 | Item | FORM_DIALOG | GENERATED | 2 | GEN009×1, GEN011×1 |
 | 300 | Permintaan Barang | FACETED_REPORT | GENERATED | 1 | GEN011×1, GEN012×1 |
 | 301 | Permintaan Barang | FORM_DIALOG | GENERATED | 2 | GEN006×1, GEN007×1, GEN008×7, GEN009×1, GEN011×1 |
-| 302 | Detail Permintaan | MANUAL | MANUAL | 0 | GEN001×1, GEN008×3, GEN011×3 |
+| 302 | Detail Permintaan | COMPOSED | MANUAL | 0 | GEN008×3, GEN011×3, GEN022×1 |
 | 310 | Baris Permintaan | IR_PAGE | GENERATED | 1 | GEN011×1 |
 | 311 | Baris Permintaan | FORM_DIALOG | GENERATED | 2 | GEN009×1, GEN011×1 |
 | 400 | Rekap Permintaan | IR_PAGE | GENERATED | 1 | - |
@@ -99,7 +99,7 @@ Generated files: 22. Open items: 19 ASSISTED, 32 MANUAL.
 | page 301 | GEN006 | MANUAL | Business logic: PL/SQL process to implement in a page service. | CALL_SUBMIT_REQUESTS |
 | page 301 | GEN009 | MANUAL | Form DML to wire to a business service (create, update, delete). | SAVE_REQUESTS |
 | page 301 | GEN007 | MANUAL | Validation to implement in a page service. | NEED_DATE_AFTER_REQUEST_DATE |
-| page 302 | GEN001 | MANUAL | Page matches no supported pattern; write the page by hand. | regions: 3 classic report(s) |
+| page 302 | GEN022 | MANUAL | Page is marked manual in app-map.json; the generator does not write it. |  |
 | page 302 | GEN008 | MANUAL | Server-side condition (button, read-only, display) to implement in a page service. | button CREATE_REQUEST_LINES |
 | page 302 | GEN011 | ASSISTED | Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others. | ON_DIALOG_CLOSED_REFRESH_HEADER |
 | page 302 | GEN011 | ASSISTED | Dynamic action: behaviour is provided by the runtime for dialogs and refresh; review others. | ON_DIALOG_CLOSED_REFRESH_REQUEST_LINES |

@@ -24,10 +24,17 @@ export function ReportTable(props: {
   columnLinks?: Record<string, (row: Row) => string>;
   testId?: string;
   kind?: 'IR' | 'CLASSIC';
+  /** Name of the paging parameter (default `page`); a composed page prefixes it with the region key. */
+  pageParam?: string;
 }) {
   const { result, params } = props;
   const cols = visibleColumns(result.columns);
-  const link = (extra: Record<string, string | undefined>) => `${props.basePath}${qs({ ...params, ...extra })}`;
+  const pageParam = props.pageParam ?? 'page';
+  const link = (extra: Record<string, string | undefined>) => {
+    const query = qs({ ...params, ...extra });
+    if (!query) return props.basePath;
+    return props.basePath.includes('?') ? `${props.basePath}&${query.slice(1)}` : `${props.basePath}${query}`;
+  };
   if (!result.rows.length) return <div className="nodata" data-testid={props.testId ? `${props.testId}-nodata` : undefined}>{props.noData}</div>;
   const pages = Math.ceil(result.total / result.rowsPerPage);
   return (
@@ -69,8 +76,8 @@ export function ReportTable(props: {
       </table>
       <div className="pagination">
         <span data-testid="row-range">{rowRange(result.page, result.rowsPerPage, result.rows.length, result.total, props.kind ?? 'CLASSIC')}</span>
-        {result.page > 1 && <Link href={link({ page: String(result.page - 1) })}>‹ Previous</Link>}
-        {result.page < pages && <Link href={link({ page: String(result.page + 1) })}>Next ›</Link>}
+        {result.page > 1 && <Link href={link({ [pageParam]: String(result.page - 1) })}>‹ Previous</Link>}
+        {result.page < pages && <Link href={link({ [pageParam]: String(result.page + 1) })}>Next ›</Link>}
       </div>
     </div>
   );

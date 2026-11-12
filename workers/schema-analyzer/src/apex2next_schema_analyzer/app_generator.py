@@ -26,6 +26,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+from .page_composer import (COMPOSE_TYPES, ITEM_CONDITIONS, map_text, node_links, region_sequence, safe_external,
+                            sanitize_html, tsx_json)
 from .region_sql import collapse_sql, translate_lov, translate_query, worst_disposition
 from .sql_expression import DISPOSITION_RANK
 
@@ -56,6 +58,14 @@ GEN_RULES: dict[str, tuple[str, str]] = {
     "GEN012": ("ASSISTED", "Static content region is not rendered by the generated page."),
     "GEN013": ("MANUAL", "Query selects columns that cannot be listed (SELECT *); list the columns."),
     "GEN014": ("MANUAL", "Interactive Report column of the query has no column definition in the export."),
+    "GEN015": ("ASSISTED", "Region display selector is not rendered; the regions are shown one after another."),
+    "GEN016": ("MANUAL", "Query binds an item that is not a hidden item of the page (nor APP_USER); serve it from a page service."),
+    "GEN017": ("MANUAL", "Static content uses substitution strings that need a server-side value."),
+    "GEN018": ("MANUAL", "Region display condition other than an item being null / not null; implement it in a page service."),
+    "GEN019": ("ASSISTED", "Link in static content or a list does not lead to a generated page; it is shown as text."),
+    "GEN020": ("MANUAL", "Button left out of the generated page: its action or condition needs server logic."),
+    "GEN021": ("ASSISTED", "Static content markup was reduced to plain structure (tags or attributes dropped)."),
+    "GEN022": ("MANUAL", "Page is marked manual in app-map.json; the generator does not write it."),
 }
 
 
@@ -182,8 +192,35 @@ def classify(page: dict[str, Any]) -> tuple[str, str | None]:
         return "FACETED_CARDS", None
     if typed == ["NATIVE_FORM"] and form_region(page) is not None and not reports and primary_key_item(page) is not None:
         return "FORM_DIALOG", None
+    types = {r["props"].get("plug_source_type") for r in regions}
+    inputs = [i["name"] for i in components(page, "ITEM") if i["props"].get("display_as") != "NATIVE_HIDDEN"]
+    if types <= COMPOSE_TYPES and not inputs and len(regions_of(page, "NATIVE_IR")) <= 1:
+        return "COMPOSED", None
     shape = typed + ([f"{len(reports)} classic report(s)"] if reports else [])
+    if types <= COMPOSE_TYPES and inputs:
+        return "MANUAL", "input items: " + ", ".join(inputs[:4]) + (" ..." if len(inputs) > 4 else "")
     return "MANUAL", "regions: " + (", ".join(shape) if shape else "none")
+
+
+def table_query(page: dict[str, Any], region: dict[str, Any], kind: str) -> str:
+    """SELECT that APEX runs for a region whose source is a table: its columns, WHERE and ORDER BY clauses."""
+    props = region["props"]
+    prefix = region["name"] + "."
+    if kind == "CLASSIC":
+        cols = sorted((c for c in components(page, "REPORT_COLUMN") if c["name"].startswith(prefix)),
+                      key=lambda c: (c["props"].get("column_display_sequence") or 0, c["name"]))
+    elif kind == "IR":
+        cols = sorted((c for c in components(page, "IR_COLUMN") if c["name"].startswith(prefix)),
+                      key=lambda c: (c["props"].get("display_order") or 0, c["name"]))
+    else:
+        cols = []
+    names = [c["name"][len(prefix):] for c in cols if c["props"].get("derived_column") != "Y"]
+    sql = f"select {', '.join(n.lower() for n in names) if names else '*'} from {props['query_table'].lower()}"
+    if props.get("query_where"):
+        sql += f" where {props['query_where']}"
+    if props.get("query_order_by") and kind == "CLASSIC":
+        sql += f" order by {props['query_order_by']}"
+    return sql
 
 
 # ------------------------------------------------------------------------------------------- app map
@@ -214,6 +251,8 @@ def default_map(inp: Inputs) -> dict[str, Any]:
         if classify(page)[0] == "FORM_DIALOG":
             parent = pages.get(str(targets.get(page["id"], -1)))
             route = parent["route"] if parent else "/" + kebab(page.get("alias") or page["name"])
+            if any(e.get("form") and e["route"] == route for e in pages.values()):  # two forms below one page
+                route = route.rstrip("/") + "/" + kebab(page.get("alias") or page["name"])
             pages[str(page["id"])] = {"route": route, "form": camel(form_region(page)["name"])}
         for c in page["components"]:
             is_region = c["kind"] == "REPORT_REGION" or (
@@ -241,9 +280,14 @@ def load_map(inp: Inputs) -> dict[str, Any]:
             raise SystemExit(f"app-map: page {key} is not in the inventory")
         if not re.fullmatch(r"/|(/[a-z0-9][a-z0-9-]*)+", route):
             raise SystemExit(f"app-map: page {key} route {route!r} must be / or lower-case path segments")
+        if "manual" in entry and not isinstance(entry["manual"], bool):
+            raise SystemExit(f"app-map: page {key} manual must be true or false")
         for name in ("form", "param"):
             if name in entry and not re.fullmatch(r"[A-Za-z][A-Za-z0-9]*", entry[name]):
                 raise SystemExit(f"app-map: page {key} {name} {entry[name]!r} must be an identifier")
+    form_routes = [e["route"] for e in data["pages"].values() if e.get("form")]
+    if len(form_routes) != len(set(form_routes)):
+        raise SystemExit("app-map: two form pages share a route; give each form its own route")
     keys = list(data.get("regions", {}).values())
     if len(keys) != len(set(keys)) or not all(re.fullmatch(r"[A-Za-z][A-Za-z0-9]*", k) for k in keys):
         raise SystemExit("app-map: region keys must be unique identifiers")
@@ -300,7 +344,7 @@ class Generator:
                 if entry["key"] is None:
                     raise SystemExit(f"app-map: no region key for {page['id']}:{c['name']}")
                 if props.get("query_type") == "TABLE" and props.get("query_table") and not sql:
-                    sql = f"select * from {props['query_table']}"
+                    sql = table_query(page, c, kind)
                 q = self.inp.translate(sql or "", self.map.get("sourceSchemas", []))
                 entry["findings"] += q.findings
                 entry["sourceSha256"] = hashlib.sha256((sql or "").encode("utf-8")).hexdigest()
@@ -321,6 +365,10 @@ class Generator:
                         src["select"] = q.columns
                     if q.binds:
                         src["binds"] = q.binds
+                        hidden = {i["name"] for i in items if i["props"].get("display_as") == "NATIVE_HIDDEN"}
+                        for bind in q.binds:
+                            if bind != "APP_USER" and bind not in hidden:
+                                entry["findings"].append(finding("GEN016", bind))
                     if kind == "IR":
                         defined = {i["name"] for i in components(page, "IR_COLUMN")}
                         for col in src["select"]:
@@ -570,6 +618,229 @@ class Generator:
                 report["files"].append(path)
             report["status"] = "GENERATED"
 
+    # ---------------------------------------------------------------- composed pages (R4a)
+    def link_value(self, value: str, row: bool, items: set[str]) -> str | None:
+        """TS template part for one f?p item value, or None when it cannot be resolved."""
+        m = re.fullmatch(r"&([A-Za-z0-9_$]+)\.", value)
+        if m and m.group(1).upper() in items:  # &ITEM. of the current page (&COL. is a row column in Cards)
+            return f"${{encodeURIComponent(items.{m.group(1).upper()} ?? '')}}"
+        col = row_column(value)
+        if col is not None:
+            return f"${{encodeURIComponent(r.{col} ?? '')}}" if row and col.isidentifier() else None
+        if "&" in value or "#" in value:
+            return None
+        return re.sub(r"[^A-Za-z0-9_.~-]", lambda x: "%{:02X}".format(ord(x.group(0))), value)
+
+    def href(self, url: str | None, *, row: bool, items: set[str]) -> str | None:
+        """Template literal body of a link to a generated page; None when the target is not generated."""
+        link = parse_link(url)
+        if link is None:
+            return None
+        target = link["page"]
+        if target in self.forms:
+            form = self.forms[target]
+            page = self.inp.pages[target]
+            if form["pk"] in link["items"]:
+                v = self.link_value(link["items"][form["pk"]], row, items)
+                return None if v is None else f"{form['route']}/{v}"
+            if not form["insert"]:
+                return None
+            sources = {i["name"]: (i["props"].get("source") or "").lower() for i in components(page, "ITEM")}
+            query = []
+            for name, value in link["items"].items():
+                v = self.link_value(value, row, items)
+                if v is None or not sources.get(name):
+                    return None
+                query.append(f"{sources[name]}={v}")
+            return f"{form['route']}/new" + ("?" + "&".join(query) if query else "")
+        entry = self.map["pages"].get(str(target))
+        if entry is None or not entry.get("route"):
+            return None
+        query = []
+        for name, value in link["items"].items():
+            v = self.link_value(value, row, items)
+            if v is None:
+                return None
+            query.append(f"{name.lower()}={v}")
+        return entry["route"] + ("?" + "&".join(query) if query else "")
+
+    def condition(self, kind: str | None, item: str | None, items: set[str]) -> str | None:
+        """TS expression of an item null / not null condition; '' when there is none; None when unsupported."""
+        if not kind:
+            return ""
+        name = (item or "").strip().upper()
+        if kind in ITEM_CONDITIONS and name in items:
+            return f"items.{name} {'===' if kind == 'ITEM_IS_NULL' else '!=='} null"
+        return None
+
+    def static_block(self, c: dict[str, Any], items: set[str], report: dict[str, Any]) -> str | None:
+        html = c["props"].get("plug_source") or ""
+        san = sanitize_html(html)
+        unresolved = [x for x in san["substitutions"] if x not in {"APP_NAME"}]
+        if unresolved:
+            report["todo"].append(finding("GEN017", f"{c['name']}: {', '.join(unresolved)}"))
+            return None
+        if san["dropped"]:
+            report["todo"].append(finding("GEN021", f"{c['name']}: {', '.join(san['dropped'])}"))
+        app_name = self.inp.inventory["application"].get("name") or ""
+        nodes = map_text(san["nodes"], lambda t: t.replace("&APP_NAME.", app_name))
+
+        def resolve(h: str) -> str | None:
+            if safe_external(h):
+                return h
+            target = self.href(h, row=False, items=set())
+            if target is None or "${" in target:
+                report["todo"].append(finding("GEN019", f"{c['name']}: {h}"))
+                return None
+            return target
+
+        nodes = node_links(nodes, resolve)
+        return f"<StaticRegion title={ts_attr(self.title(c['name']))} nodes={{{tsx_json(nodes)}}} />"
+
+    def title(self, name: str) -> str:
+        return name.replace("&APP_NAME.", self.inp.inventory["application"].get("name") or "")
+
+    def list_block(self, c: dict[str, Any], items: set[str], report: dict[str, Any]) -> str | None:
+        lst = next((x for x in self.inp.inventory.get("lists", []) if x["name"] == c["props"].get("list")), None)
+        if lst is None:
+            report["todo"].append(finding("GEN002", f"list region {c['name']}: list not found"))
+            return None
+        entries = []
+        for item in lst["items"]:
+            if item.get("parent") or item.get("scheme"):
+                continue  # sub items and authorized items: rendered by the shell menu, not here
+            target = item.get("target") or ""
+            href = target if safe_external(target) else self.href(target, row=False, items=items)
+            if target and href is None:
+                report["todo"].append(finding("GEN019", f"{c['name']}: {item['label']}"))
+            entries.append("{ " + ", ".join(
+                [f"label: {ts_str(item['label'] or '')}"]
+                + ([f"href: `{href}`"] if href else [])
+                + ([f"icon: {ts_str(item['icon'])}"] if item.get("icon") else [])
+                + ([f"description: {ts_str(item['description'])}"] if item.get("description") else [])) + " }")
+        return (f"<ListRegion title={ts_attr(self.title(c['name']))} items={{[\n        "
+                + ",\n        ".join(entries) + "]} />")
+
+    def data_block(self, c: dict[str, Any], kind: str, items: set[str], report: dict[str, Any], route: str) -> str | None:
+        page_id = int(c["key"].split(":")[0][1:])
+        source = next(r for r in self.regions if r["page"] == page_id and r["region"] == c["name"])
+        if source["status"] != "GENERATED":
+            report["todo"].append(finding("GEN003", c["name"]))
+            return None
+        binds = [b for b in source["source"].get("binds", []) if b in items]
+        bind_attr = (" items={{ " + ", ".join(f"{b}: items.{b}" for b in binds) + " }}") if binds else ""
+        common = f"pageId={{{page_id}}} region={ts_attr(source['key'])} regionName={ts_attr(c['name'])} basePath={{back}} sp={{sp}}{bind_attr}"
+        page = self.inp.pages[page_id]
+        if kind == "IR":
+            ir = next((x["props"] for x in components(page, "IR") if x["name"] == c["name"]), {})
+            detail = self.href(ir.get("detail_link"), row=True, items=items) if ir.get("detail_link") else None
+            if ir.get("detail_link") and detail is None:
+                report["todo"].append(finding("GEN005", f"IR detail link {ir['detail_link']}"))
+            return f"<IrRegion {common}" + (f" detailLink={{(r) => `{detail}`}}" if detail else "") + " />"
+        if kind == "CARDS":
+            action = next((a for a in components(page, "CARD_ACTION") if a["name"].startswith(c["name"] + ".")), None)
+            link = self.href(action["props"].get("link_target"), row=True, items=items) if action else None
+            if action and link is None:
+                report["todo"].append(finding("GEN005", f"card action {action['name']}"))
+            return f"<CardsRegion {common}" + (f" cardLink={{(r) => `{link}`}}" if link else "") + " />"
+        links = []
+        for col in components(page, "REPORT_COLUMN"):
+            if not col["name"].startswith(c["name"] + ".") or not col["props"].get("column_link"):
+                continue
+            target = self.href(col["props"]["column_link"], row=True, items=items)
+            name = col["name"].split(".", 1)[1].lower()
+            if target is None:
+                report["todo"].append(finding("GEN005", f"column link {col['name']}"))
+            else:
+                links.append(f"{ts_key(name)}: (r) => `{target}`")
+        return f"<ReportRegion {common}" + (" columnLinks={{ " + ", ".join(links) + " }}" if links else "") + " />"
+
+    def emit_composed(self, page: dict[str, Any], report: dict[str, Any]) -> None:
+        pid = page["id"]
+        route = self.map["pages"][str(pid)]["route"]
+        items = {i["name"] for i in components(page, "ITEM")}
+        blocks: list[str] = []
+        used: set[str] = set()
+        regions = sorted((c for c in page["components"] if c["kind"] in {"REGION", "REPORT_REGION"}), key=region_sequence)
+        for c in regions:
+            props = c["props"]
+            if c["kind"] == "REPORT_REGION":
+                kind, cond = "CLASSIC", self.condition(props.get("display_condition_type"),
+                                                      props.get("display_when_condition"), items)
+            else:
+                kind = props.get("plug_source_type")
+                cond = self.condition(props.get("plug_display_condition_type"), props.get("plug_display_when_condition"), items)
+            if cond is None:
+                report["todo"].append(finding("GEN018", c["name"]))
+                report["status"] = "MANUAL"
+                return
+            if kind == "NATIVE_BREADCRUMB":
+                continue
+            if kind == "NATIVE_DISPLAY_SELECTOR":
+                report["todo"].append(finding("GEN015", c["name"]))
+                continue
+            if kind is None:
+                if not (props.get("plug_source") or "").strip():
+                    continue  # empty container: its buttons are placed in the page header
+                block, comp = self.static_block(c, items, report), "StaticRegion"
+            elif kind == "NATIVE_LIST":
+                block, comp = self.list_block(c, items, report), "ListRegion"
+            else:
+                comp = {"CLASSIC": "ReportRegion", "NATIVE_IR": "IrRegion", "NATIVE_CARDS": "CardsRegion"}[kind]
+                block = self.data_block(c, {"CLASSIC": "CLASSIC", "NATIVE_IR": "IR", "NATIVE_CARDS": "CARDS"}[kind],
+                                        items, report, route)
+            if block is None:
+                report["status"] = "MANUAL"
+                return
+            used.add(comp)
+            blocks.append(f"{{{cond} && (\n        {block})}}" if cond else block)
+        actions = []
+        for b in sorted(components(page, "BUTTON"), key=lambda b: (b["props"].get("button_sequence") or 0, b["name"])):
+            bp = b["props"]
+            cond = self.condition(bp.get("button_condition_type"), bp.get("button_condition"), items)
+            target = self.href(bp.get("button_redirect_url"), row=False, items=items) \
+                if bp.get("button_action") == "REDIRECT_PAGE" else None
+            if target is None or cond is None:
+                report["todo"].append(finding("GEN020", b["name"]))
+                report["partial"] = True
+                continue
+            link = (f"<Link className={{'btn' + ({'true' if bp.get('button_is_hot') == 'Y' else 'false'} ? ' btn-hot' : '')}} "
+                    f"href={{`{target}`}}>{{SPEC.page({pid}).button[{ts_str(b['name'])}].buttonImageAlt}}</Link>")
+            guard = f"allowed[{ts_str(b['name'])}]"
+            actions.append(f"{{{(cond + ' && ') if cond else ''}{guard} && {link}}}")
+        button_names = [b["name"] for b in components(page, "BUTTON")]
+        hidden_items = sorted(items)
+        path, rel = self.page_file(route)
+        imports = ["import Link from 'next/link';"] if actions else []
+        imports.append(f"import {{ {', '.join(sorted(used | {'PageHeader'}))} }} from '{rel}components/Regions';")
+        imports.append(f"import {{ first, qs, type SearchParams }} from '{rel}lib/routes';" if hidden_items else
+                       f"import type {{ SearchParams }} from '{rel}lib/routes';")
+        imports.append(f"import {{ {'SPEC, ' if actions else ''}pageTitle }} from '{rel}lib/spec';")
+        if actions:
+            imports.append(f"import {{ buttonAllowed }} from '{rel}lib/authz';")
+        body = [f"export const metadata = {{ title: pageTitle({pid}) }};", "",
+                f"/** Page {pid} {page['name']}: composed of {len(blocks)} region(s). */",
+                "export default async function Page({ searchParams }: { searchParams: Promise<SearchParams> }) {",
+                "  const sp = await searchParams;"]
+        if hidden_items:
+            body.append("  const items = { " + ", ".join(f"{n}: first(sp.{n.lower()}) ?? null" for n in hidden_items) + " };")
+            body.append(f"  const back = `{route}${{qs({{ " + ", ".join(f"{n.lower()}: items.{n} ?? undefined" for n in hidden_items)
+                        + " })}`;")
+        else:
+            body.append(f"  const back = {ts_str(route)};")
+        if actions:
+            body.append("  const allowed = Object.fromEntries(await Promise.all(" + ts_list(sorted(button_names))
+                        + f".map(async (b) => [b, await buttonAllowed({pid}, b)] as const)));")
+        header = f"<PageHeader page={{{pid}}} title={{SPEC_TITLE}}"
+        header = header.replace("{SPEC_TITLE}", f"{{pageTitle({pid})}}")
+        if actions:
+            header += " actions={<>\n        " + "\n        ".join(actions) + "\n      </>}"
+        header += " />"
+        body += ["  return (", "    <>", f"      {header}"] + [f"      {b}" for b in blocks] + ["    </>", "  );", "}"]
+        self.files[path] = HEADER + "\n".join(imports) + "\n\n" + "\n".join(body) + "\n"
+        report["files"].append(path)
+        report["status"] = "PARTIAL" if report.pop("partial", False) else "GENERATED"
+
     def emit_routes(self) -> None:
         routes = {int(pid): e["route"] for pid, e in self.map["pages"].items()
                   if self.inp.pages[int(pid)]["mode"] == "NORMAL" and int(pid) not in self.forms}
@@ -592,8 +863,10 @@ class Generator:
     # ---------------------------------------------------------------- report
     def page_todo(self, page: dict[str, Any]) -> list[dict[str, Any]]:
         todo: list[dict[str, Any]] = []
+        composed = classify(page)[0] == "COMPOSED"  # item null / not null conditions are part of the page
         pk = primary_key_item(page)
-        standard = {f":{pk['name']} is null".lower(), f":{pk['name']} is not null".lower()} if pk else set()
+        standard = {f":{pk['name']} is null".lower(), f":{pk['name']} is not null".lower(),
+                    pk["name"].lower()} if pk else set()
         for c in page["components"]:
             props = c["props"]
             if c["kind"] == "PROCESS" and props.get("process_type") == "NATIVE_PLSQL":
@@ -602,7 +875,8 @@ class Generator:
                 todo.append(finding("GEN009", c["name"]))
             elif c["kind"] == "VALIDATION":
                 todo.append(finding("GEN007", c["name"]))
-            elif c["kind"] == "BUTTON" and props.get("button_condition") and " ".join(props["button_condition"].lower().split()) not in standard:
+            elif c["kind"] == "BUTTON" and props.get("button_condition") and " ".join(props["button_condition"].lower().split()) not in standard \
+                    and not (composed and props.get("button_condition_type") in ITEM_CONDITIONS):
                 todo.append(finding("GEN008", f"button {c['name']}"))
             elif c["kind"] == "ITEM" and props.get("read_only_when"):
                 todo.append(finding("GEN008", f"read-only {c['name']}"))
@@ -626,6 +900,13 @@ class Generator:
                 report.update(status="PROVIDED", note="sign-in pages are part of the application shell (runtime accounts)")
             elif pattern == "MANUAL":
                 report["todo"].append(finding("GEN001", reason))
+            elif self.map["pages"].get(str(page["id"]), {}).get("manual"):
+                report["todo"].append(finding("GEN022"))
+            elif pattern == "COMPOSED" and str(page["id"]) in self.map["pages"]:
+                self.emit_composed(page, report)
+                if report["status"] == "MANUAL" and not any(t["code"] in {"GEN003", "GEN017", "GEN018", "GEN002"}
+                                                            for t in report["todo"]):
+                    report["todo"].insert(0, finding("GEN001", "composed page"))
             else:
                 self.emit_page(page, report)
             if pattern not in {"GLOBAL", "LOGIN"}:
@@ -635,6 +916,10 @@ class Generator:
                     if c["props"].get("plug_source_type") is None and c["props"].get("plug_source"):
                         report["todo"].append(finding("GEN012", c["name"]))
             self.page_reports.append(report)
+        status = {p["id"]: p["status"] for p in self.page_reports}
+        for r in self.regions:  # lists and display selectors are rendered by composed pages
+            if r["kind"] in {"NATIVE_LIST", "NATIVE_DISPLAY_SELECTOR"} and status.get(r["page"]) in {"GENERATED", "PARTIAL"}:
+                r["status"], r["findings"] = "GENERATED", []
         self.emit_routes()
         return self.report()
 
@@ -755,6 +1040,11 @@ def main() -> int:
         for rel in orphans:
             print(f"orphan: {rel}")
         return 1 if stale or orphans else 0
+    hand_written = [rel for rel in files if rel.endswith("page.tsx") and (args.app / rel).exists()
+                    and not (args.app / rel).read_text(encoding="utf-8").startswith(MARKER)]
+    if hand_written:
+        raise SystemExit("refusing to overwrite hand-written page(s): " + ", ".join(hand_written)
+                         + ". Mark the page manual in ui/app-map.json or move the file.")
     for rel, text in files.items():
         target = args.app / rel
         target.parent.mkdir(parents=True, exist_ok=True)
