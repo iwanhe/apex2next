@@ -49,7 +49,7 @@ def test_synthetic_export_inventory():
     assert comps["P2:PROCESS:CALL_IT"]["props"]["when_button"] == "SAVE"
     grid_process = comps["P2:PROCESS:SAVE_GRID"]["props"]
     assert grid_process["process_type"] == "NATIVE_IG_DML"
-    assert grid_process["region"] == "Read Only Grid"
+    assert grid_process["region"] == "Editable Grid"
     assert grid_process["native_ig_dml_candidate"] is True
     assert "ROW_VERSION_COLUMN" in grid_process["process_attributes"]
     assert comps["P2:ITEM:P2_NAME"]["props"]["read_only_when"] == ":P2_ID is null"
