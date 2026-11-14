@@ -194,3 +194,13 @@ The composer now supports a deliberately narrow Interactive Grid pattern:
 - Table names must be simple identifiers present in the converted schema plan. IG `query_where` predicates are currently rejected rather than interpolated; add a reviewed predicate translator before supporting them. Missing/unknown visibility, computed expressions, invalid ordering, or a grid with no visible columns now fail closed; the generator never widens these cases to `SELECT *`.
 
 This increment is covered by synthetic regression tests for visible-column projection and fail-closed handling of editable/unspecified grids. It is not yet counted as increased sample-app coverage until the Oracle APEX 26.2 Interactive Grids export fixtures are run through the full scoreboard and parity smoke tests.
+
+## Step 4b: editable Interactive Grid metadata foundation
+
+The page inventory now retains additional source metadata needed for a later, reviewable editable-grid conversion:
+
+- Region-column primary-key, query-only, read-only, required, display, and data-type attributes.
+- DML process attributes and the owning region reference when the export supplies one.
+- Existing region-level edit operations and lost-update settings remain preserved.
+
+This is **extraction only**. It does not infer missing metadata, grant write permissions, or generate an editable grid. A future generator must reconcile the region's allowed operations with a recognized native IG DML process, a known primary key, column writeability, page/process authorization, row-level authorization, validations, and lost-update behavior. Any missing or unsupported condition must keep the region manual.
