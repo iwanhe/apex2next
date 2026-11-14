@@ -1,14 +1,7 @@
 import type { BusinessTx } from '../context';
 import { errors } from '../errors';
-import {
-  type FormDef,
-  assertValid,
-  checksum,
-  fetchForm,
-  validateForInsert,
-  validateItems,
-} from '../forms/forms';
-import { deleteRow, insertRow, updateRow } from './table-dml';
+import { type FormDef, checksum, fetchForm, validateItems } from '../forms/forms';
+import { assertValid, deleteRow, insertRow, updateRow, validateForInsert } from './table-dml';
 
 /**
  * A bounded set of row changes submitted by an Interactive Grid.
@@ -81,7 +74,7 @@ export async function applyInteractiveGridChanges(
         assertValid(checked.problems);
         // Preserve database defaults for omitted optional columns; do not turn absence into NULL.
         const supplied = new Set(Object.keys(change.values));
-        const values = Object.fromEntries(Object.entries(checked.values).filter(([column]) => supplied.has(column)));
+        const values = Object.fromEntries(Object.entries(checked.values).filter(([column]) => supplied.has(column))) as Record<string, string | null>;
         const id = await insertRow(tx, form, values);
         results.push({ operation: 'insert', id });
       } else if (change.operation === 'update') {
