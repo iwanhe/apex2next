@@ -58,6 +58,9 @@ def test_synthetic_export_inventory():
     assert comps["P2:REGION_COLUMN:Read Only Grid.ID"]["props"] == {
         "source_expression": "ID", "is_visible": True, "display_sequence": 1, "heading": "Identifier"}
     assert comps["P2:REGION_COLUMN:Read Only Grid.INTERNAL_NOTE"]["props"]["is_visible"] is False
+    assert comps["P2:REGION_COLUMN:Read Only Grid.ID"]["props"]["is_primary_key"] is True
+    assert comps["P2:REGION_COLUMN:Read Only Grid.ID"]["props"]["is_query_only"] is False
+    assert comps["P2:REGION_COLUMN:Read Only Grid.ID"]["props"]["is_readonly"] is True
 
 
 def test_inventory_is_deterministic_and_order_independent():
