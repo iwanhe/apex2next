@@ -66,7 +66,12 @@ test('AUTH_MODE=local end to end', { skip }, async () => {
     assert.equal(first.status, 200);
     assert.equal(first.body.username, 'REQ1');
     assert.equal(first.body.mustChangePassword, true);
-    const blocked = await api.call(first.body.token, 'GET', '/session');
+    // Session metadata is the sole read allowed so the web tier can render the forced-change page.
+    const metadata = await api.call(first.body.token, 'GET', '/session');
+    assert.equal(metadata.status, 200);
+    assert.equal(metadata.body.authMode, 'local');
+    // Application data remains blocked until the temporary password is changed.
+    const blocked = await api.call(first.body.token, 'GET', '/pages/100');
     assert.equal(blocked.status, 403);
     assert.equal(blocked.body.code, 'PASSWORD_CHANGE_REQUIRED');
 
