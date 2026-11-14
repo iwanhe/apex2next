@@ -15,7 +15,7 @@ def _inventory(*, editable=True, table=True, visible=True, key=True, query_only=
     }
     column_props = {
         "source_expression": "ORDER_ID", "is_visible": visible,
-        "is_primary_key": key, "is_query_only": query_only, "is_readonly": read_only,
+        "is_primary_key": key, "is_query_only": query_only, "is_readonly": read_only, "is_required": False,
     }
     components = [
         {"kind": "REGION", "name": "Orders Grid", "props": region_props},
