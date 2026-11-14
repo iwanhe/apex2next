@@ -41,7 +41,8 @@ def test_synthetic_export_inventory():
     assert set(comps) == {
         "P2:BUTTON:SAVE", "P2:DYNAMIC_ACTION:REFRESH_AFTER_DIALOG", "P2:IR:Report", "P2:IR_COLUMN:Report.NAME",
         "P2:IR_REPORT:Report.1", "P2:ITEM:P2_NAME", "P2:PROCESS:CALL_IT", "P2:REGION:Report", "P2:REGION:Thing",
-        "P2:VALIDATION:NAME_OK", "P2:REGION:Read Only Grid", "P2:REGION_COLUMN:Read Only Grid.ID",
+        "P2:VALIDATION:NAME_OK", "P2:REGION:Read Only Grid", "P2:REGION:Editable Grid",
+        "P2:PROCESS:SAVE_GRID", "P2:REGION_COLUMN:Read Only Grid.ID",
         "P2:REGION_COLUMN:Read Only Grid.INTERNAL_NOTE",
     }
     assert comps["P2:REGION:Report"]["props"]["plug_source"] == "select id, name\n  from things", "wwv_flow_string.join decoded"
