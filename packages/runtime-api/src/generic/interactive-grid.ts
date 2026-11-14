@@ -72,29 +72,38 @@ export async function applyInteractiveGridChanges(
   }
 
   const results: InteractiveGridChangeResult[] = [];
-  for (const change of changes) {
-    if (change.operation === 'insert') {
-      const checked = validateForInsert(form, change.values);
-      assertValid(checked.problems);
-      // Preserve database defaults for omitted optional columns; do not turn absence into NULL.
-      const supplied = new Set(Object.keys(change.values));
-      const values = Object.fromEntries(Object.entries(checked.values).filter(([column]) => supplied.has(column)));
-      const id = await insertRow(tx, form, values);
-      results.push({ operation: 'insert', id });
-    } else if (change.operation === 'update') {
-      // IG payloads commonly contain changed columns only. Merge with the locked current row so
-      // omitted columns are preserved, while checksum verification still prevents lost updates.
-      const current = await fetchForm(tx, form, change.id, true);
-      if (!current) throw errors.notFound(`${form.region} ${change.id}`, 'UI-FRM-01');
-      if (typeof change.checksum !== 'string' || change.checksum !== checksum(form, current)) throw errors.lostUpdate();
-      const checked = validateItems(form, { ...current, ...change.values });
-      assertValid(checked.problems);
-      await updateRow(tx, form, change.id, change.checksum, checked.values);
-      results.push({ operation: 'update', id: change.id });
-    } else {
-      await deleteRow(tx, form, change.id, change.checksum);
-      results.push({ operation: 'delete', id: change.id });
+  // A savepoint makes this batch atomic even if an application catches the error inside its outer transaction.
+  await tx.query('SAVEPOINT apex2next_ig_batch');
+  try {
+    for (const change of changes) {
+      if (change.operation === 'insert') {
+        const checked = validateForInsert(form, change.values);
+        assertValid(checked.problems);
+        // Preserve database defaults for omitted optional columns; do not turn absence into NULL.
+        const supplied = new Set(Object.keys(change.values));
+        const values = Object.fromEntries(Object.entries(checked.values).filter(([column]) => supplied.has(column)));
+        const id = await insertRow(tx, form, values);
+        results.push({ operation: 'insert', id });
+      } else if (change.operation === 'update') {
+        // IG payloads commonly contain changed columns only. Merge with the locked current row so
+        // omitted columns are preserved, while checksum verification still prevents lost updates.
+        const current = await fetchForm(tx, form, change.id, true);
+        if (!current) throw errors.notFound(`${form.region} ${change.id}`, 'UI-FRM-01');
+        if (typeof change.checksum !== 'string' || change.checksum !== checksum(form, current)) throw errors.lostUpdate();
+        const checked = validateItems(form, { ...current, ...change.values });
+        assertValid(checked.problems);
+        await updateRow(tx, form, change.id, change.checksum, checked.values);
+        results.push({ operation: 'update', id: change.id });
+      } else {
+        await deleteRow(tx, form, change.id, change.checksum);
+        results.push({ operation: 'delete', id: change.id });
+      }
     }
+    await tx.query('RELEASE SAVEPOINT apex2next_ig_batch');
+    return results;
+  } catch (error) {
+    await tx.query('ROLLBACK TO SAVEPOINT apex2next_ig_batch');
+    await tx.query('RELEASE SAVEPOINT apex2next_ig_batch');
+    throw error;
   }
-  return results;
 }
