@@ -22,7 +22,7 @@ def _inventory(*, editable=True, table=True, visible=True, key=True, query_only=
         {"kind": "REGION_COLUMN", "name": "Orders Grid.ORDER_ID", "props": column_props},
         {"kind": "REGION_COLUMN", "name": "Orders Grid.STATUS", "props": {
             "source_expression": "STATUS", "is_visible": True, "is_primary_key": False,
-            "is_query_only": False, "is_readonly": False,
+            "is_query_only": False, "is_readonly": False, "is_required": False,
         }},
     ]
     if process:
