@@ -267,6 +267,10 @@ def table_query(page: dict[str, Any], region: dict[str, Any], kind: str) -> str:
                 if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_$#]*", expression):
                     return f"select * from {props['query_table'].lower()}"
                 names.append(expression)
+            elif visible is False or (isinstance(visible, str) and visible.strip().upper() in {"N", "NO", "FALSE"}):
+                continue
+            else:
+                return f"select * from {props['query_table'].lower()}"
         order = str(props.get("query_order_by") or "").strip()
         if order:
             match = re.fullmatch(r"([A-Za-z][A-Za-z0-9_$#]*)(?:\s+(ASC|DESC))?", order, re.I)
