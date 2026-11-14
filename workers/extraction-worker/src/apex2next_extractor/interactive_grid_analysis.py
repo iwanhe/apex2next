@@ -126,7 +126,8 @@ def analyze_editable_interactive_grids(inventory: dict[str, Any]) -> dict[str, A
                 "classification": "REVIEW_REQUIRED" if len(findings) == 3 else "MANUAL",
                 "auto_generate": False,
                 "primary_key": keys[0] if len(keys) == 1 else None,
-                "writable_columns": sorted(set(writable)),\n                "required_columns": sorted({c.get("props", {}).get("source_expression", "").strip().lower() for c in region_columns if _explicit_bool(c.get("props", {}).get("is_required")) is True and isinstance(c.get("props", {}).get("source_expression"), str)}),
+                "writable_columns": sorted(set(writable)),
+                "required_columns": sorted({c.get("props", {}).get("source_expression", "").strip().lower() for c in region_columns if _explicit_bool(c.get("props", {}).get("is_required")) is True and isinstance(c.get("props", {}).get("source_expression"), str)}),
                 "column_metadata": [{
                     "column": c.get("props", {}).get("source_expression"),
                     "is_required": _explicit_bool(c.get("props", {}).get("is_required")),
