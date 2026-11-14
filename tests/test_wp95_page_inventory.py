@@ -70,6 +70,34 @@ def test_synthetic_export_inventory():
     assert comps["P2:REGION_COLUMN:Read Only Grid.ID"]["props"]["is_readonly"] is True
 
 
+def test_editable_ig_retains_operations_and_lost_update_metadata():
+    inv = inventory_from_export_dir(SYNTH)
+    comps = _components(inv)
+    grid = comps["P2:REGION:Editable Grid"]["props"]
+    assert grid["edit_operations"] == "i:u:d"
+    assert grid["lost_update_check_type"] == "ROW_VERSION"
+
+
+def test_native_ig_dml_candidate_requires_explicit_editable_region_association():
+    files = {p.relative_to(SYNTH).as_posix(): p.read_text(encoding="utf-8") for p in sorted(SYNTH.rglob("*.sql"))}
+    page = "application/pages/page_00002.sql"
+
+    # A native DML process attached to the read-only grid must not be classified as an editable-grid candidate.
+    wrong_region = dict(files)
+    wrong_region[page] = wrong_region[page].replace(
+        ",p_region_id=>wwv_flow_imp.id(180)\n);",
+        ",p_region_id=>wwv_flow_imp.id(160)\n);",
+    )
+    process = _components(build_page_inventory(wrong_region))["P2:PROCESS:SAVE_GRID"]["props"]
+    assert "native_ig_dml_candidate" not in process
+
+    # Missing editability is not permission to write.
+    unspecified = dict(files)
+    unspecified[page] = unspecified[page].replace(",p_is_editable=>true\n", "\n")
+    process = _components(build_page_inventory(unspecified))["P2:PROCESS:SAVE_GRID"]["props"]
+    assert "native_ig_dml_candidate" not in process
+
+
 def test_inventory_is_deterministic_and_order_independent():
     files = {p.relative_to(SYNTH).as_posix(): p.read_text(encoding="utf-8") for p in sorted(SYNTH.rglob("*.sql"))}
     a = build_page_inventory(files)
