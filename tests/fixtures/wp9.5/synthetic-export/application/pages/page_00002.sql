@@ -99,5 +99,31 @@ wwv_flow_imp_page.create_page_da_action(
 ,p_affected_elements_type=>'REGION'
 ,p_affected_region_id=>wwv_flow_imp.id(101)
 );
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(160)
+,p_plug_name=>'Read Only Grid'
+,p_query_type=>'TABLE'
+,p_query_table=>'THINGS'
+,p_plug_source_type=>'NATIVE_IG'
+,p_is_editable=>false
+);
+wwv_flow_imp_page.create_region_column(
+ p_id=>wwv_flow_imp.id(161)
+,p_region_id=>wwv_flow_imp.id(160)
+,p_name=>'ID'
+,p_source_expression=>'ID'
+,p_is_visible=>true
+,p_display_sequence=>1
+,p_heading=>'Identifier'
+);
+wwv_flow_imp_page.create_region_column(
+ p_id=>wwv_flow_imp.id(162)
+,p_region_id=>wwv_flow_imp.id(160)
+,p_name=>'INTERNAL_NOTE'
+,p_source_expression=>'INTERNAL_NOTE'
+,p_is_visible=>false
+,p_display_sequence=>2
+,p_heading=>'Internal Note'
+);
 end;
 /
