@@ -423,13 +423,28 @@ class Generator:
                                              "status": "MANUAL", "findings": [finding("GEN026", c["name"])]})
                         continue
                     table_name = str(props.get("query_table") or "").strip()
-                    known_tables = {name.upper() for name in self.inp.known}
+                    planned_table = next((t for t in self.inp.plan["tables"]
+                                          if t["name"].upper() == table_name.upper()), None)
+                    # A view is not a table-backed source for this deliberately narrow IG slice.
+                    visible_columns = [col for col in components(page, "REGION_COLUMN")
+                                       if col["name"].startswith(c["name"] + ".")
+                                       and (col["props"].get("is_visible") is True
+                                            or str(col["props"].get("is_visible") or "").strip().upper()
+                                            in {"Y", "YES", "TRUE"})]
+                    source_columns = {col["name"].upper() for col in planned_table["columns"]} if planned_table else set()
+                    projection_is_known = bool(visible_columns) and all(
+                        re.fullmatch(r"[A-Za-z][A-Za-z0-9_$#]*",
+                                     str(col["props"].get("source_expression") or "").strip())
+                        and str(col["props"].get("source_expression") or "").strip().upper() in source_columns
+                        for col in visible_columns
+                    )
                     if (props.get("query_type") != "TABLE"
                             or not re.fullmatch(r"[A-Za-z][A-Za-z0-9_$#]*", table_name)
-                            or table_name.upper() not in known_tables
+                            or planned_table is None
+                            or not projection_is_known
                             or props.get("query_where")):
-                        # IG predicates and identifiers are not interpolated from an export.
-                        # Until they have a reviewed expression translator, keep the region manual.
+                        # IG predicates, view sources and unknown projections are not inferred from exports.
+                        # Until they have a reviewed translator, keep the region manual.
                         self.regions.append({"page": page["id"], "region": c["name"], "kind": kind,
                                              "status": "MANUAL", "findings": [finding("GEN027", c["name"])]})
                         continue
