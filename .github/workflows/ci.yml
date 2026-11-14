@@ -149,7 +149,7 @@ jobs:
           set -o pipefail
           pnpm test 2>&1 | tee pilot-test.log
           if grep -Eq "# skipped [1-9]" pilot-test.log; then echo "Tests were skipped" >&2; exit 1; fi
-          grep -q '# pass' pilot-test.log
+          test "$(grep -Ec '# fail 0
 
   pilot-f170134-e2e:
     name: WP9.5 pilot end-to-end (Next.js + NestJS + PostgreSQL 16, Chromium)
@@ -308,8 +308,8 @@ jobs:
             -Dlanguage=Python3 -visitor -no-listener \
             -o "$RUNNER_TEMP/apex2next-antlr" \
             workers/extraction-worker/grammar/ApexLang.g4
- pilot-test.log)"
-          test_summaries="$(grep -Ec '# tests [1-9][0-9]*
+ pilot-test.log)" -eq 3
+          test "$(grep -Ec '# tests [1-9][0-9]*
 
   pilot-f170134-e2e:
     name: WP9.5 pilot end-to-end (Next.js + NestJS + PostgreSQL 16, Chromium)
@@ -468,9 +468,7 @@ jobs:
             -Dlanguage=Python3 -visitor -no-listener \
             -o "$RUNNER_TEMP/apex2next-antlr" \
             workers/extraction-worker/grammar/ApexLang.g4
- pilot-test.log)"
-          test "$fail_summaries" -ge 2
-          test "$fail_summaries" -eq "$test_summaries"
+ pilot-test.log)" -eq 3
 
   pilot-f170134-e2e:
     name: WP9.5 pilot end-to-end (Next.js + NestJS + PostgreSQL 16, Chromium)
