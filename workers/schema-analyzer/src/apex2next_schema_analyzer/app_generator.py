@@ -422,7 +422,14 @@ class Generator:
                         self.regions.append({"page": page["id"], "region": c["name"], "kind": kind,
                                              "status": "MANUAL", "findings": [finding("GEN026", c["name"])]})
                         continue
-                    if props.get("query_type") != "TABLE" or not props.get("query_table"):
+                    table_name = str(props.get("query_table") or "").strip()
+                    known_tables = {name.upper() for name in self.inp.known}
+                    if (props.get("query_type") != "TABLE"
+                            or not re.fullmatch(r"[A-Za-z][A-Za-z0-9_$#]*", table_name)
+                            or table_name.upper() not in known_tables
+                            or props.get("query_where")):
+                        # IG predicates and identifiers are not interpolated from an export.
+                        # Until they have a reviewed expression translator, keep the region manual.
                         self.regions.append({"page": page["id"], "region": c["name"], "kind": kind,
                                              "status": "MANUAL", "findings": [finding("GEN027", c["name"])]})
                         continue
