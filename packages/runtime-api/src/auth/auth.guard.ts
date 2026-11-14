@@ -15,7 +15,7 @@ export const Public = () => SetMetadata(PUBLIC, true);
 /** Marks a route as reachable while the account must still change its temporary password. */
 export const AllowDuringPasswordChange = () => SetMetadata(DURING_PASSWORD_CHANGE, true);
 
-type AuthedRequest = Request & { principal?: Principal };
+type AuthedRequest = Request & { principal?: Principal; mustChangePassword?: boolean };
 
 /**
  * Global guard: every route requires a valid session token unless marked @Public() (fail closed). For local accounts
@@ -43,6 +43,7 @@ export class SessionGuard implements CanActivate {
       }
     }
     req.principal = principal(session.sub);
+    req.mustChangePassword = session.pwc === true;
     return true;
   }
 }
