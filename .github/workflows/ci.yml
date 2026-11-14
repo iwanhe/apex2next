@@ -149,8 +149,328 @@ jobs:
           set -o pipefail
           pnpm test 2>&1 | tee pilot-test.log
           if grep -Eq "# skipped [1-9]" pilot-test.log; then echo "Tests were skipped" >&2; exit 1; fi
-          test "$(grep -Ec '# fail 0$' pilot-test.log)" -eq 2
-          test "$(grep -Ec '# tests [1-9][0-9]*$' pilot-test.log)" -eq 2
+          fail_summaries="$(grep -Ec '# fail 0
+
+  pilot-f170134-e2e:
+    name: WP9.5 pilot end-to-end (Next.js + NestJS + PostgreSQL 16, Chromium)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: f170134_e2e
+          POSTGRES_USER: apex2next
+          POSTGRES_PASSWORD: apex2next
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U apex2next -d f170134_e2e"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://apex2next:apex2next@localhost:5432/f170134_e2e
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.0.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pilot workspace dependencies (locked)
+        working-directory: examples/f170134-target
+        run: pnpm install --frozen-lockfile
+
+      - name: Build API and web
+        working-directory: examples/f170134-target
+        run: pnpm build
+
+      - name: Install Playwright and Chromium
+        run: |
+          python -m pip install --upgrade pip pytest "playwright==1.63.0"
+          python -m playwright install --with-deps chromium
+
+      - name: End-to-end journeys (no skips allowed)
+        run: |
+          set -o pipefail
+          python -m pytest examples/f170134-target/e2e -p no:cacheprovider -rs -q 2>&1 | tee e2e.log
+          if grep -q "SKIPPED" e2e.log; then echo "E2E tests were skipped" >&2; exit 1; fi
+          grep -Eq "[1-9][0-9]* passed" e2e.log
+
+      - name: Upload server logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: f170134-e2e-logs
+          path: examples/f170134-target/e2e/.logs/
+
+  target-generation:
+    name: Generated target workspace build
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: apex2next
+          POSTGRES_USER: apex2next
+          POSTGRES_PASSWORD: apex2next
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U apex2next -d apex2next"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://apex2next:apex2next@localhost:5432/apex2next
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.0.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Python generator dependencies
+        run: python -m pip install --upgrade pip jsonschema
+
+      - name: Generate target project from synthetic APEXLang fixture
+        run: |
+          PYTHONPATH=workers/extraction-worker/src python -c "from apex2next_extractor import adapt_apexlang_directory, generate_project; ir=adapt_apexlang_directory('tests/fixtures/apexlang-26.2'); print(generate_project(ir, '/tmp/apex2next-generated'))"
+
+      - name: Install generated workspace dependencies
+        working-directory: /tmp/apex2next-generated
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build generated Next.js and NestJS applications
+        working-directory: /tmp/apex2next-generated
+        run: pnpm build
+
+      - name: Apply reviewed target migrations
+        working-directory: /tmp/apex2next-generated
+        run: pnpm db:migrate
+
+      - name: Verify migration runner idempotency
+        working-directory: /tmp/apex2next-generated
+        run: pnpm db:migrate
+
+      - name: Test generated workspace
+        working-directory: /tmp/apex2next-generated
+        run: pnpm test
+
+      - name: Typecheck generated workspace
+        working-directory: /tmp/apex2next-generated
+        run: pnpm typecheck
+
+  antlr-grammar:
+    name: ANTLR grammar validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Download pinned ANTLR tool
+        run: curl --fail --silent --show-error --location https://www.antlr.org/download/antlr-4.13.2-complete.jar --output "$RUNNER_TEMP/antlr-4.13.2-complete.jar"
+
+      - name: Generate Python parser to validate grammar
+        run: |
+          java -jar "$RUNNER_TEMP/antlr-4.13.2-complete.jar" \
+            -Dlanguage=Python3 -visitor -no-listener \
+            -o "$RUNNER_TEMP/apex2next-antlr" \
+            workers/extraction-worker/grammar/ApexLang.g4
+ pilot-test.log)"
+          test_summaries="$(grep -Ec '# tests [1-9][0-9]*
+
+  pilot-f170134-e2e:
+    name: WP9.5 pilot end-to-end (Next.js + NestJS + PostgreSQL 16, Chromium)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: f170134_e2e
+          POSTGRES_USER: apex2next
+          POSTGRES_PASSWORD: apex2next
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U apex2next -d f170134_e2e"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://apex2next:apex2next@localhost:5432/f170134_e2e
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.0.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pilot workspace dependencies (locked)
+        working-directory: examples/f170134-target
+        run: pnpm install --frozen-lockfile
+
+      - name: Build API and web
+        working-directory: examples/f170134-target
+        run: pnpm build
+
+      - name: Install Playwright and Chromium
+        run: |
+          python -m pip install --upgrade pip pytest "playwright==1.63.0"
+          python -m playwright install --with-deps chromium
+
+      - name: End-to-end journeys (no skips allowed)
+        run: |
+          set -o pipefail
+          python -m pytest examples/f170134-target/e2e -p no:cacheprovider -rs -q 2>&1 | tee e2e.log
+          if grep -q "SKIPPED" e2e.log; then echo "E2E tests were skipped" >&2; exit 1; fi
+          grep -Eq "[1-9][0-9]* passed" e2e.log
+
+      - name: Upload server logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: f170134-e2e-logs
+          path: examples/f170134-target/e2e/.logs/
+
+  target-generation:
+    name: Generated target workspace build
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: apex2next
+          POSTGRES_USER: apex2next
+          POSTGRES_PASSWORD: apex2next
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U apex2next -d apex2next"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://apex2next:apex2next@localhost:5432/apex2next
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.0.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Python generator dependencies
+        run: python -m pip install --upgrade pip jsonschema
+
+      - name: Generate target project from synthetic APEXLang fixture
+        run: |
+          PYTHONPATH=workers/extraction-worker/src python -c "from apex2next_extractor import adapt_apexlang_directory, generate_project; ir=adapt_apexlang_directory('tests/fixtures/apexlang-26.2'); print(generate_project(ir, '/tmp/apex2next-generated'))"
+
+      - name: Install generated workspace dependencies
+        working-directory: /tmp/apex2next-generated
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build generated Next.js and NestJS applications
+        working-directory: /tmp/apex2next-generated
+        run: pnpm build
+
+      - name: Apply reviewed target migrations
+        working-directory: /tmp/apex2next-generated
+        run: pnpm db:migrate
+
+      - name: Verify migration runner idempotency
+        working-directory: /tmp/apex2next-generated
+        run: pnpm db:migrate
+
+      - name: Test generated workspace
+        working-directory: /tmp/apex2next-generated
+        run: pnpm test
+
+      - name: Typecheck generated workspace
+        working-directory: /tmp/apex2next-generated
+        run: pnpm typecheck
+
+  antlr-grammar:
+    name: ANTLR grammar validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Download pinned ANTLR tool
+        run: curl --fail --silent --show-error --location https://www.antlr.org/download/antlr-4.13.2-complete.jar --output "$RUNNER_TEMP/antlr-4.13.2-complete.jar"
+
+      - name: Generate Python parser to validate grammar
+        run: |
+          java -jar "$RUNNER_TEMP/antlr-4.13.2-complete.jar" \
+            -Dlanguage=Python3 -visitor -no-listener \
+            -o "$RUNNER_TEMP/apex2next-antlr" \
+            workers/extraction-worker/grammar/ApexLang.g4
+ pilot-test.log)"
+          test "$fail_summaries" -ge 2
+          test "$fail_summaries" -eq "$test_summaries"
 
   pilot-f170134-e2e:
     name: WP9.5 pilot end-to-end (Next.js + NestJS + PostgreSQL 16, Chromium)
