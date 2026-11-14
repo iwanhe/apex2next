@@ -217,4 +217,4 @@ The analyzer checks table-backed source identifiers, explicit visibility and rea
 
 It always emits `auto_generate: false`. Even a structurally complete grid remains blocked by three mandatory findings: page/process and row-level authorization; validation and server-side condition parity; and lost-update/concurrency equivalence. This is intentional: source metadata alone cannot prove that a client row may be changed or that APEX's server-side behavior is preserved.
 
-Regression tests cover complete metadata, missing visibility/writeability, unsupported operations, absent key/source/process, and read-only or unspecified editability. This analyzer is a planning/reporting foundation only; it does not change the existing read-only grid generator.
+Regression tests cover complete metadata, missing visibility/writeability, unsupported operations, absent key/source/process, and read-only or unspecified editability. Run it after inventory with `tools/apex2next ig-analyze APP/ui/apex-page-inventory.json --out APP/ui/editable-ig-analysis.json`. This analyzer is a planning/reporting foundation only; it does not change the existing read-only grid generator.
