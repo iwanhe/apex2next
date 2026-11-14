@@ -114,6 +114,8 @@ wwv_flow_imp_page.create_page_plug(
 ,p_query_table=>'THINGS'
 ,p_plug_source_type=>'NATIVE_IG'
 ,p_is_editable=>true
+,p_edit_operations=>'i:u:d'
+,p_lost_update_check_type=>'ROW_VERSION'
 );
 wwv_flow_imp_page.create_page_process(
  p_id=>wwv_flow_imp.id(170)
