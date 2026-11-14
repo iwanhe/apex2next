@@ -85,10 +85,16 @@ def analyze_editable_interactive_grids(inventory: dict[str, Any]) -> dict[str, A
                         findings.append(_finding("IG005", f"Primary-key column {col.get('name')} has an unsupported source expression."))
                 query_only = _explicit_bool(cp.get("is_query_only"))
                 read_only = _explicit_bool(cp.get("is_readonly"))
+                required = _explicit_bool(cp.get("is_required"))
                 if query_only is None or read_only is None:
                     findings.append(_finding("IG006", f"Column {col.get('name')} lacks explicit query-only/read-only metadata."))
-                elif query_only is False and read_only is False and visible is True:
-                    if isinstance(expr, str) and _IDENTIFIER.fullmatch(expr.strip()):
+                if required is None:
+                    findings.append(_finding("IG014", f"Column {col.get('name')} lacks explicit required metadata."))
+                elif required is True:
+                    # Required/default and validation semantics are recorded for review, never inferred here.
+                    pass
+                if query_only is False and read_only is False and visible is True:
+                    if isinstance(expr, str) and _IDENTIFIER.fullmatch(expr.strip()) and expr.strip().lower() not in keys:
                         writable.append(expr.strip().lower())
 
             if len(keys) != 1:
@@ -120,7 +126,7 @@ def analyze_editable_interactive_grids(inventory: dict[str, Any]) -> dict[str, A
                 "classification": "REVIEW_REQUIRED" if len(findings) == 3 else "MANUAL",
                 "auto_generate": False,
                 "primary_key": keys[0] if len(keys) == 1 else None,
-                "writable_columns": sorted(set(writable)),
+                "writable_columns": sorted(set(writable)),\n                "required_columns": sorted({c.get("props", {}).get("source_expression", "").strip().lower() for c in region_columns if _explicit_bool(c.get("props", {}).get("is_required")) is True and isinstance(c.get("props", {}).get("source_expression"), str)}),
                 "operations": sorted(operations) if operations else [],
                 "native_dml_processes": [p.get("name") for p in dml],
                 "lost_update_check_type": props.get("lost_update_check_type"),
