@@ -47,6 +47,11 @@ def test_synthetic_export_inventory():
     assert comps["P2:REGION:Report"]["props"]["plug_source"] == "select id, name\n  from things", "wwv_flow_string.join decoded"
     assert comps["P2:IR_REPORT:Report.1"]["props"] == {"report_columns": "NAME", "sort_column_1": "NAME", "sort_direction_1": "ASC"}
     assert comps["P2:PROCESS:CALL_IT"]["props"]["when_button"] == "SAVE"
+    grid_process = comps["P2:PROCESS:SAVE_GRID"]["props"]
+    assert grid_process["process_type"] == "NATIVE_IG_DML"
+    assert grid_process["region"] == "Read Only Grid"
+    assert grid_process["native_ig_dml_candidate"] is True
+    assert "ROW_VERSION_COLUMN" in grid_process["process_attributes"]
     assert comps["P2:ITEM:P2_NAME"]["props"]["read_only_when"] == ":P2_ID is null"
     assert comps["P2:VALIDATION:NAME_OK"]["props"]["validation"] == ":P2_NAME <> 'x'"
     assert comps["P2:DYNAMIC_ACTION:REFRESH_AFTER_DIALOG"]["props"]["actions"] == [
