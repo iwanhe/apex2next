@@ -53,16 +53,18 @@ def analyze_editable_interactive_grids(inventory: dict[str, Any]) -> dict[str, A
         for region in regions:
             props = region.get("props", {})
             editable = _explicit_bool(props.get("is_editable"))
-            if editable is not True:
-                continue  # read-only and unspecified grids remain on the existing read-only/manual path
+            if editable is False:
+                continue  # explicitly read-only grids use the existing read-only path
 
             findings: list[dict[str, str]] = []
+            if editable is None:
+                findings.append(_finding("IG000", "Editability is not explicit; the grid cannot be treated as writable."))
             table = props.get("query_table")
             if props.get("query_type") != "TABLE" or not isinstance(table, str) or not _TABLE.fullmatch(table):
                 findings.append(_finding("IG001", "Grid source must be an explicitly table-backed query with a simple table identifier."))
 
             region_name = region.get("name")
-            region_columns = [c for c in columns if c.get("name", "").startswith(f"{region_name}.")]
+            region_columns = [c for c in columns if isinstance(c.get("name"), str) and c["name"].startswith(f"{region_name}.")]
             if not region_columns:
                 findings.append(_finding("IG002", "No exported region-column metadata is available."))
 
