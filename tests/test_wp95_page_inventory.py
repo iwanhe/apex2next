@@ -57,7 +57,7 @@ def test_synthetic_export_inventory():
     assert comps["P2:VALIDATION:NAME_OK"]["props"]["validation"] == ":P2_NAME <> 'x'"
     assert comps["P2:DYNAMIC_ACTION:REFRESH_AFTER_DIALOG"]["props"]["actions"] == [
         {"action": "NATIVE_REFRESH", "result": "TRUE", "region": "Report"}]
-    assert inv["summary"] == {"pages": 1, "components": 13}
+    assert inv["summary"] == {"pages": 1, "components": 15}
     grid = comps["P2:REGION:Read Only Grid"]["props"]
     assert (grid["plug_source_type"], grid["query_type"], grid["query_table"], grid["is_editable"]) == (
         "NATIVE_IG", "TABLE", "THINGS", False)
