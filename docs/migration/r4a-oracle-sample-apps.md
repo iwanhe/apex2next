@@ -204,3 +204,17 @@ The page inventory now retains additional source metadata needed for a later, re
 - Existing region-level edit operations and lost-update settings remain preserved.
 
 This is **extraction only**. It does not infer missing metadata, grant write permissions, or generate an editable grid. A future generator must reconcile the region's allowed operations with a recognized native IG DML process, a known primary key, column writeability, page/process authorization, row-level authorization, validations, and lost-update behavior. Any missing or unsupported condition must keep the region manual.
+
+
+## Step 4c: editable Interactive Grid eligibility analysis
+
+A separate, deterministic analyzer now evaluates the editable-grid metadata without enabling DML generation. It reports one of:
+
+- `MANUAL`: export metadata is incomplete or contradictory (source, key, visibility, writeability, operation list, or DML process association).
+- `REVIEW_REQUIRED`: the export proves the narrow structural prerequisites, but security and parity gates still require explicit implementation and review.
+
+The analyzer checks table-backed source identifiers, explicit visibility and read-only/query-only flags, one simple primary key, at least one visible writable column, supported operation flags (`i`, `u`, `d`), and exactly one native IG DML process associated with the same region.
+
+It always emits `auto_generate: false`. Even a structurally complete grid remains blocked by three mandatory findings: page/process and row-level authorization; validation and server-side condition parity; and lost-update/concurrency equivalence. This is intentional: source metadata alone cannot prove that a client row may be changed or that APEX's server-side behavior is preserved.
+
+Regression tests cover complete metadata, missing visibility/writeability, unsupported operations, absent key/source/process, and read-only or unspecified editability. This analyzer is a planning/reporting foundation only; it does not change the existing read-only grid generator.
