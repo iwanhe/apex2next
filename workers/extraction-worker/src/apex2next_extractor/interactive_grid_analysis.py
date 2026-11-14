@@ -137,3 +137,27 @@ def analyze_editable_interactive_grids(inventory: dict[str, Any]) -> dict[str, A
         },
         "grids": results,
     }
+
+
+def main() -> int:
+    import argparse
+    import json
+    from pathlib import Path
+
+    parser = argparse.ArgumentParser(description="Fail-closed eligibility analysis for editable APEX Interactive Grids")
+    parser.add_argument("inventory", type=Path, help="apex-page-inventory.json produced by apex2next inventory")
+    parser.add_argument("--output", type=Path, required=True)
+    args = parser.parse_args()
+    inventory = json.loads(args.inventory.read_text(encoding="utf-8"))
+    result = analyze_editable_interactive_grids(inventory)
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\\n", encoding="utf-8")
+    summary = result["summary"]
+    print(f"Editable grids: {summary['editable_grids']}; review required: {summary['review_required']}; "
+          f"manual: {summary['manual']}; auto-generate: 0")
+    print(f"Written: {args.output}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
