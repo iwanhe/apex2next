@@ -64,7 +64,7 @@ KEEP = {
                   "p_column_alignment", "p_column_link", "p_column_linktext", "p_rpt_named_lov"],
     "REPORT_COLUMN": ["p_column_heading", "p_column_format", "p_column_link", "p_column_linktext", "p_hidden_column",
                       "p_column_display_sequence", "p_column_alignment", "p_display_as", "p_derived_column"],
-    "REGION_COLUMN": ["p_source_expression", "p_data_type"],
+    "REGION_COLUMN": ["p_source_expression", "p_data_type", "p_is_visible", "p_display_sequence", "p_heading"],
     "IR": ["p_max_row_count", "p_show_search_bar", "p_download_formats", "p_detail_link", "p_detail_link_text",
            "p_no_data_found_message", "p_pagination_type", "p_show_detail_link"],
     "IR_REPORT": ["p_report_columns", "p_sort_column_1", "p_sort_direction_1"],

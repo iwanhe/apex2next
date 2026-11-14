@@ -145,3 +145,55 @@ def test_two_forms_below_one_page_get_their_own_routes():
     proposed = default_map(Inputs(ROOT / "examples/f170134-target"))
     routes = [e["route"] for e in proposed["pages"].values() if e.get("form")]
     assert len(routes) == len(set(routes))
+
+
+def test_read_only_table_backed_interactive_grid_generates_only_visible_columns(tmp_path):
+    app = _app(tmp_path)
+    inventory_path = app / "ui/apex-page-inventory.json"
+    inventory = json.loads(inventory_path.read_text(encoding="utf-8"))
+    page = next(p for p in inventory["pages"] if p["id"] == 1)
+    page["components"].extend([
+        _c(1, "REGION", "Department Grid", plug_source_type="NATIVE_IG", query_type="TABLE",
+           query_table="DEPT", query_order_by="DNAME", is_editable=False, plug_display_sequence=35),
+        _c(1, "REGION_COLUMN", "Department Grid.DEPTNO", source_expression="DEPTNO",
+           is_visible="Y", display_sequence=1, heading="Department ID"),
+        _c(1, "REGION_COLUMN", "Department Grid.DNAME", source_expression="DNAME",
+           is_visible="Y", display_sequence=2, heading="Department Name"),
+        _c(1, "REGION_COLUMN", "Department Grid.INTERNAL_NOTE", source_expression="INTERNAL_NOTE",
+           is_visible="N", display_sequence=3, heading="Internal Note"),
+    ])
+    inventory_path.write_text(json.dumps(inventory), encoding="utf-8")
+    plan_path = app / "db/schema-plan.json"
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    dept = next(t for t in plan["tables"] if t["name"] == "DEPT")
+    dept["columns"].extend([
+        {"name": "DNAME", "targetName": "dname", "targetType": "text", "typeFamily": "STRING"},
+        {"name": "INTERNAL_NOTE", "targetName": "internal_note", "targetType": "text", "typeFamily": "STRING"},
+    ])
+    plan_path.write_text(json.dumps(plan), encoding="utf-8")
+    (app / "ui/app-map.json").write_text(json.dumps(default_map(Inputs(app))), encoding="utf-8")
+
+    assert classify(Inputs(app).pages[1])[0] == "COMPOSED"
+    files, report = generate(app)
+    page_report = next(p for p in report["pages"] if p["id"] == 1)
+    assert page_report["status"] in {"GENERATED", "PARTIAL"}
+    assert '<ReportRegion pageId={1} region="departmentGrid"' in files["apps/web/app/(app)/departments/page.tsx"]
+    sources = files["apps/api/src/pages/app-sources.generated.ts"]
+    assert "region: 'Department Grid', kind: 'CLASSIC'" in sources
+    assert "select: ['deptno', 'dname']" in sources
+    assert "internal_note" not in sources
+
+
+def test_editable_or_unspecified_interactive_grid_stays_manual(tmp_path):
+    app = _app(tmp_path)
+    inventory_path = app / "ui/apex-page-inventory.json"
+    inventory = json.loads(inventory_path.read_text(encoding="utf-8"))
+    page = next(p for p in inventory["pages"] if p["id"] == 1)
+    page["components"].append(_c(1, "REGION", "Editable Grid", plug_source_type="NATIVE_IG",
+                                 query_type="TABLE", query_table="DEPT", is_editable=True))
+    inventory_path.write_text(json.dumps(inventory), encoding="utf-8")
+    assert classify(Inputs(app).pages[1])[0] == "MANUAL"
+
+    page["components"][-1]["props"].pop("is_editable")
+    inventory_path.write_text(json.dumps(inventory), encoding="utf-8")
+    assert classify(Inputs(app).pages[1])[0] == "MANUAL"

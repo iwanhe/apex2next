@@ -181,3 +181,15 @@ supporting objects and sample data (checked read-only in SQL Commands):
 The R2 shared-runtime and R3 UI-generator drafts were reviewed against this branch; the pieces it lacked
 (trim_spaces handling, safe report paging, hidden-column sort refusal, session issue-time and lifetime checks)
 are now in `@apex2next/runtime-api`. Details and what was not ported: [r4a/pr2-pr3-consolidation.md](r4a/pr2-pr3-consolidation.md).
+
+
+## Step 4a: read-only Interactive Grid (initial safe slice)
+
+The composer now supports a deliberately narrow Interactive Grid pattern:
+
+- The export must explicitly mark the grid non-editable (`is_editable=false` / `N`). Missing editability is treated as editable.
+- The source must be a table-backed query (`query_type=TABLE` with a known `query_table`). SQL-backed grids remain manual until a reviewed projection can be proven equivalent.
+- Every region column must explicitly declare visibility. Only visible columns with a simple identifier `source_expression` are selected; hidden columns are not sent to the browser. Missing visibility or a computed expression keeps the query manual (`GEN013`).
+- The generated read-only grid reuses the runtime paginated report table. It does not generate row editing, row actions, bulk changes, or client-controlled DML.
+
+This increment is covered by synthetic regression tests for visible-column projection and fail-closed handling of editable/unspecified grids. It is not yet counted as increased sample-app coverage until the Oracle APEX 26.2 Interactive Grids export fixtures are run through the full scoreboard and parity smoke tests.
