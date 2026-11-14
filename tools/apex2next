@@ -110,6 +110,10 @@ def cmd_queries(a: argparse.Namespace) -> int:
     return rc
 
 
+def cmd_ig_analyze(a: argparse.Namespace) -> int:
+    return run("apex2next_extractor.interactive_grid_analysis", a.inventory, "--output", a.out)
+
+
 def cmd_supporting_objects(a: argparse.Namespace) -> int:
     d = out_dir(a.out)
     rc = run("apex2next_extractor.supporting_objects", a.export_dir, "--output", str(d / "install.sql"),
@@ -344,6 +348,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("export_dir", help="unpacked SQL export (split files), e.g. f123/")
     p.add_argument("--out", required=True)
     p.set_defaults(fn=cmd_inventory)
+    p = sub.add_parser("ig-analyze", help="fail-closed editable Interactive Grid eligibility analysis")
+    p.add_argument("inventory", help="apex-page-inventory.json produced by inventory")
+    p.add_argument("--out", required=True, help="editable-ig-analysis.json")
+    p.set_defaults(fn=cmd_ig_analyze)
     p = sub.add_parser("supporting-objects", help="install scripts of the export's supporting objects as install.sql")
     p.add_argument("export_dir", help="unpacked SQL export (split files), e.g. f123/")
     p.add_argument("--out", required=True)
