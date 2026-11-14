@@ -212,6 +212,40 @@ def test_interactive_grid_rejects_unreviewed_table_identifiers_and_predicates(tm
         assert "GEN027" in region["findings"]
 
 
+
+def test_interactive_grid_never_falls_back_to_select_star_on_incomplete_columns(tmp_path):
+    cases = [
+        # Missing visibility metadata.
+        {"source_expression": "DEPTNO"},
+        # Computed expressions are not projected.
+        {"source_expression": "UPPER(DNAME)", "is_visible": True},
+        # Explicitly hidden-only grids have no safe projection.
+        {"source_expression": "INTERNAL_NOTE", "is_visible": False},
+    ]
+    for index, column_props in enumerate(cases):
+        case_dir = tmp_path / f"projection-{index}"
+        case_dir.mkdir()
+        app = _app(case_dir)
+        inventory_path = app / "ui/apex-page-inventory.json"
+        inventory = json.loads(inventory_path.read_text(encoding="utf-8"))
+        page = next(p for p in inventory["pages"] if p["id"] == 1)
+        page["components"].extend([
+            _c(1, "REGION", "Restricted Grid", plug_source_type="NATIVE_IG", query_type="TABLE",
+               query_table="DEPT", is_editable=False),
+            _c(1, "REGION_COLUMN", "Restricted Grid.COLUMN", display_sequence=1, **column_props),
+        ])
+        inventory_path.write_text(json.dumps(inventory), encoding="utf-8")
+        (app / "ui/app-map.json").write_text(json.dumps(default_map(Inputs(app))), encoding="utf-8")
+
+        files, report = generate(app)
+        source = files["apps/api/src/pages/app-sources.generated.ts"]
+        assert "restrictedGrid" not in source
+        region = next(r for r in report["regions"] if r["region"] == "Restricted Grid")
+        assert region["status"] == "MANUAL"
+        assert "GEN003" in region["findings"] or "GEN013" in region["findings"]
+
+
+
 def test_editable_or_unspecified_interactive_grid_stays_manual(tmp_path):
     app = _app(tmp_path)
     inventory_path = app / "ui/apex-page-inventory.json"
