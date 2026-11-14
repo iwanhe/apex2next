@@ -1,6 +1,6 @@
 import type { BusinessTx } from '../context';
 import { errors } from '../errors';
-import { type FormDef, checksum, fetchForm, validateItems } from '../forms/forms';
+import { type FormDef, checksum, fetchForm, validateItems, writableItems } from '../forms/forms';
 import { assertValid, deleteRow, insertRow, updateRow, validateForInsert } from './table-dml';
 
 /**
@@ -83,7 +83,8 @@ export async function applyInteractiveGridChanges(
         const current = await fetchForm(tx, form, change.id, true);
         if (!current) throw errors.notFound(`${form.region} ${change.id}`, 'UI-FRM-01');
         if (typeof change.checksum !== 'string' || change.checksum !== checksum(form, current)) throw errors.lostUpdate();
-        const checked = validateItems(form, { ...current, ...change.values });
+        const currentWritable = Object.fromEntries(writableItems(form).map((item) => [item.column, current[item.column] ?? null]));
+        const checked = validateItems(form, { ...currentWritable, ...change.values });
         assertValid(checked.problems);
         await updateRow(tx, form, change.id, change.checksum, checked.values);
         results.push({ operation: 'update', id: change.id });
