@@ -99,5 +99,56 @@ wwv_flow_imp_page.create_page_da_action(
 ,p_affected_elements_type=>'REGION'
 ,p_affected_region_id=>wwv_flow_imp.id(101)
 );
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(160)
+,p_plug_name=>'Read Only Grid'
+,p_query_type=>'TABLE'
+,p_query_table=>'THINGS'
+,p_plug_source_type=>'NATIVE_IG'
+,p_is_editable=>false
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(180)
+,p_plug_name=>'Editable Grid'
+,p_query_type=>'TABLE'
+,p_query_table=>'THINGS'
+,p_plug_source_type=>'NATIVE_IG'
+,p_is_editable=>true
+,p_edit_operations=>'i:u:d'
+,p_lost_update_check_type=>'ROW_VERSION'
+);
+wwv_flow_imp_page.create_page_process(
+ p_id=>wwv_flow_imp.id(170)
+,p_process_sequence=>30
+,p_process_point=>'AFTER_SUBMIT'
+,p_process_type=>'NATIVE_IG_DML'
+,p_process_name=>'SAVE_GRID'
+,p_process_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+ 'REGION_ID', '180',
+ 'ROW_VERSION_COLUMN', 'ROW_VERSION'
+))
+,p_region_id=>wwv_flow_imp.id(180)
+);
+wwv_flow_imp_page.create_region_column(
+ p_id=>wwv_flow_imp.id(161)
+,p_region_id=>wwv_flow_imp.id(160)
+,p_name=>'ID'
+,p_source_expression=>'ID'
+,p_is_visible=>true
+,p_is_primary_key=>true
+,p_is_query_only=>false
+,p_is_readonly=>true
+,p_display_sequence=>1
+,p_heading=>'Identifier'
+);
+wwv_flow_imp_page.create_region_column(
+ p_id=>wwv_flow_imp.id(162)
+,p_region_id=>wwv_flow_imp.id(160)
+,p_name=>'INTERNAL_NOTE'
+,p_source_expression=>'INTERNAL_NOTE'
+,p_is_visible=>false
+,p_display_sequence=>2
+,p_heading=>'Internal Note'
+);
 end;
 /

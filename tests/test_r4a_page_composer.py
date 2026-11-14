@@ -145,3 +145,142 @@ def test_two_forms_below_one_page_get_their_own_routes():
     proposed = default_map(Inputs(ROOT / "examples/f170134-target"))
     routes = [e["route"] for e in proposed["pages"].values() if e.get("form")]
     assert len(routes) == len(set(routes))
+
+
+def test_read_only_table_backed_interactive_grid_generates_only_visible_columns(tmp_path):
+    app = _app(tmp_path)
+    inventory_path = app / "ui/apex-page-inventory.json"
+    inventory = json.loads(inventory_path.read_text(encoding="utf-8"))
+    page = next(p for p in inventory["pages"] if p["id"] == 1)
+    page["components"].extend([
+        _c(1, "REGION", "Department Grid", plug_source_type="NATIVE_IG", query_type="TABLE",
+           query_table="DEPT", query_order_by="DNAME", is_editable=False, plug_display_sequence=35),
+        _c(1, "REGION_COLUMN", "Department Grid.DEPTNO", source_expression="DEPTNO",
+           is_visible="Y", display_sequence=1, heading="Department ID"),
+        _c(1, "REGION_COLUMN", "Department Grid.DNAME", source_expression="DNAME",
+           is_visible="Y", display_sequence=2, heading="Department Name"),
+        _c(1, "REGION_COLUMN", "Department Grid.INTERNAL_NOTE", source_expression="INTERNAL_NOTE",
+           is_visible="N", display_sequence=3, heading="Internal Note"),
+    ])
+    inventory_path.write_text(json.dumps(inventory), encoding="utf-8")
+    plan_path = app / "db/schema-plan.json"
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    dept = next(t for t in plan["tables"] if t["name"] == "DEPT")
+    dept["columns"].extend([
+        {"name": "DNAME", "targetName": "dname", "targetType": "text", "typeFamily": "STRING"},
+        {"name": "INTERNAL_NOTE", "targetName": "internal_note", "targetType": "text", "typeFamily": "STRING"},
+    ])
+    plan_path.write_text(json.dumps(plan), encoding="utf-8")
+    (app / "ui/app-map.json").write_text(json.dumps(default_map(Inputs(app))), encoding="utf-8")
+
+    assert classify(Inputs(app).pages[1])[0] == "COMPOSED"
+    files, report = generate(app)
+    page_report = next(p for p in report["pages"] if p["id"] == 1)
+    assert page_report["status"] in {"GENERATED", "PARTIAL"}
+    assert '<ReportRegion pageId={1} region="departmentGrid"' in files["apps/web/app/(app)/departments/page.tsx"]
+    sources = files["apps/api/src/pages/app-sources.generated.ts"]
+    assert "region: 'Department Grid', kind: 'CLASSIC'" in sources
+    assert "select: ['deptno', 'dname']" in sources
+    assert "internal_note" not in sources
+
+
+
+def test_interactive_grid_rejects_unreviewed_table_identifiers_and_predicates(tmp_path):
+    cases = [
+        {"query_table": "DEPT; DROP TABLE EMP"},
+        {"query_table": "DEPT", "query_where": "1=1 OR 1=1"},
+    ]
+    for index, overrides in enumerate(cases):
+        case_dir = tmp_path / f"case-{index}"
+        case_dir.mkdir()
+        app = _app(case_dir)
+        inventory_path = app / "ui/apex-page-inventory.json"
+        inventory = json.loads(inventory_path.read_text(encoding="utf-8"))
+        page = next(p for p in inventory["pages"] if p["id"] == 1)
+        grid_props = {"plug_source_type": "NATIVE_IG", "query_type": "TABLE",
+                      "query_table": "DEPT", "is_editable": False}
+        grid_props.update(overrides)
+        page["components"].append(_c(1, "REGION", "Unsafe Grid", **grid_props))
+        page["components"].append(_c(1, "REGION_COLUMN", "Unsafe Grid.DEPTNO",
+                                     source_expression="DEPTNO", is_visible=True, display_sequence=1))
+        inventory_path.write_text(json.dumps(inventory), encoding="utf-8")
+        (app / "ui/app-map.json").write_text(json.dumps(default_map(Inputs(app))), encoding="utf-8")
+
+        _, report = generate(app)
+        region = next(r for r in report["regions"] if r["region"] == "Unsafe Grid")
+        assert region["status"] == "MANUAL"
+        assert "GEN027" in region["findings"]
+
+
+
+def test_interactive_grid_never_falls_back_to_select_star_on_incomplete_columns(tmp_path):
+    cases = [
+        # Missing visibility metadata.
+        {"source_expression": "DEPTNO"},
+        # Computed expressions are not projected.
+        {"source_expression": "UPPER(DNAME)", "is_visible": True},
+        # Explicitly hidden-only grids have no safe projection.
+        {"source_expression": "INTERNAL_NOTE", "is_visible": False},
+        # A simple identifier is still rejected when it is not in the target table plan.
+        {"source_expression": "NOT_A_REAL_COLUMN", "is_visible": True},
+    ]
+    for index, column_props in enumerate(cases):
+        case_dir = tmp_path / f"projection-{index}"
+        case_dir.mkdir()
+        app = _app(case_dir)
+        inventory_path = app / "ui/apex-page-inventory.json"
+        inventory = json.loads(inventory_path.read_text(encoding="utf-8"))
+        page = next(p for p in inventory["pages"] if p["id"] == 1)
+        page["components"].extend([
+            _c(1, "REGION", "Restricted Grid", plug_source_type="NATIVE_IG", query_type="TABLE",
+               query_table="DEPT", is_editable=False),
+            _c(1, "REGION_COLUMN", "Restricted Grid.COLUMN", display_sequence=1, **column_props),
+        ])
+        inventory_path.write_text(json.dumps(inventory), encoding="utf-8")
+        (app / "ui/app-map.json").write_text(json.dumps(default_map(Inputs(app))), encoding="utf-8")
+
+        files, report = generate(app)
+        source = files["apps/api/src/pages/app-sources.generated.ts"]
+        assert "restrictedGrid" not in source
+        region = next(r for r in report["regions"] if r["region"] == "Restricted Grid")
+        assert region["status"] == "MANUAL"
+        assert any(code in region["findings"] for code in ("GEN003", "GEN013", "GEN027"))
+
+
+
+def test_editable_or_unspecified_interactive_grid_stays_manual(tmp_path):
+    app = _app(tmp_path)
+    inventory_path = app / "ui/apex-page-inventory.json"
+    inventory = json.loads(inventory_path.read_text(encoding="utf-8"))
+    page = next(p for p in inventory["pages"] if p["id"] == 1)
+    page["components"].append(_c(1, "REGION", "Editable Grid", plug_source_type="NATIVE_IG",
+                                 query_type="TABLE", query_table="DEPT", is_editable=True))
+    inventory_path.write_text(json.dumps(inventory), encoding="utf-8")
+    assert classify(Inputs(app).pages[1])[0] == "MANUAL"
+
+    page["components"][-1]["props"].pop("is_editable")
+    inventory_path.write_text(json.dumps(inventory), encoding="utf-8")
+    assert classify(Inputs(app).pages[1])[0] == "MANUAL"
+
+
+def test_unknown_interactive_grid_visibility_flag_keeps_region_manual(tmp_path):
+    app = _app(tmp_path)
+    inventory_path = app / "ui/apex-page-inventory.json"
+    inventory = json.loads(inventory_path.read_text(encoding="utf-8"))
+    page = next(p for p in inventory["pages"] if p["id"] == 1)
+    page["components"].extend([
+        _c(1, "REGION", "Department Grid", plug_source_type="NATIVE_IG", query_type="TABLE",
+           query_table="DEPT", is_editable=False),
+        _c(1, "REGION_COLUMN", "Department Grid.DEPTNO", source_expression="DEPTNO",
+           is_visible="UNKNOWN", display_sequence=1),
+    ])
+    inventory_path.write_text(json.dumps(inventory), encoding="utf-8")
+    (app / "ui/app-map.json").write_text(json.dumps(default_map(Inputs(app))), encoding="utf-8")
+
+    files, report = generate(app)
+    page_report = next(p for p in report["pages"] if p["id"] == 1)
+    region_report = next(r for r in report["regions"] if r["region"] == "Department Grid")
+    assert page_report["status"] == "MANUAL"
+    assert region_report["status"] == "MANUAL"
+    assert any(code in region_report["findings"] for code in ("GEN003", "GEN013", "GEN027", "RGN007"))
+    assert "apps/web/app/(app)/departments/page.tsx" not in files

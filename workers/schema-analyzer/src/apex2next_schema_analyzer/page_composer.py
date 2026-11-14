@@ -19,7 +19,7 @@ from html.parser import HTMLParser
 from typing import Any
 
 # region types the composer renders; None is a static content (or empty container) region
-COMPOSE_TYPES = {None, "NATIVE_BREADCRUMB", "NATIVE_LIST", "NATIVE_DISPLAY_SELECTOR", "NATIVE_IR", "NATIVE_CARDS"}
+COMPOSE_TYPES = {None, "NATIVE_BREADCRUMB", "NATIVE_LIST", "NATIVE_DISPLAY_SELECTOR", "NATIVE_IR", "NATIVE_CARDS", "NATIVE_IG"}
 ITEM_CONDITIONS = {"ITEM_IS_NULL", "ITEM_IS_NOT_NULL"}
 ALLOWED_TAGS = {"p", "br", "ul", "ol", "li", "strong", "b", "em", "i", "a", "h1", "h2", "h3", "h4", "h5", "h6",
                 "code", "pre", "span", "div", "small", "blockquote", "hr", "table", "thead", "tbody", "tr", "th", "td",

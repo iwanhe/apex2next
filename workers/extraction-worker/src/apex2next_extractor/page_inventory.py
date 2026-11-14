@@ -55,8 +55,8 @@ KEEP = {
              "p_lov_display_extra", "p_item_sequence", "p_display_when2"],
     "BUTTON": ["p_button_image_alt", "p_button_sequence", "p_button_is_hot", "p_button_action", "p_button_redirect_url", "p_button_condition", "p_button_condition_type",
                "p_database_action", "p_confirm_message", "p_button_execute_validations", "p_button_position"],
-    "PROCESS": ["p_process_point", "p_process_type", "p_process_sql_clob", "p_process_when", "p_process_when_type",
-                "p_process_success_message", "p_process_sequence"],
+    "PROCESS": ["p_process_point", "p_process_type", "p_process_sql_clob", "p_process_attributes",
+                "p_process_when", "p_process_when_type", "p_process_success_message", "p_process_sequence"],
     "VALIDATION": ["p_validation", "p_validation2", "p_validation_type", "p_error_message", "p_validation_condition",
                    "p_validation_condition_type"],
     "DYNAMIC_ACTION": ["p_triggering_element_type", "p_bind_event_type", "p_event_sequence"],
@@ -64,7 +64,10 @@ KEEP = {
                   "p_column_alignment", "p_column_link", "p_column_linktext", "p_rpt_named_lov"],
     "REPORT_COLUMN": ["p_column_heading", "p_column_format", "p_column_link", "p_column_linktext", "p_hidden_column",
                       "p_column_display_sequence", "p_column_alignment", "p_display_as", "p_derived_column"],
-    "REGION_COLUMN": ["p_source_expression", "p_data_type"],
+    "REGION_COLUMN": ["p_source_expression", "p_data_type", "p_is_visible", "p_is_primary_key",
+                      "p_is_query_only", "p_is_readonly", "p_is_required", "p_default_type", "p_default_expression",
+                      "p_display_as", "p_column_type",
+                      "p_display_sequence", "p_heading"],
     "IR": ["p_max_row_count", "p_show_search_bar", "p_download_formats", "p_detail_link", "p_detail_link_text",
            "p_no_data_found_message", "p_pagination_type", "p_show_detail_link"],
     "IR_REPORT": ["p_report_columns", "p_sort_column_1", "p_sort_direction_1"],
@@ -201,6 +204,12 @@ def build_page_inventory(files: dict[str, str]) -> dict[str, Any]:
         page_id = page_call["arguments"].get("p_id")
         regions = {_ref(c, "p_id"): c["arguments"].get("p_plug_name") or c["arguments"].get("p_name")
                    for c in calls if c["routine"] in {"create_page_plug", "create_report_region"}}
+        editable_ig_region_ids = {
+            _ref(c, "p_id") for c in calls
+            if c["routine"] == "create_page_plug"
+            and c["arguments"].get("p_plug_source_type") == "NATIVE_IG"
+            and c["arguments"].get("p_is_editable") is True
+        }
         buttons = {_ref(c, "p_id"): c["arguments"].get("p_button_name") for c in calls
                    if c["routine"] == "create_page_button"}
         page_items = {_ref(c, "p_id"): c["arguments"].get("p_name") for c in calls if c["routine"] == "create_page_item"}
@@ -243,8 +252,18 @@ def build_page_inventory(files: dict[str, str]) -> dict[str, Any]:
             if kind == "ITEM" and "wwv_flow_t_plugin_attributes" in (c["raw_arguments"].get("p_attributes") or ""):
                 values = [m.replace("''", "'") for m in _STRING.findall(c["raw_arguments"]["p_attributes"])]
                 props["attributes"] = dict(zip(values[0::2], values[1::2]))
-            if kind == "PROCESS" and _ref(c, "p_process_when_button_id"):
-                props["when_button"] = buttons.get(_ref(c, "p_process_when_button_id"))
+            if kind == "PROCESS":
+                if _ref(c, "p_process_when_button_id"):
+                    props["when_button"] = buttons.get(_ref(c, "p_process_when_button_id"))
+                process_region_id = _ref(c, "p_region_id")
+                if process_region_id:
+                    props["region"] = regions.get(process_region_id)
+                # A positive classification only: a native IG DML process explicitly
+                # associated with an exported NATIVE_IG region. This is not permission
+                # to generate writes; authorization, validations and row scope are separate gates.
+                if (c["arguments"].get("p_process_type") == "NATIVE_IG_DML"
+                        and process_region_id in editable_ig_region_ids):
+                    props["native_ig_dml_candidate"] = True
             if _ref(c, "p_security_scheme"):  # component authorization (e.g. a CREATE button for MASTER_DATA only)
                 props["security_scheme"] = schemes.get(_ref(c, "p_security_scheme"))
             if kind == "REGION" and _ref(c, "p_list_id"):

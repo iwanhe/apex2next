@@ -24,3 +24,4 @@ export * from './reports/region-source';
 export * from './forms/forms';
 export * from './generic/table-dml';
 export * from './generic/schemes';
+export * from './generic/interactive-grid';

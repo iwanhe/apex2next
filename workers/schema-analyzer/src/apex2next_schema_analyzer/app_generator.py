@@ -69,6 +69,8 @@ GEN_RULES: dict[str, tuple[str, str]] = {
     "GEN023": ("MANUAL", "Form item type is not rendered by the form runtime (file upload, rich text, multi-select, ...)."),
     "GEN024": ("ASSISTED", "Form item is shown as a select list (switch, radio group or popup LOV in APEX)."),
     "GEN025": ("MANUAL", "Form item uses a shared LOV that is not generated (see its findings); the form page is not written."),
+    "GEN026": ("MANUAL", "Interactive Grid is editable or its read-only status is not explicit; only explicitly read-only grids are generated."),
+    "GEN027": ("MANUAL", "Interactive Grid source is not a table query; SQL-backed grids need a reviewed projection before generation."),
 }
 FORM_ITEM_KINDS = {"NATIVE_TEXT_FIELD", "NATIVE_TEXTAREA", "NATIVE_NUMBER_FIELD", "NATIVE_DATE_PICKER_APEX",
                    "NATIVE_SELECT_LIST", "NATIVE_DISPLAY_ONLY", "NATIVE_HIDDEN"}
@@ -172,6 +174,12 @@ class Inputs:
 
 
 # ------------------------------------------------------------------------------------------- page patterns
+def read_only_interactive_grid(region: dict[str, Any]) -> bool:
+    """Only generate an IG when the export explicitly disables editing."""
+    value = region.get("props", {}).get("is_editable")
+    return value is False or (isinstance(value, str) and value.strip().upper() in {"N", "NO", "FALSE"})
+
+
 def form_region(page: dict[str, Any]) -> dict[str, Any] | None:
     forms = regions_of(page, "NATIVE_FORM")
     return forms[0] if len(forms) == 1 else None
@@ -190,6 +198,11 @@ def classify(page: dict[str, Any]) -> tuple[str, str | None]:
     if (page.get("alias") or "").upper() == "LOGIN" or {"USERNAME", "PASSWORD"} <= names:
         return "LOGIN", None
     regions = components(page, "REGION")
+    interactive_grids = regions_of(page, "NATIVE_IG")
+    if any(not read_only_interactive_grid(r) for r in interactive_grids):
+        return "MANUAL", "Interactive Grid is editable or its read-only status is not explicit"
+    if any(r["props"].get("query_type") != "TABLE" or not r["props"].get("query_table") for r in interactive_grids):
+        return "MANUAL", "Interactive Grid is not a table-backed query"
     typed = sorted({r["props"].get("plug_source_type") for r in regions} - CONTAINER_TYPES)
     reports = components(page, "REPORT_REGION")
     if typed == ["NATIVE_IR"] and len(regions_of(page, "NATIVE_IR")) == 1 and not reports and not components(page, "ITEM"):
@@ -230,18 +243,50 @@ export default function Home() {
 
 
 def table_query(page: dict[str, Any], region: dict[str, Any], kind: str) -> str:
-    """SELECT that APEX runs for a region whose source is a table: its columns, WHERE and ORDER BY clauses."""
+    """SELECT that APEX runs for a region whose source is a table."""
     props = region["props"]
     prefix = region["name"] + "."
     if kind == "CLASSIC":
         cols = sorted((c for c in components(page, "REPORT_COLUMN") if c["name"].startswith(prefix)),
                       key=lambda c: (c["props"].get("column_display_sequence") or 0, c["name"]))
+        names = [c["name"][len(prefix):] for c in cols if c["props"].get("derived_column") != "Y"]
     elif kind == "IR":
         cols = sorted((c for c in components(page, "IR_COLUMN") if c["name"].startswith(prefix)),
                       key=lambda c: (c["props"].get("display_order") or 0, c["name"]))
+        names = [c["name"][len(prefix):] for c in cols]
+    elif kind == "IG":
+        cols = sorted((c for c in components(page, "REGION_COLUMN") if c["name"].startswith(prefix)),
+                      key=lambda c: (c["props"].get("display_sequence") or 0, c["name"]))
+        names = []
+        for col in cols:
+            visible = col["props"].get("is_visible")
+            if visible is None:
+                return ""
+            if visible is True or (isinstance(visible, str) and visible.strip().upper() in {"Y", "YES", "TRUE"}):
+                expression = str(col["props"].get("source_expression") or "").strip()
+                if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_$#]*", expression):
+                    return ""
+                names.append(expression)
+            elif visible is False or (isinstance(visible, str) and visible.strip().upper() in {"N", "NO", "FALSE"}):
+                continue
+            else:
+                return ""
+        order = str(props.get("query_order_by") or "").strip()
+        if order:
+            match = re.fullmatch(r"([A-Za-z][A-Za-z0-9_$#]*)(?:\s+(ASC|DESC))?", order, re.I)
+            if not match or match.group(1).upper() not in {n.upper() for n in names}:
+                return ""
+            order = " order by " + match.group(1).lower() + (" " + match.group(2).upper() if match.group(2) else "")
+        else:
+            order = ""
+        if not names:
+            return ""
+        sql = f"select {', '.join(n.lower() for n in names)} from {props['query_table'].lower()}"
+        if props.get("query_where"):
+            sql += f" where {props['query_where']}"
+        return sql + order
     else:
-        cols = []
-    names = [c["name"][len(prefix):] for c in cols if c["props"].get("derived_column") != "Y"]
+        names = []
     sql = f"select {', '.join(n.lower() for n in names) if names else '*'} from {props['query_table'].lower()}"
     if props.get("query_where"):
         sql += f" where {props['query_where']}"
@@ -285,7 +330,7 @@ def default_map(inp: Inputs) -> dict[str, Any]:
             pages[str(page["id"])] = {"route": route, "form": camel(form_region(page)["name"])}
         for c in page["components"]:
             is_region = c["kind"] == "REPORT_REGION" or (
-                c["kind"] == "REGION" and c["props"].get("plug_source_type") in {"NATIVE_IR", "NATIVE_CARDS"})
+                c["kind"] == "REGION" and c["props"].get("plug_source_type") in {"NATIVE_IR", "NATIVE_CARDS", "NATIVE_IG"})
             if is_region:
                 key = camel(c["name"])
                 if key in used:
@@ -371,6 +416,38 @@ class Generator:
                     kind, sql = "IR", props.get("plug_source")
                 elif c["kind"] == "REGION" and props.get("plug_source_type") == "NATIVE_CARDS":
                     kind, sql = "CARDS", props.get("plug_source")
+                elif c["kind"] == "REGION" and props.get("plug_source_type") == "NATIVE_IG":
+                    kind, sql = "IG", None
+                    if not read_only_interactive_grid(c):
+                        self.regions.append({"page": page["id"], "region": c["name"], "kind": kind,
+                                             "status": "MANUAL", "findings": [finding("GEN026", c["name"])]})
+                        continue
+                    table_name = str(props.get("query_table") or "").strip()
+                    planned_table = next((t for t in self.inp.plan["tables"]
+                                          if t["name"].upper() == table_name.upper()), None)
+                    # A view is not a table-backed source for this deliberately narrow IG slice.
+                    visible_columns = [col for col in components(page, "REGION_COLUMN")
+                                       if col["name"].startswith(c["name"] + ".")
+                                       and (col["props"].get("is_visible") is True
+                                            or str(col["props"].get("is_visible") or "").strip().upper()
+                                            in {"Y", "YES", "TRUE"})]
+                    source_columns = {col["name"].upper() for col in planned_table["columns"]} if planned_table else set()
+                    projection_is_known = bool(visible_columns) and all(
+                        re.fullmatch(r"[A-Za-z][A-Za-z0-9_$#]*",
+                                     str(col["props"].get("source_expression") or "").strip())
+                        and str(col["props"].get("source_expression") or "").strip().upper() in source_columns
+                        for col in visible_columns
+                    )
+                    if (props.get("query_type") != "TABLE"
+                            or not re.fullmatch(r"[A-Za-z][A-Za-z0-9_$#]*", table_name)
+                            or planned_table is None
+                            or not projection_is_known
+                            or props.get("query_where")):
+                        # IG predicates, view sources and unknown projections are not inferred from exports.
+                        # Until they have a reviewed translator, keep the region manual.
+                        self.regions.append({"page": page["id"], "region": c["name"], "kind": kind,
+                                             "status": "MANUAL", "findings": [finding("GEN027", c["name"])]})
+                        continue
                 else:
                     if c["kind"] == "REGION" and props.get("plug_source_type") not in CONTAINER_TYPES | {
                             "NATIVE_FORM", "NATIVE_FACETED_SEARCH"}:
@@ -392,7 +469,8 @@ class Generator:
                 elif q.columns is None:
                     entry["findings"].append(finding("GEN013"))
                 else:
-                    src: dict[str, Any] = {"page": page["id"], "region": c["name"], "kind": kind}
+                    api_kind = "CLASSIC" if kind == "IG" else kind
+                    src: dict[str, Any] = {"page": page["id"], "region": c["name"], "kind": api_kind}
                     if q.simple is not None:
                         src["view"] = q.simple["view"]
                         src["select"] = q.simple["select"]
@@ -849,6 +927,9 @@ class Generator:
                 block, comp = self.static_block(c, items, report), "StaticRegion"
             elif kind == "NATIVE_LIST":
                 block, comp = self.list_block(c, items, report), "ListRegion"
+            elif kind == "NATIVE_IG":
+                comp = "ReportRegion"
+                block = self.data_block(c, "CLASSIC", items, report, route)
             else:
                 comp = {"CLASSIC": "ReportRegion", "NATIVE_IR": "IrRegion", "NATIVE_CARDS": "CardsRegion"}[kind]
                 block = self.data_block(c, {"CLASSIC": "CLASSIC", "NATIVE_IR": "IR", "NATIVE_CARDS": "CARDS"}[kind],
