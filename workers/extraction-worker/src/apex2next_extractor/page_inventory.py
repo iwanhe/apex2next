@@ -203,10 +203,11 @@ def build_page_inventory(files: dict[str, str]) -> dict[str, Any]:
         page_id = page_call["arguments"].get("p_id")
         regions = {_ref(c, "p_id"): c["arguments"].get("p_plug_name") or c["arguments"].get("p_name")
                    for c in calls if c["routine"] in {"create_page_plug", "create_report_region"}}
-        ig_region_ids = {
+        editable_ig_region_ids = {
             _ref(c, "p_id") for c in calls
             if c["routine"] == "create_page_plug"
             and c["arguments"].get("p_plug_source_type") == "NATIVE_IG"
+            and c["arguments"].get("p_is_editable") is True
         }
         buttons = {_ref(c, "p_id"): c["arguments"].get("p_button_name") for c in calls
                    if c["routine"] == "create_page_button"}
@@ -260,7 +261,7 @@ def build_page_inventory(files: dict[str, str]) -> dict[str, Any]:
                 # associated with an exported NATIVE_IG region. This is not permission
                 # to generate writes; authorization, validations and row scope are separate gates.
                 if (c["arguments"].get("p_process_type") == "NATIVE_IG_DML"
-                        and process_region_id in ig_region_ids):
+                        and process_region_id in editable_ig_region_ids):
                     props["native_ig_dml_candidate"] = True
             if _ref(c, "p_security_scheme"):  # component authorization (e.g. a CREATE button for MASTER_DATA only)
                 props["security_scheme"] = schemes.get(_ref(c, "p_security_scheme"))
