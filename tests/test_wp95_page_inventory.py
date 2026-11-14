@@ -56,7 +56,8 @@ def test_synthetic_export_inventory():
     assert (grid["plug_source_type"], grid["query_type"], grid["query_table"], grid["is_editable"]) == (
         "NATIVE_IG", "TABLE", "THINGS", False)
     assert comps["P2:REGION_COLUMN:Read Only Grid.ID"]["props"] == {
-        "source_expression": "ID", "is_visible": True, "display_sequence": 1, "heading": "Identifier"}
+        "source_expression": "ID", "is_visible": True, "is_primary_key": True,
+        "is_query_only": False, "is_readonly": True, "display_sequence": 1, "heading": "Identifier"}
     assert comps["P2:REGION_COLUMN:Read Only Grid.INTERNAL_NOTE"]["props"]["is_visible"] is False
     assert comps["P2:REGION_COLUMN:Read Only Grid.ID"]["props"]["is_primary_key"] is True
     assert comps["P2:REGION_COLUMN:Read Only Grid.ID"]["props"]["is_query_only"] is False
