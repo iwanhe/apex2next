@@ -3,6 +3,8 @@ import { errors } from '../errors';
 import {
   type FormDef,
   assertValid,
+  checksum,
+  fetchForm,
   validateForInsert,
   validateItems,
 } from '../forms/forms';
@@ -74,10 +76,18 @@ export async function applyInteractiveGridChanges(
     if (change.operation === 'insert') {
       const checked = validateForInsert(form, change.values);
       assertValid(checked.problems);
-      const id = await insertRow(tx, form, checked.values);
+      // Preserve database defaults for omitted optional columns; do not turn absence into NULL.
+      const supplied = new Set(Object.keys(change.values));
+      const values = Object.fromEntries(Object.entries(checked.values).filter(([column]) => supplied.has(column)));
+      const id = await insertRow(tx, form, values);
       results.push({ operation: 'insert', id });
     } else if (change.operation === 'update') {
-      const checked = validateItems(form, change.values);
+      // IG payloads commonly contain changed columns only. Merge with the locked current row so
+      // omitted columns are preserved, while checksum verification still prevents lost updates.
+      const current = await fetchForm(tx, form, change.id, true);
+      if (!current) throw errors.notFound(`${form.region} ${change.id}`, 'UI-FRM-01');
+      if (typeof change.checksum !== 'string' || change.checksum !== checksum(form, current)) throw errors.lostUpdate();
+      const checked = validateItems(form, { ...current, ...change.values });
       assertValid(checked.problems);
       await updateRow(tx, form, change.id, change.checksum, checked.values);
       results.push({ operation: 'update', id: change.id });
