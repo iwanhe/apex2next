@@ -41,7 +41,8 @@ def test_synthetic_export_inventory():
     assert set(comps) == {
         "P2:BUTTON:SAVE", "P2:DYNAMIC_ACTION:REFRESH_AFTER_DIALOG", "P2:IR:Report", "P2:IR_COLUMN:Report.NAME",
         "P2:IR_REPORT:Report.1", "P2:ITEM:P2_NAME", "P2:PROCESS:CALL_IT", "P2:REGION:Report", "P2:REGION:Thing",
-        "P2:VALIDATION:NAME_OK",
+        "P2:VALIDATION:NAME_OK", "P2:REGION:Read Only Grid", "P2:REGION_COLUMN:ID",
+        "P2:REGION_COLUMN:INTERNAL_NOTE",
     }
     assert comps["P2:REGION:Report"]["props"]["plug_source"] == "select id, name\n  from things", "wwv_flow_string.join decoded"
     assert comps["P2:IR_REPORT:Report.1"]["props"] == {"report_columns": "NAME", "sort_column_1": "NAME", "sort_direction_1": "ASC"}
@@ -50,7 +51,13 @@ def test_synthetic_export_inventory():
     assert comps["P2:VALIDATION:NAME_OK"]["props"]["validation"] == ":P2_NAME <> 'x'"
     assert comps["P2:DYNAMIC_ACTION:REFRESH_AFTER_DIALOG"]["props"]["actions"] == [
         {"action": "NATIVE_REFRESH", "result": "TRUE", "region": "Report"}]
-    assert inv["summary"] == {"pages": 1, "components": 10}
+    assert inv["summary"] == {"pages": 1, "components": 13}
+    grid = comps["P2:REGION:Read Only Grid"]["props"]
+    assert (grid["plug_source_type"], grid["query_type"], grid["query_table"], grid["is_editable"]) == (
+        "NATIVE_IG", "TABLE", "THINGS", False)
+    assert comps["P2:REGION_COLUMN:ID"]["props"] == {
+        "source_expression": "ID", "is_visible": True, "display_sequence": 1, "heading": "Identifier"}
+    assert comps["P2:REGION_COLUMN:INTERNAL_NOTE"]["props"]["is_visible"] is False
 
 
 def test_inventory_is_deterministic_and_order_independent():
