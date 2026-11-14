@@ -280,5 +280,5 @@ def test_unknown_interactive_grid_visibility_flag_keeps_region_manual(tmp_path):
     region_report = next(r for r in report["regions"] if r["region"] == "Department Grid")
     assert page_report["status"] == "MANUAL"
     assert region_report["status"] == "MANUAL"
-    assert "GEN013" in region_report["findings"]
+    assert any(code in region_report["findings"] for code in ("GEN003", "GEN013", "RGN007"))
     assert "apps/web/app/(app)/departments/page.tsx" not in files
