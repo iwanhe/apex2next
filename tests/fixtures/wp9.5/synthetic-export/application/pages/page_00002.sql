@@ -107,6 +107,14 @@ wwv_flow_imp_page.create_page_plug(
 ,p_plug_source_type=>'NATIVE_IG'
 ,p_is_editable=>false
 );
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(180)
+,p_plug_name=>'Editable Grid'
+,p_query_type=>'TABLE'
+,p_query_table=>'THINGS'
+,p_plug_source_type=>'NATIVE_IG'
+,p_is_editable=>true
+);
 wwv_flow_imp_page.create_page_process(
  p_id=>wwv_flow_imp.id(170)
 ,p_process_sequence=>30
@@ -114,10 +122,10 @@ wwv_flow_imp_page.create_page_process(
 ,p_process_type=>'NATIVE_IG_DML'
 ,p_process_name=>'SAVE_GRID'
 ,p_process_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
- 'REGION_ID', '160',
+ 'REGION_ID', '180',
  'ROW_VERSION_COLUMN', 'ROW_VERSION'
 ))
-,p_region_id=>wwv_flow_imp.id(160)
+,p_region_id=>wwv_flow_imp.id(180)
 );
 wwv_flow_imp_page.create_region_column(
  p_id=>wwv_flow_imp.id(161)
