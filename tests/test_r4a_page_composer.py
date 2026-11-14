@@ -186,17 +186,20 @@ def test_read_only_table_backed_interactive_grid_generates_only_visible_columns(
 
 
 def test_interactive_grid_rejects_unreviewed_table_identifiers_and_predicates(tmp_path):
-    for props in (
+    cases = [
         {"query_table": "DEPT; DROP TABLE EMP"},
         {"query_table": "DEPT", "query_where": "1=1 OR 1=1"},
-    ):
-        app = _app(tmp_path / str(len(props)) + str(list(props)))
+    ]
+    for index, overrides in enumerate(cases):
+        case_dir = tmp_path / f"case-{index}"
+        case_dir.mkdir()
+        app = _app(case_dir)
         inventory_path = app / "ui/apex-page-inventory.json"
         inventory = json.loads(inventory_path.read_text(encoding="utf-8"))
         page = next(p for p in inventory["pages"] if p["id"] == 1)
         grid_props = {"plug_source_type": "NATIVE_IG", "query_type": "TABLE",
                       "query_table": "DEPT", "is_editable": False}
-        grid_props.update(props)
+        grid_props.update(overrides)
         page["components"].append(_c(1, "REGION", "Unsafe Grid", **grid_props))
         page["components"].append(_c(1, "REGION_COLUMN", "Unsafe Grid.DEPTNO",
                                      source_expression="DEPTNO", is_visible=True, display_sequence=1))
@@ -207,7 +210,6 @@ def test_interactive_grid_rejects_unreviewed_table_identifiers_and_predicates(tm
         region = next(r for r in report["regions"] if r["region"] == "Unsafe Grid")
         assert region["status"] == "MANUAL"
         assert "GEN027" in region["findings"]
-
 
 
 def test_editable_or_unspecified_interactive_grid_stays_manual(tmp_path):
