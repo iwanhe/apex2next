@@ -269,7 +269,7 @@ def table_query(page: dict[str, Any], region: dict[str, Any], kind: str) -> str:
                 names.append(expression)
         order = str(props.get("query_order_by") or "").strip()
         if order:
-            match = re.fullmatch(r"([A-Za-z][A-Za-z0-9_$#]*)(?:\\s+(ASC|DESC))?", order, re.I)
+            match = re.fullmatch(r"([A-Za-z][A-Za-z0-9_$#]*)(?:\s+(ASC|DESC))?", order, re.I)
             if not match or match.group(1).upper() not in {n.upper() for n in names}:
                 return f"select * from {props['query_table'].lower()}"
             order = " order by " + match.group(1).lower() + (" " + match.group(2).upper() if match.group(2) else "")
