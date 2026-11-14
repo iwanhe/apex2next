@@ -221,6 +221,8 @@ def test_interactive_grid_never_falls_back_to_select_star_on_incomplete_columns(
         {"source_expression": "UPPER(DNAME)", "is_visible": True},
         # Explicitly hidden-only grids have no safe projection.
         {"source_expression": "INTERNAL_NOTE", "is_visible": False},
+        # A simple identifier is still rejected when it is not in the target table plan.
+        {"source_expression": "NOT_A_REAL_COLUMN", "is_visible": True},
     ]
     for index, column_props in enumerate(cases):
         case_dir = tmp_path / f"projection-{index}"
@@ -242,7 +244,7 @@ def test_interactive_grid_never_falls_back_to_select_star_on_incomplete_columns(
         assert "restrictedGrid" not in source
         region = next(r for r in report["regions"] if r["region"] == "Restricted Grid")
         assert region["status"] == "MANUAL"
-        assert "GEN003" in region["findings"] or "GEN013" in region["findings"]
+        assert any(code in region["findings"] for code in ("GEN003", "GEN013", "GEN027"))
 
 
 
