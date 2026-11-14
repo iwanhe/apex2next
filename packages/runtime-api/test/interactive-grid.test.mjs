@@ -71,7 +71,7 @@ test('insert preserves database defaults for omitted optional columns', async ()
     { operation: 'insert', values: { ename: 'New' } },
   ]);
   assert.deepEqual(result, [{ operation: 'insert', id: '11' }]);
-  const insert = seen[0];
+  const insert = seen.find((q) => q.sql.startsWith('INSERT'));
   assert.match(insert.sql, /INSERT INTO app\.employee \(ename\) VALUES \(\$1\)/);
   assert.deepEqual(insert.values, ['New']);
 });
