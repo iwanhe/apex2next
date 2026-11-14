@@ -197,3 +197,26 @@ def test_editable_or_unspecified_interactive_grid_stays_manual(tmp_path):
     page["components"][-1]["props"].pop("is_editable")
     inventory_path.write_text(json.dumps(inventory), encoding="utf-8")
     assert classify(Inputs(app).pages[1])[0] == "MANUAL"
+
+
+def test_unknown_interactive_grid_visibility_flag_keeps_region_manual(tmp_path):
+    app = _app(tmp_path)
+    inventory_path = app / "ui/apex-page-inventory.json"
+    inventory = json.loads(inventory_path.read_text(encoding="utf-8"))
+    page = next(p for p in inventory["pages"] if p["id"] == 1)
+    page["components"].extend([
+        _c(1, "REGION", "Department Grid", plug_source_type="NATIVE_IG", query_type="TABLE",
+           query_table="DEPT", is_editable=False),
+        _c(1, "REGION_COLUMN", "Department Grid.DEPTNO", source_expression="DEPTNO",
+           is_visible="UNKNOWN", display_sequence=1),
+    ])
+    inventory_path.write_text(json.dumps(inventory), encoding="utf-8")
+    (app / "ui/app-map.json").write_text(json.dumps(default_map(Inputs(app))), encoding="utf-8")
+
+    files, report = generate(app)
+    page_report = next(p for p in report["pages"] if p["id"] == 1)
+    region_report = next(r for r in report["regions"] if r["region"] == "Department Grid")
+    assert page_report["status"] == "MANUAL"
+    assert region_report["status"] == "MANUAL"
+    assert "GEN013" in {f["code"] for f in region_report["findings"]}
+    assert "apps/web/app/(app)/departments/page.tsx" not in files
