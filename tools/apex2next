@@ -8,6 +8,7 @@ Nothing here connects to Oracle; only `load-data` writes, and only to the Postgr
   apex2next doctor                                  check the tools on this machine
   apex2next queries      --out DIR [--plan F]       SQL Workshop queries to run on the APEX schema
   apex2next inventory    EXPORT_DIR --out DIR       pages and components of an APEX SQL export (split files)
+  apex2next ig-analyze   INVENTORY_JSON --out FILE  fail-closed editable Interactive Grid eligibility report
   apex2next supporting-objects EXPORT_DIR --out DIR
                                                     DDL and data scripts carried by the export, as install.sql
   apex2next schema-plan  INSTALL_SQL --out DIR      Oracle DDL -> PostgreSQL migration + conversion report
