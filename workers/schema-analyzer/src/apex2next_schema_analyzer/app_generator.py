@@ -261,26 +261,26 @@ def table_query(page: dict[str, Any], region: dict[str, Any], kind: str) -> str:
         for col in cols:
             visible = col["props"].get("is_visible")
             if visible is None:
-                return f"select * from {props['query_table'].lower()}"
+                return ""
             if visible is True or (isinstance(visible, str) and visible.strip().upper() in {"Y", "YES", "TRUE"}):
                 expression = str(col["props"].get("source_expression") or "").strip()
                 if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_$#]*", expression):
-                    return f"select * from {props['query_table'].lower()}"
+                    return ""
                 names.append(expression)
             elif visible is False or (isinstance(visible, str) and visible.strip().upper() in {"N", "NO", "FALSE"}):
                 continue
             else:
-                return f"select * from {props['query_table'].lower()}"
+                return ""
         order = str(props.get("query_order_by") or "").strip()
         if order:
             match = re.fullmatch(r"([A-Za-z][A-Za-z0-9_$#]*)(?:\s+(ASC|DESC))?", order, re.I)
             if not match or match.group(1).upper() not in {n.upper() for n in names}:
-                return f"select * from {props['query_table'].lower()}"
+                return ""
             order = " order by " + match.group(1).lower() + (" " + match.group(2).upper() if match.group(2) else "")
         else:
             order = ""
         if not names:
-            return f"select * from {props['query_table'].lower()}"
+            return ""
         sql = f"select {', '.join(n.lower() for n in names)} from {props['query_table'].lower()}"
         if props.get("query_where"):
             sql += f" where {props['query_where']}"
