@@ -113,6 +113,9 @@ wwv_flow_imp_page.create_region_column(
 ,p_name=>'ID'
 ,p_source_expression=>'ID'
 ,p_is_visible=>true
+,p_is_primary_key=>true
+,p_is_query_only=>false
+,p_is_readonly=>true
 ,p_display_sequence=>1
 ,p_heading=>'Identifier'
 );
