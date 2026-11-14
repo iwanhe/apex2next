@@ -199,7 +199,7 @@ This increment is covered by synthetic regression tests for visible-column proje
 
 The page inventory now retains additional source metadata needed for a later, reviewable editable-grid conversion:
 
-- Region-column primary-key, query-only, read-only, required, display, and data-type attributes.
+- Region-column primary-key, query-only, read-only, required, default type/expression, display, and data-type attributes.
 - DML process attributes and the owning region reference when the export supplies one.
 - Existing region-level edit operations and lost-update settings remain preserved.
 
