@@ -24,8 +24,11 @@ def _explicit_bool(value: Any) -> bool | None:
 def _operations(value: Any) -> set[str] | None:
     if not isinstance(value, str) or not value.strip():
         return None
-    parts = {part.strip().lower() for part in re.split(r"[,;:]", value) if part.strip()}
-    if not parts or not parts <= _ALLOWED_OPERATIONS:
+    raw_parts = [part.strip().lower() for part in re.split(r"[,;:]", value)]
+    if not raw_parts or any(not part for part in raw_parts):
+        return None
+    parts = set(raw_parts)
+    if not parts <= _ALLOWED_OPERATIONS:
         return None
     return parts
 
@@ -111,6 +114,10 @@ def analyze_editable_interactive_grids(inventory: dict[str, Any]) -> dict[str, A
             if len(dml) != 1:
                 findings.append(_finding("IG010", "Exactly one native IG DML process explicitly associated with this editable region is required."))
 
+            # Keep structural eligibility separate from the mandatory security/parity review gates.
+            # This avoids a fragile "number of findings" heuristic when new gates are added later.
+            structural_blocked = bool(findings)
+
             # These are deliberately unconditional blockers until dedicated translators and
             # runtime enforcement are implemented and parity-tested.
             findings.extend([
@@ -123,7 +130,7 @@ def analyze_editable_interactive_grids(inventory: dict[str, Any]) -> dict[str, A
                 "pageId": page.get("id"),
                 "region": region_name,
                 "table": table if isinstance(table, str) else None,
-                "classification": "REVIEW_REQUIRED" if len(findings) == 3 else "MANUAL",
+                "classification": "MANUAL" if structural_blocked else "REVIEW_REQUIRED",
                 "auto_generate": False,
                 "primary_key": keys[0] if len(keys) == 1 else None,
                 "writable_columns": sorted(set(writable)),
@@ -139,6 +146,17 @@ def analyze_editable_interactive_grids(inventory: dict[str, Any]) -> dict[str, A
                 } for c in region_columns],
                 "operations": sorted(operations) if operations else [],
                 "native_dml_processes": [p.get("name") for p in dml],
+                "security_evidence": {
+                    "page_scheme": page.get("scheme"),
+                    "region_scheme": props.get("security_scheme"),
+                    "process_schemes": [p.get("props", {}).get("security_scheme") for p in dml],
+                    "row_scope_proven": False,
+                },
+                "validation_evidence": [
+                    {"name": c.get("name"), "type": c.get("props", {}).get("validation_type"),
+                     "associated_item": c.get("props", {}).get("associated_item")}
+                    for c in components if c.get("kind") == "VALIDATION"
+                ],
                 "lost_update_check_type": props.get("lost_update_check_type"),
                 "findings": findings,
             })
@@ -167,7 +185,7 @@ def main() -> int:
     inventory = json.loads(args.inventory.read_text(encoding="utf-8"))
     result = analyze_editable_interactive_grids(inventory)
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\\n", encoding="utf-8")
+    args.output.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     summary = result["summary"]
     print(f"Editable grids: {summary['editable_grids']}; review required: {summary['review_required']}; "
           f"manual: {summary['manual']}; auto-generate: 0")
