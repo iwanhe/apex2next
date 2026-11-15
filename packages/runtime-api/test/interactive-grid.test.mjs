@@ -74,7 +74,7 @@ test('insert preserves database defaults for omitted optional columns', async ()
   ]);
   assert.deepEqual(result, [{ operation: 'insert', id: '11' }]);
   const insert = seen.find((q) => q.sql.startsWith('INSERT'));
-  assert.match(insert.sql, /INSERT INTO app\\.employee \\(ename, tenant_id\\) VALUES \\(\\$1, \\$2\\)/);
+  assert.match(insert.sql, /INSERT INTO app\.employee \(ename, tenant_id\) VALUES \(\$1, \$2\)/);
   assert.deepEqual(insert.values, ['New', 'tenant-A']);
 });
 
@@ -111,9 +111,9 @@ test('scopes locked row lookup and update to the server tenant', async () => {
   ]);
   const select = seen.find((q) => q.sql.startsWith('SELECT'));
   const update = seen.find((q) => q.sql.startsWith('UPDATE'));
-  assert.match(select.sql, /tenant_id = \\$2 FOR UPDATE/);
+  assert.match(select.sql, /tenant_id = \$2 FOR UPDATE/);
   assert.deepEqual(select.values, ['10', 'tenant-A']);
-  assert.match(update.sql, /WHERE empno = \\$1 AND tenant_id = \\$2/);
+  assert.match(update.sql, /WHERE empno = \$1 AND tenant_id = \$2/);
   assert.deepEqual(update.values.slice(0, 2), ['10', 'tenant-A']);
 });
 
@@ -130,7 +130,7 @@ test('cross-tenant row is indistinguishable from a missing row', async () => {
   ]), (e) => e.code === 'NOT_FOUND');
   const select = seen.find((q) => q.sql.startsWith('SELECT'));
   assert.deepEqual(select.values, ['foreign-row', 'tenant-A']);
-  assert.match(select.sql, /tenant_id = \\$2/);
+  assert.match(select.sql, /tenant_id = \$2/);
 });
 
 test('insert rejects client-supplied ownership and policy without row scope fails closed', async () => {
