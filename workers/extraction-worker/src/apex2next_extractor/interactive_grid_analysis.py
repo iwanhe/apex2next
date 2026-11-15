@@ -160,8 +160,20 @@ def analyze_editable_interactive_grids(inventory: dict[str, Any]) -> dict[str, A
                     "row_scope_proven": False,
                 },
                 "validation_evidence": [
-                    {"name": c.get("name"), "type": c.get("props", {}).get("validation_type"),
-                     "associated_item": c.get("props", {}).get("associated_item")}
+                    {
+                        "name": c.get("name"),
+                        "source_id": c.get("props", {}).get("source_id"),
+                        "region_id": c.get("props", {}).get("region_id"),
+                        "type": c.get("props", {}).get("validation_type"),
+                        "expression": c.get("props", {}).get("validation"),
+                        "expression2": c.get("props", {}).get("validation2"),
+                        "condition": c.get("props", {}).get("validation_condition"),
+                        "condition_type": c.get("props", {}).get("validation_condition_type"),
+                        "associated_item": c.get("props", {}).get("associated_item"),
+                        "associated_column": c.get("props", {}).get("associated_column"),
+                        "when_button": c.get("props", {}).get("when_button"),
+                        "error_display_location": c.get("props", {}).get("error_display_location"),
+                    }
                     for c in components if c.get("kind") == "VALIDATION"
                 ],
                 "lost_update_check_type": props.get("lost_update_check_type"),
