@@ -48,7 +48,7 @@ test('partial update preserves omitted columns and verifies the loaded checksum'
   const seen = [];
   const tx = txWith(async (sql, values = []) => {
     seen.push({ sql, values });
-    if (sql.startsWith('SAVEPOINT') || sql.startsWith('RELEASE')) return { rows: [], rowCount: 0 };
+    if (sql.startsWith('SAVEPOINT') || sql.startsWith('RELEASE') || sql.startsWith('ROLLBACK TO')) return { rows: [], rowCount: 0 };
     if (sql.startsWith('SELECT')) return { rows: [current], rowCount: 1 };
     if (sql.startsWith('UPDATE')) return { rows: [], rowCount: 1 };
     throw new Error(`unexpected SQL: ${sql}`);
@@ -65,7 +65,7 @@ test('insert preserves database defaults for omitted optional columns', async ()
   const seen = [];
   const tx = txWith(async (sql, values = []) => {
     seen.push({ sql, values });
-    if (sql.startsWith('SAVEPOINT') || sql.startsWith('RELEASE')) return { rows: [], rowCount: 0 };
+    if (sql.startsWith('SAVEPOINT') || sql.startsWith('RELEASE') || sql.startsWith('ROLLBACK TO')) return { rows: [], rowCount: 0 };
     if (sql.startsWith('INSERT')) return { rows: [{ id: '11' }], rowCount: 1 };
     throw new Error(`unexpected SQL: ${sql}`);
   });
@@ -83,7 +83,7 @@ test('rolls the whole batch back to its savepoint when a later row fails', async
   const seen = [];
   const tx = txWith(async (sql, values = []) => {
     seen.push({ sql, values });
-    if (sql.startsWith('SAVEPOINT') || sql.startsWith('RELEASE') || sql.startsWith('ROLLBACK TO')) return { rows: [], rowCount: 0 };
+    if (sql.startsWith('SAVEPOINT') || sql.startsWith('RELEASE') || sql.startsWith('ROLLBACK TO') || sql.startsWith('ROLLBACK TO')) return { rows: [], rowCount: 0 };
     if (sql.startsWith('INSERT')) return { rows: [{ id: '11' }], rowCount: 1 };
     if (sql.startsWith('SELECT')) return { rows: [current], rowCount: 1 };
     throw new Error(`unexpected SQL: ${sql}`);
@@ -101,7 +101,7 @@ test('scopes locked row lookup and update to the server tenant', async () => {
   const seen = [];
   const tx = txWith(async (sql, values = []) => {
     seen.push({ sql, values });
-    if (sql.startsWith('SAVEPOINT') || sql.startsWith('RELEASE')) return { rows: [], rowCount: 0 };
+    if (sql.startsWith('SAVEPOINT') || sql.startsWith('RELEASE') || sql.startsWith('ROLLBACK TO')) return { rows: [], rowCount: 0 };
     if (sql.startsWith('SELECT')) return { rows: [current], rowCount: 1 };
     if (sql.startsWith('UPDATE')) return { rows: [], rowCount: 1 };
     throw new Error(`unexpected SQL: ${sql}`);
@@ -121,7 +121,7 @@ test('cross-tenant row is indistinguishable from a missing row', async () => {
   const seen = [];
   const tx = txWith(async (sql, values = []) => {
     seen.push({ sql, values });
-    if (sql.startsWith('SAVEPOINT') || sql.startsWith('RELEASE') || sql.startsWith('ROLLBACK TO')) return { rows: [], rowCount: 0 };
+    if (sql.startsWith('SAVEPOINT') || sql.startsWith('RELEASE') || sql.startsWith('ROLLBACK TO') || sql.startsWith('ROLLBACK TO')) return { rows: [], rowCount: 0 };
     if (sql.startsWith('SELECT')) return { rows: [], rowCount: 0 };
     throw new Error(`unexpected SQL: ${sql}`);
   });
