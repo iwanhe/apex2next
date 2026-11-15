@@ -120,6 +120,22 @@ def analyze_editable_interactive_grids(inventory: dict[str, Any]) -> dict[str, A
             if len(dml) != 1:
                 findings.append(_finding("IG010", "Exactly one native IG DML process explicitly associated with this editable region is required."))
 
+            # An explicit reference whose scheme definition is absent from the export is
+            # different from an absent scheme reference. Never silently treat it as unrestricted.
+            referenced_schemes = [
+                (page.get("scheme_id"), page.get("scheme_unresolved") is True),
+                (props.get("security_scheme_id"), props.get("security_scheme_unresolved") is True),
+                *[(p.get("props", {}).get("security_scheme_id"),
+                   p.get("props", {}).get("security_scheme_unresolved") is True) for p in dml],
+            ]
+            unresolved = [scheme_id for scheme_id, is_unresolved in referenced_schemes
+                          if scheme_id and is_unresolved]
+            if unresolved:
+                findings.append(_finding(
+                    "IG016",
+                    "An authorization scheme is referenced by ID but its definition is missing from this export: "
+                    + ", ".join(sorted(set(unresolved)))))
+
             # Keep structural eligibility separate from the mandatory security/parity review gates.
             # This avoids a fragile "number of findings" heuristic when new gates are added later.
             structural_blocked = bool(findings)
@@ -155,8 +171,14 @@ def analyze_editable_interactive_grids(inventory: dict[str, Any]) -> dict[str, A
                 "native_dml_processes": [p.get("name") for p in dml],
                 "security_evidence": {
                     "page_scheme": page.get("scheme"),
+                    "page_scheme_id": page.get("scheme_id"),
+                    "page_scheme_unresolved": page.get("scheme_unresolved") is True,
                     "region_scheme": props.get("security_scheme"),
+                    "region_scheme_id": props.get("security_scheme_id"),
+                    "region_scheme_unresolved": props.get("security_scheme_unresolved") is True,
                     "process_schemes": [p.get("props", {}).get("security_scheme") for p in dml],
+                    "process_scheme_ids": [p.get("props", {}).get("security_scheme_id") for p in dml],
+                    "unresolved_scheme_ids": sorted(set(unresolved)),
                     "row_scope_proven": False,
                 },
                 "validation_evidence": [
