@@ -52,6 +52,7 @@ def test_synthetic_export_inventory():
     grid_process = comps["P2:PROCESS:SAVE_GRID"]["props"]
     assert grid_process["process_type"] == "NATIVE_IG_DML"
     assert grid_process["region"] == "Editable Grid"
+    assert grid_process["region_id"] == "180"
     assert grid_process["native_ig_dml_candidate"] is True
     assert "ROW_VERSION_COLUMN" in grid_process["process_attributes"]
     assert comps["P2:ITEM:P2_NAME"]["props"]["read_only_when"] == ":P2_ID is null"
@@ -62,8 +63,9 @@ def test_synthetic_export_inventory():
     grid = comps["P2:REGION:Read Only Grid"]["props"]
     assert (grid["plug_source_type"], grid["query_type"], grid["query_table"], grid["is_editable"]) == (
         "NATIVE_IG", "TABLE", "THINGS", False)
+    assert grid["source_id"] == "160"
     assert comps["P2:REGION_COLUMN:Read Only Grid.ID"]["props"] == {
-        "source_expression": "ID", "is_visible": True, "is_primary_key": True,
+        "region_id": "160", "source_expression": "ID", "is_visible": True, "is_primary_key": True,
         "is_query_only": False, "is_readonly": True, "display_sequence": 1, "heading": "Identifier"}
     assert comps["P2:REGION_COLUMN:Read Only Grid.INTERNAL_NOTE"]["props"]["is_visible"] is False
     assert comps["P2:REGION_COLUMN:Read Only Grid.ID"]["props"]["is_primary_key"] is True
