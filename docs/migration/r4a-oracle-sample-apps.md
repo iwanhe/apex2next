@@ -250,3 +250,12 @@ The editable-IG analysis report now exposes the source-side row-scope inputs sep
 The editable-IG analysis now emits a dedicated `concurrency_evidence` object, separate from authorization and row-scope evidence. It preserves the region's `lost_update_check_type`, the raw native DML process attributes, and the `ROW_VERSION_COLUMN` value when that key/value pair is present in the exported plugin attributes.
 
 This is evidence preservation only. The analyzer explicitly reports `runtime_equivalence_proven: false`; it does not assume that an APEX `ROW_VERSION` or `VALUES` setting is interchangeable with the target API's optimistic-locking strategy. The existing `IG013` finding remains a mandatory blocker. The target implementation must still define a server-side version/checksum contract, reject stale writes, and prove behavior with concurrent update tests (including two clients editing the same row). Editable DML generation remains disabled.
+
+
+## Step 4h: validation execution and association evidence
+
+The page inventory and editable-IG analysis now retain additional validation metadata when the APEX export provides it: validation sequence, `always_execute`, second validation condition and condition type, associated item export ID, associated column, error display location, owning region ID, and submit-button association. Resolved item names remain alongside immutable item IDs so a later mapping can trace the source relationship without guessing from labels.
+
+This is still evidence preservation, not validation translation or proof that a validation applies to every IG operation. Page-level validations may be tied to a submit button, item, column, or region; their ordering and execution behavior can depend on APEX submit processing. A generated API must not blindly execute every page validation for every row operation, nor skip a validation merely because its association is not resolved. Unknown and unsupported validation types/conditions remain manual-review cases under `IG012`.
+
+The synthetic export fixture and tests cover the added fields. The analyzer continues to emit `auto_generate: false`; no editable DML is enabled by this step.
