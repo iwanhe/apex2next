@@ -45,7 +45,7 @@ def test_editable_ig_analysis_cli_writes_valid_json(tmp_path):
     assert result["summary"]["editable_grids"] == 1
     assert result["summary"]["auto_generate"] == 0
     assert result["grids"][0]["classification"] == "REVIEW_REQUIRED"
-    assert report.read_bytes().endswith(b"\\n")
+    assert report.read_bytes().endswith(b"\n")
 
 
 def test_schema_plan_and_plsql_on_small_script(tmp_path):
