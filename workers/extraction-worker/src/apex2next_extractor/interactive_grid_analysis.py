@@ -179,7 +179,14 @@ def analyze_editable_interactive_grids(inventory: dict[str, Any]) -> dict[str, A
                     "process_schemes": [p.get("props", {}).get("security_scheme") for p in dml],
                     "process_scheme_ids": [p.get("props", {}).get("security_scheme_id") for p in dml],
                     "unresolved_scheme_ids": sorted(set(unresolved)),
+                },
+                "row_scope_evidence": {
+                    "source_type": props.get("plug_source_type"),
+                    "query_type": props.get("query_type"),
+                    "query_where": props.get("query_where"),
+                    "ajax_items_to_submit": props.get("ajax_items_to_submit"),
                     "row_scope_proven": False,
+                    "reason": "A region predicate or submitted page items do not prove equivalent per-row authorization in the generated API.",
                 },
                 "validation_evidence": [
                     {
