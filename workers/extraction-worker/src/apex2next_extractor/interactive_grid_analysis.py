@@ -41,7 +41,7 @@ def _process_attribute_value(value: Any, key: str) -> str | None:
     """Read one key/value pair from the serialized APEX plugin attributes."""
     if not isinstance(value, str):
         return None
-    match = re.search(r"(?:^|[\\s,])['\"]?" + re.escape(key) + r"['\"]?\\s*,\\s*['\"]([^'\"]*)['\"]", value)
+    match = re.search(r"(?:^|[\s,])['\"]?" + re.escape(key) + r"['\"]?\s*,\s*['\"]([^'\"]*)['\"]", value)
     return match.group(1) if match else None
 
 
