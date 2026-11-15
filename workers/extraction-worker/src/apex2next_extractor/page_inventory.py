@@ -242,7 +242,7 @@ def build_page_inventory(files: dict[str, str]) -> dict[str, Any]:
             # identity instead of display name (region names are not guaranteed unique).
             if kind in {"REGION", "REPORT_REGION"}:
                 props["source_id"] = _ref(c, "p_id")
-            if kind in {"REGION_COLUMN", "PROCESS"}:
+            if kind in {"REGION_COLUMN", "PROCESS", "VALIDATION"}:
                 component_region_id = _ref(c, "p_region_id")
                 if component_region_id:
                     props["region_id"] = component_region_id
@@ -276,8 +276,11 @@ def build_page_inventory(files: dict[str, str]) -> dict[str, Any]:
                 props["security_scheme"] = schemes.get(_ref(c, "p_security_scheme"))
             if kind == "REGION" and _ref(c, "p_list_id"):
                 props["list"] = list_names.get(_ref(c, "p_list_id"))
-            if kind == "VALIDATION" and _ref(c, "p_associated_item"):
-                props["associated_item"] = page_items.get(_ref(c, "p_associated_item"))
+            if kind == "VALIDATION":
+                if _ref(c, "p_associated_item"):
+                    props["associated_item"] = page_items.get(_ref(c, "p_associated_item"))
+                if _ref(c, "p_when_button_id"):
+                    props["when_button"] = buttons.get(_ref(c, "p_when_button_id"))
             components.append({"key": f"P{page_id}:{kind}:{cname}", "kind": kind, "name": cname, "props": props})
         components.sort(key=lambda x: x["key"])
         dupes = {x["key"] for x in components if [y["key"] for y in components].count(x["key"]) > 1}
