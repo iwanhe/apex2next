@@ -150,5 +150,31 @@ wwv_flow_imp_page.create_region_column(
 ,p_display_sequence=>2
 ,p_heading=>'Internal Note'
 );
+wwv_flow_imp_page.create_region_column(
+ p_id=>wwv_flow_imp.id(181)
+,p_region_id=>wwv_flow_imp.id(180)
+,p_name=>'ID'
+,p_source_expression=>'ID'
+,p_is_visible=>true
+,p_is_primary_key=>true
+,p_is_query_only=>false
+,p_is_readonly=>true
+,p_is_required=>false
+,p_display_sequence=>1
+,p_heading=>'Identifier'
+);
+wwv_flow_imp_page.create_region_column(
+ p_id=>wwv_flow_imp.id(182)
+,p_region_id=>wwv_flow_imp.id(180)
+,p_name=>'STATUS'
+,p_source_expression=>'STATUS'
+,p_is_visible=>true
+,p_is_primary_key=>false
+,p_is_query_only=>false
+,p_is_readonly=>false
+,p_is_required=>false
+,p_display_sequence=>2
+,p_heading=>'Status'
+);
 end;
 /
