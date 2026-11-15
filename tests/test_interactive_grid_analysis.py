@@ -31,7 +31,7 @@ def _inventory(*, editable=True, table=True, visible=True, key=True, query_only=
     if process:
         components.append({"kind": "PROCESS", "name": "SAVE_ORDERS", "props": {
             "native_ig_dml_candidate": True, "region": "Orders Grid", "region_id": "180",
-            "process_attributes": "ROW_VERSION_COLUMN, ROW_VERSION",
+            "process_attributes": "'ROW_VERSION_COLUMN', 'ROW_VERSION'",
         }})
     return {"pages": [{"id": 10, "scheme": "AUTHENTICATED", "scheme_id": "501", "scheme_unresolved": False, "components": components}]}
 
