@@ -259,3 +259,29 @@ The page inventory and editable-IG analysis now retain additional validation met
 This is still evidence preservation, not validation translation or proof that a validation applies to every IG operation. Page-level validations may be tied to a submit button, item, column, or region; their ordering and execution behavior can depend on APEX submit processing. A generated API must not blindly execute every page validation for every row operation, nor skip a validation merely because its association is not resolved. Unknown and unsupported validation types/conditions remain manual-review cases under `IG012`.
 
 The synthetic export fixture and tests cover the added fields. The analyzer continues to emit `auto_generate: false`; no editable DML is enabled by this step.
+
+
+## Step 4i: runtime row-scope enforcement (2026-11-15)
+
+The Interactive Grid DML primitive now requires an explicit server-created `InteractiveGridAccess` policy.
+The policy carries a list of allowed operations and a mandatory row-scope column/value. The caller must
+derive the value from the verified `Principal` or a trusted server-side tenant resolver; it must never
+come from request body, query string, grid filters or browser session state.
+
+- UPDATE and DELETE first lock the target row using both its primary key and the trusted scope predicate.
+  The subsequent UPDATE / DELETE repeats that predicate, so the write itself remains bounded.
+- INSERT rejects a client-supplied ownership column and writes the server-derived scope value.
+- A missing policy, missing scope, invalid scope metadata, or operation without an explicit grant fails closed.
+- A row outside the scope is returned as not found, avoiding disclosure of another tenant's row existence.
+- The scope column must be a physical table column and must not be an editable form item. The runtime does not
+  infer tenant columns or claim that every APEX application is multi-tenant.
+
+This step secures the DML primitive, not every generated report/SELECT endpoint. The application service still
+owns authorization and must construct the policy inside the authenticated request path. Database RLS is not
+claimed or enabled by this change. A future SELECT integration must apply the same trusted scope before data
+is returned; DML generation remains disabled until the full authorization and runtime parity review is complete.
+
+Tests cover scoped row locking and updates, cross-tenant lookup denial, client ownership-field spoofing and
+missing-policy denial. Further work: wire the policy to a real app's verified tenant/ownership model, add
+PostgreSQL integration tests against two tenants, and verify SELECT/report isolation before enabling editable
+grid generation.
