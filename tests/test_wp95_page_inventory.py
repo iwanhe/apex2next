@@ -67,6 +67,10 @@ def test_synthetic_export_inventory():
     assert validation["source_id"] == "140"
     assert validation["validation"] == ":P2_NAME <> 'x'"
     assert validation["validation_type"] == "EXPRESSION"
+    assert validation["validation_sequence"] == 10
+    assert validation["always_execute"] is True
+    assert validation["associated_column"] == "NAME"
+    assert validation["error_display_location"] == "INLINE_WITH_FIELD_AND_NOTIFICATION"
     assert comps["P2:DYNAMIC_ACTION:REFRESH_AFTER_DIALOG"]["props"]["actions"] == [
         {"action": "NATIVE_REFRESH", "result": "TRUE", "region": "Report"}]
     assert inv["summary"] == {"pages": 1, "components": 17}
