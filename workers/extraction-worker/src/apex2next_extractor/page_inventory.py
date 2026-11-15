@@ -121,16 +121,20 @@ def build_page_inventory(files: dict[str, str]) -> dict[str, Any]:
             "timestampFormat": lit.get("p_timestamp_format"), "version": lit.get("p_flow_version"),
             "language": lit.get("p_flow_language"),
             "securityScheme": schemes.get(ref.get("p_security_scheme")),
+            "securitySchemeId": ref.get("p_security_scheme"),
             "authentication": next((c["arguments"].get("p_name") for c in all_calls
                                     if c["routine"] == "create_authentication"), None),
         }
     for c in all_calls:
         r = c["routine"]
         if r == "create_security_scheme":
-            attrs = _text(c, "p_attributes")
+            scheme_id = _ref(c, "p_id")
+            attrs = {f"attribute_{n:02d}": c["arguments"].get(f"p_attribute_{n:02d}")
+                     for n in range(1, 11) if c["arguments"].get(f"p_attribute_{n:02d}") not in (None, "")}
             inventory["authorizations"].append({
-                "name": c["arguments"].get("p_name"), "type": c["arguments"].get("p_scheme_type"),
-                "expression": attrs, "errorMessage": c["arguments"].get("p_error_message")})
+                "id": scheme_id, "name": c["arguments"].get("p_name"), "type": c["arguments"].get("p_scheme_type"),
+                "attributes": attrs, "expression": _text(c, "p_attributes"),
+                "errorMessage": c["arguments"].get("p_error_message")})
         elif r == "create_list_of_values":
             inventory["lovs"].append({"name": c["arguments"].get("p_lov_name"),
                                       "location": c["arguments"].get("p_location"),
@@ -272,8 +276,11 @@ def build_page_inventory(files: dict[str, str]) -> dict[str, Any]:
                 if (c["arguments"].get("p_process_type") == "NATIVE_IG_DML"
                         and process_region_id in editable_ig_region_ids):
                     props["native_ig_dml_candidate"] = True
-            if _ref(c, "p_security_scheme"):  # component authorization (e.g. a CREATE button for MASTER_DATA only)
-                props["security_scheme"] = schemes.get(_ref(c, "p_security_scheme"))
+            if _ref(c, "p_security_scheme"):  # preserve ID even when scheme definition is absent from this export
+                scheme_id = _ref(c, "p_security_scheme")
+                props["security_scheme_id"] = scheme_id
+                props["security_scheme"] = schemes.get(scheme_id)
+                props["security_scheme_unresolved"] = scheme_id not in schemes
             if kind == "REGION" and _ref(c, "p_list_id"):
                 props["list"] = list_names.get(_ref(c, "p_list_id"))
             if kind == "VALIDATION":
@@ -291,7 +298,10 @@ def build_page_inventory(files: dict[str, str]) -> dict[str, Any]:
         inventory["pages"].append({
             "id": page_id, "name": a.get("p_name"), "alias": a.get("p_alias"), "title": a.get("p_step_title"),
             "mode": a.get("p_page_mode") or "NORMAL",
-            "scheme": schemes.get(_ref(page_call, "p_required_role")), "file": name, "components": components})
+            "scheme": schemes.get(_ref(page_call, "p_required_role")),
+            "scheme_id": _ref(page_call, "p_required_role"),
+            "scheme_unresolved": bool(_ref(page_call, "p_required_role") and _ref(page_call, "p_required_role") not in schemes),
+            "file": name, "components": components})
     inventory["pages"].sort(key=lambda p: p["id"])
     for lov in inventory["lovs"]:
         lov.pop("id")
