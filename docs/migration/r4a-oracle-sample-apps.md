@@ -243,3 +243,10 @@ This step does not translate authorization PL/SQL or infer the effect of an abse
 The editable-IG analysis report now exposes the source-side row-scope inputs separately from authorization schemes: source type, query type, region `query_where`, and `ajax_items_to_submit`. These values are evidence for review only. A region predicate can filter the rows initially displayed in APEX, and submitted page items can influence a query, but neither is proof that a generated API enforces tenant ownership or per-user row access on every read and write.
 
 `row_scope_proven` is therefore intentionally absent from the authorization object and explicitly remains `false` in `row_scope_evidence`, with a reason explaining why the source predicate is not trusted. The existing `IG011` authorization/row-scope blocker remains mandatory; no client-supplied filter is promoted to a write authorization rule, and DML generation remains disabled. The next implementation must map row scope to server-derived identity/tenant context and enforce it in SQL or trusted service policy for select, update, and delete, with cross-tenant negative tests.
+
+
+## Step 4g: lost-update and concurrency evidence
+
+The editable-IG analysis now emits a dedicated `concurrency_evidence` object, separate from authorization and row-scope evidence. It preserves the region's `lost_update_check_type`, the raw native DML process attributes, and the `ROW_VERSION_COLUMN` value when that key/value pair is present in the exported plugin attributes.
+
+This is evidence preservation only. The analyzer explicitly reports `runtime_equivalence_proven: false`; it does not assume that an APEX `ROW_VERSION` or `VALUES` setting is interchangeable with the target API's optimistic-locking strategy. The existing `IG013` finding remains a mandatory blocker. The target implementation must still define a server-side version/checksum contract, reject stale writes, and prove behavior with concurrent update tests (including two clients editing the same row). Editable DML generation remains disabled.
