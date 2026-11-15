@@ -24,9 +24,14 @@ def test_synthetic_export_inventory():
     assert inv["application"] == {
         "name": "Synthetic App", "alias": "SYN", "logoText": None, "dateFormat": "DD-MON-YYYY", "homeLink": None,
         "timestampFormat": None,
-        "version": "Release 1.0", "language": "en", "securityScheme": "APP_USERS", "authentication": "Oracle APEX Accounts",
+        "version": "Release 1.0", "language": "en", "securityScheme": "APP_USERS", "securitySchemeId": "20",
+        "authentication": "Oracle APEX Accounts",
     }
     assert [a["name"] for a in inv["authorizations"]] == ["ADMIN_RIGHTS", "APP_USERS"]
+    app_users = next(a for a in inv["authorizations"] if a["name"] == "APP_USERS")
+    assert app_users["id"] == "20"
+    assert app_users["type"] == "NATIVE_FUNCTION_BODY"
+    assert app_users["attributes"] == {}
     yes_no = next(lov for lov in inv["lovs"] if lov["name"] == "YES_NO")
     assert yes_no["values"] == [{"seq": 10, "display": "Ya", "return": "Y"}, {"seq": 20, "display": "Tidak", "return": "N"}], \
         "static values without p_lov_id belong to the preceding LOV, ordered by sequence"
@@ -37,6 +42,8 @@ def test_synthetic_export_inventory():
 
     page = inv["pages"][0]
     assert (page["id"], page["mode"], page["scheme"], page["title"]) == (2, "MODAL", "ADMIN_RIGHTS", "Things")
+    assert page["scheme_id"] == "21"
+    assert page["scheme_unresolved"] is False
     comps = _components(inv)
     assert set(comps) == {
         "P2:BUTTON:SAVE", "P2:DYNAMIC_ACTION:REFRESH_AFTER_DIALOG", "P2:IR:Report", "P2:IR_COLUMN:Report.NAME",
