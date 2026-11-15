@@ -57,8 +57,9 @@ KEEP = {
                "p_database_action", "p_confirm_message", "p_button_execute_validations", "p_button_position"],
     "PROCESS": ["p_process_point", "p_process_type", "p_process_sql_clob", "p_process_attributes",
                 "p_process_when", "p_process_when_type", "p_process_success_message", "p_process_sequence"],
-    "VALIDATION": ["p_validation", "p_validation2", "p_validation_type", "p_error_message", "p_validation_condition",
-                   "p_validation_condition_type"],
+    "VALIDATION": ["p_validation", "p_validation2", "p_validation_type", "p_validation_sequence", "p_error_message",
+                   "p_validation_condition", "p_validation_condition2", "p_validation_condition_type",
+                   "p_validation_condition_type2", "p_always_execute", "p_associated_column", "p_error_display_location"],
     "DYNAMIC_ACTION": ["p_triggering_element_type", "p_bind_event_type", "p_event_sequence"],
     "IR_COLUMN": ["p_column_label", "p_column_type", "p_format_mask", "p_display_text_as", "p_display_order",
                   "p_column_alignment", "p_column_link", "p_column_linktext", "p_rpt_named_lov"],
@@ -284,8 +285,10 @@ def build_page_inventory(files: dict[str, str]) -> dict[str, Any]:
             if kind == "REGION" and _ref(c, "p_list_id"):
                 props["list"] = list_names.get(_ref(c, "p_list_id"))
             if kind == "VALIDATION":
-                if _ref(c, "p_associated_item"):
-                    props["associated_item"] = page_items.get(_ref(c, "p_associated_item"))
+                associated_item_id = _ref(c, "p_associated_item")
+                if associated_item_id:
+                    props["associated_item_id"] = associated_item_id
+                    props["associated_item"] = page_items.get(associated_item_id)
                 if _ref(c, "p_when_button_id"):
                     props["when_button"] = buttons.get(_ref(c, "p_when_button_id"))
             components.append({"key": f"P{page_id}:{kind}:{cname}", "kind": kind, "name": cname, "props": props})
