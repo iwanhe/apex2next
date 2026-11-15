@@ -88,7 +88,7 @@ export async function applyInteractiveGridChanges(
     throw errors.invalidInput(`Grid changes must contain between 1 and ${MAX_GRID_CHANGES} operations.`);
   }
   const scope = access?.rowScope;
-  if (!scope || typeof scope.column !== 'string' || !IDENT.test(scope.column)
+  if (!scope || typeof scope.column !== 'string' || !/^[a-z_][a-z0-9_]*$/.test(scope.column)
     || typeof scope.value !== 'string' || !scope.value.trim()
     || form.items.some((item) => item.column === scope.column)) {
     throw errors.forbidden('Interactive Grid requires a valid server-derived row scope outside the editable form items.');
