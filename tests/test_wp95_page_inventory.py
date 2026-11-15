@@ -56,7 +56,10 @@ def test_synthetic_export_inventory():
     assert grid_process["native_ig_dml_candidate"] is True
     assert "ROW_VERSION_COLUMN" in grid_process["process_attributes"]
     assert comps["P2:ITEM:P2_NAME"]["props"]["read_only_when"] == ":P2_ID is null"
-    assert comps["P2:VALIDATION:NAME_OK"]["props"]["validation"] == ":P2_NAME <> 'x'"
+    validation = comps["P2:VALIDATION:NAME_OK"]["props"]
+    assert validation["source_id"] == "140"
+    assert validation["validation"] == ":P2_NAME <> 'x'"
+    assert validation["validation_type"] == "EXPRESSION"
     assert comps["P2:DYNAMIC_ACTION:REFRESH_AFTER_DIALOG"]["props"]["actions"] == [
         {"action": "NATIVE_REFRESH", "result": "TRUE", "region": "Report"}]
     assert inv["summary"] == {"pages": 1, "components": 17}
