@@ -227,3 +227,12 @@ Regression tests cover complete metadata, missing visibility/writeability, malfo
 The inventory now retains validation component identity and association metadata where the APEX export supplies it: immutable validation ID, owning region ID, associated page item/column, submit button, validation expression(s), validation type, condition/type, and error display location. The editable-IG analysis report emits these fields per validation rather than reducing each validation to only its display name and type. This makes the evidence reviewable and gives later parity work enough context to distinguish item-, region-, and submit-flow-related rules.
 
 This is deliberately **not** a validation translator. Validation expressions and conditions may contain PL/SQL, APEX binds, server-side state, or execution-order dependencies; they remain evidence only. The unconditional `IG012` review blocker stays in place, and no editable DML is generated. Missing association metadata is preserved as missing rather than inferred from validation names.
+
+
+## Step 4e: authorization reference integrity
+
+The page inventory now retains immutable authorization scheme IDs alongside resolved names at application and page level, and at component level when a region/process/button exports a `p_security_scheme` reference. Scheme definitions retain their export ID, scheme type, configured attributes (`p_attribute_01` through `p_attribute_10`), and error message. This preserves enough source evidence to trace a DML process reference back to its definition instead of relying only on a display name.
+
+The editable-IG analyzer distinguishes an absent explicit component scheme from a referenced scheme whose definition is missing from the export. An unresolved reference produces `IG016`, is included in `security_evidence.unresolved_scheme_ids`, and forces `MANUAL`; it is never treated as an unrestricted or public rule. The report includes page/region/process scheme IDs and resolution state. A resolved scheme is still not proof that the generated API enforces equivalent authorization: `IG011` remains mandatory, row-level scope remains unproven, and `auto_generate` remains false.
+
+This step does not translate authorization PL/SQL or infer the effect of an absent component-level scheme. Authorization behavior must be mapped and enforced server-side in a later step, with negative tests for users lacking each permission.
