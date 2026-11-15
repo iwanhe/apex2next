@@ -58,7 +58,7 @@ test('partial update preserves omitted columns and verifies the loaded checksum'
   ]);
   assert.deepEqual(result, [{ operation: 'update', id: '10' }]);
   const update = seen.find((q) => q.sql.startsWith('UPDATE'));
-  assert.deepEqual(update.values, ['10', 'New', '20']);
+  assert.deepEqual(update.values, ['10', 'tenant-A', 'New', '20']);
 });
 
 test('insert preserves database defaults for omitted optional columns', async () => {
