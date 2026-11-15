@@ -33,7 +33,7 @@ export interface InteractiveGridChangeResult {
 
 const MAX_GRID_CHANGES = 100;
 const MAX_ROW_ID_LENGTH = 256;
-const IDENT = /^[a-z_][a-z0-9_]*(\\.[a-z_][a-z0-9_]*)?$/;
+const IDENT = /^[a-z_][a-z0-9_]*(\.[a-z_][a-z0-9_]*)?$/;
 
 function ident(name: string): string {
   if (!IDENT.test(name)) throw errors.invalidInput('Invalid Interactive Grid identifier in server metadata.');
