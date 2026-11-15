@@ -238,6 +238,14 @@ def build_page_inventory(files: dict[str, str]) -> dict[str, Any]:
             if kind in {"IR_COLUMN", "REPORT_COLUMN", "REGION_COLUMN", "CARD_ACTION", "CHART_SERIES", "IR_REPORT"}:
                 cname = f"{region}.{cname}"
             props = {k[2:]: _text(c, k) for k in KEEP[kind] if _text(c, k) not in (None, "")}
+            # Preserve immutable export IDs so later analysis can join components by
+            # identity instead of display name (region names are not guaranteed unique).
+            if kind in {"REGION", "REPORT_REGION"}:
+                props["source_id"] = _ref(c, "p_id")
+            if kind in {"REGION_COLUMN", "PROCESS"}:
+                component_region_id = _ref(c, "p_region_id")
+                if component_region_id:
+                    props["region_id"] = component_region_id
             if kind == "DYNAMIC_ACTION":
                 trig = _ref(c, "p_triggering_button_id")
                 if trig:
