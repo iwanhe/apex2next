@@ -44,6 +44,7 @@ def test_synthetic_export_inventory():
         "P2:VALIDATION:NAME_OK", "P2:REGION:Read Only Grid", "P2:REGION:Editable Grid",
         "P2:PROCESS:SAVE_GRID", "P2:REGION_COLUMN:Read Only Grid.ID",
         "P2:REGION_COLUMN:Read Only Grid.INTERNAL_NOTE",
+        "P2:REGION_COLUMN:Editable Grid.ID", "P2:REGION_COLUMN:Editable Grid.STATUS",
     }
     assert comps["P2:REGION:Report"]["props"]["plug_source"] == "select id, name\n  from things", "wwv_flow_string.join decoded"
     assert comps["P2:IR_REPORT:Report.1"]["props"] == {"report_columns": "NAME", "sort_column_1": "NAME", "sort_direction_1": "ASC"}
@@ -57,7 +58,7 @@ def test_synthetic_export_inventory():
     assert comps["P2:VALIDATION:NAME_OK"]["props"]["validation"] == ":P2_NAME <> 'x'"
     assert comps["P2:DYNAMIC_ACTION:REFRESH_AFTER_DIALOG"]["props"]["actions"] == [
         {"action": "NATIVE_REFRESH", "result": "TRUE", "region": "Report"}]
-    assert inv["summary"] == {"pages": 1, "components": 15}
+    assert inv["summary"] == {"pages": 1, "components": 17}
     grid = comps["P2:REGION:Read Only Grid"]["props"]
     assert (grid["plug_source_type"], grid["query_type"], grid["query_table"], grid["is_editable"]) == (
         "NATIVE_IG", "TABLE", "THINGS", False)
