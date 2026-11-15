@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { applyInteractiveGridChanges } from '../dist/generic/interactive-grid.js';
+import { applyInteractiveGridChanges as applyChanges } from '../dist/generic/interactive-grid.js';
 import { checksum } from '../dist/forms/forms.js';
 
 const item = (column, options = {}) => ({
@@ -23,6 +23,8 @@ function txWith(query) {
   return { query };
 }
 const noQuery = txWith(async () => { throw new Error('unexpected database call'); });
+const access = { operations: ['insert', 'update', 'delete'], rowScope: { column: 'tenant_id', value: 'tenant-A' } };
+const applyInteractiveGridChanges = (tx, definition, changes) => applyChanges(tx, definition, changes, access);
 
 test('rejects empty and oversized change batches before database access', async () => {
   await assert.rejects(() => applyInteractiveGridChanges(noQuery, form, []), (e) => e.code === 'INVALID_INPUT');
@@ -73,7 +75,7 @@ test('insert preserves database defaults for omitted optional columns', async ()
   assert.deepEqual(result, [{ operation: 'insert', id: '11' }]);
   const insert = seen.find((q) => q.sql.startsWith('INSERT'));
   assert.match(insert.sql, /INSERT INTO app\.employee \(ename\) VALUES \(\$1\)/);
-  assert.deepEqual(insert.values, ['New']);
+  assert.deepEqual(insert.values, ['New', 'tenant-A']);
 });
 
 test('rolls the whole batch back to its savepoint when a later row fails', async () => {
@@ -91,4 +93,51 @@ test('rolls the whole batch back to its savepoint when a later row fails', async
     { operation: 'update', id: '10', checksum: 'stale-checksum', values: { ename: 'Second' } },
   ]), (e) => e.code === 'LOST_UPDATE');
   assert.ok(seen.some((q) => q.sql === 'ROLLBACK TO SAVEPOINT apex2next_ig_batch'));
+});
+
+
+test('scopes locked row lookup and update to the server tenant', async () => {
+  const current = { empno: '10', ename: 'Old', deptno: '20' };
+  const seen = [];
+  const tx = txWith(async (sql, values = []) => {
+    seen.push({ sql, values });
+    if (sql.startsWith('SAVEPOINT') || sql.startsWith('RELEASE')) return { rows: [], rowCount: 0 };
+    if (sql.startsWith('SELECT')) return { rows: [current], rowCount: 1 };
+    if (sql.startsWith('UPDATE')) return { rows: [], rowCount: 1 };
+    throw new Error(`unexpected SQL: ${sql}`);
+  });
+  await applyInteractiveGridChanges(tx, form, [
+    { operation: 'update', id: '10', checksum: checksum(form, current), values: { ename: 'Scoped' } },
+  ]);
+  const select = seen.find((q) => q.sql.startsWith('SELECT'));
+  const update = seen.find((q) => q.sql.startsWith('UPDATE'));
+  assert.match(select.sql, /tenant_id = \\$2 FOR UPDATE/);
+  assert.deepEqual(select.values, ['10', 'tenant-A']);
+  assert.match(update.sql, /WHERE empno = \\$1 AND tenant_id = \\$2/);
+  assert.deepEqual(update.values.slice(0, 2), ['10', 'tenant-A']);
+});
+
+test('cross-tenant row is indistinguishable from a missing row', async () => {
+  const seen = [];
+  const tx = txWith(async (sql, values = []) => {
+    seen.push({ sql, values });
+    if (sql.startsWith('SAVEPOINT') || sql.startsWith('RELEASE') || sql.startsWith('ROLLBACK TO')) return { rows: [], rowCount: 0 };
+    if (sql.startsWith('SELECT')) return { rows: [], rowCount: 0 };
+    throw new Error(`unexpected SQL: ${sql}`);
+  });
+  await assert.rejects(() => applyInteractiveGridChanges(tx, form, [
+    { operation: 'delete', id: 'foreign-row', checksum: 'valid-looking-checksum' },
+  ]), (e) => e.code === 'NOT_FOUND');
+  const select = seen.find((q) => q.sql.startsWith('SELECT'));
+  assert.deepEqual(select.values, ['foreign-row', 'tenant-A']);
+  assert.match(select.sql, /tenant_id = \\$2/);
+});
+
+test('insert rejects client-supplied ownership and policy without row scope fails closed', async () => {
+  await assert.rejects(() => applyChanges(noQuery, form, [
+    { operation: 'insert', values: { ename: 'Mallory', tenant_id: 'tenant-B' } },
+  ], access), (e) => e.code === 'FORBIDDEN');
+  await assert.rejects(() => applyChanges(noQuery, form, [
+    { operation: 'insert', values: { ename: 'No scope' } },
+  ], { operations: ['insert'] }), (e) => e.code === 'FORBIDDEN');
 });
