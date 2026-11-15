@@ -108,9 +108,10 @@ def test_review_report_exposes_security_and_validation_evidence_without_granting
         "reason": "A region predicate or submitted page items do not prove equivalent per-row authorization in the generated API.",
     }
     assert grid["validation_evidence"] == [{
-        "name": "STATUS_REQUIRED", "source_id": None, "region_id": None,
+        "name": "STATUS_REQUIRED", "source_id": None, "region_id": None, "sequence": None,
         "type": "ITEM_NOT_NULL", "expression": None, "expression2": None,
-        "condition": None, "condition_type": None, "associated_item": "P10_STATUS",
+        "condition": None, "condition_type": None, "condition2": None, "condition_type2": None,
+        "always_execute": None, "associated_item_id": None, "associated_item": "P10_STATUS",
         "associated_column": None, "when_button": None, "error_display_location": None,
     }]
     assert grid["auto_generate"] is False
