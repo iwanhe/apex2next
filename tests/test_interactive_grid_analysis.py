@@ -13,6 +13,8 @@ def _inventory(*, editable=True, table=True, visible=True, key=True, query_only=
         "query_table": "APP.ORDERS" if table else None,
         "edit_operations": operations,
         "lost_update_check_type": "ROW_VERSION",
+        "query_where": "TENANT_ID = :P10_TENANT_ID",
+        "ajax_items_to_submit": "P10_TENANT_ID",
     }
     column_props = {
         "region_id": "180", "source_expression": "ORDER_ID", "is_visible": visible,
@@ -94,7 +96,12 @@ def test_review_report_exposes_security_and_validation_evidence_without_granting
         "process_schemes": [None],
         "process_scheme_ids": [None],
         "unresolved_scheme_ids": [],
-        "row_scope_proven": False,
+    }
+    assert grid["row_scope_evidence"] == {
+        "source_type": "NATIVE_IG", "query_type": "TABLE",
+        "query_where": "TENANT_ID = :P10_TENANT_ID",
+        "ajax_items_to_submit": "P10_TENANT_ID", "row_scope_proven": False,
+        "reason": "A region predicate or submitted page items do not prove equivalent per-row authorization in the generated API.",
     }
     assert grid["validation_evidence"] == [{
         "name": "STATUS_REQUIRED", "source_id": None, "region_id": None,
