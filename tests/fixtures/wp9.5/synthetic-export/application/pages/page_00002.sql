@@ -79,8 +79,12 @@ wwv_flow_imp_page.create_page_process(
 wwv_flow_imp_page.create_page_validation(
  p_id=>wwv_flow_imp.id(140)
 ,p_validation_name=>'NAME_OK'
+,p_validation_sequence=>10
 ,p_validation=>':P2_NAME <> ''x'''
 ,p_validation_type=>'EXPRESSION'
+,p_always_execute=>true
+,p_associated_column=>'NAME'
+,p_error_display_location=>'INLINE_WITH_FIELD_AND_NOTIFICATION'
 ,p_error_message=>'No x.'
 );
 wwv_flow_imp_page.create_page_da_event(
