@@ -220,3 +220,10 @@ The report also carries forward evidence for the page, region and DML-process au
 It always emits `auto_generate: false`. Even a structurally complete grid remains `REVIEW_REQUIRED` with three mandatory findings: page/process and row-level authorization; validation and server-side condition parity; and lost-update/concurrency equivalence. Missing or contradictory structural metadata remains `MANUAL`. This is intentional: source metadata alone cannot prove that a client row may be changed or that APEX's server-side behavior is preserved.
 
 Regression tests cover complete metadata, missing visibility/writeability, malformed/unsupported operations, absent key/source/process, read-only or unspecified editability, review evidence, and the `ig-analyze` CLI output. Run it after inventory with `tools/apex2next ig-analyze APP/ui/apex-page-inventory.json --out APP/ui/editable-ig-analysis.json`. This analyzer is a planning/reporting foundation only; it does not change the existing read-only grid generator.
+
+
+## Step 4d: validation evidence preservation
+
+The inventory now retains validation component identity and association metadata where the APEX export supplies it: immutable validation ID, owning region ID, associated page item/column, submit button, validation expression(s), validation type, condition/type, and error display location. The editable-IG analysis report emits these fields per validation rather than reducing each validation to only its display name and type. This makes the evidence reviewable and gives later parity work enough context to distinguish item-, region-, and submit-flow-related rules.
+
+This is deliberately **not** a validation translator. Validation expressions and conditions may contain PL/SQL, APEX binds, server-side state, or execution-order dependencies; they remain evidence only. The unconditional `IG012` review blocker stays in place, and no editable DML is generated. Missing association metadata is preserved as missing rather than inferred from validation names.
