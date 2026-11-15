@@ -68,6 +68,35 @@ def test_missing_table_source_or_native_dml_association_fails_closed():
     assert {"IG001", "IG010"} <= codes
 
 
+def test_malformed_operation_list_fails_closed():
+    result = analyze_editable_interactive_grids(_inventory(operations="i::u"))
+    grid = result["grids"][0]
+    assert grid["classification"] == "MANUAL"
+    assert "IG009" in {f["code"] for f in grid["findings"]}
+
+
+def test_review_report_exposes_security_and_validation_evidence_without_granting_it():
+    inventory = _inventory()
+    inventory["pages"][0]["components"].append({
+        "kind": "VALIDATION", "name": "STATUS_REQUIRED",
+        "props": {"validation_type": "ITEM_NOT_NULL", "associated_item": "P10_STATUS"},
+    })
+    result = analyze_editable_interactive_grids(inventory)
+    grid = result["grids"][0]
+    assert grid["security_evidence"] == {
+        "page_scheme": "AUTHENTICATED",
+        "region_scheme": None,
+        "process_schemes": [None],
+        "row_scope_proven": False,
+    }
+    assert grid["validation_evidence"] == [{
+        "name": "STATUS_REQUIRED", "type": "ITEM_NOT_NULL", "associated_item": "P10_STATUS",
+    }]
+    assert grid["auto_generate"] is False
+    assert "IG011" in {f["code"] for f in grid["findings"]}
+    assert "IG012" in {f["code"] for f in grid["findings"]}
+
+
 def test_read_only_grids_are_skipped_but_unspecified_editability_is_manual():
     read_only = analyze_editable_interactive_grids(_inventory(editable=False))
     assert read_only["summary"]["editable_grids"] == 0
