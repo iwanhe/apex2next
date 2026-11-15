@@ -30,7 +30,7 @@ def _inventory(*, editable=True, table=True, visible=True, key=True, query_only=
         components.append({"kind": "PROCESS", "name": "SAVE_ORDERS", "props": {
             "native_ig_dml_candidate": True, "region": "Orders Grid", "region_id": "180",
         }})
-    return {"pages": [{"id": 10, "scheme": "AUTHENTICATED", "components": components}]}
+    return {"pages": [{"id": 10, "scheme": "AUTHENTICATED", "scheme_id": "501", "scheme_unresolved": False, "components": components}]}
 
 
 def test_fully_described_editable_grid_is_review_required_not_auto_generated():
@@ -86,8 +86,14 @@ def test_review_report_exposes_security_and_validation_evidence_without_granting
     grid = result["grids"][0]
     assert grid["security_evidence"] == {
         "page_scheme": "AUTHENTICATED",
+        "page_scheme_id": "501",
+        "page_scheme_unresolved": False,
         "region_scheme": None,
+        "region_scheme_id": None,
+        "region_scheme_unresolved": False,
         "process_schemes": [None],
+        "process_scheme_ids": [None],
+        "unresolved_scheme_ids": [],
         "row_scope_proven": False,
     }
     assert grid["validation_evidence"] == [{
@@ -140,3 +146,20 @@ def test_read_only_grids_are_skipped_but_unspecified_editability_is_manual():
     assert grid["classification"] == "MANUAL"
     assert grid["auto_generate"] is False
     assert "IG000" in {f["code"] for f in grid["findings"]}
+
+
+
+def test_unresolved_authorization_scheme_reference_fails_closed_and_is_reported():
+    inventory = _inventory()
+    page = inventory["pages"][0]
+    page["scheme_id"] = "999"
+    page["scheme_unresolved"] = True
+    process = next(c for c in page["components"] if c["kind"] == "PROCESS")
+    process["props"]["security_scheme_id"] = "998"
+    process["props"]["security_scheme_unresolved"] = True
+
+    grid = analyze_editable_interactive_grids(inventory)["grids"][0]
+    assert grid["classification"] == "MANUAL"
+    assert grid["auto_generate"] is False
+    assert grid["security_evidence"]["unresolved_scheme_ids"] == ["998", "999"]
+    assert "IG016" in {f["code"] for f in grid["findings"]}
