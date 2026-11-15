@@ -31,6 +31,7 @@ def _inventory(*, editable=True, table=True, visible=True, key=True, query_only=
     if process:
         components.append({"kind": "PROCESS", "name": "SAVE_ORDERS", "props": {
             "native_ig_dml_candidate": True, "region": "Orders Grid", "region_id": "180",
+            "process_attributes": "ROW_VERSION_COLUMN, ROW_VERSION",
         }})
     return {"pages": [{"id": 10, "scheme": "AUTHENTICATED", "scheme_id": "501", "scheme_unresolved": False, "components": components}]}
 
@@ -43,6 +44,9 @@ def test_fully_described_editable_grid_is_review_required_not_auto_generated():
     assert grid["primary_key"] == "order_id"
     assert grid["writable_columns"] == ["status"]
     assert grid["operations"] == ["d", "i", "u"]
+    assert grid["concurrency_evidence"]["lost_update_check_type"] == "ROW_VERSION"
+    assert grid["concurrency_evidence"]["process_row_version_column"] == ["ROW_VERSION"]
+    assert grid["concurrency_evidence"]["runtime_equivalence_proven"] is False
     assert {f["code"] for f in grid["findings"]} == {"IG011", "IG012", "IG013"}
     assert result["summary"]["auto_generate"] == 0
 
