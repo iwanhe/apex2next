@@ -240,7 +240,7 @@ def build_page_inventory(files: dict[str, str]) -> dict[str, Any]:
             props = {k[2:]: _text(c, k) for k in KEEP[kind] if _text(c, k) not in (None, "")}
             # Preserve immutable export IDs so later analysis can join components by
             # identity instead of display name (region names are not guaranteed unique).
-            if kind in {"REGION", "REPORT_REGION"}:
+            if kind in {"REGION", "REPORT_REGION", "VALIDATION"}:
                 props["source_id"] = _ref(c, "p_id")
             if kind in {"REGION_COLUMN", "PROCESS", "VALIDATION"}:
                 component_region_id = _ref(c, "p_region_id")
