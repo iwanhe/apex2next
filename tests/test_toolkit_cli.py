@@ -16,7 +16,7 @@ def test_help_lists_every_command():
     r = run("-h")
     assert r.returncode == 0
     for cmd in ("doctor", "queries", "inventory", "schema-plan", "dictionary-check", "plsql", "load-data", "catalog",
-                "generate", "assess", "supporting-objects", "new", "smoke", "scoreboard"):
+                "generate", "assess", "supporting-objects", "ig-analyze", "new", "smoke", "scoreboard"):
         assert cmd in r.stdout
 
 
@@ -31,6 +31,21 @@ def test_inventory_on_synthetic_export(tmp_path):
     assert r.returncode == 0, r.stderr
     inv = json.loads((tmp_path / "apex-page-inventory.json").read_text())
     assert f"{len(inv['pages'])} pages" in r.stdout
+
+
+def test_editable_ig_analysis_cli_writes_valid_json(tmp_path):
+    app = tmp_path / "app"
+    inv_dir = app / "ui"
+    r = run("inventory", ROOT / "tests/fixtures/wp9.5/synthetic-export", "--out", inv_dir)
+    assert r.returncode == 0, r.stderr
+    report = inv_dir / "editable-ig-analysis.json"
+    r = run("ig-analyze", inv_dir / "apex-page-inventory.json", "--out", report)
+    assert r.returncode == 0, r.stderr + r.stdout
+    result = json.loads(report.read_text(encoding="utf-8"))
+    assert result["summary"]["editable_grids"] == 1
+    assert result["summary"]["auto_generate"] == 0
+    assert result["grids"][0]["classification"] == "REVIEW_REQUIRED"
+    assert report.read_bytes().endswith(b"\\n")
 
 
 def test_schema_plan_and_plsql_on_small_script(tmp_path):
