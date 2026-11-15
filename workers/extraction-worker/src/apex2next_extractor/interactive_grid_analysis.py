@@ -37,6 +37,14 @@ def _finding(code: str, message: str) -> dict[str, str]:
     return {"code": code, "message": message}
 
 
+def _process_attribute_value(value: Any, key: str) -> str | None:
+    """Read one key/value pair from the serialized APEX plugin attributes."""
+    if not isinstance(value, str):
+        return None
+    match = re.search(r"(?:^|[\\s,])['\"]?" + re.escape(key) + r"['\"]?\\s*,\\s*['\"]([^'\"]*)['\"]", value)
+    return match.group(1) if match else None
+
+
 def analyze_editable_interactive_grids(inventory: dict[str, Any]) -> dict[str, Any]:
     """Classify editable IGs without ever granting write permission.
 
@@ -179,6 +187,17 @@ def analyze_editable_interactive_grids(inventory: dict[str, Any]) -> dict[str, A
                     "process_schemes": [p.get("props", {}).get("security_scheme") for p in dml],
                     "process_scheme_ids": [p.get("props", {}).get("security_scheme_id") for p in dml],
                     "unresolved_scheme_ids": sorted(set(unresolved)),
+                },
+                "concurrency_evidence": {
+                    "lost_update_check_type": props.get("lost_update_check_type"),
+                    "process_row_version_column": [
+                        _process_attribute_value(p.get("props", {}).get("process_attributes"), "ROW_VERSION_COLUMN")
+                        for p in dml
+                    ],
+                    "process_attributes": [p.get("props", {}).get("process_attributes") for p in dml],
+                    "source_metadata_present": bool(props.get("lost_update_check_type")),
+                    "runtime_equivalence_proven": False,
+                    "reason": "APEX lost-update settings and DML plugin attributes are preserved as evidence; they are not yet mapped to an equivalent server-side concurrency check.",
                 },
                 "row_scope_evidence": {
                     "source_type": props.get("plug_source_type"),
