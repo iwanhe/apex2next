@@ -91,7 +91,10 @@ def test_review_report_exposes_security_and_validation_evidence_without_granting
         "row_scope_proven": False,
     }
     assert grid["validation_evidence"] == [{
-        "name": "STATUS_REQUIRED", "type": "ITEM_NOT_NULL", "associated_item": "P10_STATUS",
+        "name": "STATUS_REQUIRED", "source_id": None, "region_id": None,
+        "type": "ITEM_NOT_NULL", "expression": None, "expression2": None,
+        "condition": None, "condition_type": None, "associated_item": "P10_STATUS",
+        "associated_column": None, "when_button": None, "error_display_location": None,
     }]
     assert grid["auto_generate"] is False
     assert "IG011" in {f["code"] for f in grid["findings"]}
