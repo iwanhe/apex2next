@@ -236,3 +236,10 @@ The page inventory now retains immutable authorization scheme IDs alongside reso
 The editable-IG analyzer distinguishes an absent explicit component scheme from a referenced scheme whose definition is missing from the export. An unresolved reference produces `IG016`, is included in `security_evidence.unresolved_scheme_ids`, and forces `MANUAL`; it is never treated as an unrestricted or public rule. The report includes page/region/process scheme IDs and resolution state. A resolved scheme is still not proof that the generated API enforces equivalent authorization: `IG011` remains mandatory, row-level scope remains unproven, and `auto_generate` remains false.
 
 This step does not translate authorization PL/SQL or infer the effect of an absent component-level scheme. Authorization behavior must be mapped and enforced server-side in a later step, with negative tests for users lacking each permission.
+
+
+## Step 4f: row-scope evidence (not authorization)
+
+The editable-IG analysis report now exposes the source-side row-scope inputs separately from authorization schemes: source type, query type, region `query_where`, and `ajax_items_to_submit`. These values are evidence for review only. A region predicate can filter the rows initially displayed in APEX, and submitted page items can influence a query, but neither is proof that a generated API enforces tenant ownership or per-user row access on every read and write.
+
+`row_scope_proven` is therefore intentionally absent from the authorization object and explicitly remains `false` in `row_scope_evidence`, with a reason explaining why the source predicate is not trusted. The existing `IG011` authorization/row-scope blocker remains mandatory; no client-supplied filter is promoted to a write authorization rule, and DML generation remains disabled. The next implementation must map row scope to server-derived identity/tenant context and enforce it in SQL or trusted service policy for select, update, and delete, with cross-tenant negative tests.
