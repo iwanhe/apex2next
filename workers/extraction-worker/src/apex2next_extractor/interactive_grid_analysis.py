@@ -67,9 +67,14 @@ def analyze_editable_interactive_grids(inventory: dict[str, Any]) -> dict[str, A
                 findings.append(_finding("IG001", "Grid source must be an explicitly table-backed query with a simple table identifier."))
 
             region_name = region.get("name")
-            region_columns = [c for c in columns if isinstance(c.get("name"), str) and c["name"].startswith(f"{region_name}.")]
+            region_id = props.get("source_id")
+            if not isinstance(region_id, str) or not region_id.strip():
+                findings.append(_finding("IG015", "The region's immutable export ID is missing; component ownership cannot be proven."))
+                region_columns = []
+            else:
+                region_columns = [c for c in columns if c.get("props", {}).get("region_id") == region_id]
             if not region_columns:
-                findings.append(_finding("IG002", "No exported region-column metadata is available."))
+                findings.append(_finding("IG002", "No region-column metadata is explicitly associated with this region ID."))
 
             keys: list[str] = []
             writable: list[str] = []
@@ -110,7 +115,8 @@ def analyze_editable_interactive_grids(inventory: dict[str, Any]) -> dict[str, A
                 findings.append(_finding("IG009", "Allowed insert/update/delete operations are missing or unsupported."))
 
             dml = [p for p in processes if p.get("props", {}).get("native_ig_dml_candidate") is True
-                   and p.get("props", {}).get("region") == region_name]
+                   and isinstance(region_id, str)
+                   and p.get("props", {}).get("region_id") == region_id]
             if len(dml) != 1:
                 findings.append(_finding("IG010", "Exactly one native IG DML process explicitly associated with this editable region is required."))
 
@@ -129,6 +135,7 @@ def analyze_editable_interactive_grids(inventory: dict[str, Any]) -> dict[str, A
             results.append({
                 "pageId": page.get("id"),
                 "region": region_name,
+                "region_id": region_id if isinstance(region_id, str) else None,
                 "table": table if isinstance(table, str) else None,
                 "classification": "MANUAL" if structural_blocked else "REVIEW_REQUIRED",
                 "auto_generate": False,
