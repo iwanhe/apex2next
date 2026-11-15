@@ -7,6 +7,7 @@ def _inventory(*, editable=True, table=True, visible=True, key=True, query_only=
                read_only=False, process=True, operations="i:u:d"):
     region_props = {
         "plug_source_type": "NATIVE_IG",
+        "source_id": "180",
         "is_editable": editable,
         "query_type": "TABLE" if table else "SQL",
         "query_table": "APP.ORDERS" if table else None,
@@ -14,20 +15,20 @@ def _inventory(*, editable=True, table=True, visible=True, key=True, query_only=
         "lost_update_check_type": "ROW_VERSION",
     }
     column_props = {
-        "source_expression": "ORDER_ID", "is_visible": visible,
+        "region_id": "180", "source_expression": "ORDER_ID", "is_visible": visible,
         "is_primary_key": key, "is_query_only": query_only, "is_readonly": read_only, "is_required": False,
     }
     components = [
         {"kind": "REGION", "name": "Orders Grid", "props": region_props},
         {"kind": "REGION_COLUMN", "name": "Orders Grid.ORDER_ID", "props": column_props},
         {"kind": "REGION_COLUMN", "name": "Orders Grid.STATUS", "props": {
-            "source_expression": "STATUS", "is_visible": True, "is_primary_key": False,
+            "region_id": "180", "source_expression": "STATUS", "is_visible": True, "is_primary_key": False,
             "is_query_only": False, "is_readonly": False, "is_required": False,
         }},
     ]
     if process:
         components.append({"kind": "PROCESS", "name": "SAVE_ORDERS", "props": {
-            "native_ig_dml_candidate": True, "region": "Orders Grid",
+            "native_ig_dml_candidate": True, "region": "Orders Grid", "region_id": "180",
         }})
     return {"pages": [{"id": 10, "scheme": "AUTHENTICATED", "components": components}]}
 
@@ -95,6 +96,35 @@ def test_review_report_exposes_security_and_validation_evidence_without_granting
     assert grid["auto_generate"] is False
     assert "IG011" in {f["code"] for f in grid["findings"]}
     assert "IG012" in {f["code"] for f in grid["findings"]}
+
+
+def test_region_columns_and_dml_process_are_joined_by_export_id_not_display_name():
+    inventory = _inventory()
+    components = inventory["pages"][0]["components"]
+    components.append({
+        "kind": "REGION", "name": "Orders Grid",
+        "props": {
+            "plug_source_type": "NATIVE_IG", "source_id": "181",
+            "is_editable": True, "query_type": "TABLE", "query_table": "APP.OTHER_ORDERS",
+            "edit_operations": "i:u:d",
+        },
+    })
+    result = analyze_editable_interactive_grids(inventory)
+    grids = {g["region_id"]: g for g in result["grids"]}
+    assert grids["180"]["classification"] == "REVIEW_REQUIRED"
+    assert grids["180"]["primary_key"] == "order_id"
+    assert grids["181"]["classification"] == "MANUAL"
+    assert {"IG002", "IG007", "IG008", "IG010"} <= {f["code"] for f in grids["181"]["findings"]}
+
+
+def test_missing_region_id_fails_closed():
+    inventory = _inventory()
+    inventory["pages"][0]["components"][0]["props"].pop("source_id")
+    result = analyze_editable_interactive_grids(inventory)
+    grid = result["grids"][0]
+    assert grid["classification"] == "MANUAL"
+    assert "IG015" in {f["code"] for f in grid["findings"]}
+    assert grid["native_dml_processes"] == []
 
 
 def test_read_only_grids_are_skipped_but_unspecified_editability_is_manual():
