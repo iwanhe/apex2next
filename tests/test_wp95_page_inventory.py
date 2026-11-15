@@ -31,7 +31,7 @@ def test_synthetic_export_inventory():
     app_users = next(a for a in inv["authorizations"] if a["name"] == "APP_USERS")
     assert app_users["id"] == "20"
     assert app_users["type"] == "NATIVE_FUNCTION_BODY"
-    assert app_users["attributes"] == {}
+    assert app_users["attributes"] == {"attribute_01": "return synth_pkg.has_any_role;"}
     yes_no = next(lov for lov in inv["lovs"] if lov["name"] == "YES_NO")
     assert yes_no["values"] == [{"seq": 10, "display": "Ya", "return": "Y"}, {"seq": 20, "display": "Tidak", "return": "N"}], \
         "static values without p_lov_id belong to the preceding LOV, ordered by sequence"
