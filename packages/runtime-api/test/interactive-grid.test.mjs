@@ -27,7 +27,11 @@ const access = { operations: ['insert', 'update', 'delete'], rowScope: { column:
 const applyInteractiveGridChanges = (tx, definition, changes) => applyChanges(tx, definition, changes, access);
 
 test('policy resolver receives the verified transaction principal and requested operations', async () => {
-  const tx = { principal: { username: 'ALICE' }, query: noQuery.query };
+  const tx = { principal: { username: 'ALICE' }, query: async (sql) => {
+    if (sql.startsWith('SAVEPOINT') || sql.startsWith('RELEASE') || sql.startsWith('ROLLBACK TO')) return { rows: [], rowCount: 0 };
+    if (sql.startsWith('SELECT')) return { rows: [], rowCount: 0 };
+    throw new Error(`unexpected SQL: ${sql}`);
+  } };
   let seen;
   const resolver = {
     async resolve(context, definition, operations) {
