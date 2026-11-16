@@ -285,3 +285,27 @@ Tests cover scoped row locking and updates, cross-tenant lookup denial, client o
 missing-policy denial. Further work: wire the policy to a real app's verified tenant/ownership model, add
 PostgreSQL integration tests against two tenants, and verify SELECT/report isolation before enabling editable
 grid generation.
+
+
+## Step 4j: trusted Interactive Grid policy resolution
+
+The runtime now provides `applyInteractiveGridChangesWithPolicy` as the application-service entry point.
+It accepts a policy resolver that receives the authenticated `BusinessTx`, the trusted form definition,
+and the distinct operation set derived from the submitted batch. The transaction exposes the verified
+`Principal`; the resolver must use that principal and server-side ownership/tenant data to construct
+`InteractiveGridAccess`.
+
+The wrapper rejects an absent resolver, a null policy, or a policy that does not grant every requested
+operation before invoking the DML primitive. It never accepts a principal, tenant ID, ownership value or
+scope column from the request payload. The lower-level `applyInteractiveGridChanges` remains available
+for tightly controlled internal callers that already hold an explicit server-created access policy.
+
+This is a reusable enforcement seam, **not** a generic tenant implementation: each application must provide
+a resolver based on its actual data model and authorization schemes. The F170134 pilot currently has
+role-based APEX authorization but no generic tenant identifier on `Principal`; no tenant column is inferred.
+The resolver must not fabricate row ownership where the source schema has none.
+
+Tests cover principal propagation, operation-set derivation, null-policy denial, incomplete-operation denial,
+and the existing scoped DML behavior. Still outstanding before editable-grid generation: a concrete
+application resolver backed by source authorization metadata, SELECT/report row-scope enforcement,
+and PostgreSQL integration tests proving isolation for the actual ownership model.
