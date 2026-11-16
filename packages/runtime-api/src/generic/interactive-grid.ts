@@ -73,6 +73,49 @@ async function fetchScoped(tx: BusinessTx, form: FormDef, id: string, scope: Int
 }
 
 /**
+ * Resolves the Interactive Grid policy from trusted transaction context.
+ * Implementations must derive identity/scope from tx.principal and server-side data;
+ * request payloads and query parameters must never be used as identity or scope inputs.
+ */
+export interface InteractiveGridPolicyResolver {
+  resolve(
+    tx: BusinessTx,
+    form: FormDef,
+    operations: readonly InteractiveGridChange['operation'][],
+  ): Promise<InteractiveGridAccess | null>;
+}
+
+/**
+ * Policy-aware entry point for application services. The resolver receives the verified
+ * transaction principal, and the operation set is derived from the submitted changes.
+ * Missing policy or an incomplete operation grant fails closed before any DML is attempted.
+ */
+export async function applyInteractiveGridChangesWithPolicy(
+  tx: BusinessTx,
+  form: FormDef,
+  changes: readonly InteractiveGridChange[],
+  resolver: InteractiveGridPolicyResolver,
+): Promise<InteractiveGridChangeResult[]> {
+  if (!Array.isArray(changes) || changes.length === 0 || changes.length > MAX_GRID_CHANGES) {
+    throw errors.invalidInput(`Grid changes must contain between 1 and ${MAX_GRID_CHANGES} operations.`);
+  }
+  const requested = new Set<InteractiveGridChange['operation']>();
+  for (const change of changes) {
+    if (!change || !['insert', 'update', 'delete'].includes(change.operation)) {
+      throw errors.invalidInput('Unsupported Interactive Grid operation.');
+    }
+    requested.add(change.operation);
+  }
+  if (!resolver || typeof resolver.resolve !== 'function') {
+    throw errors.forbidden('Interactive Grid policy resolver is not configured.');
+  }
+  const access = await resolver.resolve(tx, form, [...requested]);
+  if (!access) throw errors.forbidden('Interactive Grid policy could not authorize this operation.');
+  for (const operation of requested) assertInteractiveGridAccess(access, operation);
+  return applyInteractiveGridChanges(tx, form, changes, access);
+}
+
+/**
  * Applies at most 100 changes atomically inside the caller's transaction.
  * SELECT-for-update, UPDATE and DELETE all carry the trusted row-scope predicate.
  * INSERT overwrites no ownership field: a client attempt to submit it is rejected and the server value is inserted.
