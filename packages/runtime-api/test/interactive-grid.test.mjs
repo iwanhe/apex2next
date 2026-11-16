@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { applyInteractiveGridChanges as applyChanges } from '../dist/generic/interactive-grid.js';
+import { applyInteractiveGridChanges as applyChanges, applyInteractiveGridChangesWithPolicy } from '../dist/generic/interactive-grid.js';
 import { checksum } from '../dist/forms/forms.js';
 
 const item = (column, options = {}) => ({
@@ -25,6 +25,39 @@ function txWith(query) {
 const noQuery = txWith(async () => { throw new Error('unexpected database call'); });
 const access = { operations: ['insert', 'update', 'delete'], rowScope: { column: 'tenant_id', value: 'tenant-A' } };
 const applyInteractiveGridChanges = (tx, definition, changes) => applyChanges(tx, definition, changes, access);
+
+test('policy resolver receives the verified transaction principal and requested operations', async () => {
+  const tx = { principal: { username: 'ALICE' }, query: noQuery.query };
+  let seen;
+  const resolver = {
+    async resolve(context, definition, operations) {
+      seen = { username: context.principal.username, definition, operations };
+      return access;
+    },
+  };
+  await assert.rejects(() => applyInteractiveGridChangesWithPolicy(tx, form, [
+    { operation: 'update', id: '10', checksum: 'checksum', values: { ename: 'A' } },
+  ], resolver), (e) => e.code === 'NOT_FOUND');
+  assert.equal(seen.username, 'ALICE');
+  assert.equal(seen.definition, form);
+  assert.deepEqual(seen.operations, ['update']);
+});
+
+test('policy resolver fails closed when no policy is returned', async () => {
+  const tx = { principal: { username: 'ALICE' }, query: noQuery.query };
+  await assert.rejects(() => applyInteractiveGridChangesWithPolicy(tx, form, [
+    { operation: 'insert', values: { ename: 'A' } },
+  ], { async resolve() { return null; } }), (e) => e.code === 'FORBIDDEN');
+});
+
+test('policy resolver must grant every operation in a mixed batch', async () => {
+  const tx = { principal: { username: 'ALICE' }, query: noQuery.query };
+  await assert.rejects(() => applyInteractiveGridChangesWithPolicy(tx, form, [
+    { operation: 'insert', values: { ename: 'A' } },
+    { operation: 'delete', id: '10', checksum: 'checksum' },
+  ], { async resolve() { return { ...access, operations: ['insert'] }; } }),
+  (e) => e.code === 'FORBIDDEN');
+});
 
 test('rejects empty and oversized change batches before database access', async () => {
   await assert.rejects(() => applyInteractiveGridChanges(noQuery, form, []), (e) => e.code === 'INVALID_INPUT');
