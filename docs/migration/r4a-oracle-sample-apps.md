@@ -309,3 +309,20 @@ Tests cover principal propagation, operation-set derivation, null-policy denial,
 and the existing scoped DML behavior. Still outstanding before editable-grid generation: a concrete
 application resolver backed by source authorization metadata, SELECT/report row-scope enforcement,
 and PostgreSQL integration tests proving isolation for the actual ownership model.
+
+
+### Step 4j.1: reusable policy factory
+
+A reusable `createInteractiveGridPolicyResolver` factory is now available in the shared runtime.
+Application configuration must supply, for each operation, an explicit authorization-scheme name,
+an authorization callback backed by the application's server-side scheme evaluator, and a row-scope
+callback backed by its actual schema/ownership model.
+
+The factory evaluates every requested operation (mixed batches require every grant), and returns no
+policy if a rule is missing, authorization fails, callbacks are not configured, or scope cannot be
+resolved. It does not translate APEX schemes or infer ownership by itself. This keeps source-specific
+role logic and ownership semantics outside the generic runtime.
+
+Unit coverage verifies denied grants, missing operation rules, unresolved scope and a successful
+multi-operation policy. The pilot-specific wiring remains intentionally pending because its current
+authorization schemes are role-based and no generic owner column has been identified for the IG source.
