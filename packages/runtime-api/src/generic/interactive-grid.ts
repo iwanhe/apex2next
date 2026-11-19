@@ -85,6 +85,38 @@ export interface InteractiveGridPolicyResolver {
   ): Promise<InteractiveGridAccess | null>;
 }
 
+/** Operation-specific authorization and scope are supplied by the application, never by the client. */
+export interface InteractiveGridPolicyRule {
+  readonly authorizationScheme: string;
+}
+export interface InteractiveGridPolicyResolverOptions {
+  readonly rules: Partial<Record<InteractiveGridChange['operation'], InteractiveGridPolicyRule>>;
+  readonly authorize: (tx: BusinessTx, scheme: string) => Promise<boolean>;
+  readonly resolveRowScope: (tx: BusinessTx, form: FormDef) => Promise<InteractiveGridRowScope | null>;
+}
+
+/**
+ * Build a fail-closed policy resolver. Each requested operation must have an explicit
+ * scheme rule, pass server-side authorization, and resolve an explicit physical row scope.
+ */
+export function createInteractiveGridPolicyResolver(
+  options: InteractiveGridPolicyResolverOptions,
+): InteractiveGridPolicyResolver {
+  return {
+    async resolve(tx, form, operations) {
+      if (!options || typeof options.authorize !== 'function' || typeof options.resolveRowScope !== 'function') return null;
+      for (const operation of operations) {
+        const rule = options.rules?.[operation];
+        if (!rule || typeof rule.authorizationScheme !== 'string' || !rule.authorizationScheme.trim()) return null;
+        if (!(await options.authorize(tx, rule.authorizationScheme))) return null;
+      }
+      const rowScope = await options.resolveRowScope(tx, form);
+      if (!rowScope) return null;
+      return { operations: [...operations], rowScope };
+    },
+  };
+}
+
 /**
  * Policy-aware entry point for application services. The resolver receives the verified
  * transaction principal, and the operation set is derived from the submitted changes.
