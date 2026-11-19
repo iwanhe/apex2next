@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { applyInteractiveGridChanges as applyChanges, applyInteractiveGridChangesWithPolicy } from '../dist/generic/interactive-grid.js';
+import { applyInteractiveGridChanges as applyChanges, applyInteractiveGridChangesWithPolicy, createInteractiveGridPolicyResolver } from '../dist/generic/interactive-grid.js';
 import { checksum } from '../dist/forms/forms.js';
 
 const item = (column, options = {}) => ({
@@ -25,6 +25,43 @@ function txWith(query) {
 const noQuery = txWith(async () => { throw new Error('unexpected database call'); });
 const access = { operations: ['insert', 'update', 'delete'], rowScope: { column: 'tenant_id', value: 'tenant-A' } };
 const applyInteractiveGridChanges = (tx, definition, changes) => applyChanges(tx, definition, changes, access);
+
+test('policy factory requires every operation scheme and trusted row-scope resolution', async () => {
+  const tx = { principal: { username: 'ALICE' } };
+  const formDef = form;
+  const resolver = createInteractiveGridPolicyResolver({
+    rules: { insert: { authorizationScheme: 'CREATE' }, update: { authorizationScheme: 'EDIT' } },
+    async authorize(context, scheme) {
+      assert.equal(context.principal.username, 'ALICE');
+      return scheme === 'CREATE';
+    },
+    async resolveRowScope() { return { column: 'tenant_id', value: 'tenant-A' }; },
+  });
+  assert.equal(await resolver.resolve(tx, formDef, ['insert']), null); // fail closed when denied
+  const allowed = createInteractiveGridPolicyResolver({
+    rules: { insert: { authorizationScheme: 'CREATE' }, update: { authorizationScheme: 'EDIT' } },
+    async authorize() { return true; },
+    async resolveRowScope(context) {
+      assert.equal(context.principal.username, 'ALICE');
+      return { column: 'tenant_id', value: 'tenant-A' };
+    },
+  });
+  assert.deepEqual(await allowed.resolve(tx, formDef, ['insert', 'update']), {
+    operations: ['insert', 'update'], rowScope: { column: 'tenant_id', value: 'tenant-A' },
+  });
+  const missingRule = createInteractiveGridPolicyResolver({
+    rules: { insert: { authorizationScheme: 'CREATE' } },
+    async authorize() { return true; },
+    async resolveRowScope() { return { column: 'tenant_id', value: 'tenant-A' }; },
+  });
+  assert.equal(await missingRule.resolve(tx, formDef, ['delete']), null);
+  const missingScope = createInteractiveGridPolicyResolver({
+    rules: { insert: { authorizationScheme: 'CREATE' } },
+    async authorize() { return true; },
+    async resolveRowScope() { return null; },
+  });
+  assert.equal(await missingScope.resolve(tx, formDef, ['insert']), null);
+});
 
 test('policy resolver receives the verified transaction principal and requested operations', async () => {
   const tx = { principal: { username: 'ALICE' }, query: async (sql) => {
