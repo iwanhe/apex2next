@@ -33,7 +33,7 @@ test('policy factory requires every operation scheme and trusted row-scope resol
     rules: { insert: { authorizationScheme: 'CREATE' }, update: { authorizationScheme: 'EDIT' } },
     async authorize(context, scheme) {
       assert.equal(context.principal.username, 'ALICE');
-      return scheme === 'CREATE';
+      return scheme === 'OTHER';
     },
     async resolveRowScope() { return { column: 'tenant_id', value: 'tenant-A' }; },
   });
