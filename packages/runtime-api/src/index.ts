@@ -25,3 +25,5 @@ export * from './forms/forms';
 export * from './generic/table-dml';
 export * from './generic/schemes';
 export * from './generic/interactive-grid';
+
+export * from './generic/scoped-read';
