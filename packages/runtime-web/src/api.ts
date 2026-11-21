@@ -66,6 +66,8 @@ export interface Session {
   appAccessDenied: string | null;
   /** 'local': accounts in schema iam (Change Password available); 'dev': test mode. */
   authMode?: 'local' | 'dev';
+  /** True only when the verified API session carries the forced temporary-password-change flag. */
+  mustChangePassword?: boolean;
 }
 
 export interface ReportColumn {

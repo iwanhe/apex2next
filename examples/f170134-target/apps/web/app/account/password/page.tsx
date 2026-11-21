@@ -14,6 +14,7 @@ export default async function ChangePasswordPage() {
   try {
     const s = await apiGetRaw<Session>('/session');
     if (s.authMode !== 'local') redirect('/');
+    forced = s.mustChangePassword === true;
   } catch (e) {
     if (e instanceof ApiError && e.status === 401) redirect('/login');
     if (!(e instanceof ApiError) || e.body.code !== 'PASSWORD_CHANGE_REQUIRED') throw e;

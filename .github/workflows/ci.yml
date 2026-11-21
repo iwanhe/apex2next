@@ -149,8 +149,8 @@ jobs:
           set -o pipefail
           pnpm test 2>&1 | tee pilot-test.log
           if grep -Eq "# skipped [1-9]" pilot-test.log; then echo "Tests were skipped" >&2; exit 1; fi
-          test "$(grep -Ec '# fail 0$' pilot-test.log)" -eq 2
-          test "$(grep -Ec '# tests [1-9][0-9]*$' pilot-test.log)" -eq 2
+          test "$(grep -Ec '# fail 0' pilot-test.log)" -eq 3
+          test "$(grep -Ec '# tests [1-9]' pilot-test.log)" -eq 3
 
   pilot-f170134-e2e:
     name: WP9.5 pilot end-to-end (Next.js + NestJS + PostgreSQL 16, Chromium)

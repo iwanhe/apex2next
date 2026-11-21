@@ -1,5 +1,6 @@
-import { Body, Controller, Delete, Get, HttpCode, Inject, Param, Post, Put, Query } from '@nestjs/common';
-import { Actor, AUTH_CONFIG, errors } from '@apex2next/runtime-api';
+import { Body, Controller, Delete, Get, HttpCode, Inject, Param, Post, Put, Query, Req } from '@nestjs/common';
+import type { Request } from 'express';
+import { Actor, AllowDuringPasswordChange, AUTH_CONFIG, errors } from '@apex2next/runtime-api';
 import type { AuthConfig, Principal } from '@apex2next/runtime-api';
 import { MasterFormName, PagesService } from './pages.service';
 import { REGION_SOURCES, RegionName } from './report-definitions';
@@ -25,9 +26,12 @@ export class PagesController {
   constructor(private readonly pages: PagesService, @Inject(AUTH_CONFIG) private readonly auth: AuthConfig) {}
 
   /** The signed-in user, evaluated authorization schemes and the account mode (local accounts can change their password). */
+  // A temporary-password session may read its own session metadata to render the forced-change page.
+  // This endpoint exposes no application data; all business routes remain blocked by SessionGuard.
+  @AllowDuringPasswordChange()
   @Get('session')
-  async me(@Actor() actor: Principal) {
-    return { ...(await this.pages.me(actor)), authMode: this.auth.mode };
+  async me(@Actor() actor: Principal, @Req() req: Request & { mustChangePassword?: boolean }) {
+    return { ...(await this.pages.me(actor)), authMode: this.auth.mode, mustChangePassword: req.mustChangePassword === true };
   }
 
   @Get('pages/100')

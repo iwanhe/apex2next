@@ -15,6 +15,7 @@ It was extracted from the pilot app 170134 without changing behaviour. The accep
 | `reports/report` | Report engine | Interactive/classic reports: search, sort on the source column, paging (rows per page from the definition), facets |
 | `reports/region-source` | `RegionSource`, `LovSource`, `bindRegionSources(spec, {schema})` → `{regionColumns, regionDefaultSort, reportDef, lovSql}` | Turns the generated region and LOV sources (R3) into report definitions and LOV SQL |
 | `forms/forms` | `bindUiSpec(spec)` → `{formDef, result}` | Form definitions read from the app's generated UI spec |
+| `generic/interactive-grid` | `applyInteractiveGridChanges(tx, form, changes)` | Bounded (max 100) transactional grid changes; caller owns authorization and transaction |
 
 ## How an app uses it
 
@@ -33,3 +34,10 @@ The `iam` schema migrations still live in the app (`db/migrations/0004*`, `0005*
 
 The package is compiled with `tsc` to CommonJS in `dist/`. Build it before the app: `pnpm --filter @apex2next/runtime-api build`. The pilot's `pnpm typecheck` does this first.
 NestJS and `pg` are peer dependencies, so the app and the package share one instance.
+
+
+## Interactive Grid DML primitive (R4a)
+
+The runtime exports `applyInteractiveGridChanges(tx, form, changes)`. It accepts a bounded batch of insert/update/delete operations, validates submitted columns through the native form rules, and requires the existing lost-update checksum for update/delete. Duplicate row IDs are rejected.
+
+This is intentionally **not** an HTTP endpoint and does not infer authorization. An application page service must check its page/process authorization first and call the helper inside `BusinessDatabase.run`; the enclosing transaction provides all-or-nothing commit/rollback. Do not call it with a client-created `FormDef`: use the form definition bound to the trusted generated UI spec. Editable IG generation remains gated until source metadata, row authorization, and parity behavior are mapped.

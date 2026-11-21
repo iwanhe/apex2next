@@ -1,0 +1,177 @@
+from __future__ import annotations
+
+from apex2next_extractor.interactive_grid_analysis import analyze_editable_interactive_grids
+
+
+def _inventory(*, editable=True, table=True, visible=True, key=True, query_only=False,
+               read_only=False, process=True, operations="i:u:d"):
+    region_props = {
+        "plug_source_type": "NATIVE_IG",
+        "source_id": "180",
+        "is_editable": editable,
+        "query_type": "TABLE" if table else "SQL",
+        "query_table": "APP.ORDERS" if table else None,
+        "edit_operations": operations,
+        "lost_update_check_type": "ROW_VERSION",
+        "query_where": "TENANT_ID = :P10_TENANT_ID",
+        "ajax_items_to_submit": "P10_TENANT_ID",
+    }
+    column_props = {
+        "region_id": "180", "source_expression": "ORDER_ID", "is_visible": visible,
+        "is_primary_key": key, "is_query_only": query_only, "is_readonly": read_only, "is_required": False,
+    }
+    components = [
+        {"kind": "REGION", "name": "Orders Grid", "props": region_props},
+        {"kind": "REGION_COLUMN", "name": "Orders Grid.ORDER_ID", "props": column_props},
+        {"kind": "REGION_COLUMN", "name": "Orders Grid.STATUS", "props": {
+            "region_id": "180", "source_expression": "STATUS", "is_visible": True, "is_primary_key": False,
+            "is_query_only": False, "is_readonly": False, "is_required": False,
+        }},
+    ]
+    if process:
+        components.append({"kind": "PROCESS", "name": "SAVE_ORDERS", "props": {
+            "native_ig_dml_candidate": True, "region": "Orders Grid", "region_id": "180",
+            "process_attributes": "'ROW_VERSION_COLUMN', 'ROW_VERSION'",
+        }})
+    return {"pages": [{"id": 10, "scheme": "AUTHENTICATED", "scheme_id": "501", "scheme_unresolved": False, "components": components}]}
+
+
+def test_fully_described_editable_grid_is_review_required_not_auto_generated():
+    result = analyze_editable_interactive_grids(_inventory())
+    grid = result["grids"][0]
+    assert grid["classification"] == "REVIEW_REQUIRED"
+    assert grid["auto_generate"] is False
+    assert grid["primary_key"] == "order_id"
+    assert grid["writable_columns"] == ["status"]
+    assert grid["operations"] == ["d", "i", "u"]
+    assert grid["concurrency_evidence"]["lost_update_check_type"] == "ROW_VERSION"
+    assert grid["concurrency_evidence"]["process_row_version_column"] == ["ROW_VERSION"]
+    assert grid["concurrency_evidence"]["runtime_equivalence_proven"] is False
+    assert {f["code"] for f in grid["findings"]} == {"IG011", "IG012", "IG013"}
+    assert result["summary"]["auto_generate"] == 0
+
+
+def test_missing_visibility_or_writeability_fails_closed():
+    result = analyze_editable_interactive_grids(_inventory(visible=None, query_only=None, read_only=None))
+    grid = result["grids"][0]
+    codes = {f["code"] for f in grid["findings"]}
+    assert grid["classification"] == "MANUAL"
+    assert {"IG003", "IG006"} <= codes
+
+
+def test_missing_or_unsupported_primary_key_and_operations_fail_closed():
+    result = analyze_editable_interactive_grids(_inventory(key=False, operations="i:u:merge"))
+    grid = result["grids"][0]
+    codes = {f["code"] for f in grid["findings"]}
+    assert grid["classification"] == "MANUAL"
+    assert {"IG007", "IG009"} <= codes
+
+
+def test_missing_table_source_or_native_dml_association_fails_closed():
+    result = analyze_editable_interactive_grids(_inventory(table=False, process=False))
+    grid = result["grids"][0]
+    codes = {f["code"] for f in grid["findings"]}
+    assert grid["classification"] == "MANUAL"
+    assert {"IG001", "IG010"} <= codes
+
+
+def test_malformed_operation_list_fails_closed():
+    result = analyze_editable_interactive_grids(_inventory(operations="i::u"))
+    grid = result["grids"][0]
+    assert grid["classification"] == "MANUAL"
+    assert "IG009" in {f["code"] for f in grid["findings"]}
+
+
+def test_review_report_exposes_security_and_validation_evidence_without_granting_it():
+    inventory = _inventory()
+    inventory["pages"][0]["components"].append({
+        "kind": "VALIDATION", "name": "STATUS_REQUIRED",
+        "props": {"validation_type": "ITEM_NOT_NULL", "associated_item": "P10_STATUS"},
+    })
+    result = analyze_editable_interactive_grids(inventory)
+    grid = result["grids"][0]
+    assert grid["security_evidence"] == {
+        "page_scheme": "AUTHENTICATED",
+        "page_scheme_id": "501",
+        "page_scheme_unresolved": False,
+        "region_scheme": None,
+        "region_scheme_id": None,
+        "region_scheme_unresolved": False,
+        "process_schemes": [None],
+        "process_scheme_ids": [None],
+        "unresolved_scheme_ids": [],
+    }
+    assert grid["row_scope_evidence"] == {
+        "source_type": "NATIVE_IG", "query_type": "TABLE",
+        "query_where": "TENANT_ID = :P10_TENANT_ID",
+        "ajax_items_to_submit": "P10_TENANT_ID", "row_scope_proven": False,
+        "reason": "A region predicate or submitted page items do not prove equivalent per-row authorization in the generated API.",
+    }
+    assert grid["validation_evidence"] == [{
+        "name": "STATUS_REQUIRED", "source_id": None, "region_id": None, "sequence": None,
+        "type": "ITEM_NOT_NULL", "expression": None, "expression2": None,
+        "condition": None, "condition_type": None, "condition2": None, "condition_type2": None,
+        "always_execute": None, "associated_item_id": None, "associated_item": "P10_STATUS",
+        "associated_column": None, "when_button": None, "error_display_location": None,
+    }]
+    assert grid["auto_generate"] is False
+    assert "IG011" in {f["code"] for f in grid["findings"]}
+    assert "IG012" in {f["code"] for f in grid["findings"]}
+
+
+def test_region_columns_and_dml_process_are_joined_by_export_id_not_display_name():
+    inventory = _inventory()
+    components = inventory["pages"][0]["components"]
+    components.append({
+        "kind": "REGION", "name": "Orders Grid",
+        "props": {
+            "plug_source_type": "NATIVE_IG", "source_id": "181",
+            "is_editable": True, "query_type": "TABLE", "query_table": "APP.OTHER_ORDERS",
+            "edit_operations": "i:u:d",
+        },
+    })
+    result = analyze_editable_interactive_grids(inventory)
+    grids = {g["region_id"]: g for g in result["grids"]}
+    assert grids["180"]["classification"] == "REVIEW_REQUIRED"
+    assert grids["180"]["primary_key"] == "order_id"
+    assert grids["181"]["classification"] == "MANUAL"
+    assert {"IG002", "IG007", "IG008", "IG010"} <= {f["code"] for f in grids["181"]["findings"]}
+
+
+def test_missing_region_id_fails_closed():
+    inventory = _inventory()
+    inventory["pages"][0]["components"][0]["props"].pop("source_id")
+    result = analyze_editable_interactive_grids(inventory)
+    grid = result["grids"][0]
+    assert grid["classification"] == "MANUAL"
+    assert "IG015" in {f["code"] for f in grid["findings"]}
+    assert grid["native_dml_processes"] == []
+
+
+def test_read_only_grids_are_skipped_but_unspecified_editability_is_manual():
+    read_only = analyze_editable_interactive_grids(_inventory(editable=False))
+    assert read_only["summary"]["editable_grids"] == 0
+
+    unspecified = analyze_editable_interactive_grids(_inventory(editable=None))
+    assert unspecified["summary"]["editable_grids"] == 1
+    grid = unspecified["grids"][0]
+    assert grid["classification"] == "MANUAL"
+    assert grid["auto_generate"] is False
+    assert "IG000" in {f["code"] for f in grid["findings"]}
+
+
+
+def test_unresolved_authorization_scheme_reference_fails_closed_and_is_reported():
+    inventory = _inventory()
+    page = inventory["pages"][0]
+    page["scheme_id"] = "999"
+    page["scheme_unresolved"] = True
+    process = next(c for c in page["components"] if c["kind"] == "PROCESS")
+    process["props"]["security_scheme_id"] = "998"
+    process["props"]["security_scheme_unresolved"] = True
+
+    grid = analyze_editable_interactive_grids(inventory)["grids"][0]
+    assert grid["classification"] == "MANUAL"
+    assert grid["auto_generate"] is False
+    assert grid["security_evidence"]["unresolved_scheme_ids"] == ["998", "999"]
+    assert "IG016" in {f["code"] for f in grid["findings"]}

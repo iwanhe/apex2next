@@ -24,9 +24,14 @@ def test_synthetic_export_inventory():
     assert inv["application"] == {
         "name": "Synthetic App", "alias": "SYN", "logoText": None, "dateFormat": "DD-MON-YYYY", "homeLink": None,
         "timestampFormat": None,
-        "version": "Release 1.0", "language": "en", "securityScheme": "APP_USERS", "authentication": "Oracle APEX Accounts",
+        "version": "Release 1.0", "language": "en", "securityScheme": "APP_USERS", "securitySchemeId": "20",
+        "authentication": "Oracle APEX Accounts",
     }
     assert [a["name"] for a in inv["authorizations"]] == ["ADMIN_RIGHTS", "APP_USERS"]
+    app_users = next(a for a in inv["authorizations"] if a["name"] == "APP_USERS")
+    assert app_users["id"] == "20"
+    assert app_users["type"] == "NATIVE_FUNCTION_BODY"
+    assert app_users["attributes"] == {"attribute_01": "return synth_pkg.has_any_role;"}
     yes_no = next(lov for lov in inv["lovs"] if lov["name"] == "YES_NO")
     assert yes_no["values"] == [{"seq": 10, "display": "Ya", "return": "Y"}, {"seq": 20, "display": "Tidak", "return": "N"}], \
         "static values without p_lov_id belong to the preceding LOV, ordered by sequence"
@@ -37,20 +42,77 @@ def test_synthetic_export_inventory():
 
     page = inv["pages"][0]
     assert (page["id"], page["mode"], page["scheme"], page["title"]) == (2, "MODAL", "ADMIN_RIGHTS", "Things")
+    assert page["scheme_id"] == "21"
+    assert page["scheme_unresolved"] is False
     comps = _components(inv)
     assert set(comps) == {
         "P2:BUTTON:SAVE", "P2:DYNAMIC_ACTION:REFRESH_AFTER_DIALOG", "P2:IR:Report", "P2:IR_COLUMN:Report.NAME",
         "P2:IR_REPORT:Report.1", "P2:ITEM:P2_NAME", "P2:PROCESS:CALL_IT", "P2:REGION:Report", "P2:REGION:Thing",
-        "P2:VALIDATION:NAME_OK",
+        "P2:VALIDATION:NAME_OK", "P2:REGION:Read Only Grid", "P2:REGION:Editable Grid",
+        "P2:PROCESS:SAVE_GRID", "P2:REGION_COLUMN:Read Only Grid.ID",
+        "P2:REGION_COLUMN:Read Only Grid.INTERNAL_NOTE",
+        "P2:REGION_COLUMN:Editable Grid.ID", "P2:REGION_COLUMN:Editable Grid.STATUS",
     }
     assert comps["P2:REGION:Report"]["props"]["plug_source"] == "select id, name\n  from things", "wwv_flow_string.join decoded"
     assert comps["P2:IR_REPORT:Report.1"]["props"] == {"report_columns": "NAME", "sort_column_1": "NAME", "sort_direction_1": "ASC"}
     assert comps["P2:PROCESS:CALL_IT"]["props"]["when_button"] == "SAVE"
+    grid_process = comps["P2:PROCESS:SAVE_GRID"]["props"]
+    assert grid_process["process_type"] == "NATIVE_IG_DML"
+    assert grid_process["region"] == "Editable Grid"
+    assert grid_process["region_id"] == "180"
+    assert grid_process["native_ig_dml_candidate"] is True
+    assert "ROW_VERSION_COLUMN" in grid_process["process_attributes"]
     assert comps["P2:ITEM:P2_NAME"]["props"]["read_only_when"] == ":P2_ID is null"
-    assert comps["P2:VALIDATION:NAME_OK"]["props"]["validation"] == ":P2_NAME <> 'x'"
+    validation = comps["P2:VALIDATION:NAME_OK"]["props"]
+    assert validation["source_id"] == "140"
+    assert validation["validation"] == ":P2_NAME <> 'x'"
+    assert validation["validation_type"] == "EXPRESSION"
+    assert validation["validation_sequence"] == 10
+    assert validation["always_execute"] is True
+    assert validation["associated_column"] == "NAME"
+    assert validation["error_display_location"] == "INLINE_WITH_FIELD_AND_NOTIFICATION"
     assert comps["P2:DYNAMIC_ACTION:REFRESH_AFTER_DIALOG"]["props"]["actions"] == [
         {"action": "NATIVE_REFRESH", "result": "TRUE", "region": "Report"}]
-    assert inv["summary"] == {"pages": 1, "components": 10}
+    assert inv["summary"] == {"pages": 1, "components": 17}
+    grid = comps["P2:REGION:Read Only Grid"]["props"]
+    assert (grid["plug_source_type"], grid["query_type"], grid["query_table"], grid["is_editable"]) == (
+        "NATIVE_IG", "TABLE", "THINGS", False)
+    assert grid["source_id"] == "160"
+    assert comps["P2:REGION_COLUMN:Read Only Grid.ID"]["props"] == {
+        "region_id": "160", "source_expression": "ID", "is_visible": True, "is_primary_key": True,
+        "is_query_only": False, "is_readonly": True, "display_sequence": 1, "heading": "Identifier"}
+    assert comps["P2:REGION_COLUMN:Read Only Grid.INTERNAL_NOTE"]["props"]["is_visible"] is False
+    assert comps["P2:REGION_COLUMN:Read Only Grid.ID"]["props"]["is_primary_key"] is True
+    assert comps["P2:REGION_COLUMN:Read Only Grid.ID"]["props"]["is_query_only"] is False
+    assert comps["P2:REGION_COLUMN:Read Only Grid.ID"]["props"]["is_readonly"] is True
+
+
+def test_editable_ig_retains_operations_and_lost_update_metadata():
+    inv = inventory_from_export_dir(SYNTH)
+    comps = _components(inv)
+    grid = comps["P2:REGION:Editable Grid"]["props"]
+    assert grid["edit_operations"] == "i:u:d"
+    assert grid["lost_update_check_type"] == "ROW_VERSION"
+
+
+def test_native_ig_dml_candidate_requires_explicit_editable_region_association():
+    files = {p.relative_to(SYNTH).as_posix(): p.read_text(encoding="utf-8") for p in sorted(SYNTH.rglob("*.sql"))}
+    page = "application/pages/page_00002.sql"
+
+    # A native DML process attached to the read-only grid must not be classified as an editable-grid candidate.
+    wrong_region = dict(files)
+    wrong_region[page] = wrong_region[page].replace(
+        ",p_region_id=>wwv_flow_imp.id(180)\n);",
+        ",p_region_id=>wwv_flow_imp.id(160)\n);",
+    )
+    process = _components(build_page_inventory(wrong_region))["P2:PROCESS:SAVE_GRID"]["props"]
+    assert "native_ig_dml_candidate" not in process
+
+    # Missing editability is not permission to write.
+    unspecified = dict(files)
+    unspecified[page] = unspecified[page].replace(",p_is_editable=>true\n", "\n")
+    process = _components(build_page_inventory(unspecified))["P2:PROCESS:SAVE_GRID"]["props"]
+    assert "native_ig_dml_candidate" not in process
 
 
 def test_inventory_is_deterministic_and_order_independent():

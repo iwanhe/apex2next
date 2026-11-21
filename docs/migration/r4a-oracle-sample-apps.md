@@ -181,3 +181,148 @@ supporting objects and sample data (checked read-only in SQL Commands):
 The R2 shared-runtime and R3 UI-generator drafts were reviewed against this branch; the pieces it lacked
 (trim_spaces handling, safe report paging, hidden-column sort refusal, session issue-time and lifetime checks)
 are now in `@apex2next/runtime-api`. Details and what was not ported: [r4a/pr2-pr3-consolidation.md](r4a/pr2-pr3-consolidation.md).
+
+
+## Step 4a: read-only Interactive Grid (initial safe slice)
+
+The composer now supports a deliberately narrow Interactive Grid pattern:
+
+- The export must explicitly mark the grid non-editable (`is_editable=false` / `N`). Missing editability is treated as editable.
+- The source must be a table-backed query (`query_type=TABLE` with a known `query_table`). SQL-backed grids remain manual until a reviewed projection can be proven equivalent.
+- Every region column must explicitly declare visibility. Only visible columns with a simple identifier `source_expression` are selected; hidden columns are not sent to the browser. Missing visibility or a computed expression keeps the query manual (`GEN013`).
+- The generated read-only grid reuses the runtime paginated report table. It does not generate row editing, row actions, bulk changes, or client-controlled DML.
+- Table names must be simple identifiers present in the converted schema plan. IG `query_where` predicates are currently rejected rather than interpolated; add a reviewed predicate translator before supporting them. Missing/unknown visibility, computed expressions, invalid ordering, or a grid with no visible columns now fail closed; the generator never widens these cases to `SELECT *`.
+
+This increment is covered by synthetic regression tests for visible-column projection and fail-closed handling of editable/unspecified grids. It is not yet counted as increased sample-app coverage until the Oracle APEX 26.2 Interactive Grids export fixtures are run through the full scoreboard and parity smoke tests.
+
+## Step 4b: editable Interactive Grid metadata foundation
+
+The page inventory now retains additional source metadata needed for a later, reviewable editable-grid conversion:
+
+- Region-column primary-key, query-only, read-only, required, default type/expression, display, and data-type attributes.
+- DML process attributes and the owning region reference when the export supplies one.
+- Existing region-level edit operations and lost-update settings remain preserved.
+
+This is **extraction only**. It does not infer missing metadata, grant write permissions, or generate an editable grid. A future generator must reconcile the region's allowed operations with a recognized native IG DML process, a known primary key, column writeability, page/process authorization, row-level authorization, validations, and lost-update behavior. Any missing or unsupported condition must keep the region manual.
+
+
+## Step 4c: editable Interactive Grid eligibility analysis
+
+A separate, deterministic analyzer now evaluates the editable-grid metadata without enabling DML generation. It reports one of:
+
+- `MANUAL`: export metadata is incomplete or contradictory (source, key, visibility, writeability, operation list, or DML process association).
+- `REVIEW_REQUIRED`: the export proves the narrow structural prerequisites, but security and parity gates still require explicit implementation and review.
+
+The analyzer checks table-backed source identifiers, explicit visibility and read-only/query-only/required flags, one simple primary key, at least one visible writable column, a well-formed allowlist of operation flags (`i`, `u`, `d`), and exactly one native IG DML process associated with the same region. Region columns and DML processes are joined by immutable export IDs, not display names, so duplicate region names cannot borrow another region's columns or write process; a missing region ID is a manual finding (`IG015`). Structural eligibility is tracked separately from the review findings so adding a new security gate cannot accidentally change a structurally incomplete grid into a reviewable one.
+
+The report also carries forward evidence for the page, region and DML-process authorization schemes and the page's validation metadata. This is evidence for a developer to review, not proof of authorization: row-level scope is explicitly reported as unproven. The CLI writes a standards-compliant JSON document with a terminating newline.
+
+It always emits `auto_generate: false`. Even a structurally complete grid remains `REVIEW_REQUIRED` with three mandatory findings: page/process and row-level authorization; validation and server-side condition parity; and lost-update/concurrency equivalence. Missing or contradictory structural metadata remains `MANUAL`. This is intentional: source metadata alone cannot prove that a client row may be changed or that APEX's server-side behavior is preserved.
+
+Regression tests cover complete metadata, missing visibility/writeability, malformed/unsupported operations, absent key/source/process, read-only or unspecified editability, review evidence, and the `ig-analyze` CLI output. Run it after inventory with `tools/apex2next ig-analyze APP/ui/apex-page-inventory.json --out APP/ui/editable-ig-analysis.json`. This analyzer is a planning/reporting foundation only; it does not change the existing read-only grid generator.
+
+
+## Step 4d: validation evidence preservation
+
+The inventory now retains validation component identity and association metadata where the APEX export supplies it: immutable validation ID, owning region ID, associated page item/column, submit button, validation expression(s), validation type, condition/type, and error display location. The editable-IG analysis report emits these fields per validation rather than reducing each validation to only its display name and type. This makes the evidence reviewable and gives later parity work enough context to distinguish item-, region-, and submit-flow-related rules.
+
+This is deliberately **not** a validation translator. Validation expressions and conditions may contain PL/SQL, APEX binds, server-side state, or execution-order dependencies; they remain evidence only. The unconditional `IG012` review blocker stays in place, and no editable DML is generated. Missing association metadata is preserved as missing rather than inferred from validation names.
+
+
+## Step 4e: authorization reference integrity
+
+The page inventory now retains immutable authorization scheme IDs alongside resolved names at application and page level, and at component level when a region/process/button exports a `p_security_scheme` reference. Scheme definitions retain their export ID, scheme type, configured attributes (`p_attribute_01` through `p_attribute_10`), and error message. This preserves enough source evidence to trace a DML process reference back to its definition instead of relying only on a display name.
+
+The editable-IG analyzer distinguishes an absent explicit component scheme from a referenced scheme whose definition is missing from the export. An unresolved reference produces `IG016`, is included in `security_evidence.unresolved_scheme_ids`, and forces `MANUAL`; it is never treated as an unrestricted or public rule. The report includes page/region/process scheme IDs and resolution state. A resolved scheme is still not proof that the generated API enforces equivalent authorization: `IG011` remains mandatory, row-level scope remains unproven, and `auto_generate` remains false.
+
+This step does not translate authorization PL/SQL or infer the effect of an absent component-level scheme. Authorization behavior must be mapped and enforced server-side in a later step, with negative tests for users lacking each permission.
+
+
+## Step 4f: row-scope evidence (not authorization)
+
+The editable-IG analysis report now exposes the source-side row-scope inputs separately from authorization schemes: source type, query type, region `query_where`, and `ajax_items_to_submit`. These values are evidence for review only. A region predicate can filter the rows initially displayed in APEX, and submitted page items can influence a query, but neither is proof that a generated API enforces tenant ownership or per-user row access on every read and write.
+
+`row_scope_proven` is therefore intentionally absent from the authorization object and explicitly remains `false` in `row_scope_evidence`, with a reason explaining why the source predicate is not trusted. The existing `IG011` authorization/row-scope blocker remains mandatory; no client-supplied filter is promoted to a write authorization rule, and DML generation remains disabled. The next implementation must map row scope to server-derived identity/tenant context and enforce it in SQL or trusted service policy for select, update, and delete, with cross-tenant negative tests.
+
+
+## Step 4g: lost-update and concurrency evidence
+
+The editable-IG analysis now emits a dedicated `concurrency_evidence` object, separate from authorization and row-scope evidence. It preserves the region's `lost_update_check_type`, the raw native DML process attributes, and the `ROW_VERSION_COLUMN` value when that key/value pair is present in the exported plugin attributes.
+
+This is evidence preservation only. The analyzer explicitly reports `runtime_equivalence_proven: false`; it does not assume that an APEX `ROW_VERSION` or `VALUES` setting is interchangeable with the target API's optimistic-locking strategy. The existing `IG013` finding remains a mandatory blocker. The target implementation must still define a server-side version/checksum contract, reject stale writes, and prove behavior with concurrent update tests (including two clients editing the same row). Editable DML generation remains disabled.
+
+
+## Step 4h: validation execution and association evidence
+
+The page inventory and editable-IG analysis now retain additional validation metadata when the APEX export provides it: validation sequence, `always_execute`, second validation condition and condition type, associated item export ID, associated column, error display location, owning region ID, and submit-button association. Resolved item names remain alongside immutable item IDs so a later mapping can trace the source relationship without guessing from labels.
+
+This is still evidence preservation, not validation translation or proof that a validation applies to every IG operation. Page-level validations may be tied to a submit button, item, column, or region; their ordering and execution behavior can depend on APEX submit processing. A generated API must not blindly execute every page validation for every row operation, nor skip a validation merely because its association is not resolved. Unknown and unsupported validation types/conditions remain manual-review cases under `IG012`.
+
+The synthetic export fixture and tests cover the added fields. The analyzer continues to emit `auto_generate: false`; no editable DML is enabled by this step.
+
+
+## Step 4i: runtime row-scope enforcement (2026-11-15)
+
+The Interactive Grid DML primitive now requires an explicit server-created `InteractiveGridAccess` policy.
+The policy carries a list of allowed operations and a mandatory row-scope column/value. The caller must
+derive the value from the verified `Principal` or a trusted server-side tenant resolver; it must never
+come from request body, query string, grid filters or browser session state.
+
+- UPDATE and DELETE first lock the target row using both its primary key and the trusted scope predicate.
+  The subsequent UPDATE / DELETE repeats that predicate, so the write itself remains bounded.
+- INSERT rejects a client-supplied ownership column and writes the server-derived scope value.
+- A missing policy, missing scope, invalid scope metadata, or operation without an explicit grant fails closed.
+- A row outside the scope is returned as not found, avoiding disclosure of another tenant's row existence.
+- The scope column must be a physical table column and must not be an editable form item. The runtime does not
+  infer tenant columns or claim that every APEX application is multi-tenant.
+
+This step secures the DML primitive, not every generated report/SELECT endpoint. The application service still
+owns authorization and must construct the policy inside the authenticated request path. Database RLS is not
+claimed or enabled by this change. A future SELECT integration must apply the same trusted scope before data
+is returned; DML generation remains disabled until the full authorization and runtime parity review is complete.
+
+Tests cover scoped row locking and updates, cross-tenant lookup denial, client ownership-field spoofing and
+missing-policy denial. Further work: wire the policy to a real app's verified tenant/ownership model, add
+PostgreSQL integration tests against two tenants, and verify SELECT/report isolation before enabling editable
+grid generation.
+
+
+## Step 4j: trusted Interactive Grid policy resolution
+
+The runtime now provides `applyInteractiveGridChangesWithPolicy` as the application-service entry point.
+It accepts a policy resolver that receives the authenticated `BusinessTx`, the trusted form definition,
+and the distinct operation set derived from the submitted batch. The transaction exposes the verified
+`Principal`; the resolver must use that principal and server-side ownership/tenant data to construct
+`InteractiveGridAccess`.
+
+The wrapper rejects an absent resolver, a null policy, or a policy that does not grant every requested
+operation before invoking the DML primitive. It never accepts a principal, tenant ID, ownership value or
+scope column from the request payload. The lower-level `applyInteractiveGridChanges` remains available
+for tightly controlled internal callers that already hold an explicit server-created access policy.
+
+This is a reusable enforcement seam, **not** a generic tenant implementation: each application must provide
+a resolver based on its actual data model and authorization schemes. The F170134 pilot currently has
+role-based APEX authorization but no generic tenant identifier on `Principal`; no tenant column is inferred.
+The resolver must not fabricate row ownership where the source schema has none.
+
+Tests cover principal propagation, operation-set derivation, null-policy denial, incomplete-operation denial,
+and the existing scoped DML behavior. Still outstanding before editable-grid generation: a concrete
+application resolver backed by source authorization metadata, SELECT/report row-scope enforcement,
+and PostgreSQL integration tests proving isolation for the actual ownership model.
+
+
+### Step 4j.1: reusable policy factory
+
+A reusable `createInteractiveGridPolicyResolver` factory is now available in the shared runtime.
+Application configuration must supply, for each operation, an explicit authorization-scheme name,
+an authorization callback backed by the application's server-side scheme evaluator, and a row-scope
+callback backed by its actual schema/ownership model.
+
+The factory evaluates every requested operation (mixed batches require every grant), and returns no
+policy if a rule is missing, authorization fails, callbacks are not configured, or scope cannot be
+resolved. It does not translate APEX schemes or infer ownership by itself. This keeps source-specific
+role logic and ownership semantics outside the generic runtime.
+
+Unit coverage verifies denied grants, missing operation rules, unresolved scope and a successful
+multi-operation policy. The pilot-specific wiring remains intentionally pending because its current
+authorization schemes are role-based and no generic owner column has been identified for the IG source.

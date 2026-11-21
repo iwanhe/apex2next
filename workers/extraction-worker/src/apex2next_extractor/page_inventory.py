@@ -55,16 +55,20 @@ KEEP = {
              "p_lov_display_extra", "p_item_sequence", "p_display_when2"],
     "BUTTON": ["p_button_image_alt", "p_button_sequence", "p_button_is_hot", "p_button_action", "p_button_redirect_url", "p_button_condition", "p_button_condition_type",
                "p_database_action", "p_confirm_message", "p_button_execute_validations", "p_button_position"],
-    "PROCESS": ["p_process_point", "p_process_type", "p_process_sql_clob", "p_process_when", "p_process_when_type",
-                "p_process_success_message", "p_process_sequence"],
-    "VALIDATION": ["p_validation", "p_validation2", "p_validation_type", "p_error_message", "p_validation_condition",
-                   "p_validation_condition_type"],
+    "PROCESS": ["p_process_point", "p_process_type", "p_process_sql_clob", "p_process_attributes",
+                "p_process_when", "p_process_when_type", "p_process_success_message", "p_process_sequence"],
+    "VALIDATION": ["p_validation", "p_validation2", "p_validation_type", "p_validation_sequence", "p_error_message",
+                   "p_validation_condition", "p_validation_condition2", "p_validation_condition_type",
+                   "p_validation_condition_type2", "p_always_execute", "p_associated_column", "p_error_display_location"],
     "DYNAMIC_ACTION": ["p_triggering_element_type", "p_bind_event_type", "p_event_sequence"],
     "IR_COLUMN": ["p_column_label", "p_column_type", "p_format_mask", "p_display_text_as", "p_display_order",
                   "p_column_alignment", "p_column_link", "p_column_linktext", "p_rpt_named_lov"],
     "REPORT_COLUMN": ["p_column_heading", "p_column_format", "p_column_link", "p_column_linktext", "p_hidden_column",
                       "p_column_display_sequence", "p_column_alignment", "p_display_as", "p_derived_column"],
-    "REGION_COLUMN": ["p_source_expression", "p_data_type"],
+    "REGION_COLUMN": ["p_source_expression", "p_data_type", "p_is_visible", "p_is_primary_key",
+                      "p_is_query_only", "p_is_readonly", "p_is_required", "p_default_type", "p_default_expression",
+                      "p_display_as", "p_column_type",
+                      "p_display_sequence", "p_heading"],
     "IR": ["p_max_row_count", "p_show_search_bar", "p_download_formats", "p_detail_link", "p_detail_link_text",
            "p_no_data_found_message", "p_pagination_type", "p_show_detail_link"],
     "IR_REPORT": ["p_report_columns", "p_sort_column_1", "p_sort_direction_1"],
@@ -118,16 +122,20 @@ def build_page_inventory(files: dict[str, str]) -> dict[str, Any]:
             "timestampFormat": lit.get("p_timestamp_format"), "version": lit.get("p_flow_version"),
             "language": lit.get("p_flow_language"),
             "securityScheme": schemes.get(ref.get("p_security_scheme")),
+            "securitySchemeId": ref.get("p_security_scheme"),
             "authentication": next((c["arguments"].get("p_name") for c in all_calls
                                     if c["routine"] == "create_authentication"), None),
         }
     for c in all_calls:
         r = c["routine"]
         if r == "create_security_scheme":
-            attrs = _text(c, "p_attributes")
+            scheme_id = _ref(c, "p_id")
+            attrs = {f"attribute_{n:02d}": c["arguments"].get(f"p_attribute_{n:02d}")
+                     for n in range(1, 11) if c["arguments"].get(f"p_attribute_{n:02d}") not in (None, "")}
             inventory["authorizations"].append({
-                "name": c["arguments"].get("p_name"), "type": c["arguments"].get("p_scheme_type"),
-                "expression": attrs, "errorMessage": c["arguments"].get("p_error_message")})
+                "id": scheme_id, "name": c["arguments"].get("p_name"), "type": c["arguments"].get("p_scheme_type"),
+                "attributes": attrs, "expression": _text(c, "p_attributes"),
+                "errorMessage": c["arguments"].get("p_error_message")})
         elif r == "create_list_of_values":
             inventory["lovs"].append({"name": c["arguments"].get("p_lov_name"),
                                       "location": c["arguments"].get("p_location"),
@@ -201,6 +209,12 @@ def build_page_inventory(files: dict[str, str]) -> dict[str, Any]:
         page_id = page_call["arguments"].get("p_id")
         regions = {_ref(c, "p_id"): c["arguments"].get("p_plug_name") or c["arguments"].get("p_name")
                    for c in calls if c["routine"] in {"create_page_plug", "create_report_region"}}
+        editable_ig_region_ids = {
+            _ref(c, "p_id") for c in calls
+            if c["routine"] == "create_page_plug"
+            and c["arguments"].get("p_plug_source_type") == "NATIVE_IG"
+            and c["arguments"].get("p_is_editable") is True
+        }
         buttons = {_ref(c, "p_id"): c["arguments"].get("p_button_name") for c in calls
                    if c["routine"] == "create_page_button"}
         page_items = {_ref(c, "p_id"): c["arguments"].get("p_name") for c in calls if c["routine"] == "create_page_item"}
@@ -229,6 +243,14 @@ def build_page_inventory(files: dict[str, str]) -> dict[str, Any]:
             if kind in {"IR_COLUMN", "REPORT_COLUMN", "REGION_COLUMN", "CARD_ACTION", "CHART_SERIES", "IR_REPORT"}:
                 cname = f"{region}.{cname}"
             props = {k[2:]: _text(c, k) for k in KEEP[kind] if _text(c, k) not in (None, "")}
+            # Preserve immutable export IDs so later analysis can join components by
+            # identity instead of display name (region names are not guaranteed unique).
+            if kind in {"REGION", "REPORT_REGION", "VALIDATION"}:
+                props["source_id"] = _ref(c, "p_id")
+            if kind in {"REGION_COLUMN", "PROCESS", "VALIDATION"}:
+                component_region_id = _ref(c, "p_region_id")
+                if component_region_id:
+                    props["region_id"] = component_region_id
             if kind == "DYNAMIC_ACTION":
                 trig = _ref(c, "p_triggering_button_id")
                 if trig:
@@ -243,14 +265,32 @@ def build_page_inventory(files: dict[str, str]) -> dict[str, Any]:
             if kind == "ITEM" and "wwv_flow_t_plugin_attributes" in (c["raw_arguments"].get("p_attributes") or ""):
                 values = [m.replace("''", "'") for m in _STRING.findall(c["raw_arguments"]["p_attributes"])]
                 props["attributes"] = dict(zip(values[0::2], values[1::2]))
-            if kind == "PROCESS" and _ref(c, "p_process_when_button_id"):
-                props["when_button"] = buttons.get(_ref(c, "p_process_when_button_id"))
-            if _ref(c, "p_security_scheme"):  # component authorization (e.g. a CREATE button for MASTER_DATA only)
-                props["security_scheme"] = schemes.get(_ref(c, "p_security_scheme"))
+            if kind == "PROCESS":
+                if _ref(c, "p_process_when_button_id"):
+                    props["when_button"] = buttons.get(_ref(c, "p_process_when_button_id"))
+                process_region_id = _ref(c, "p_region_id")
+                if process_region_id:
+                    props["region"] = regions.get(process_region_id)
+                # A positive classification only: a native IG DML process explicitly
+                # associated with an exported NATIVE_IG region. This is not permission
+                # to generate writes; authorization, validations and row scope are separate gates.
+                if (c["arguments"].get("p_process_type") == "NATIVE_IG_DML"
+                        and process_region_id in editable_ig_region_ids):
+                    props["native_ig_dml_candidate"] = True
+            if _ref(c, "p_security_scheme"):  # preserve ID even when scheme definition is absent from this export
+                scheme_id = _ref(c, "p_security_scheme")
+                props["security_scheme_id"] = scheme_id
+                props["security_scheme"] = schemes.get(scheme_id)
+                props["security_scheme_unresolved"] = scheme_id not in schemes
             if kind == "REGION" and _ref(c, "p_list_id"):
                 props["list"] = list_names.get(_ref(c, "p_list_id"))
-            if kind == "VALIDATION" and _ref(c, "p_associated_item"):
-                props["associated_item"] = page_items.get(_ref(c, "p_associated_item"))
+            if kind == "VALIDATION":
+                associated_item_id = _ref(c, "p_associated_item")
+                if associated_item_id:
+                    props["associated_item_id"] = associated_item_id
+                    props["associated_item"] = page_items.get(associated_item_id)
+                if _ref(c, "p_when_button_id"):
+                    props["when_button"] = buttons.get(_ref(c, "p_when_button_id"))
             components.append({"key": f"P{page_id}:{kind}:{cname}", "kind": kind, "name": cname, "props": props})
         components.sort(key=lambda x: x["key"])
         dupes = {x["key"] for x in components if [y["key"] for y in components].count(x["key"]) > 1}
@@ -261,7 +301,10 @@ def build_page_inventory(files: dict[str, str]) -> dict[str, Any]:
         inventory["pages"].append({
             "id": page_id, "name": a.get("p_name"), "alias": a.get("p_alias"), "title": a.get("p_step_title"),
             "mode": a.get("p_page_mode") or "NORMAL",
-            "scheme": schemes.get(_ref(page_call, "p_required_role")), "file": name, "components": components})
+            "scheme": schemes.get(_ref(page_call, "p_required_role")),
+            "scheme_id": _ref(page_call, "p_required_role"),
+            "scheme_unresolved": bool(_ref(page_call, "p_required_role") and _ref(page_call, "p_required_role") not in schemes),
+            "file": name, "components": components})
     inventory["pages"].sort(key=lambda p: p["id"])
     for lov in inventory["lovs"]:
         lov.pop("id")
