@@ -1,7 +1,7 @@
 import type { BusinessTx } from '../context';
 import { errors } from '../errors';
 
-const IDENT = /^[a-z_][a-z0-9_]*(\\.[a-z_][a-z0-9_]*)?$/;
+const IDENT = /^[a-z_][a-z0-9_]*(\.[a-z_][a-z0-9_]*)?$/;
 const MAX_PAGE_SIZE = 100;
 
 function ident(value: string): string {
